@@ -1,0 +1,356 @@
+#include <design.hpp>
+
+/*
+  std::vector<int> source_node_ids, sink_node_ids;
+  std::vector<std::vector<Flit::FlitType>> source_adapter_interface_types, sink_adapter_interface_types;
+  std::vector<std::vector<unsigned int>> source_adapter_interface_dataw, sink_adapter_interface_dataw;
+  std::vector<float> source_node_periods;
+  std::vector<unsigned int> source_node_clks, sink_node_clks;
+*/
+
+#define INST_AXIS_DATAW 512
+#define WB0_AXIS_DATAW 512
+#define WB1_AXIS_DATAW 512
+#define BLOCKS_FF_AXIS_DATAW 512
+
+#define SECTOR_INST_AXIS_DATAW 512
+#define SECTOR_FF_AXIS_DATAW 512
+#define SECTOR_WB0_AXIS_DATAW 512
+
+void design::prepare_adapters_info() {
+  std::vector<Flit::FlitType> sector_input_interface_types, sector_output_interface_types;
+  std::vector<unsigned int> sector_input_interface_dataw, sector_output_interface_dataw;
+  std::vector<Flit::FlitType> other_blocks_input_interface_types, other_blocks_output_interface_types;
+  std::vector<unsigned int> other_blocks_input_interface_dataw, other_blocks_output_interface_dataw;
+  std::vector<Flit::FlitType> ld_input_interface_types, ld_output_interface_types;
+  std::vector<unsigned int> ld_input_interface_dataw, ld_output_interface_dataw;
+  std::vector<Flit::FlitType> common_ld_input_interface_types, common_ld_output_interface_types;
+  std::vector<unsigned int> common_ld_input_interface_dataw, common_ld_output_interface_dataw;
+  std::vector<Flit::FlitType> inst_dispatcher_output_interface_types;
+  std::vector<unsigned int> inst_dispatcher_output_interface_dataw;
+
+  sector_input_interface_types.push_back(AXIS_TYPE0);
+  sector_input_interface_dataw.push_back(SECTOR_INST_AXIS_DATAW);
+  sector_input_interface_types.push_back(AXIS_TYPE1);
+  sector_input_interface_dataw.push_back(SECTOR_WB0_AXIS_DATAW);
+  sector_output_interface_types.push_back(AXIS_TYPE2);
+  sector_output_interface_dataw.push_back(SECTOR_FF_AXIS_DATAW);
+  sector_output_interface_types.push_back(AXIS_TYPE1);
+  sector_output_interface_dataw.push_back(SECTOR_WB0_AXIS_DATAW);
+
+  other_blocks_input_interface_types.push_back(AXIS_TYPE0);
+  other_blocks_input_interface_dataw.push_back(INST_AXIS_DATAW);
+  other_blocks_input_interface_types.push_back(AXIS_TYPE1);
+  other_blocks_input_interface_dataw.push_back(WB1_AXIS_DATAW);
+  other_blocks_input_interface_types.push_back(AXIS_TYPE2);
+  other_blocks_input_interface_dataw.push_back(BLOCKS_FF_AXIS_DATAW);
+  other_blocks_output_interface_types.push_back(AXIS_TYPE2);
+  other_blocks_output_interface_dataw.push_back(BLOCKS_FF_AXIS_DATAW);
+
+  ld_input_interface_types.push_back(AXIS_TYPE2);
+  ld_input_interface_dataw.push_back(BLOCKS_FF_AXIS_DATAW);
+  ld_output_interface_types.push_back(AXIS_TYPE1);
+  ld_output_interface_dataw.push_back(WB1_AXIS_DATAW);
+
+  common_ld_input_interface_types.push_back(AXIS_TYPE0);
+  common_ld_input_interface_dataw.push_back(INST_AXIS_DATAW);
+  common_ld_output_interface_types.push_back(AXIS_TYPE1);
+  common_ld_output_interface_dataw.push_back(WB0_AXIS_DATAW);
+
+  for (unsigned int sector_id = 0; sector_id < SECTORS; sector_id++) {
+    for (unsigned int block_id = 0; block_id < NUM_PIPELINE_BLOCKS - 1; block_id++) {
+      inst_dispatcher_output_interface_types.push_back(AXIS_TYPE0);
+      inst_dispatcher_output_interface_dataw.push_back(INST_AXIS_DATAW);
+    }
+  }
+  inst_dispatcher_output_interface_types.push_back(AXIS_TYPE0);
+  inst_dispatcher_output_interface_dataw.push_back(INST_AXIS_DATAW);
+
+  unsigned int node_id;
+
+  for (unsigned int sector_id = 0; sector_id < SECTORS; sector_id++) {
+    node_id = (sector_id * 6) + SECTOR_DEST_ID;
+    source_node_ids.push_back(node_id);
+    sink_node_ids.push_back(node_id);
+    source_node_periods.push_back(FABRIC_PERIOD);
+    source_node_clks.push_back(0);
+    sink_node_clks.push_back(0);
+    source_adapter_interface_types.push_back(sector_output_interface_types);
+    sink_adapter_interface_types.push_back(sector_input_interface_types);
+    source_adapter_interface_dataw.push_back(sector_output_interface_dataw);
+    sink_adapter_interface_dataw.push_back(sector_input_interface_dataw);
+
+    node_id = (sector_id * 6) + EVRF_DEST_ID;
+    source_node_ids.push_back(node_id);
+    sink_node_ids.push_back(node_id);
+    source_node_periods.push_back(FABRIC_PERIOD);
+    source_node_clks.push_back(0);
+    sink_node_clks.push_back(0);
+    source_adapter_interface_types.push_back(other_blocks_output_interface_types);
+    sink_adapter_interface_types.push_back(other_blocks_input_interface_types);
+    source_adapter_interface_dataw.push_back(other_blocks_output_interface_dataw);
+    sink_adapter_interface_dataw.push_back(other_blocks_input_interface_dataw);
+
+    node_id = (sector_id * 6) + MFU0_DEST_ID;
+    source_node_ids.push_back(node_id);
+    sink_node_ids.push_back(node_id);
+    source_node_periods.push_back(FABRIC_PERIOD);
+    source_node_clks.push_back(0);
+    sink_node_clks.push_back(0);
+    source_adapter_interface_types.push_back(other_blocks_output_interface_types);
+    sink_adapter_interface_types.push_back(other_blocks_input_interface_types);
+    source_adapter_interface_dataw.push_back(other_blocks_output_interface_dataw);
+    sink_adapter_interface_dataw.push_back(other_blocks_input_interface_dataw);
+
+    node_id = (sector_id * 6) + MFU1_DEST_ID;
+    source_node_ids.push_back(node_id);
+    sink_node_ids.push_back(node_id);
+    source_node_periods.push_back(FABRIC_PERIOD);
+    source_node_clks.push_back(0);
+    sink_node_clks.push_back(0);
+    source_adapter_interface_types.push_back(other_blocks_output_interface_types);
+    sink_adapter_interface_types.push_back(other_blocks_input_interface_types);
+    source_adapter_interface_dataw.push_back(other_blocks_output_interface_dataw);
+    sink_adapter_interface_dataw.push_back(other_blocks_input_interface_dataw);
+
+    node_id = (sector_id * 6) + LD_DEST_ID;
+    source_node_ids.push_back(node_id);
+    sink_node_ids.push_back(node_id);
+    source_node_periods.push_back(FABRIC_PERIOD);
+    source_node_clks.push_back(0);
+    sink_node_clks.push_back(0);
+    source_adapter_interface_types.push_back(ld_output_interface_types);
+    sink_adapter_interface_types.push_back(ld_input_interface_types);
+    source_adapter_interface_dataw.push_back(ld_output_interface_dataw);
+    sink_adapter_interface_dataw.push_back(ld_input_interface_dataw);
+  }
+
+  node_id = ((SECTORS / 2) * 6) + LD_DEST_ID + 1;
+  source_node_ids.push_back(node_id);
+  sink_node_ids.push_back(node_id);
+  source_node_periods.push_back(FABRIC_PERIOD);
+  source_node_clks.push_back(0);
+  sink_node_clks.push_back(0);
+  source_adapter_interface_types.push_back(common_ld_output_interface_types);
+  sink_adapter_interface_types.push_back(common_ld_input_interface_types);
+  source_adapter_interface_dataw.push_back(common_ld_output_interface_dataw);
+  sink_adapter_interface_dataw.push_back(common_ld_input_interface_dataw);
+
+  node_id = ((SECTORS / 2 + 1) * 6) + LD_DEST_ID + 1;
+  source_node_ids.push_back(node_id);
+  source_node_periods.push_back(FABRIC_PERIOD);
+  source_node_clks.push_back(0);
+  source_adapter_interface_types.push_back(inst_dispatcher_output_interface_types);
+  source_adapter_interface_dataw.push_back(inst_dispatcher_output_interface_dataw);
+}
+
+design::design(const sc_module_name &name, std::string &noc_config_filename, std::vector<sc_clock*>& node_clks)
+    : sc_module(name),
+      mrf_waddr("mrf_waddr"),
+      mrf_wdata("mrf_wdata"),
+      mrf_wid("mrf_wid"),
+      ififo_rdy("ififo_rdy", CORES),
+      ififo_wen("ififo_ren", CORES),
+      ififo_wdata("ififo_wdata", CORES),
+      ofifo_rdy("ofifo_rdy", CORES),
+      ofifo_ren("ofifo_ren", CORES),
+      ofifo_rdata("ofifo_rdata", CORES) {
+  /*********************************************************/
+  /* Instantiate adapter information and create system NoC */
+  /*********************************************************/
+
+  prepare_adapters_info();
+  _system_noc = new noc("system_noc", noc_config_filename, node_clks, source_node_ids, source_adapter_interface_types,
+                        source_node_periods, source_node_clks, source_adapter_interface_dataw, sink_node_ids,
+                        sink_adapter_interface_types, sink_adapter_interface_dataw, sink_node_clks);
+  _system_noc->noc_clk(noc_clk);
+  _system_noc->adapter_clk(adapter_clk);
+  _system_noc->rst(rst);
+
+  /***************************************/
+  /* Resize AXI-streaming signal vectors */
+  /***************************************/
+
+  int num_sinks = sink_node_ids.size();
+  int num_sources = source_node_ids.size();
+  master_axis_signals.resize(num_sinks);
+  for (unsigned int sink_id = 0; sink_id < num_sinks; sink_id++) {
+    master_axis_signals[sink_id].resize(sink_adapter_interface_types[sink_id].size());
+  }
+  slave_axis_signals.resize(num_sources);
+  for (unsigned int src_id = 0; src_id < num_sources; src_id++) {
+    slave_axis_signals[src_id].resize(source_adapter_interface_types[src_id].size());
+  }
+
+  /**********************************************************************/
+  /* Instantiate system blocks and connect external interfaces (if any) */
+  /**********************************************************************/
+
+  inst_dispatcher = new axis_inst_dispatch("axis_inst_dispatcher", INST_AXIS_DATAW);
+  inst_dispatcher->clk(*node_clks[0]);
+  inst_dispatcher->rst(rst);
+  inst_dispatcher->start_pc(start_pc);
+  inst_dispatcher->end_pc(end_pc);
+  inst_dispatcher->start(start);
+  inst_dispatcher->inst_wdata(inst_wdata);
+  inst_dispatcher->inst_waddr(inst_waddr);
+  inst_dispatcher->inst_wen(inst_wen);
+
+  mvu_sectors.resize(SECTORS);
+  evrf_blocks.resize(SECTORS);
+  mfu0_blocks.resize(SECTORS);
+  mfu1_blocks.resize(SECTORS);
+  char module_name[15];
+  std::string module_name_str;
+  for (unsigned int sector_id = 0; sector_id < SECTORS; sector_id++) {
+    module_name_str = "axis_mvu_sector_" + std::to_string(sector_id);
+    std::strcpy(module_name, module_name_str.c_str());
+    mvu_sectors[sector_id] = new axis_mvu_sector(module_name, sector_id, SECTOR_INST_AXIS_DATAW, SECTOR_WB0_AXIS_DATAW, SECTOR_FF_AXIS_DATAW, SECTOR_WB0_AXIS_DATAW);
+    mvu_sectors[sector_id]->clk(*node_clks[0]);
+    mvu_sectors[sector_id]->rst(rst);
+    mvu_sectors[sector_id]->mrf_waddr(mrf_waddr);
+    mvu_sectors[sector_id]->mrf_wdata(mrf_wdata);
+    mvu_sectors[sector_id]->mrf_wid(mrf_wid);
+
+    module_name_str = "axis_evrf_" + std::to_string(sector_id);
+    std::strcpy(module_name, module_name_str.c_str());
+    evrf_blocks[sector_id] = new axis_evrf(module_name, sector_id, INST_AXIS_DATAW, WB1_AXIS_DATAW, BLOCKS_FF_AXIS_DATAW, BLOCKS_FF_AXIS_DATAW);
+    evrf_blocks[sector_id]->clk(*node_clks[0]);
+    evrf_blocks[sector_id]->rst(rst);
+
+    module_name_str = "axis_mfu0_" + std::to_string(sector_id);
+    std::strcpy(module_name, module_name_str.c_str());
+    mfu0_blocks[sector_id] = new axis_mfu(module_name, 0, sector_id, INST_AXIS_DATAW, WB1_AXIS_DATAW, BLOCKS_FF_AXIS_DATAW, BLOCKS_FF_AXIS_DATAW);
+    mfu0_blocks[sector_id]->clk(*node_clks[0]);
+    mfu0_blocks[sector_id]->rst(rst);
+
+    module_name_str = "axis_mfu1_" + std::to_string(sector_id);
+    std::strcpy(module_name, module_name_str.c_str());
+    mfu1_blocks[sector_id] = new axis_mfu(module_name, 1, sector_id, INST_AXIS_DATAW, WB1_AXIS_DATAW, BLOCKS_FF_AXIS_DATAW, BLOCKS_FF_AXIS_DATAW);
+    mfu1_blocks[sector_id]->clk(*node_clks[0]);
+    mfu1_blocks[sector_id]->rst(rst);
+  }
+
+  ld_block = new axis_loader("axis_ld", INST_AXIS_DATAW, WB0_AXIS_DATAW, WB1_AXIS_DATAW, BLOCKS_FF_AXIS_DATAW);
+  ld_block->clk(*node_clks[0]);
+  ld_block->rst(rst);
+  ld_block->ext_input_fifo_rdy(ififo_rdy);
+  ld_block->ext_input_fifo_wen(ififo_wen);
+  ld_block->ext_input_fifo_wdata(ififo_wdata);
+  ld_block->ext_output_fifo_rdy(ofifo_rdy);
+  ld_block->ext_output_fifo_ren(ofifo_ren);
+  ld_block->ext_output_fifo_rdata(ofifo_rdata);
+
+  /*********************************/
+  /* Connect NoC source interfaces */
+  /*********************************/
+
+  for (unsigned int sector_id = 0; sector_id < SECTORS; sector_id++) {
+    slave_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + SECTOR_DEST_ID][0].Connect(
+        mvu_sectors[sector_id]->sector_ofifo_interface,
+        _system_noc->noc_slave_ports[(sector_id * NUM_PIPELINE_BLOCKS) + SECTOR_DEST_ID][0]);
+    slave_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + SECTOR_DEST_ID][1].Connect(
+        mvu_sectors[sector_id]->sector_chain_ofifo_interface,
+        _system_noc->noc_slave_ports[(sector_id * NUM_PIPELINE_BLOCKS) + SECTOR_DEST_ID][1]);
+
+    slave_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + EVRF_DEST_ID][0].Connect(
+        evrf_blocks[sector_id]->evrf_ofifo_interface,
+        _system_noc->noc_slave_ports[(sector_id * NUM_PIPELINE_BLOCKS) + EVRF_DEST_ID][0]);
+
+    slave_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + MFU0_DEST_ID][0].Connect(
+        mfu0_blocks[sector_id]->mfu_ofifo_interface,
+        _system_noc->noc_slave_ports[(sector_id * NUM_PIPELINE_BLOCKS) + MFU0_DEST_ID][0]);
+
+    slave_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + MFU1_DEST_ID][0].Connect(
+        mfu1_blocks[sector_id]->mfu_ofifo_interface,
+        _system_noc->noc_slave_ports[(sector_id * NUM_PIPELINE_BLOCKS) + MFU1_DEST_ID][0]);
+
+    slave_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + LD_DEST_ID][0].Connect(
+        ld_block->loader_wb1_interfaces[sector_id],
+        _system_noc->noc_slave_ports[(sector_id * NUM_PIPELINE_BLOCKS) + LD_DEST_ID][0]);
+  }
+  slave_axis_signals[SECTORS * NUM_PIPELINE_BLOCKS][0].Connect(
+      ld_block->loader_wb0_interface, _system_noc->noc_slave_ports[SECTORS * NUM_PIPELINE_BLOCKS][0]);
+
+  for (unsigned int sector_id = 0; sector_id < SECTORS; sector_id++) {
+    slave_axis_signals[SECTORS * NUM_PIPELINE_BLOCKS + 1][(sector_id * (NUM_PIPELINE_BLOCKS - 1))].Connect(
+        inst_dispatcher->sector_mop_interface[sector_id],
+        _system_noc->noc_slave_ports[SECTORS * NUM_PIPELINE_BLOCKS + 1][(sector_id * (NUM_PIPELINE_BLOCKS - 1))]);
+
+    slave_axis_signals[SECTORS * NUM_PIPELINE_BLOCKS + 1][(sector_id * (NUM_PIPELINE_BLOCKS - 1)) + 1].Connect(
+        inst_dispatcher->evrf_mop_interface[sector_id],
+        _system_noc->noc_slave_ports[SECTORS * NUM_PIPELINE_BLOCKS + 1][(sector_id * (NUM_PIPELINE_BLOCKS - 1)) + 1]);
+
+    slave_axis_signals[SECTORS * NUM_PIPELINE_BLOCKS + 1][(sector_id * (NUM_PIPELINE_BLOCKS - 1)) + 2].Connect(
+        inst_dispatcher->mfu0_mop_interface[sector_id],
+        _system_noc->noc_slave_ports[SECTORS * NUM_PIPELINE_BLOCKS + 1][(sector_id * (NUM_PIPELINE_BLOCKS - 1)) + 2]);
+
+    slave_axis_signals[SECTORS * NUM_PIPELINE_BLOCKS + 1][(sector_id * (NUM_PIPELINE_BLOCKS - 1)) + 3].Connect(
+        inst_dispatcher->mfu1_mop_interface[sector_id],
+        _system_noc->noc_slave_ports[SECTORS * NUM_PIPELINE_BLOCKS + 1][(sector_id * (NUM_PIPELINE_BLOCKS - 1)) + 3]);
+  }
+  slave_axis_signals[SECTORS * NUM_PIPELINE_BLOCKS + 1][SECTORS * (NUM_PIPELINE_BLOCKS - 1)].Connect(
+      inst_dispatcher->ld_mop_interface,
+      _system_noc->noc_slave_ports[SECTORS * NUM_PIPELINE_BLOCKS + 1][SECTORS * (NUM_PIPELINE_BLOCKS - 1)]);
+
+  /*******************************/
+  /* Connect NoC sink interfaces */
+  /*******************************/
+
+  for (unsigned int sector_id = 0; sector_id < SECTORS; sector_id++) {
+    master_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + SECTOR_DEST_ID][0].Connect(
+        _system_noc->noc_master_ports[(sector_id * NUM_PIPELINE_BLOCKS) + SECTOR_DEST_ID][0],
+        mvu_sectors[sector_id]->sector_inst_interface);
+    master_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + SECTOR_DEST_ID][1].Connect(
+        _system_noc->noc_master_ports[(sector_id * NUM_PIPELINE_BLOCKS) + SECTOR_DEST_ID][1],
+        mvu_sectors[sector_id]->sector_wb_interface);
+
+    master_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + EVRF_DEST_ID][0].Connect(
+        _system_noc->noc_master_ports[(sector_id * NUM_PIPELINE_BLOCKS) + EVRF_DEST_ID][0],
+        evrf_blocks[sector_id]->evrf_inst_interface);
+    master_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + EVRF_DEST_ID][1].Connect(
+        _system_noc->noc_master_ports[(sector_id * NUM_PIPELINE_BLOCKS) + EVRF_DEST_ID][1],
+        evrf_blocks[sector_id]->evrf_wb_interface);
+    master_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + EVRF_DEST_ID][2].Connect(
+        _system_noc->noc_master_ports[(sector_id * NUM_PIPELINE_BLOCKS) + EVRF_DEST_ID][2],
+        evrf_blocks[sector_id]->evrf_ififo_interface);
+
+    master_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + MFU0_DEST_ID][0].Connect(
+        _system_noc->noc_master_ports[(sector_id * NUM_PIPELINE_BLOCKS) + MFU0_DEST_ID][0],
+        mfu0_blocks[sector_id]->mfu_inst_interface);
+    master_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + MFU0_DEST_ID][1].Connect(
+        _system_noc->noc_master_ports[(sector_id * NUM_PIPELINE_BLOCKS) + MFU0_DEST_ID][1],
+        mfu0_blocks[sector_id]->mfu_wb_interface);
+    master_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + MFU0_DEST_ID][2].Connect(
+        _system_noc->noc_master_ports[(sector_id * NUM_PIPELINE_BLOCKS) + MFU0_DEST_ID][2],
+        mfu0_blocks[sector_id]->mfu_ififo_interface);
+
+    master_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + MFU1_DEST_ID][0].Connect(
+        _system_noc->noc_master_ports[(sector_id * NUM_PIPELINE_BLOCKS) + MFU1_DEST_ID][0],
+        mfu1_blocks[sector_id]->mfu_inst_interface);
+    master_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + MFU1_DEST_ID][1].Connect(
+        _system_noc->noc_master_ports[(sector_id * NUM_PIPELINE_BLOCKS) + MFU1_DEST_ID][1],
+        mfu1_blocks[sector_id]->mfu_wb_interface);
+    master_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + MFU1_DEST_ID][2].Connect(
+        _system_noc->noc_master_ports[(sector_id * NUM_PIPELINE_BLOCKS) + MFU1_DEST_ID][2],
+        mfu1_blocks[sector_id]->mfu_ififo_interface);
+
+    master_axis_signals[(sector_id * NUM_PIPELINE_BLOCKS) + LD_DEST_ID][0].Connect(
+        _system_noc->noc_master_ports[(sector_id * NUM_PIPELINE_BLOCKS) + LD_DEST_ID][0],
+        ld_block->loader_input_fifo_interfaces[sector_id]);
+  }
+  master_axis_signals[SECTORS * NUM_PIPELINE_BLOCKS][0].Connect(
+      _system_noc->noc_master_ports[SECTORS * NUM_PIPELINE_BLOCKS][0], ld_block->loader_inst_interface);
+}
+
+design::~design() {
+  delete _system_noc;
+  for (unsigned int sector_id = 0; sector_id < SECTORS; sector_id++) {
+    delete mvu_sectors[sector_id];
+    delete evrf_blocks[sector_id];
+    delete mfu0_blocks[sector_id];
+    delete mfu1_blocks[sector_id];
+  }
+  delete ld_block;
+  delete inst_dispatcher;
+}

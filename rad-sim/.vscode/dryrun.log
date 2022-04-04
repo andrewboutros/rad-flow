@@ -1,0 +1,9 @@
+make -f /Users/andrew/PhD/dev/rad-sim-opt-npu-multithread-hard-c2/Makefile --dry-run --always-make --keep-going --print-directory
+make: Entering directory `/Users/andrew/PhD/dev/rad-sim-opt-npu-multithread-hard-c2'
+make: Leaving directory `/Users/andrew/PhD/dev/rad-sim-opt-npu-multithread-hard-c2'
+ 
+make: /Users/andrew/PhD/dev/rad-sim-opt-npu-multithread-hard-c2/Makefile: No such file or directory
+make: *** No rule to make target `/Users/andrew/PhD/dev/rad-sim-opt-npu-multithread-hard-c2/Makefile'.
+make: Failed to remake makefile `/Users/andrew/PhD/dev/rad-sim-opt-npu-multithread-hard-c2/Makefile'.
+make: *** No targets specified and no makefile found.  Stop.
+ 
