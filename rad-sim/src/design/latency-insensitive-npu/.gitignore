@@ -1,0 +1,12 @@
+register_files/*.txt
+*.log
+NPUSim
+build/*
+gen_done
+sim_done
+npu_log
+npu_traces
+compiler/dump/*
+compiler/__pycache__/*
+scripts/reports/*.rpt
+.vscode
