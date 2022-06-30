@@ -2,9 +2,9 @@
 
 # -- Project information
 
-project = 'Lumache'
-copyright = '2021, Graziella'
-author = 'Graziella'
+project = 'RAD Flow'
+copyright = '2022, Andrew Boutros'
+author = 'Andrew Boutros'
 
 release = '0.1'
 version = '0.1.0'
