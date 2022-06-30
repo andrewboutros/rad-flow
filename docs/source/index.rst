@@ -1,22 +1,12 @@
-Welcome to Lumache's documentation!
-===================================
+Welcome to the RAD Flow documentation!
+======================================
 
-**Lumache** (/lu'make/) is a Python library for cooks and food lovers
-that creates recipes mixing random ingredients.
-It pulls data from the `Open Food Facts database <https://world.openfoodfacts.org/>`_
-and offers a *simple* and *intuitive* API.
-
-Check out the :doc:`usage` section for further information, including
-how to :ref:`installation` the project.
-
-.. note::
-
-   This project is under active development.
+The RAD flow is an open source academic architecture exploration and evaluation flow for novel beyond-FPGA reconfigurable acceleration devices (RADs). These devices incorporate conventional FPGA fabrics, several coarse-grained domain-specialized accelerator blocks, and high-performance packet-switched networks-on-chip (NoCs) for system-level communication. 
 
 Contents
 --------
 
 .. toctree::
 
-   usage
-   api
+   radsim
+   
