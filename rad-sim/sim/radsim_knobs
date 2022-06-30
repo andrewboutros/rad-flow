@@ -4,7 +4,7 @@ num_nocs 1
 noc_period 1.0 
 noc_vcs 5 
 noc_payload_width 166 
-noc_num_nodes 100 
+noc_num_nodes 256 
 noc_placement_file noc.place 
 adapter_period 1.25 
 adapter_fifo_size 16 
@@ -14,7 +14,7 @@ adapter_out_arbiter priority_rr
 adapter_vc_mapping direct 
 module_period 5.0 2.5 
 sim_driver_period 5.0 
-log_verbosity 2
+log_verbosity 0
 num_traces 5
 num_trace_modules 41
 trace_names uOPIssue uOPRetire FristuOPIssue LastuOPRetire TagUpdate 

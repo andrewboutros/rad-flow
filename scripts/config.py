@@ -284,7 +284,8 @@ radsim_knobs = {
 }
 
 parse_config_file(config_filename, booksim_params, radsim_header_params, radsim_knobs)
-print_config(booksim_params, radsim_header_params, radsim_knobs)
+#print_config(booksim_params, radsim_header_params, radsim_knobs)
 generate_booksim_config_files(booksim_params, radsim_header_params, radsim_knobs)
 generate_radsim_params_header(radsim_header_params)
 generate_radsim_config_file(radsim_knobs)
+print('Finished RAD-Flow Configuration!')

@@ -50,6 +50,7 @@ set(hdrfiles
   modules/fifo.hpp
   modules/instruction_fifo.hpp
   modules/instructions.hpp
+  modules/interface_defines.hpp
   modules/loader.hpp
   modules/mfu.hpp
   modules/mvu_sector.hpp

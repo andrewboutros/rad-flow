@@ -12,7 +12,7 @@
 #define PACKET_TYPE_2 Flit::WRITE_DATA
 #define PACKET_TYPE_3 Flit::READ_REPLY
 #define PACKET_TYPE_4 Flit::WRITE_REPLY
-#define NOC_LINKS_DEST_WIDTH 7
+#define NOC_LINKS_DEST_WIDTH 8
 #define NOC_LINKS_DEST_INTERFACE_WIDTH 5
 
 // AXI-Streaming Parameters

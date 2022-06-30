@@ -20,7 +20,7 @@ int GetSimulationCycle(double period);
 int GetSimulationCycle();
 
 // Returns the current simulation cycle number given the NoC clock period
-int GetSimTime();
+//int GetSimTime();
 
 // Calculates the number of hops between source and destination nodes in a 2D grid of certain dimension in case of
 // minimal XY routing

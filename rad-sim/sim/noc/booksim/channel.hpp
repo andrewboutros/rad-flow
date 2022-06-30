@@ -116,7 +116,7 @@ void Channel<T>::WriteOutputs() {
   if(GetSimTime() < time) {
     return;
   }
-  assert(GetSimTime() == time);
+  //assert(GetSimTime() == time);
   _output = item.second;
   assert(_output);
   _wait_queue.pop();

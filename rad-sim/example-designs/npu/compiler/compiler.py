@@ -2500,7 +2500,7 @@ def generate_header_file(filename):
 			continue
 		mtx = re.match('WIDTH = (\d+);', line)
 		if mtx:
-			width = int(mtx.groups()[0]);
+			width = int(mtx.groups()[0])
 			continue
 
 	in_ = open(mif_path+'top_sched.mif','r') 
@@ -2513,7 +2513,7 @@ def generate_header_file(filename):
 			continue
 		mtx = re.match('WIDTH = (\d+);', line)
 		if mtx:
-			inst_width = int(mtx.groups()[0]);
+			inst_width = int(mtx.groups()[0])
 			continue
 
 	dre_src = '([0-9]+):\s+((0|1){' + str(width) + '})'
@@ -2724,6 +2724,16 @@ def initialize_npu(argv):
 			num_sectors = int(sys.argv[sys.argv.index('-s') + 1])
 		except ValueError:
 			print(bcolors.FAIL + "\nInvalid -s argument!" + bcolors.RESET)
+			sys.exit(1)
+
+	if('-th' in sys.argv):
+		if(sys.argv.index('-th') + 1 >= len(sys.argv)):
+			print(bcolors.FAIL + "\nInvalid -th argument!" + bcolors.RESET)
+			sys.exit(1)
+		try:
+			num_threads = int(sys.argv[sys.argv.index('-th') + 1])
+		except ValueError:
+			print(bcolors.FAIL + "\nInvalid -th argument!" + bcolors.RESET)
 			sys.exit(1)
 
 	if('-d' in sys.argv):

@@ -6,7 +6,7 @@
 #define SECTORS 10
 #define DPES_PER_SECTOR 4
 #define LANES 40
-#define THREADS 4
+#define THREADS 1
 #define VRF_DEPTH 1024
 #define MRF_DEPTH 2048
 #define DATA_FIFO_DEPTH 512
