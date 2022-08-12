@@ -26,7 +26,6 @@ Bibtex:
   year={2022},
   organization={IEEE}
 }
-}
 ```
 
 ## Contributors
