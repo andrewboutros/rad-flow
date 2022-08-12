@@ -15,18 +15,17 @@ The flow's full documentation can be found here.
 ## How to Cite
 The following paper may be used as a general citation for RAD-Sim:
 
-A. Boutros, E. Nurvitadhi, and V. Betz, "Architecture and Application Co-Design for Beyond-FPGA Reconfigurable Acceleration Devices", IEEE Access, 2022
+A. Boutros, E. Nurvitadhi, and V. Betz, "RAD-Sim: Rapid Architecture Exploration for Novel Reconfigurable Acceleration Devices", International Conference on Field Programmable Logic and Applications (FPL), 2022
 
 Bibtex:
 ```
-@article{radsim,
-  title={{Architecture and Application Co-Design for Beyond-FPGA Reconfigurable Acceleration Devices}},
+@inproceedings{radsim,
+  title={{RAD-Sim: Rapid Architecture Exploration for Novel Reconfigurable Acceleration Devices}},
   author={Boutros, Andrew and Nurvitadhi, Eriko and Betz, Vaughn},
-  journal={IEEE Access},
-  volume={},
-  pages={},
+  booktitle={International Conference on Field Programmable Logic and Applications (FPL)},
   year={2022},
-  publisher={IEEE}
+  organization={IEEE}
+}
 }
 ```
 
