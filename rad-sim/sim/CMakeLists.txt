@@ -14,8 +14,10 @@ include_directories(
   noc/booksim/arbiters
   noc/booksim/networks
   noc/booksim/power
-  ../example-designs/npu
-  ../example-designs/npu/modules
+  #../example-designs/npu
+  #../example-designs/npu/modules
+  ../example-designs/mvm
+  ../example-designs/mvm/modules
 )
 
 set(srcfiles
@@ -40,10 +42,10 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 add_library(radsim STATIC ${srcfiles} ${hdrfiles})
-target_link_libraries(radsim PUBLIC SystemC::systemc booksim noc npu)
+target_link_libraries(radsim PUBLIC SystemC::systemc booksim noc design)
 
 add_executable(system main.cpp ${srcfiles} ${hdrfiles})
-target_link_libraries(system PUBLIC radsim SystemC::systemc booksim noc npu)
+target_link_libraries(system PUBLIC radsim SystemC::systemc booksim noc design)
 add_custom_target(run
   COMMAND system
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

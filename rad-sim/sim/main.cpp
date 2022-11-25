@@ -4,7 +4,8 @@
 #include <fstream>
 #include <radsim_config.hpp>
 #include <design_context.hpp>
-#include <npu_system.hpp>
+//#include <npu_system.hpp>
+#include <mlp_system.hpp>
 
 RADSimConfig radsim_config;
 RADSimDesignContext radsim_design;
@@ -22,7 +23,8 @@ int sc_main(int argc, char* argv[]) {
   sim_trace_probe.SetTraceRecordingSettings("sim.trace", num_traces, num_trace_modules);
 
   sc_clock* driver_clk_sig = new sc_clock("node_clk0", radsim_config.GetDoubleKnob("sim_driver_period"), SC_NS);
-  npu_system* system = new npu_system("npu_system", driver_clk_sig);
+  mlp_system* system = new mlp_system("mlp_system", driver_clk_sig);
+  //npu_system* system = new npu_system("npu_system", driver_clk_sig);
   //radsim_design.DumpDesignContext();
   sc_start();
 

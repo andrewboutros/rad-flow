@@ -1,13 +1,10 @@
 // Topology
-topology = cmesh;
-k = 8;
+topology = mesh;
+k = 4;
 n = 2;
-c = 4;
-xr = 2;
-yr = 2;
 
 // Routing
-routing_function = dor;
+routing_function = dim_order;
 
 // Flow control
 num_vcs = 5;
