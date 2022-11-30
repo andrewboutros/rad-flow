@@ -91,7 +91,7 @@ mvm::mvm(const sc_module_name& name, unsigned int id_mvm, unsigned int id_layer,
   std::string fifo_name_str;
   fifo_name_str = "mvm" + std::to_string(mvm_id) + "_ififo";
   std::strcpy(fifo_name, fifo_name_str.c_str());
-  ififo = new fifo<sc_int<32>>(fifo_name, FIFO_SIZE, LANES, FIFO_SIZE-1, 0);
+  ififo = new fifo<sc_int<32>>(fifo_name, FIFO_SIZE, LANES, FIFO_SIZE-4, 0);
   ififo->clk(clk);
   ififo->rst(rst);
   ififo->wen(ififo_wen_signal);
@@ -105,7 +105,7 @@ mvm::mvm(const sc_module_name& name, unsigned int id_mvm, unsigned int id_layer,
 
   fifo_name_str = "mvm" + std::to_string(mvm_id) + "_reduce_fifo";
   std::strcpy(fifo_name, fifo_name_str.c_str());
-  reduce_fifo = new fifo<sc_int<32>>(fifo_name, FIFO_SIZE, LANES, FIFO_SIZE-1, 0);
+  reduce_fifo = new fifo<sc_int<32>>(fifo_name, FIFO_SIZE, LANES, FIFO_SIZE-4, 0);
   reduce_fifo->clk(clk);
   reduce_fifo->rst(rst);
   reduce_fifo->wen(reduce_fifo_wen_signal);
@@ -119,7 +119,7 @@ mvm::mvm(const sc_module_name& name, unsigned int id_mvm, unsigned int id_layer,
   
   fifo_name_str = "mvm" + std::to_string(mvm_id) + "_ofifo";
   std::strcpy(fifo_name, fifo_name_str.c_str());
-  ofifo = new fifo<sc_int<32>>(fifo_name, FIFO_SIZE, LANES, FIFO_SIZE - COMPUTE_LATENCY, 0);
+  ofifo = new fifo<sc_int<32>>(fifo_name, FIFO_SIZE, LANES, FIFO_SIZE - COMPUTE_LATENCY - RF_RD_LATENCY - 4, 0);
   ofifo->clk(clk);
   ofifo->rst(rst);
   ofifo->wen(ofifo_wen_signal);
@@ -133,7 +133,7 @@ mvm::mvm(const sc_module_name& name, unsigned int id_mvm, unsigned int id_layer,
 
   fifo_name_str = "mvm" + std::to_string(mvm_id) + "_dl_fifo";
   std::strcpy(fifo_name, fifo_name_str.c_str());
-  dl_fifo = new fifo<sc_int<5>>(fifo_name, FIFO_SIZE, 1, FIFO_SIZE - COMPUTE_LATENCY, 0);
+  dl_fifo = new fifo<sc_int<5>>(fifo_name, FIFO_SIZE, 1, FIFO_SIZE - COMPUTE_LATENCY - RF_RD_LATENCY - 4, 0);
   dl_fifo->clk(clk);
   dl_fifo->rst(rst);
   dl_fifo->wen(dl_fifo_wen_signal);
@@ -147,7 +147,7 @@ mvm::mvm(const sc_module_name& name, unsigned int id_mvm, unsigned int id_layer,
 
   fifo_name_str = "mvm" + std::to_string(mvm_id) + "_dm_fifo";
   std::strcpy(fifo_name, fifo_name_str.c_str());
-  dm_fifo = new fifo<sc_uint<5>>(fifo_name, FIFO_SIZE, 1, FIFO_SIZE - COMPUTE_LATENCY, 0);
+  dm_fifo = new fifo<sc_uint<5>>(fifo_name, FIFO_SIZE, 1, FIFO_SIZE - COMPUTE_LATENCY - RF_RD_LATENCY - 4, 0);
   dm_fifo->clk(clk);
   dm_fifo->rst(rst);
   dm_fifo->wen(dm_fifo_wen_signal);
@@ -192,17 +192,18 @@ void mvm::Tick() {
   }
   pc.write(0);
   mvm_inst rst_inst;
-  next_inst.write(rst_inst);
+  //next_inst.write(rst_inst);
   wait();
   // Sequential logic
   while(true) {
     // Instruction issue logic
-    next_inst.write(inst_memory[pc.read()]);
+    //next_inst.write(inst_memory[pc.read()]);
     
     // Compute logic
     if (dot_reduce_op) {
       ififo_pipeline[0].write(ififo_rdata_signal.read());
       reduce_pipeline[0].write(reduce_fifo_rdata_signal.read());
+      //std::cout << "Dot-Reduce op @ MVM (" << layer_id << ", " << mvm_id << ")" << std::endl;
       valid_pipeline[0].write(true);
       accum_pipeline[0].write(next_inst.read().accum);
       accum_en_pipeline[0].write(next_inst.read().accum_en);
@@ -211,6 +212,7 @@ void mvm::Tick() {
       dest_mvm_pipeline[0].write(next_inst.read().dest_mvm);
       pc.write(pc.read() + 1);
     } else if (dot_op) {
+      //std::cout << "Dot op @ MVM (" << layer_id << ", " << mvm_id << ")" << std::endl;
       data_vector<sc_int<32>> zeros(LANES);
       ififo_pipeline[0].write(ififo_rdata_signal.read());
       reduce_pipeline[0].write(zeros);
@@ -243,6 +245,7 @@ void mvm::Tick() {
       }
       accum_memory[accum_addr] = result;
       result_pipeline[0].write(result);
+      //std::cout << "Result: " << result << std::endl;
     }
 
     // Advance pipelines
@@ -294,6 +297,8 @@ void mvm::Tick() {
           for (unsigned int dot_id = 0; dot_id < DOT_PRODUCTS; dot_id++) {
             matrix_mem_wen[dot_id].write(false);
           }
+          //std::cout << "Write to reduce FIFO" << std::endl;
+          //std::cout << tdata_vec << std::endl;
         } else if (rx_interface.tuser.read().range(15,13).to_uint() == 3) {  // Input FIFO
           ififo_wdata_signal.write(tdata_vec);
           ififo_wen_signal.write(true);
@@ -371,6 +376,7 @@ void mvm::Assign() {
     }
 
     matrix_mem_raddr.write(next_inst.read().raddr);
+    next_inst.write(inst_memory[pc.read()]);
 
     if (!ififo_empty_signal && !reduce_fifo_empty_signal && !ofifo_almost_full_signal
       && next_inst.read().en && !next_inst.read().jump && next_inst.read().reduce) {
@@ -425,8 +431,18 @@ void mvm::Assign() {
     dest_id = radsim_design.GetPortDestinationID(dest_name);
 
     unsigned int dest_interface;
-    if ((unsigned int) dest_layer_int == layer_id+1) dest_interface = 2 << 13;
-    else dest_interface = 3 << 13;
+    // If destination is the same layer, send to reduce FIFO
+    if ((unsigned int) dest_layer_int-1 == layer_id) {
+      dest_interface = 2 << 13;
+      //if (tx_tdata.size() > 0 && !ofifo_empty_signal)
+        //std::cout << this->name() << " sending to interface 2 -- " << dest_layer_int << std::endl;
+    }
+    // If destination is a different layer, send to the input FIFO
+    else {
+      dest_interface = 3 << 13;
+      //if (tx_tdata.size() > 0 && !ofifo_empty_signal)
+        //std::cout << this->name() << " sending to interface 3 -- " << dest_layer_int << std::endl;
+    }
 
     if (tx_tdata.size() > 0 && !ofifo_empty_signal) {
       sc_bv<AXIS_MAX_DATAW> tx_tdata_bv;
@@ -437,6 +453,10 @@ void mvm::Assign() {
       tx_interface.tvalid.write(!ofifo_empty_signal);
       tx_interface.tuser.write(dest_interface);
       tx_interface.tdest.write(dest_id);
+      /*if (dest_interface == 2 << 13 && !ofifo_empty_signal) {
+        std::cout << "Sending to reduce FIFO" << std::endl;
+        std::cout << tx_tdata << std::endl;
+      }*/
       //std::cout << "MVM (" << layer_id << "," << mvm_id << ") pushed data into the NoC with dest " << dest_id << "!" << std::endl;
     } else {
       tx_interface.tvalid.write(false);

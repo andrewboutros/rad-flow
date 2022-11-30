@@ -130,7 +130,13 @@ void mlp_driver::sink() {
   else std::cout << "SUCCESS - All outputs are matching!" << std::endl;
 
   end_cycle = GetSimulationCycle(1.0);
-  std::cout << "Simulation took " << end_cycle - start_cycle << " cycles!" << std::endl;
+  std::cout << "Simulation Cycles = " << end_cycle - start_cycle << std::endl;
+  NoCTransactionTelemetry::DumpStatsToFile("stats.csv");
+
+  std::vector<double> aggregate_bandwidths = NoCTransactionTelemetry::DumpTrafficFlows("traffic_flows", 
+    end_cycle - start_cycle, radsim_design.GetNodeModuleNames());
+  std::cout << "Aggregate NoC BW = " << aggregate_bandwidths[0] / 1000000000 << " Gbps" << std::endl;
+
   sc_stop();
 }
 

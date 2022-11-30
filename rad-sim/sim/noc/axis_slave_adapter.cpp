@@ -11,10 +11,10 @@ axis_slave_adapter::axis_slave_adapter(const sc_module_name &name, int node_id, 
 
   // Node properties
   _node_id = node_id;
+  _network_id = network_id;
   _node_period = node_period;
   _adapter_period = adapter_period;
   _noc_period = radsim_config.GetDoubleVectorKnob("noc_period", _network_id);
-  _network_id = network_id;
   _num_axis_interfaces = interface_types.size();
   _interface_types = interface_types;
   _interface_dataw = interface_dataw;
@@ -119,7 +119,7 @@ void axis_slave_adapter::InputInterface() {
         // Log transaction initiation to get a unique packet ID
         int unique_sim_packet_id = NoCTransactionTelemetry::RecordTransactionInitiation(
             _node_id, GetInputDestinationNode(axis_interfaces[interface_id].tdest.read()),
-            _interface_types[interface_id]);
+            _interface_types[interface_id], _interface_dataw[interface_id], _network_id);
 
         // Register the packet ID, transaction type, and which interface it came from
         _input_axis_transaction_id.write(unique_sim_packet_id);

@@ -7,11 +7,13 @@ NoCTransactionTelemetry::NoCTransactionTelemetry() {}
 NoCTransactionTelemetry::~NoCTransactionTelemetry() {}
 
 // Records the initiation timestamp of a transaction and returns its unique global ID
-int NoCTransactionTelemetry::RecordTransactionInitiation(int src, int dest, int type) {
+int NoCTransactionTelemetry::RecordTransactionInitiation(int src, int dest, int type, int dataw, int network_id) {
   NoCTransactionTrace entry;
   entry.src_node = src;
   entry.dest_node = dest;
   entry.transaction_type = type;
+  entry.dataw = dataw;
+  entry.network_id = network_id;
   entry.t_init = sc_time_stamp().to_double() / 1000;
   global_transaction_id++;
   trace_bookkeeping[global_transaction_id] = entry;
@@ -50,13 +52,63 @@ void NoCTransactionTelemetry::UpdateHops(int id, int num_hops) { trace_bookkeepi
 
 void NoCTransactionTelemetry::DumpStatsToFile(const std::string& filename) {
   std::ofstream ofile(filename, std::ofstream::out);
-  ofile << "id, hops, t_init, t_packet, t_inject, t_eject, t_depacket, t_receive, latency" << endl;
+  ofile << "id, noc_id, src, dest, dataw, hops, t_init, t_packet, t_inject, t_eject, t_depacket, t_receive, latency" << endl;
   for (auto& entry : trace_bookkeeping) {
-    ofile << entry.first << ", " << entry.second.num_hops << ", " << entry.second.t_init << ", "
-          << entry.second.t_packet << ", " << entry.second.t_inject << ", " << entry.second.t_eject << ", "
-          << entry.second.t_depacket << ", " << entry.second.t_recieve << ", " << entry.second.total_latency_ns << endl;
+    ofile << entry.first << ", " << entry.second.network_id << ", " << entry.second.src_node << ", " 
+          << entry.second.dest_node << ", " << entry.second.dataw << ", " << entry.second.num_hops << ", " 
+          << entry.second.t_init << ", " << entry.second.t_packet << ", " << entry.second.t_inject << ", " 
+          << entry.second.t_eject << ", " << entry.second.t_depacket << ", " << entry.second.t_recieve 
+          << ", " << entry.second.total_latency_ns << endl;
   }
   ofile.close();
+}
+
+std::vector<double> NoCTransactionTelemetry::DumpTrafficFlows(const std::string& filename, unsigned int cycle_count, 
+  std::vector<std::vector<std::set<std::string>>>& node_module_names) {
+  double sim_driver_period = radsim_config.GetDoubleKnob("sim_driver_period") / 1000000000.0;
+  unsigned int num_nocs = radsim_config.GetIntKnob("num_nocs");
+  std::vector<std::vector<std::unordered_map<unsigned int, unsigned int>>> traffic_bits(num_nocs);
+  std::vector<std::vector<std::unordered_map<unsigned int, unsigned int>>> traffic_num_hops(num_nocs);
+  for (unsigned int noc_id = 0; noc_id < num_nocs; noc_id++) {
+    unsigned int num_nodes = radsim_config.GetIntVectorKnob("noc_num_nodes", noc_id);
+    traffic_bits[noc_id].resize(num_nodes);
+    traffic_num_hops[noc_id].resize(num_nodes);
+  }
+  for (auto& entry : trace_bookkeeping) {
+    unsigned int noc_id = (unsigned int) entry.second.network_id;
+    unsigned int src = (unsigned int) entry.second.src_node;
+    unsigned int dest = (unsigned int) entry.second.dest_node;
+    if (traffic_bits[noc_id][src].find(dest) == traffic_bits[noc_id][src].end())
+      traffic_bits[noc_id][src][dest] = entry.second.dataw;
+    else
+      traffic_bits[noc_id][src][dest] += entry.second.dataw;
+    traffic_num_hops[noc_id][src][dest] = entry.second.num_hops - 1;
+  }
+  
+  std::vector<double> aggregate_bandwidths;
+  for (unsigned int noc_id = 0; noc_id < num_nocs; noc_id++) {
+    double aggregate_bandwidth = 0.0;
+    std::ofstream traffic_file(filename + "_noc" + std::to_string(noc_id) + ".xml", std::ofstream::out);
+    traffic_file << "<traffic_flows>" << endl;
+    unsigned int num_nodes = radsim_config.GetIntVectorKnob("noc_num_nodes", noc_id);
+    for (unsigned int src_id = 0; src_id < num_nodes; src_id++) {
+      if (traffic_bits[noc_id][src_id].size() > 0) {
+        for (auto& flow : traffic_bits[noc_id][src_id]) {
+          traffic_file << "\t<single_flow src=\".*";
+          std::string src_name = *node_module_names[noc_id][src_id].begin();
+          std::string dst_name = *node_module_names[noc_id][flow.first].begin();
+          traffic_file << "noc_router_" << src_name << ".*\" dst=\".*";
+          traffic_file << "noc_router_" << dst_name << ".*\" bandwidth=\"";
+          double bandwidth = flow.second / (cycle_count * sim_driver_period);
+          aggregate_bandwidth += (traffic_num_hops[noc_id][src_id][flow.first] * bandwidth);
+          traffic_file << bandwidth << "\"/>" << endl;
+        }
+      }
+    }
+    traffic_file << "</traffic_flows>" << endl;
+    aggregate_bandwidths.push_back(aggregate_bandwidth);
+  }
+  return aggregate_bandwidths;
 }
 
 SimLog::SimLog() {

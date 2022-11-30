@@ -68,8 +68,6 @@ void fifo<dtype>::Tick() {
       rdata.write(data_vector<dtype>(temp));
     }
 
-    //if (!mem.empty())
-    //  cout << this->name() << ": " << mem.size() << endl;
     wait();
   }
 }

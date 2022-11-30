@@ -46,7 +46,7 @@ for l in range(num_layers):
   padded_dimx = int(math.ceil(layer_input_dim * 1.0 / native_dim / num_mvms_in) * native_dim * num_mvms_in)
   padded_dimy = int(math.ceil(hidden_dims[l] * 1.0 / native_dim / num_mvms_out) * native_dim * num_mvms_out)
   padded_weights.append(np.zeros(shape=(padded_dimy, padded_dimx), dtype=int))
-  padded_weights[l][:hidden_dims[l], :layer_input_dim] = np.random.randint(-128, 128, size=(hidden_dims[l], layer_input_dim))
+  padded_weights[l][:hidden_dims[l], :layer_input_dim] = np.random.randint(-2, 2, size=(hidden_dims[l], layer_input_dim))
 
 # Prepare weight MIFs directory
 if(not(os.path.exists('./weight_mifs'))):
@@ -98,18 +98,18 @@ for l in range(num_layers):
   limx = int(padded_weights[l].shape[1] / native_dim / layer_mvms)
   limy = int(padded_weights[l].shape[0] / native_dim)
   for m in range(layer_mvms):
-    if (l == num_layers - 1):
-      dest_layer = 0
-      dest_mvm = 0
-    elif (m == layer_mvms - 1):
-      dest_layer = l + 2
-      dest_mvm = 0
-    else:
-      dest_layer = l + 1
-      dest_mvm = m + 1
     inst_mif = open('inst_mifs/layer'+str(l)+'_mvm'+str(m)+'.mif', 'w')
     for i in range(limx):
       for j in range(limy):
+        if ((l == num_layers - 1) and (m == layer_mvms - 1)):
+          dest_layer = 0
+          dest_mvm = 0
+        elif (m == layer_mvms - 1):
+          dest_layer = l + 2
+          dest_mvm = j % num_mvms[l+1]
+        else:
+          dest_layer = l + 1
+          dest_mvm = m + 1
         inst_mif.write('1 0 ') # en, jump
         if (m == 0 or i < limx-1):
           inst_mif.write('0 ') # reduce
@@ -143,7 +143,7 @@ else:
 # Generate test input MIFs
 padded_input_dim = int(math.ceil(input_dim * 1.0 / native_dim / num_mvms[0]) * native_dim * num_mvms[0])
 test_inputs = np.zeros(shape=(num_test_inputs, padded_input_dim), dtype=int)
-test_inputs[:, :input_dim] = np.random.randint(-128, 128, size=(num_test_inputs, input_dim))
+test_inputs[:, :input_dim] = np.random.randint(-2, 2, size=(num_test_inputs, input_dim))
 input_files = []
 for i in range(num_mvms[0]):
   input_files.append(open('input_mifs/inputs_mvm' + str(i) + '.mif', 'w'))
@@ -209,7 +209,7 @@ clocks_file.write('output_collector 0 0\n')
 placement_file.close()
 clocks_file.close()
 
-for l in range(num_layers):
+'''for l in range(num_layers):
   print('Layer ' + str(l) + ':')
   for y in range(padded_weights[l].shape[0]):
     for x in range(padded_weights[l].shape[1]):
@@ -222,7 +222,7 @@ for i in range(num_test_inputs):
   for x in range(test_inputs.shape[0]):
     print('{:>4} '.format(test_inputs[x][i]), end='')
   print('\nOutput ' + str(i) + ':')
-  for x in range(test_inputs.shape[0]):
+  for x in range(test_outputs.shape[0]):
     print('{:>4} '.format(test_outputs[i][x]), end='')
-  print('\n---------------------------------------')
+  print('\n---------------------------------------')'''
 

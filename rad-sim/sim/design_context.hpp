@@ -21,6 +21,7 @@ class RADSimDesignContext {
     std::unordered_map<std::string, std::pair<unsigned int, unsigned int>> _module_clk_settings;
     std::unordered_map<std::string, radsim_module*> _design_modules;
     std::vector<std::unordered_map<unsigned int, std::vector<std::string>>> _node_id_ports_list;
+    std::vector<std::vector<std::set<std::string>>> _node_module_names;
 
     std::vector<std::vector<AdapterInfo>> _noc_slave_adapter_info, _noc_master_adapter_info;
     std::vector<std::vector<unsigned int>> _num_noc_slave_ports, _num_noc_master_ports;
@@ -49,6 +50,7 @@ class RADSimDesignContext {
     unsigned int GetPortDestinationID(std::string& port_name);
     unsigned int GetPortInterfaceID(std::string& port_name);
     void DumpDesignContext();
+    std::vector<std::vector<std::set<std::string>>>& GetNodeModuleNames();
 };
 
 extern RADSimDesignContext radsim_design;

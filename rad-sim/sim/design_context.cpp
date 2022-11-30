@@ -29,6 +29,13 @@ RADSimDesignContext::RADSimDesignContext() {
     clk_name = "module_clk" + std::to_string(clk_id);
     _module_clks[clk_id] = new sc_clock(clk_name.c_str(), module_period[clk_id], SC_NS);
   }
+
+  int num_nocs = radsim_config.GetIntKnob("num_nocs");
+  _node_module_names.resize(num_nocs);
+  for (int noc_id = 0; noc_id < num_nocs; noc_id++) {
+    int num_nodes = radsim_config.GetIntVectorKnob("noc_num_nodes", noc_id);
+    _node_module_names[noc_id].resize(num_nodes);
+  }
 }
 
 RADSimDesignContext::~RADSimDesignContext() {
@@ -65,6 +72,10 @@ void RADSimDesignContext::ParseNoCPlacement(const std::string& placement_filenam
       std::getline(ss, port_name, ' ');
       std::getline(ss, port_noc_placement_str, ' ');
       std::getline(ss, port_node_placement_str, ' ');
+      std::stringstream port_name_ss;
+      port_name_ss << port_name;
+      std::string module_name;
+      std::getline(port_name_ss, module_name, '.');
       int port_noc_placement = std::stoi(port_noc_placement_str);
       int port_node_placement = std::stoi(port_node_placement_str);
       _port_placement[port_name] = std::make_tuple(port_noc_placement, port_node_placement, 0);
@@ -76,6 +87,7 @@ void RADSimDesignContext::ParseNoCPlacement(const std::string& placement_filenam
       } else {
         _node_id_ports_list[port_noc_placement][port_node_placement].push_back(port_name);
       }
+      _node_module_names[port_noc_placement][port_node_placement].insert(module_name);
     } else {
       std::string module_name, port_name, port_noc_placement_str, port_node_placement_str;
       std::getline(ss, module_name, ' ');
@@ -112,6 +124,7 @@ void RADSimDesignContext::ParseNoCPlacement(const std::string& placement_filenam
           _node_id_ports_list[port_noc_placement][port_node_placement].push_back(port_name);
         }
       }
+      _node_module_names[port_noc_placement][port_node_placement].insert(module_name);
     }
   }
 }
@@ -347,4 +360,8 @@ void RADSimDesignContext::DumpDesignContext () {
     std::cout << std::get<1>(p) << " " << std::get<2>(p) << std::endl;
   }
   cin.get();
+}
+
+std::vector<std::vector<std::set<std::string>>>& RADSimDesignContext::GetNodeModuleNames(){
+  return _node_module_names;
 }

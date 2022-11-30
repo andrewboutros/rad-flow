@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <set>
 
 // Struct capsulating information for a transaction traversing through the NoC
 struct NoCTransactionTrace {
@@ -13,6 +14,8 @@ struct NoCTransactionTrace {
   int dest_node;            // Destination node receiving the transaction
   int num_hops;             // Number of hops between source and destination nodes
   int transaction_type;     // Transaction type
+  int dataw;                // Data width of the transaction in bits
+  int network_id;           // NoC ID of the transaction
   double t_init;            // Time at which transaction is initiated
   double t_packet;          // Time at which transaction is packetized
   double t_inject;          // Time at which head flit of transaction is injected into the NoC
@@ -26,6 +29,8 @@ struct NoCTransactionTrace {
         dest_node(-1),
         num_hops(0),
         transaction_type(0),
+        dataw(0),
+        network_id(0),
         t_init(0.0),
         t_packet(0.0),
         t_inject(0.0),
@@ -43,7 +48,7 @@ class NoCTransactionTelemetry {
 
   NoCTransactionTelemetry();
   ~NoCTransactionTelemetry();
-  static int RecordTransactionInitiation(int src, int dest, int type);
+  static int RecordTransactionInitiation(int src, int dest, int type, int dataw, int network_id);
   static void RecordTransactionTailPacketization(int id);
   static void RecordTransactionHeadInjection(int id);
   static void RecordTransactionTailEjection(int id);
@@ -51,6 +56,8 @@ class NoCTransactionTelemetry {
   static void RecordTransactionReceipt(int id);
   static void UpdateHops(int id, int num_hops);
   static void DumpStatsToFile(const std::string& filename);
+  static std::vector<double> DumpTrafficFlows(const std::string& filename, unsigned int cycle_count,
+    std::vector<std::vector<std::set<std::string>>>& node_module_names);
 };
 
 struct debug_t {};

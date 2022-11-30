@@ -72,11 +72,11 @@ void register_file<dtype>::Tick() {
     if (!clk_en.read()) {
       // Address guards
       if (raddr.read() >= mem.size()) {
-        cerr << "Read address out of bound at RF " << register_file_id << endl;
+        cerr << "Read address (" << raddr.read() << ") out of bound at RF " << register_file_id << endl;
         exit(1);
       }
       if (waddr.read() >= mem.size()) {
-        cerr << "Write address out of bound at RF " << register_file_id << endl;
+        cerr << "Write address (" << waddr.read() << ") out of bound at RF " << register_file_id << endl;
         exit(1);
       }
 
