@@ -6,7 +6,7 @@ add_subdirectory(noc)
 
 include_directories(
   ./
-  ${SystemCLanguage_DIR}/../include/
+  ${SystemCLanguage_DIR}/../src/
   noc
   noc/booksim
   noc/booksim/routers
@@ -14,10 +14,8 @@ include_directories(
   noc/booksim/arbiters
   noc/booksim/networks
   noc/booksim/power
-  #../example-designs/npu
-  #../example-designs/npu/modules
-  ../example-designs/mvm
-  ../example-designs/mvm/modules
+  ../example-designs/${DESIGN}
+  ../example-designs/${DESIGN}/modules
 )
 
 set(srcfiles

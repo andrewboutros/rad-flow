@@ -3,3 +3,4 @@ rad-sim/CMakeFiles/
 rad-sim/.vscode/
 .vscode
 .DS_Store
+*.mif

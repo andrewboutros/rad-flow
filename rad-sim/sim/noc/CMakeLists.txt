@@ -6,7 +6,7 @@ add_subdirectory(booksim)
 include_directories(
   ./
   ../
-  ${SystemCLanguage_DIR}/../include/
+  ${SystemCLanguage_DIR}/../src/
   ./booksim
   ./booksim/routers
   ./booksim/allocators

@@ -70,9 +70,10 @@ mvm::mvm(const sc_module_name& name, unsigned int id_mvm, unsigned int id_layer,
   char mem_name[25];
   std::string mem_name_str;
   matrix_memory.resize(DOT_PRODUCTS);
+  std::string mvm_dir = radsim_config.GetStringKnob("radsim_user_design_root_dir");
   std::string mem_init_file;
   for (unsigned int dot_id = 0; dot_id < DOT_PRODUCTS; dot_id++) {
-    mem_init_file = "/media/andrew/DATA/research/rad-flow/rad-sim/example-designs/mvm/compiler/weight_mifs/layer" 
+    mem_init_file = mvm_dir + "/compiler/weight_mifs/layer" 
       + std::to_string(layer_id) + "_mvm" + std::to_string(mvm_id) + "_dot" + std::to_string(dot_id) + ".mif";
     mem_name_str = "mvm" + std::to_string(mvm_id) + "_matrix_mem" + std::to_string(dot_id);
     std::strcpy(mem_name, mem_name_str.c_str());

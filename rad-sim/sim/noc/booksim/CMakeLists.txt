@@ -10,7 +10,7 @@ include_directories(
   arbiters
   networks
   power
-  ${SystemCLanguage_DIR}/../include/
+  ${SystemCLanguage_DIR}/../src/
 )
 
 file(GLOB srcfiles

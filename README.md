@@ -10,7 +10,7 @@ The flow consists of the following tools:
 <img src="https://drive.google.com/uc?export=view&id=1m8ChChTQlDjKXf8buyGt05LwFYkPiHV6" width="1000"/>
 
 ## Documentation
-The flow's full documentation can be found here.
+The flow's full documentation can be found [here](https://www.notion.so/RAD-Sim-Documentation-7adde413148a4286bc5cc85648564672).
 
 ## How to Cite
 The following paper may be used as a general citation for RAD-Sim:

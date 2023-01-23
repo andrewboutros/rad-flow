@@ -47,6 +47,20 @@ sc_flit::~sc_flit() {
   
 }
 
+sc_flit& sc_flit::operator= (const sc_flit& f) {
+  _head = f._head;
+  _tail = f._tail;
+  _type = f._type;
+  _vc_id = f._vc_id;
+  _dest = f._dest;
+  _dest_interface = f._dest_interface;
+  _packet_id = f._packet_id;
+  _payload = AllocateFlitPayload();
+  *_payload = *(f._payload);
+  _sim_transaction_id = f._sim_transaction_id;
+  return *this;
+}
+
 sc_bv<NOC_LINKS_PAYLOAD_WIDTH>* sc_flit::AllocateFlitPayload() {
   sc_bv<NOC_LINKS_PAYLOAD_WIDTH>* payload_ptr;
   if (_free.empty()) {

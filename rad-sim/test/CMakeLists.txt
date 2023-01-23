@@ -3,7 +3,7 @@ find_package(SystemCLanguage CONFIG REQUIRED)
 
 include_directories(
   ./
-  ${SystemCLanguage_DIR}/../include/
+  ${SystemCLanguage_DIR}/../src/
   ../src
   ../src/noc
   ../src/noc/booksim

@@ -32,6 +32,7 @@ class sc_flit {
           const sc_bv<NOC_LINKS_DEST_INTERFACE_WIDTH>& dest_interface, const sc_bv<NOC_LINKS_PACKETID_WIDTH>& packet_id,
           unsigned int sim_transaction_id);
   ~sc_flit();
+  sc_flit& operator= (const sc_flit& f);
   static sc_bv<NOC_LINKS_PAYLOAD_WIDTH>* AllocateFlitPayload();
   void FreeFlit();
   static void FreeAllFlits();

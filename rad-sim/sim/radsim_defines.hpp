@@ -1,6 +1,6 @@
 #pragma once
 
-#define RADSIM_ROOT_DIR "/media/andrew/DATA/research/rad-flow/rad-sim"
+#define RADSIM_ROOT_DIR "/home/abouts/rad-flow/rad-sim"
 
 // NoC-related Parameters
 #define NOC_LINKS_PAYLOAD_WIDTH 166
