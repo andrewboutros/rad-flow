@@ -1,5 +1,5 @@
-radsim_root_dir /home/abouts/rad-flow/rad-sim
-radsim_user_design_root_dir /home/abouts/rad-flow/rad-sim/example-designs/mvm
+radsim_root_dir /media/andrew/DATA/research/rad-flow/rad-sim
+radsim_user_design_root_dir /media/andrew/DATA/research/rad-flow/rad-sim/example-designs/mvm
 num_nocs 1
 noc_period 1.0 
 noc_vcs 5 

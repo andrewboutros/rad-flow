@@ -26,6 +26,7 @@ set(srcfiles
 )
 
 set(hdrfiles
+  aximm_interface.hpp
   axis_interface.hpp
   axis_master_adapter.hpp
   axis_slave_adapter.hpp

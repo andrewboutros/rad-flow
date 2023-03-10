@@ -3,6 +3,7 @@ find_package(SystemCLanguage CONFIG REQUIRED)
 set(CMAKE_CXX_STANDARD 11)
 
 add_subdirectory(noc)
+add_subdirectory(dram)
 
 include_directories(
   ./
@@ -14,6 +15,9 @@ include_directories(
   noc/booksim/arbiters
   noc/booksim/networks
   noc/booksim/power
+  dram
+  dram/DRAMsim3
+  dram/DRAMsim3/src
   ../example-designs/${DESIGN}
   ../example-designs/${DESIGN}/modules
 )
@@ -40,10 +44,10 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 add_library(radsim STATIC ${srcfiles} ${hdrfiles})
-target_link_libraries(radsim PUBLIC SystemC::systemc booksim noc design)
+target_link_libraries(radsim PUBLIC SystemC::systemc booksim noc dram design)
 
 add_executable(system main.cpp ${srcfiles} ${hdrfiles})
-target_link_libraries(system PUBLIC radsim SystemC::systemc booksim noc design)
+target_link_libraries(system PUBLIC radsim SystemC::systemc booksim noc dram design)
 add_custom_target(run
   COMMAND system
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

@@ -64,7 +64,7 @@ struct axis_slave_port {
   axis_slave_port(const sc_module_name& name) : tvalid(), tready(), tdata(), tstrb(), 
                        tkeep(), tlast(), tid(), tdest(), tuser() { (void) name;}
 
-  // Helper function for reseting all output ports of an AXI-stream master interface
+  // Helper function for reseting all output ports of an AXI-stream slave interface
   void Reset() { tready.write(true); }
 
   // Helper function for connecting two AXI-stream slave ports in module hierarchy
