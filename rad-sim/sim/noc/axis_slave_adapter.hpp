@@ -9,15 +9,15 @@
 #include <cmath>
 #include <flit.hpp>
 #include <network.hpp>
+#include <noc_utils.hpp>
 #include <queue>
 #include <radsim_telemetry.hpp>
-#include <noc_utils.hpp>
 #include <routefunc.hpp>
 #include <sc_flit.hpp>
 
 class axis_slave_adapter : public sc_module {
- private:
-  unsigned int _node_id;  // Node ID of this adapter
+private:
+  unsigned int _node_id; // Node ID of this adapter
   double _node_period, _adapter_period, _noc_period;
   unsigned int _network_id;
   unsigned int _num_axis_interfaces;
@@ -27,9 +27,9 @@ class axis_slave_adapter : public sc_module {
   unsigned int _max_num_flits_per_packet;
   unsigned int _freq_ratio;
 
-  BookSimConfig* _noc_config;
-  Network* _noc;
-  BufferState* _buffer_state;
+  BookSimConfig *_noc_config;
+  Network *_noc;
+  BufferState *_buffer_state;
   tRoutingFunction _routing_func;
   bool _lookahead_routing;
   bool _wait_for_tail_credit;
@@ -55,18 +55,20 @@ class axis_slave_adapter : public sc_module {
   bool _injection_flit_ready;
   sc_flit _to_be_injected_flit;
 
- public:
+public:
   sc_in<bool> node_clk;
   sc_in<bool> adapter_clk;
   sc_in<bool> noc_clk;
   sc_in<bool> rst;
   sc_vector<axis_slave_port> axis_interfaces;
 
-  axis_slave_adapter(const sc_module_name& name, int node_id, int network_id,
-                     std::vector<Flit::FlitType>& interface_types, std::vector<unsigned int>& interface_dataw,
-                     double node_period, double adapter_period, BookSimConfig* noc_config, Network* noc, 
-                     BufferState* buffer_state, tRoutingFunction routing_func, bool lookahead_routing, 
-                     bool wait_for_tail_credit);
+  axis_slave_adapter(const sc_module_name &name, int node_id, int network_id,
+                     std::vector<Flit::FlitType> &interface_types,
+                     std::vector<unsigned int> &interface_dataw,
+                     double node_period, double adapter_period,
+                     BookSimConfig *noc_config, Network *noc,
+                     BufferState *buffer_state, tRoutingFunction routing_func,
+                     bool lookahead_routing, bool wait_for_tail_credit);
   ~axis_slave_adapter();
 
   int GetInputDestinationNode(const sc_bv<AXIS_DESTW> axis_transaction_dest);

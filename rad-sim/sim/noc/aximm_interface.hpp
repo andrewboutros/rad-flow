@@ -1,8 +1,8 @@
 #pragma once
 
-#include <systemc.h>
 #include <radsim_defines.hpp>
 #include <radsim_utils.hpp>
+#include <systemc.h>
 
 // Encapsulation of all AXI-MM master interface ports in a single struct
 // An AXI-MM master can send read/write requests and receive responses
@@ -47,17 +47,20 @@ struct aximm_master_port {
   sc_in<bool> rlast;
   sc_in<sc_bv<AXI_USERW>> ruser;
 
-  aximm_master_port() : awvalid(), awready(), awid(), awaddr(), awlen(), awsize(), awburst(), awuser(),
-                        wvalid(), wready(), wid(), wdata(), wlast(), wuser(),
-                        bvalid(), bready(), bid(), bresp(), buser(),
-                        arvalid(), arready(), arid(), araddr(), arlen(), arsize(), arburst(), aruser(),
-                        rvalid(), rready(), rid(), rdata(), rresp(), rlast(), ruser() {}
-  aximm_master_port(const sc_module_name& name) : 
-                        awvalid(), awready(), awid(), awaddr(), awlen(), awsize(), awburst(), awuser(),
-                        wvalid(), wready(), wid(), wdata(), wlast(), wuser(),
-                        bvalid(), bready(), bid(), bresp(), buser(),
-                        arvalid(), arready(), arid(), araddr(), arlen(), arsize(), arburst(), aruser(),
-                        rvalid(), rready(), rid(), rdata(), rresp(), rlast(), ruser() { (void) name; }
+  aximm_master_port()
+      : awvalid(), awready(), awid(), awaddr(), awlen(), awsize(), awburst(),
+        awuser(), wvalid(), wready(), wid(), wdata(), wlast(), wuser(),
+        bvalid(), bready(), bid(), bresp(), buser(), arvalid(), arready(),
+        arid(), araddr(), arlen(), arsize(), arburst(), aruser(), rvalid(),
+        rready(), rid(), rdata(), rresp(), rlast(), ruser() {}
+  aximm_master_port(const sc_module_name &name)
+      : awvalid(), awready(), awid(), awaddr(), awlen(), awsize(), awburst(),
+        awuser(), wvalid(), wready(), wid(), wdata(), wlast(), wuser(),
+        bvalid(), bready(), bid(), bresp(), buser(), arvalid(), arready(),
+        arid(), araddr(), arlen(), arsize(), arburst(), aruser(), rvalid(),
+        rready(), rid(), rdata(), rresp(), rlast(), ruser() {
+    (void)name;
+  }
 
   // Helper function for reseting all output ports of an AXI-MM master interface
   void Reset() {
@@ -85,7 +88,7 @@ struct aximm_master_port {
   }
 
   // Helper function for connecting two AXI-MM master ports in module hierarchy
-  void ConnectToPort(aximm_master_port& p) {
+  void ConnectToPort(aximm_master_port &p) {
     // Write address channel
     this->awvalid(p.awvalid);
     this->awready(p.awready);
@@ -171,20 +174,23 @@ struct aximm_slave_port {
   sc_out<bool> rlast;
   sc_out<sc_bv<AXI_USERW>> ruser;
 
-  aximm_slave_port() : awvalid(), awready(), awid(), awaddr(), awlen(), awsize(), awburst(), awuser(),
-                       wvalid(), wready(), wid(), wdata(), wlast(), wuser(),
-                       bvalid(), bready(), bid(), bresp(), buser(),
-                       arvalid(), arready(), arid(), araddr(), arlen(), arsize(), arburst(), aruser(),
-                       rvalid(), rready(), rid(), rdata(), rresp(), rlast(), ruser() {}
-  aximm_slave_port(const sc_module_name& name) : 
-                       awvalid(), awready(), awid(), awaddr(), awlen(), awsize(), awburst(), awuser(),
-                       wvalid(), wready(), wid(), wdata(), wlast(), wuser(),
-                       bvalid(), bready(), bid(), bresp(), buser(),
-                       arvalid(), arready(), arid(), araddr(), arlen(), arsize(), arburst(), aruser(),
-                       rvalid(), rready(), rid(), rdata(), rresp(), rlast(), ruser() { (void) name; }
+  aximm_slave_port()
+      : awvalid(), awready(), awid(), awaddr(), awlen(), awsize(), awburst(),
+        awuser(), wvalid(), wready(), wid(), wdata(), wlast(), wuser(),
+        bvalid(), bready(), bid(), bresp(), buser(), arvalid(), arready(),
+        arid(), araddr(), arlen(), arsize(), arburst(), aruser(), rvalid(),
+        rready(), rid(), rdata(), rresp(), rlast(), ruser() {}
+  aximm_slave_port(const sc_module_name &name)
+      : awvalid(), awready(), awid(), awaddr(), awlen(), awsize(), awburst(),
+        awuser(), wvalid(), wready(), wid(), wdata(), wlast(), wuser(),
+        bvalid(), bready(), bid(), bresp(), buser(), arvalid(), arready(),
+        arid(), araddr(), arlen(), arsize(), arburst(), aruser(), rvalid(),
+        rready(), rid(), rdata(), rresp(), rlast(), ruser() {
+    (void)name;
+  }
 
   // Helper function for reseting all output ports of an AXI-MM slave interface
-  void Reset() { 
+  void Reset() {
     awready.write(false);
     wready.write(false);
     bvalid.write(false);
@@ -201,7 +207,7 @@ struct aximm_slave_port {
   }
 
   // Helper function for connecting two AXI-MM slave ports in module hierarchy
-  void ConnectToPort(aximm_slave_port& p) {
+  void ConnectToPort(aximm_slave_port &p) {
     // Write address channel
     this->awvalid(p.awvalid);
     this->awready(p.awready);
@@ -286,12 +292,13 @@ struct aximm_signal {
   sc_signal<bool> rlast;
   sc_signal<sc_bv<AXI_USERW>> ruser;
 
-  aximm_signal() : awvalid(), awready(), awid(), awaddr(), awlen(), awsize(), awburst(), awuser(),
-                   wvalid(), wready(), wid(), wdata(), wlast(), wuser(),
-                   bvalid(), bready(), bid(), bresp(), buser(),
-                   arvalid(), arready(), arid(), araddr(), arlen(), arsize(), arburst(), aruser(),
-                   rvalid(), rready(), rid(), rdata(), rresp(), rlast(), ruser() {}
-  aximm_signal(const aximm_signal& sig) {
+  aximm_signal()
+      : awvalid(), awready(), awid(), awaddr(), awlen(), awsize(), awburst(),
+        awuser(), wvalid(), wready(), wid(), wdata(), wlast(), wuser(),
+        bvalid(), bready(), bid(), bresp(), buser(), arvalid(), arready(),
+        arid(), araddr(), arlen(), arsize(), arburst(), aruser(), rvalid(),
+        rready(), rid(), rdata(), rresp(), rlast(), ruser() {}
+  aximm_signal(const aximm_signal &sig) {
     // Write address channel
     awvalid = sig.awvalid;
     awready = sig.awready;
@@ -332,14 +339,18 @@ struct aximm_signal {
     rlast = sig.rlast;
     ruser = sig.ruser;
   }
-  aximm_signal(const sc_module_name& name) : awvalid(), awready(), awid(), awaddr(), awlen(), awsize(), awburst(), awuser(),
-                       wvalid(), wready(), wid(), wdata(), wlast(), wuser(),
-                       bvalid(), bready(), bid(), bresp(), buser(),
-                       arvalid(), arready(), arid(), araddr(), arlen(), arsize(), arburst(), aruser(),
-                       rvalid(), rready(), rid(), rdata(), rresp(), rlast(), ruser() { (void) name; }
+  aximm_signal(const sc_module_name &name)
+      : awvalid(), awready(), awid(), awaddr(), awlen(), awsize(), awburst(),
+        awuser(), wvalid(), wready(), wid(), wdata(), wlast(), wuser(),
+        bvalid(), bready(), bid(), bresp(), buser(), arvalid(), arready(),
+        arid(), araddr(), arlen(), arsize(), arburst(), aruser(), rvalid(),
+        rready(), rid(), rdata(), rresp(), rlast(), ruser() {
+    (void)name;
+  }
 
-  // Helper function for connecting the AXI-MM master and slave ports of two modules
-  void Connect(aximm_master_port& m, aximm_slave_port& s) {
+  // Helper function for connecting the AXI-MM master and slave ports of two
+  // modules
+  void Connect(aximm_master_port &m, aximm_slave_port &s) {
     // Connect signal to master port
     m.awvalid(awvalid);
     m.awready(awready);
@@ -447,115 +458,5 @@ struct aximm_signal {
     rresp.write(0);
     rlast.write(false);
     ruser.write(0);
-  }
-};
-
-struct aximm_msg {
-  sc_bv<AXI_MSGW> msg;
-  uint8_t msg_type;
-  unsigned int useful_msg_width;
-
-  aximm_msg() { msg = 0; msg_type = AXI_TYPE_AR; useful_msg_width = 0; }
-
-  // Read AR/AW/W Transaction from AXI-MM slave port
-  void ReadFromPort(uint8_t type, aximm_slave_port& port, unsigned int dataw) {
-    assert(type == AXI_TYPE_AR || type == AXI_TYPE_AW || type == AXI_TYPE_W);
-    if (type == AXI_TYPE_AR) {
-      int offset = 0;
-      msg.range(offset + AXI_BURSTW - 1, offset) = port.arburst.read(); offset += AXI_BURSTW;
-      msg.range( offset + AXI_SIZEW - 1, offset) = port.arsize.read(); offset += AXI_SIZEW;
-      msg.range(  offset + AXI_LENW - 1, offset) = port.arlen.read(); offset += AXI_LENW;
-      msg.range( offset + AXI_ADDRW - 1, offset) = port.araddr.read(); offset += AXI_ADDRW;
-      msg.range( offset + AXI_USERW - 1, offset) = port.aruser.read(); offset += AXI_USERW;
-      msg.range(   offset + AXI_IDW - 1, offset) = port.arid.read();
-      msg_type = type;
-      useful_msg_width = AXI_BURSTW + AXI_SIZEW + AXI_LENW + AXI_ADDRW + AXI_USERW + AXI_IDW;
-    } else if (type == AXI_TYPE_AW) {
-      int offset = 0;
-      msg.range(offset + AXI_BURSTW - 1, offset) = port.awburst.read(); offset += AXI_BURSTW;
-      msg.range( offset + AXI_SIZEW - 1, offset) = port.awsize.read(); offset += AXI_SIZEW;
-      msg.range(  offset + AXI_LENW - 1, offset) = port.awlen.read(); offset += AXI_LENW;
-      msg.range( offset + AXI_ADDRW - 1, offset) = port.awaddr.read(); offset += AXI_ADDRW;
-      msg.range( offset + AXI_USERW - 1, offset) = port.awuser.read(); offset += AXI_USERW;
-      msg.range(   offset + AXI_IDW - 1, offset) = port.awid.read();
-      msg_type = type;
-      useful_msg_width = AXI_BURSTW + AXI_SIZEW + AXI_LENW + AXI_ADDRW + AXI_USERW + AXI_IDW;
-    } else {
-      int offset = 0;
-      msg.range(                 offset, offset) = port.wlast.read(); offset += 1;
-      msg.range(     offset + dataw - 1, offset) = port.wdata.read(); offset += dataw;
-      msg.range( offset + AXI_USERW - 1, offset) = port.wuser.read(); offset += AXI_USERW;
-      msg.range(   offset + AXI_IDW - 1, offset) = port.wid.read();
-      msg_type = type;
-      useful_msg_width = 1 + dataw + AXI_USERW + AXI_IDW;
-    }
-  }
-
-  // Read R/B Transaction from AXI-MM master port
-  void ReadFromPort(uint8_t type, aximm_master_port& port, unsigned int dataw) {
-    assert(type == AXI_TYPE_R || type == AXI_TYPE_B);
-    if (type == AXI_TYPE_R) {
-      int offset = 0;
-      msg.range( offset + AXI_RESPW - 1, offset) = port.rresp.read(); offset += AXI_RESPW;
-      msg.range(                 offset, offset) = port.rlast.read(); offset += 1;
-      msg.range(     offset + dataw - 1, offset) = port.rdata.read(); offset += dataw;
-      msg.range( offset + AXI_USERW - 1, offset) = port.ruser.read(); offset += AXI_USERW;
-      msg.range(   offset + AXI_IDW - 1, offset) = port.rid.read();
-      msg_type = type;
-      useful_msg_width = AXI_RESPW + 1 + dataw + AXI_USERW + AXI_IDW;
-    } else {
-      int offset = 0;
-      msg.range( offset + AXI_RESPW - 1, offset) = port.bresp.read(); offset += AXI_RESPW;
-      msg.range( offset + AXI_USERW - 1, offset) = port.buser.read(); offset += AXI_USERW;
-      msg.range(   offset + AXI_IDW - 1, offset) = port.bid.read();
-      msg_type = type;
-      useful_msg_width = AXI_RESPW + AXI_USERW + AXI_IDW;
-    }
-  }
-
-  // Write message to R/B AXI-MM slave port
-  void WriteToPort(uint8_t type, aximm_slave_port& port, unsigned int dataw) {
-    assert(type == AXI_TYPE_R || type == AXI_TYPE_B);
-    if (type == AXI_TYPE_R) {
-      int offset = 0;
-      port.rresp.write(msg.range(offset + AXI_RESPW - 1, offset)); offset += AXI_RESPW;
-      port.rlast.write(msg.range(offset, offset).to_uint()); offset += 1;
-      port.rdata.write(msg.range(offset + dataw - 1, offset)); offset += dataw;
-      port.ruser.write(msg.range(offset + AXI_USERW - 1, offset)); offset += AXI_USERW;
-      port.rid.write(msg.range(offset + AXI_IDW - 1, offset));
-    } else {
-      int offset = 0;
-      port.bresp.write(msg.range(offset + AXI_RESPW - 1, offset)); offset += AXI_RESPW;
-      port.buser.write(msg.range(offset + AXI_USERW - 1, offset)); offset += AXI_USERW;
-      port.bid.write(msg.range(offset + AXI_IDW - 1, offset));
-    }
-  }
-
-  // Write message to AR/AW/W AXI-MM master port
-  void WriteToPort(uint8_t type, aximm_master_port& port, unsigned int dataw) {
-    assert(type == AXI_TYPE_AR || type == AXI_TYPE_AW || type == AXI_TYPE_W);
-    if (type == AXI_TYPE_AR) {
-      int offset = 0;
-      port.arburst.write(msg.range(offset + AXI_BURSTW - 1, offset)); offset += AXI_BURSTW;
-      port.arsize.write(msg.range(offset + AXI_SIZEW - 1, offset)); offset += AXI_SIZEW;
-      port.arlen.write(msg.range(offset + AXI_LENW - 1, offset)); offset += AXI_LENW;
-      port.araddr.write(msg.range(offset + AXI_ADDRW - 1, offset)); offset += AXI_ADDRW;
-      port.aruser.write(msg.range(offset + AXI_USERW - 1, offset)); offset += AXI_USERW;
-      port.arid.write(msg.range(offset + AXI_IDW - 1, offset));
-    } else if (type == AXI_TYPE_AW) {
-      int offset = 0;
-      port.awburst.write(msg.range(offset + AXI_BURSTW - 1, offset)); offset += AXI_BURSTW;
-      port.awsize.write(msg.range( offset + AXI_SIZEW - 1, offset)); offset += AXI_SIZEW;
-      port.awlen.write(msg.range(  offset + AXI_LENW - 1, offset)); offset += AXI_LENW;
-      port.awaddr.write(msg.range( offset + AXI_ADDRW - 1, offset)); offset += AXI_ADDRW;
-      port.awuser.write(msg.range( offset + AXI_USERW - 1, offset)); offset += AXI_USERW;
-      port.awid.write(msg.range(   offset + AXI_IDW - 1, offset));
-    } else {
-      int offset = 0;
-      port.wlast.write(msg.range(offset, offset).to_uint()); offset += 1;
-      port.wdata.write(msg.range(offset + dataw - 1, offset)); offset += dataw;
-      port.wuser.write(msg.range(offset + AXI_USERW - 1, offset)); offset += AXI_USERW;
-      port.wid.write(msg.range(offset + AXI_IDW - 1, offset));
-    }
   }
 };

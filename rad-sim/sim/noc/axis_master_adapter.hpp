@@ -39,7 +39,6 @@ class axis_master_adapter : public sc_module {
   sc_vector<sc_signal<int>> _ejection_afifo_pop_counter;
   std::queue<unsigned int> _ejection_afifo_priority;
   sc_signal<bool> _ejection_afifo_is_depacketizing;
-  sc_signal<int> _insert_credit_vc;
 
   std::vector<std::queue<sc_packet>> _output_afifos;
   unsigned int _output_afifo_depth;

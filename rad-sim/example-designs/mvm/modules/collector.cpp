@@ -1,11 +1,8 @@
 #include "collector.hpp"
 
-collector::collector(const sc_module_name& name) : 
-  radsim_module(name),
-  rst("rst"),
-  data_fifo_rdy("data_fifo_rdy"),
-  data_fifo_ren("data_fifo_ren"),
-  data_fifo_rdata("data_fifo_rdata") {
+collector::collector(const sc_module_name &name)
+    : radsim_module(name), rst("rst"), data_fifo_rdy("data_fifo_rdy"),
+      data_fifo_ren("data_fifo_ren"), data_fifo_rdata("data_fifo_rdata") {
 
   module_name = name;
 
@@ -13,7 +10,8 @@ collector::collector(const sc_module_name& name) :
   std::string fifo_name_str;
   fifo_name_str = "collector_data_fifo";
   std::strcpy(fifo_name, fifo_name_str.c_str());
-  data_fifo = new fifo<sc_int<32>>(fifo_name, FIFO_SIZE, LANES, FIFO_SIZE-1, 0);
+  data_fifo =
+      new fifo<sc_int<32>>(fifo_name, FIFO_SIZE, LANES, FIFO_SIZE - 1, 0);
   data_fifo->clk(clk);
   data_fifo->rst(rst);
   data_fifo->wen(data_fifo_wen_signal);
@@ -26,15 +24,13 @@ collector::collector(const sc_module_name& name) :
   data_fifo->rdata(data_fifo_rdata);
 
   SC_METHOD(Assign);
-  sensitive << rst << data_fifo_empty_signal << data_fifo_almost_full_signal 
-    << rx_interface.tvalid << rx_interface.tdata << rx_interface.tready;
+  sensitive << rst << data_fifo_empty_signal << data_fifo_almost_full_signal
+            << rx_interface.tvalid << rx_interface.tdata << rx_interface.tready;
 
   this->RegisterModuleInfo();
 }
 
-collector::~collector() { 
-  delete data_fifo;
-}
+collector::~collector() { delete data_fifo; }
 
 void collector::Assign() {
   if (rst.read()) {
@@ -42,14 +38,16 @@ void collector::Assign() {
     data_fifo_rdy.write(false);
   } else {
     rx_interface.tready.write(!data_fifo_almost_full_signal);
-    data_fifo_wen_signal.write(rx_interface.tvalid.read() && rx_interface.tready.read());
+    data_fifo_wen_signal.write(rx_interface.tvalid.read() &&
+                               rx_interface.tready.read());
     data_fifo_rdy.write(!data_fifo_empty_signal);
 
     data_vector<sc_int<32>> tx_tdata(LANES);
     sc_bv<AXIS_MAX_DATAW> tx_tdata_bv = rx_interface.tdata.read();
     if (rx_interface.tvalid.read() && rx_interface.tready.read()) {
       for (unsigned int lane_id = 0; lane_id < LANES; lane_id++) {
-        tx_tdata[lane_id] = tx_tdata_bv.range((lane_id + 1) * 32 - 1, lane_id * 32).to_int();
+        tx_tdata[lane_id] =
+            tx_tdata_bv.range((lane_id + 1) * 32 - 1, lane_id * 32).to_int();
       }
       data_fifo_wdata_signal.write(tx_tdata);
     }
@@ -58,9 +56,9 @@ void collector::Assign() {
 
 void collector::RegisterModuleInfo() {
   std::string port_name;
-  _num_noc_slave_ports = 0;
-  _num_noc_master_ports = 0;
+  _num_noc_axis_slave_ports = 0;
+  _num_noc_axis_master_ports = 0;
 
   port_name = module_name + ".data_collect";
-  RegisterSlavePort(port_name, &rx_interface, 512, 0);
+  RegisterAxisSlavePort(port_name, &rx_interface, 512, 0);
 }

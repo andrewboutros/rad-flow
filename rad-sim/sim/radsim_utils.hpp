@@ -1,10 +1,11 @@
 #pragma once
 
-#include <systemc.h>
 #include <radsim_config.hpp>
+#include <systemc.h>
 
 struct AdapterInfo {
   bool _is_master = false;
+  bool _is_aximm = false;
   unsigned int _noc_id = 0;
   unsigned int _node_id = 0;
   unsigned int _adapter_clk_idx = 0;
@@ -20,8 +21,9 @@ int GetSimulationCycle(double period);
 int GetSimulationCycle();
 
 // Returns the current simulation cycle number given the NoC clock period
-//int GetSimTime();
+// int GetSimTime();
 
-// Calculates the number of hops between source and destination nodes in a 2D grid of certain dimension in case of
-// minimal XY routing
-int CalculateXYGridHops(unsigned int src, unsigned int dest, unsigned int grid_dimension);
+// Calculates the number of hops between source and destination nodes in a 2D
+// grid of certain dimension in case of minimal XY routing
+int CalculateXYGridHops(unsigned int src, unsigned int dest,
+                        unsigned int grid_dimension);

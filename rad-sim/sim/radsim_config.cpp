@@ -4,148 +4,163 @@ RADSimConfig::RADSimConfig() {}
 RADSimConfig::~RADSimConfig() {}
 
 // Adds a new integer configuration knob
-void RADSimConfig::AddIntKnob(const std::string& key, int val) { 
-  _int_knobs[key] = val; 
+void RADSimConfig::AddIntKnob(const std::string &key, int val) {
+  _int_knobs[key] = val;
 }
 
 // Adds a new double configuration knob
-void RADSimConfig::AddDoubleKnob(const std::string& key, double val) { 
-  _double_knobs[key] = val; 
+void RADSimConfig::AddDoubleKnob(const std::string &key, double val) {
+  _double_knobs[key] = val;
 }
 
 // Adds a new string configuration knob
-void RADSimConfig::AddStringKnob(const std::string& key, std::string& val) { 
-  _string_knobs[key] = val; 
+void RADSimConfig::AddStringKnob(const std::string &key, std::string &val) {
+  _string_knobs[key] = val;
 }
 
 // Adds a new integer vector configuration knob
-void RADSimConfig::AddIntVectorKnob(const std::string& key, std::vector<int>& val) { 
-  _int_vector_knobs[key] = val; 
+void RADSimConfig::AddIntVectorKnob(const std::string &key,
+                                    std::vector<int> &val) {
+  _int_vector_knobs[key] = val;
 }
 
 // Adds a new double vector configuration knob
-void RADSimConfig::AddDoubleVectorKnob(const std::string& key, std::vector<double>& val) { 
-  _double_vector_knobs[key] = val; 
+void RADSimConfig::AddDoubleVectorKnob(const std::string &key,
+                                       std::vector<double> &val) {
+  _double_vector_knobs[key] = val;
 }
 
 // Adds a new string vector configuration knob
-void RADSimConfig::AddStringVectorKnob(const std::string& key, std::vector<std::string>& val) { 
-  _string_vector_knobs[key] = val; 
+void RADSimConfig::AddStringVectorKnob(const std::string &key,
+                                       std::vector<std::string> &val) {
+  _string_vector_knobs[key] = val;
 }
 
 // Gets the value of an integer configuration knob
-int RADSimConfig::GetIntKnob(const std::string& key) {
+int RADSimConfig::GetIntKnob(const std::string &key) {
   if (_int_knobs.find(key) == _int_knobs.end()) {
-    std::cerr << "Cannot find configuration parameter \"" << key << "\"" << std::endl;
+    std::cerr << "GetIntKnob: Cannot find configuration parameter \"" << key
+              << "\"" << std::endl;
     exit(1);
   }
   return _int_knobs[key];
 }
 
 // Gets the value of a double configuration knob
-double RADSimConfig::GetDoubleKnob(const std::string& key) {
+double RADSimConfig::GetDoubleKnob(const std::string &key) {
   if (_double_knobs.find(key) == _double_knobs.end()) {
-    std::cerr << "Cannot find configuration parameter \"" << key << "\"" << std::endl;
+    std::cerr << "GetDoubleKnob: Cannot find configuration parameter \"" << key
+              << "\"" << std::endl;
     exit(1);
   }
   return _double_knobs[key];
 }
 
 // Gets the value of a string configuration knob
-std::string RADSimConfig::GetStringKnob(const std::string& key) {
+std::string RADSimConfig::GetStringKnob(const std::string &key) {
   if (_string_knobs.find(key) == _string_knobs.end()) {
-    std::cerr << "Cannot find configuration parameter \"" << key << "\"" << std::endl;
+    std::cerr << "GetStringKnob: Cannot find configuration parameter \"" << key
+              << "\"" << std::endl;
     exit(1);
   }
   return _string_knobs[key];
 }
 
 // Gets the value of an integer vector configuration knob
-int RADSimConfig::GetIntVectorKnob(const std::string& key, unsigned int idx) {
+int RADSimConfig::GetIntVectorKnob(const std::string &key, unsigned int idx) {
   if (_int_vector_knobs.find(key) == _int_vector_knobs.end()) {
-    std::cerr << "Cannot find configuration parameter \"" << key << "\"" << std::endl;
+    std::cerr << "GetIntVectorKnob: Cannot find configuration parameter \""
+              << key << "\"" << std::endl;
     exit(1);
   }
   return _int_vector_knobs[key][idx];
 }
 
 // Gets the value of a double vector configuration knob
-double RADSimConfig::GetDoubleVectorKnob(const std::string& key, unsigned int idx) {
+double RADSimConfig::GetDoubleVectorKnob(const std::string &key,
+                                         unsigned int idx) {
   if (_double_vector_knobs.find(key) == _double_vector_knobs.end()) {
-    std::cerr << "Cannot find configuration parameter \"" << key << "\"" << std::endl;
+    std::cerr << "GetDoubleVectorKnob: Cannot find configuration parameter \""
+              << key << "\"" << std::endl;
     exit(1);
   }
   return _double_vector_knobs[key][idx];
 }
 
 // Gets the value of a string vector configuration knob
-std::string RADSimConfig::GetStringVectorKnob(const std::string& key, unsigned int idx) {
+std::string RADSimConfig::GetStringVectorKnob(const std::string &key,
+                                              unsigned int idx) {
   if (_string_vector_knobs.find(key) == _string_vector_knobs.end()) {
-    std::cerr << "Cannot find configuration parameter \"" << key << "\"" << std::endl;
+    std::cerr << "GetStringVectorKnob: Cannot find configuration parameter \""
+              << key << "\"" << std::endl;
     exit(1);
   }
   return _string_vector_knobs[key][idx];
 }
 
 // Gets the value of an integer vector configuration knob
-std::vector<int>& RADSimConfig::GetIntVectorKnob(const std::string& key) {
+std::vector<int> &RADSimConfig::GetIntVectorKnob(const std::string &key) {
   if (_int_vector_knobs.find(key) == _int_vector_knobs.end()) {
-    std::cerr << "Cannot find configuration parameter \"" << key << "\"" << std::endl;
+    std::cerr << "GetIntVectorKnob: Cannot find configuration parameter \""
+              << key << "\"" << std::endl;
     exit(1);
   }
   return _int_vector_knobs[key];
 }
 
 // Gets the value of a double vector configuration knob
-std::vector<double>& RADSimConfig::GetDoubleVectorKnob(const std::string& key) {
+std::vector<double> &RADSimConfig::GetDoubleVectorKnob(const std::string &key) {
   if (_double_vector_knobs.find(key) == _double_vector_knobs.end()) {
-    std::cerr << "Cannot find configuration parameter \"" << key << "\"" << std::endl;
+    std::cerr << "GetDoubleVectorKnob: Cannot find configuration parameter \""
+              << key << "\"" << std::endl;
     exit(1);
   }
   return _double_vector_knobs[key];
 }
 
 // Gets the value of a string vector configuration knob
-std::vector<std::string>& RADSimConfig::GetStringVectorKnob(const std::string& key) {
+std::vector<std::string> &
+RADSimConfig::GetStringVectorKnob(const std::string &key) {
   if (_string_vector_knobs.find(key) == _string_vector_knobs.end()) {
-    std::cerr << "Cannot find configuration parameter \"" << key << "\"" << std::endl;
+    std::cerr << "GetStringVectorKnob: Cannot find configuration parameter \""
+              << key << "\"" << std::endl;
     exit(1);
   }
   return _string_vector_knobs[key];
 }
 
 // Check if an integer configuration knob is defined
-bool RADSimConfig::HasIntKnob(const std::string& key) { 
-  return (_int_knobs.find(key) != _int_knobs.end()); 
+bool RADSimConfig::HasIntKnob(const std::string &key) {
+  return (_int_knobs.find(key) != _int_knobs.end());
 }
 
 // Check if a double configuration knob is defined
-bool RADSimConfig::HasDoubleKnob(const std::string& key) { 
-  return (_double_knobs.find(key) != _double_knobs.end()); 
+bool RADSimConfig::HasDoubleKnob(const std::string &key) {
+  return (_double_knobs.find(key) != _double_knobs.end());
 }
 
 // Check if a string configuration knob is defined
-bool RADSimConfig::HasStringKnob(const std::string& key) { 
-  return (_string_knobs.find(key) != _string_knobs.end()); 
+bool RADSimConfig::HasStringKnob(const std::string &key) {
+  return (_string_knobs.find(key) != _string_knobs.end());
 }
 
 // Check if an integer vector configuration knob is defined
-bool RADSimConfig::HasIntVectorKnob(const std::string& key) { 
-  return (_int_vector_knobs.find(key) != _int_vector_knobs.end()); 
+bool RADSimConfig::HasIntVectorKnob(const std::string &key) {
+  return (_int_vector_knobs.find(key) != _int_vector_knobs.end());
 }
 
 // Check if a double vector configuration knob is defined
-bool RADSimConfig::HasDoubleVectorKnob(const std::string& key) { 
-  return (_double_vector_knobs.find(key) != _double_vector_knobs.end()); 
+bool RADSimConfig::HasDoubleVectorKnob(const std::string &key) {
+  return (_double_vector_knobs.find(key) != _double_vector_knobs.end());
 }
 
 // Check if a string vector configuration knob is defined
-bool RADSimConfig::HasStringVectorKnob(const std::string& key) { 
-  return (_string_vector_knobs.find(key) != _string_vector_knobs.end()); 
+bool RADSimConfig::HasStringVectorKnob(const std::string &key) {
+  return (_string_vector_knobs.find(key) != _string_vector_knobs.end());
 }
 
 // Parse RADSim knobs from file into RADSimConfig data structures
-void ParseRADSimKnobs(const std::string& knobs_filename) {
+void ParseRADSimKnobs(const std::string &knobs_filename) {
   std::ifstream knobs_file(knobs_filename);
   std::string line;
 
@@ -159,24 +174,21 @@ void ParseRADSimKnobs(const std::string& knobs_filename) {
     std::string param;
     std::getline(ss, param, ' ');
 
-    // Based on parameter name, parse a single or a vector of values of int, double or string data types
+    // Based on parameter name, parse a single or a vector of values of int,
+    // double or string data types
     if ((param == "radsim_root_dir") ||
-        (param == "radsim_user_design_root_dir")){
+        (param == "radsim_user_design_root_dir")) {
       std::string value;
       std::getline(ss, value, ' ');
       radsim_config.AddStringKnob(param, value);
-    } else if ((param == "num_nocs") ||
-               (param == "log_verbosity") ||
-               (param == "num_traces") ||
-               (param == "num_trace_modules")) {
+    } else if ((param == "num_nocs") || (param == "log_verbosity") ||
+               (param == "num_traces") || (param == "num_trace_modules")) {
       std::string value_str;
       std::getline(ss, value_str, ' ');
       int value = std::stoi(value_str);
       radsim_config.AddIntKnob(param, value);
-    } else if ((param == "noc_payload_width") ||
-               (param == "noc_vcs") ||
-               (param == "noc_num_nodes") ||
-               (param == "adapter_fifo_size") ||
+    } else if ((param == "noc_payload_width") || (param == "noc_vcs") ||
+               (param == "noc_num_nodes") || (param == "adapter_fifo_size") ||
                (param == "adapter_obuff_size")) {
       std::vector<int> value;
       std::string value_element_str;
@@ -194,8 +206,7 @@ void ParseRADSimKnobs(const std::string& knobs_filename) {
         max_period = value;
       }
       radsim_config.AddDoubleKnob(param, value);
-    } else if ((param == "noc_period") ||
-               (param == "adapter_period") ||
+    } else if ((param == "noc_period") || (param == "adapter_period") ||
                (param == "module_period")) {
       std::vector<double> value;
       std::string value_element_str;
@@ -208,11 +219,12 @@ void ParseRADSimKnobs(const std::string& knobs_filename) {
         value.push_back(value_element);
       }
       radsim_config.AddDoubleVectorKnob(param, value);
+      if (param == "noc_period")
+        std::cout << "Added!" << std::endl;
     } else if ((param == "noc_placement_file") ||
                (param == "adapter_in_arbiter") ||
                (param == "adapter_out_arbiter") ||
-               (param == "adapter_vc_mapping") ||
-               (param == "trace_names")) {
+               (param == "adapter_vc_mapping") || (param == "trace_names")) {
       std::vector<std::string> value;
       std::string value_element;
       while (getline(ss, value_element, ' ')) {

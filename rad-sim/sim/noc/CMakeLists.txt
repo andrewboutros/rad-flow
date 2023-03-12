@@ -20,17 +20,21 @@ include_directories(
 set(srcfiles
   axis_master_adapter.cpp
   axis_slave_adapter.cpp
-  noc_axis.cpp
+  aximm_master_adapter.cpp
+  aximm_slave_adapter.cpp
+  radsim_noc.cpp
   noc_utils.cpp
   sc_flit.cpp
 )
 
 set(hdrfiles
   aximm_interface.hpp
+  aximm_master_adapter.hpp
+  aximm_slave_adapter.hpp
   axis_interface.hpp
   axis_master_adapter.hpp
   axis_slave_adapter.hpp
-  noc_axis.hpp
+  radsim_noc.hpp
   noc_utils.hpp
   sc_flit.hpp
 )

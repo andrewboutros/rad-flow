@@ -1,8 +1,8 @@
 #pragma once
 
-#include <systemc.h>
 #include <radsim_defines.hpp>
 #include <radsim_utils.hpp>
+#include <systemc.h>
 
 // Encapsulation of all AXI-stream master interface ports in a single struct
 struct axis_master_port {
@@ -16,12 +16,17 @@ struct axis_master_port {
   sc_out<sc_bv<AXIS_DESTW>> tdest;
   sc_out<sc_bv<AXIS_USERW>> tuser;
 
-  axis_master_port() : tvalid(), tready(), tdata(), tstrb(), 
-                       tkeep(), tlast(), tid(), tdest(), tuser() {}
-  axis_master_port(const sc_module_name& name) : tvalid(), tready(), tdata(), tstrb(), 
-                       tkeep(), tlast(), tid(), tdest(), tuser() { (void) name; }
+  axis_master_port()
+      : tvalid(), tready(), tdata(), tstrb(), tkeep(), tlast(), tid(), tdest(),
+        tuser() {}
+  axis_master_port(const sc_module_name &name)
+      : tvalid(), tready(), tdata(), tstrb(), tkeep(), tlast(), tid(), tdest(),
+        tuser() {
+    (void)name;
+  }
 
-  // Helper function for reseting all output ports of an AXI-stream master interface
+  // Helper function for reseting all output ports of an AXI-stream master
+  // interface
   void Reset() {
     tvalid.write(false);
     tdata.write(0);
@@ -33,8 +38,9 @@ struct axis_master_port {
     tuser.write(0);
   }
 
-  // Helper function for connecting two AXI-stream master ports in module hierarchy
-  void ConnectToPort(axis_master_port& p) {
+  // Helper function for connecting two AXI-stream master ports in module
+  // hierarchy
+  void ConnectToPort(axis_master_port &p) {
     this->tvalid(p.tvalid);
     this->tready(p.tready);
     this->tdata(p.tdata);
@@ -59,16 +65,22 @@ struct axis_slave_port {
   sc_in<sc_bv<AXIS_DESTW>> tdest;
   sc_in<sc_bv<AXIS_USERW>> tuser;
 
-  axis_slave_port() : tvalid(), tready(), tdata(), tstrb(), 
-                       tkeep(), tlast(), tid(), tdest(), tuser() {}
-  axis_slave_port(const sc_module_name& name) : tvalid(), tready(), tdata(), tstrb(), 
-                       tkeep(), tlast(), tid(), tdest(), tuser() { (void) name;}
+  axis_slave_port()
+      : tvalid(), tready(), tdata(), tstrb(), tkeep(), tlast(), tid(), tdest(),
+        tuser() {}
+  axis_slave_port(const sc_module_name &name)
+      : tvalid(), tready(), tdata(), tstrb(), tkeep(), tlast(), tid(), tdest(),
+        tuser() {
+    (void)name;
+  }
 
-  // Helper function for reseting all output ports of an AXI-stream slave interface
+  // Helper function for reseting all output ports of an AXI-stream slave
+  // interface
   void Reset() { tready.write(true); }
 
-  // Helper function for connecting two AXI-stream slave ports in module hierarchy
-  void ConnectToPort(axis_slave_port& p) {
+  // Helper function for connecting two AXI-stream slave ports in module
+  // hierarchy
+  void ConnectToPort(axis_slave_port &p) {
     this->tvalid(p.tvalid);
     this->tready(p.tready);
     this->tdata(p.tdata);
@@ -93,9 +105,10 @@ struct axis_signal {
   sc_signal<sc_bv<AXIS_DESTW>> tdest;
   sc_signal<sc_bv<AXIS_USERW>> tuser;
 
-  axis_signal() : tvalid(), tready(), tdata(), tstrb(), 
-                  tkeep(), tlast(), tid(), tdest(), tuser() {}
-  axis_signal(const axis_signal& sig) {
+  axis_signal()
+      : tvalid(), tready(), tdata(), tstrb(), tkeep(), tlast(), tid(), tdest(),
+        tuser() {}
+  axis_signal(const axis_signal &sig) {
     tvalid = sig.tvalid;
     tready = sig.tready;
     tdata = sig.tdata;
@@ -106,11 +119,15 @@ struct axis_signal {
     tdest = sig.tdest;
     tuser = sig.tuser;
   }
-  axis_signal(const sc_module_name& name) : tvalid(), tready(), tdata(), tstrb(), 
-                  tkeep(), tlast(), tid(), tdest(), tuser() { (void) name; }
+  axis_signal(const sc_module_name &name)
+      : tvalid(), tready(), tdata(), tstrb(), tkeep(), tlast(), tid(), tdest(),
+        tuser() {
+    (void)name;
+  }
 
-  // Helper function for connecting the AXI-stream master and slave ports of two modules
-  void Connect(axis_master_port& m, axis_slave_port& s) {
+  // Helper function for connecting the AXI-stream master and slave ports of two
+  // modules
+  void Connect(axis_master_port &m, axis_slave_port &s) {
     // Connect signal to master port
     m.tvalid(tvalid);
     m.tready(tready);
