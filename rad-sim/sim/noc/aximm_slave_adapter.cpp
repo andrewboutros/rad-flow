@@ -27,7 +27,8 @@ aximm_slave_adapter::aximm_slave_adapter(
   _ejected_flits = ejected_flits;
 
   // Initialize request interface (AR, AW, W) member variables
-  _injection_afifo_depth = radsim_config.GetIntKnob("noc_adapter_fifo_depth");
+  _injection_afifo_depth =
+      radsim_config.GetIntVectorKnob("adapter_fifo_size", _network_id);
 
   _axi_transaction_width = AXI_USERW;
   if ((AXI_ADDRW + AXI_CTRLW) > (_interface_dataw + AXI_RESPW + 1)) {
@@ -59,7 +60,8 @@ aximm_slave_adapter::aximm_slave_adapter(
 
   // Initialize response interface (B, R) member variables
   _ejected_booksim_flit = nullptr;
-  _ejection_afifo_depth = radsim_config.GetIntKnob("noc_adapter_fifo_depth");
+  _ejection_afifo_depth =
+      radsim_config.GetIntVectorKnob("adapter_fifo_size", _network_id);
   _ejection_afifos.resize(AXI_NUM_RSP_TYPES);
   _ejection_afifo_push_counter.init(AXI_NUM_RSP_TYPES);
   _ejection_afifo_pop_counter.init(AXI_NUM_RSP_TYPES);
@@ -166,7 +168,8 @@ void aximm_slave_adapter::InputInterface() {
       tmp_ctrl.range(offset + AXI_SIZEW - 1, offset) =
           aximm_interface.arsize.read();
       offset += AXI_SIZEW;
-      tmp_ctrl.range(offset + AXI_LENW, offset) = aximm_interface.arlen.read();
+      tmp_ctrl.range(offset + AXI_LENW - 1, offset) =
+          aximm_interface.arlen.read();
       _i_ctrl.write(tmp_ctrl);
       _i_user.write(aximm_interface.aruser.read());
       _i_valid.write(aximm_interface.arvalid.read());
@@ -182,6 +185,9 @@ void aximm_slave_adapter::InputInterface() {
       int unique_sim_id = NoCTransactionTelemetry::RecordTransactionInitiation(
           _node_id, noc_dest, AXI_TYPE_AR, _interface_dataw, _network_id);
       _i_unique_sim_id.write(unique_sim_id);
+      std::cout << this->name() << ": Registered AR transaction (user = "
+                << aximm_interface.aruser.read().to_uint64() << ")!"
+                << std::endl;
     } else if (aximm_interface.awready.read() &&
                aximm_interface.awvalid.read()) {
       // Capture the values at the AXI AW port
@@ -194,7 +200,8 @@ void aximm_slave_adapter::InputInterface() {
       tmp_ctrl.range(offset + AXI_SIZEW - 1, offset) =
           aximm_interface.awsize.read();
       offset += AXI_SIZEW;
-      tmp_ctrl.range(offset + AXI_LENW, offset) = aximm_interface.awlen.read();
+      tmp_ctrl.range(offset + AXI_LENW - 1, offset) =
+          aximm_interface.awlen.read();
       _i_ctrl.write(tmp_ctrl);
       _i_user.write(aximm_interface.awuser.read());
       _i_valid.write(aximm_interface.awvalid.read());
@@ -211,12 +218,15 @@ void aximm_slave_adapter::InputInterface() {
       int unique_sim_id = NoCTransactionTelemetry::RecordTransactionInitiation(
           _node_id, noc_dest, AXI_TYPE_AW, _interface_dataw, _network_id);
       _i_unique_sim_id.write(unique_sim_id);
+      std::cout << this->name() << ": Registered AW transaction (user = "
+                << aximm_interface.awuser.read().to_uint64() << ")!"
+                << std::endl;
     } else if (aximm_interface.wready.read() && aximm_interface.wvalid.read() &&
                _got_aw.read()) {
       // Capture the values at the AXI W port
       _i_id.write(aximm_interface.wid.read());
       _i_payload.write(aximm_interface.wdata.read());
-      tmp_ctrl.range(AXI_CTRLW, 1) = 0;
+      tmp_ctrl.range(AXI_CTRLW - 1, 1) = 0;
       tmp_ctrl.range(0, 0) = aximm_interface.wlast.read();
       _i_ctrl.write(tmp_ctrl);
       _i_user.write(aximm_interface.wuser.read());
@@ -234,6 +244,9 @@ void aximm_slave_adapter::InputInterface() {
           _node_id, (int)_last_awdest.read().to_uint(), AXI_TYPE_W,
           _interface_dataw, _network_id);
       _i_unique_sim_id.write(unique_sim_id);
+      std::cout << this->name() << ": Registered W transaction (user = "
+                << aximm_interface.wuser.read().to_uint64() << ")!"
+                << std::endl;
     } else {
       _i_valid.write(false);
     }
@@ -270,6 +283,7 @@ void aximm_slave_adapter::InputPacketization() {
       // state, then remains idle during the remaining states (analogous to an
       // assymmetric FIFO with input size of N flits & output size of 1 flit)
       if (_packetization_cycle.read() == 0) {
+        std::cout << this->name() << ": Packetized transaction!" << std::endl;
         sc_bv<AXI_TRANSACTION_MAX_WIDTH> packet_bv;
         unsigned int num_flits = 0;
         if ((_i_type.read() == AXI_TYPE_AR) ||
@@ -321,15 +335,25 @@ void aximm_slave_adapter::InputPacketization() {
         }
         _num_packetization_flits.write(num_flits);
         _packetization_cycle.write(_packetization_cycle.read() + 1);
-      } else if (_packetization_cycle.read() ==
-                 _num_packetization_flits.read() - 1) {
+      }
+    }
+
+    if (_packetization_cycle.read() > 0) {
+      uint8_t limit;
+      if (_num_packetization_flits.read() >= _freq_ratio) {
+        limit = _num_packetization_flits.read() - 1;
+      } else {
+        limit = _freq_ratio - 1;
+      }
+      if (_packetization_cycle.read() == limit) {
         NoCTransactionTelemetry::RecordTransactionTailPacketization(
             _i_unique_sim_id.read());
         _packetization_cycle.write(0);
-      } else if (_packetization_cycle.read() > 0) {
+      } else {
         _packetization_cycle.write(_packetization_cycle.read() + 1);
       }
     }
+
     // Asynchronous injection FIFO is considered full if it cannot hold the
     // maximum number of flits per transaction
     _injection_afifo_full.write(
@@ -407,6 +431,9 @@ void aximm_slave_adapter::InputInjection() {
         if (booksim_flit->head)
           NoCTransactionTelemetry::RecordTransactionHeadInjection(
               booksim_flit->id);
+        std::cout << this->name() << ": Injected flit to VC "
+                  << (int)(_to_be_injected_flit._vc_id.to_uint()) << "!"
+                  << std::endl;
       }
     }
 
@@ -607,7 +634,7 @@ void aximm_slave_adapter::OutputInterface() {
                                    (int)(i + 1) * NOC_LINKS_PAYLOAD_WIDTH);
         sc_bv<NOC_LINKS_PAYLOAD_WIDTH> flit_payload =
             *(_output_packet.GetFlit(i)->_payload);
-        temp_bv.range(start_idx, end_idx) = flit_payload;
+        temp_bv.range(end_idx - 1, start_idx) = flit_payload;
       }
 
       aximm_interface.bid.write(temp_flit->_packet_id);
@@ -633,7 +660,7 @@ void aximm_slave_adapter::OutputInterface() {
                                    (int)(i + 1) * NOC_LINKS_PAYLOAD_WIDTH);
         sc_bv<NOC_LINKS_PAYLOAD_WIDTH> flit_payload =
             *(_output_packet.GetFlit(i)->_payload);
-        temp_bv.range(start_idx, end_idx) = flit_payload;
+        temp_bv.range(end_idx - 1, start_idx) = flit_payload;
       }
 
       aximm_interface.bvalid.write(false);

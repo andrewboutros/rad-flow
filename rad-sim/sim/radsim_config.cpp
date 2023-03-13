@@ -219,8 +219,6 @@ void ParseRADSimKnobs(const std::string &knobs_filename) {
         value.push_back(value_element);
       }
       radsim_config.AddDoubleVectorKnob(param, value);
-      if (param == "noc_period")
-        std::cout << "Added!" << std::endl;
     } else if ((param == "noc_placement_file") ||
                (param == "adapter_in_arbiter") ||
                (param == "adapter_out_arbiter") ||

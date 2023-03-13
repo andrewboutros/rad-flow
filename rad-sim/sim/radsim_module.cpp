@@ -2,6 +2,7 @@
 #include <radsim_module.hpp>
 
 radsim_module::radsim_module(const sc_module_name &name) : sc_module(name) {
+  module_name = name;
   std::string name_str(static_cast<const char *>(name));
   radsim_design.RegisterModule(name_str, this);
   _num_noc_axis_slave_ports = 0;

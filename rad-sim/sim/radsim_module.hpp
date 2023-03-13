@@ -8,6 +8,7 @@
 
 class radsim_module : public sc_module {
 public:
+  std::string module_name;
   int _num_noc_axis_slave_ports, _num_noc_axis_master_ports;
   int _num_noc_aximm_slave_ports, _num_noc_aximm_master_ports;
   std::vector<std::string> _ordered_axis_slave_ports;

@@ -25,7 +25,8 @@ aximm_master_adapter::aximm_master_adapter(
   _ejected_flits = ejected_flits;
 
   // Initialize request interface (AR, AW, W) member variables
-  _ejection_afifo_depth = radsim_config.GetIntKnob("noc_adapter_fifo_depth");
+  _ejection_afifo_depth =
+      radsim_config.GetIntVectorKnob("adapter_fifo_size", _network_id);
   _ejection_afifos.resize(AXI_NUM_REQ_TYPES);
   _ejection_afifo_push_counter.init(AXI_NUM_REQ_TYPES);
   _ejection_afifo_pop_counter.init(AXI_NUM_REQ_TYPES);
@@ -42,7 +43,8 @@ aximm_master_adapter::aximm_master_adapter(
   reset_signal_is(rst, true);
 
   // Initialize response interface (B, R) member variables
-  _injection_afifo_depth = radsim_config.GetIntKnob("noc_adapter_fifo_depth");
+  _injection_afifo_depth =
+      radsim_config.GetIntVectorKnob("adapter_fifo_size", _network_id);
   _axi_transaction_width = AXI_USERW;
   if ((AXI_ADDRW + AXI_CTRLW) > (_interface_dataw + AXI_RESPW + 1)) {
     _axi_transaction_width += (AXI_ADDRW + AXI_CTRLW);
@@ -118,6 +120,8 @@ void aximm_master_adapter::OutputEjection() {
     if (_ejected_booksim_flit) {
       // Check if corresponding ejection FIFO can accept a new flit
       int vc_id = _ejected_booksim_flit->vc;
+      std::cout << this->name() << ": Ejected Flit from VC " << vc_id << "!"
+                << std::endl;
       int type = InverseVCMapping(vc_id);
       int type_id = (type == AXI_TYPE_AR) ? 0 : (type == AXI_TYPE_AW) ? 1 : 2;
       if (_ejection_afifos[type_id].size() < _ejection_afifo_depth) {
@@ -221,6 +225,7 @@ void aximm_master_adapter::OutputDepacketization() {
           // Adjust ejection FIFOs priority status
           _ejection_afifo_priority.push(_ejection_afifo_priority.front());
           _ejection_afifo_priority.pop();
+          std::cout << this->name() << ": Depacketized packet!" << std::endl;
         } else {
           _ejection_afifo_is_depacketizing.write(true);
         }
@@ -259,7 +264,7 @@ void aximm_master_adapter::OutputInterface() {
                                    (int)(i + 1) * NOC_LINKS_PAYLOAD_WIDTH);
         sc_bv<NOC_LINKS_PAYLOAD_WIDTH> flit_payload =
             *(_output_packet.GetFlit(i)->_payload);
-        temp_bv.range(start_idx, end_idx) = flit_payload;
+        temp_bv.range(end_idx - 1, start_idx) = flit_payload;
       }
 
       aximm_interface.awvalid.write(false);
@@ -274,10 +279,10 @@ void aximm_master_adapter::OutputInterface() {
           temp_bv.range(offset + AXI_BURSTW - 1, offset).to_uint());
       offset += AXI_BURSTW;
       aximm_interface.arsize.write(
-          temp_bv.range(offset + AXI_SIZEW, offset).to_uint());
+          temp_bv.range(offset + AXI_SIZEW - 1, offset).to_uint());
       offset += AXI_SIZEW;
       aximm_interface.arlen.write(
-          temp_bv.range(offset + AXI_LENW, offset).to_uint());
+          temp_bv.range(offset + AXI_LENW - 1, offset).to_uint());
       _output_packet_ready = false;
       NoCTransactionTelemetry::RecordTransactionReceipt(
           temp_flit->_sim_transaction_id);
@@ -296,7 +301,7 @@ void aximm_master_adapter::OutputInterface() {
                                    (int)(i + 1) * NOC_LINKS_PAYLOAD_WIDTH);
         sc_bv<NOC_LINKS_PAYLOAD_WIDTH> flit_payload =
             *(_output_packet.GetFlit(i)->_payload);
-        temp_bv.range(start_idx, end_idx) = flit_payload;
+        temp_bv.range(end_idx - 1, start_idx) = flit_payload;
       }
 
       aximm_interface.arvalid.write(false);
@@ -304,16 +309,17 @@ void aximm_master_adapter::OutputInterface() {
       aximm_interface.awvalid.write(true);
       aximm_interface.awid.write(temp_flit->_packet_id);
       aximm_interface.awaddr.write(AXI_ADDR(temp_bv));
+      aximm_interface.awuser.write(AXI_USER(temp_bv));
       sc_bv<AXI_CTRLW> ctrl_temp = AXI_CTRL(temp_bv);
       unsigned int offset = 0;
       aximm_interface.awburst.write(
           temp_bv.range(offset + AXI_BURSTW - 1, offset).to_uint());
       offset += AXI_BURSTW;
       aximm_interface.awsize.write(
-          temp_bv.range(offset + AXI_SIZEW, offset).to_uint());
+          temp_bv.range(offset + AXI_SIZEW - 1, offset).to_uint());
       offset += AXI_SIZEW;
       aximm_interface.awlen.write(
-          temp_bv.range(offset + AXI_LENW, offset).to_uint());
+          temp_bv.range(offset + AXI_LENW - 1, offset).to_uint());
       _output_packet_ready = false;
       NoCTransactionTelemetry::RecordTransactionReceipt(
           temp_flit->_sim_transaction_id);
@@ -332,7 +338,7 @@ void aximm_master_adapter::OutputInterface() {
                                    (int)(i + 1) * NOC_LINKS_PAYLOAD_WIDTH);
         sc_bv<NOC_LINKS_PAYLOAD_WIDTH> flit_payload =
             *(_output_packet.GetFlit(i)->_payload);
-        temp_bv.range(start_idx, end_idx) = flit_payload;
+        temp_bv.range(end_idx - 1, start_idx) = flit_payload;
       }
 
       aximm_interface.arvalid.write(false);
@@ -341,6 +347,7 @@ void aximm_master_adapter::OutputInterface() {
       aximm_interface.wid.write(temp_flit->_packet_id);
       aximm_interface.wlast.write(AXI_LAST(temp_bv).to_uint());
       aximm_interface.wdata.write(AXI_DATA(temp_bv));
+      aximm_interface.wuser.write(AXI_USER(temp_bv));
       _output_packet_ready = false;
       NoCTransactionTelemetry::RecordTransactionReceipt(
           temp_flit->_sim_transaction_id);
@@ -417,6 +424,11 @@ void aximm_master_adapter::InputInterface() {
       _i_type.write(AXI_TYPE_R);
       sc_bv<AXI_ADDRW> resp_addr = aximm_interface.ruser.read().to_uint64();
       int noc_dest = GetInputDestinationNode(resp_addr);
+      _i_noc_dest.write(noc_dest);
+      std::cout << this->name()
+                << ": Registered R transaction with destination node "
+                << noc_dest << " and resp address " << resp_addr.to_uint64()
+                << "!" << std::endl;
 
       // Adjust priority setting and log the initiation of an R transaction
       _injection_priority_setting.write(1);
@@ -434,6 +446,11 @@ void aximm_master_adapter::InputInterface() {
       _i_type.write(AXI_TYPE_B);
       sc_bv<AXI_ADDRW> resp_addr = aximm_interface.buser.read().to_uint64();
       int noc_dest = GetInputDestinationNode(resp_addr);
+      _i_noc_dest.write(noc_dest);
+      std::cout << this->name()
+                << ": Registered B transaction with destination node "
+                << noc_dest << " and resp address " << resp_addr.to_uint64()
+                << "!" << std::endl;
 
       // Adjust priority setting and log the initiation of a B transaction
       _injection_priority_setting.write(0);
@@ -511,15 +528,25 @@ void aximm_master_adapter::InputPacketization() {
         }
         _num_packetization_flits.write(num_flits);
         _packetization_cycle.write(_packetization_cycle.read() + 1);
-      } else if (_packetization_cycle.read() ==
-                 _num_packetization_flits.read() - 1) {
+      }
+    }
+
+    if (_packetization_cycle.read() > 0) {
+      uint8_t limit;
+      if (_num_packetization_flits.read() >= _freq_ratio) {
+        limit = _num_packetization_flits.read() - 1;
+      } else {
+        limit = _freq_ratio - 1;
+      }
+      if (_packetization_cycle.read() == limit) {
         NoCTransactionTelemetry::RecordTransactionTailPacketization(
             _i_unique_sim_id.read());
         _packetization_cycle.write(0);
-      } else if (_packetization_cycle.read() > 0) {
+      } else {
         _packetization_cycle.write(_packetization_cycle.read() + 1);
       }
     }
+
     // Asynchronous injection FIFO is considered full if it cannot hold the
     // maximum number of flits per transaction
     _injection_afifo_full.write(
@@ -597,6 +624,10 @@ void aximm_master_adapter::InputInjection() {
         if (booksim_flit->head)
           NoCTransactionTelemetry::RecordTransactionHeadInjection(
               _to_be_injected_flit._sim_transaction_id);
+        std::cout << this->name() << ": Injected flit to VC "
+                  << (int)(_to_be_injected_flit._vc_id.to_uint())
+                  << " with destination node "
+                  << _to_be_injected_flit._dest.to_uint() << "!" << std::endl;
       }
     }
 

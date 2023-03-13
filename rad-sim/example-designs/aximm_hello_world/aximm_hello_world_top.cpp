@@ -16,6 +16,7 @@ aximm_hello_world_top::aximm_hello_world_top(const sc_module_name &name)
   requester_inst->req_wdata(req_wdata);
   requester_inst->req_valid(req_valid);
   requester_inst->req_ready(req_ready);
+  requester_inst->received_responses(received_responses);
 
   module_name_str = "responder_inst";
   std::strcpy(module_name, module_name_str.c_str());

@@ -3,7 +3,6 @@
 #include <radsim_config.hpp>
 #include <requester.hpp>
 #include <responder.hpp>
-#include <sim_utils.hpp>
 #include <systemc.h>
 #include <vector>
 
@@ -20,6 +19,7 @@ public:
   sc_in<sc_bv<DATAW>> req_wdata;
   sc_in<bool> req_valid;
   sc_out<bool> req_ready;
+  sc_out<unsigned int> received_responses;
 
   aximm_hello_world_top(const sc_module_name &name);
   ~aximm_hello_world_top();

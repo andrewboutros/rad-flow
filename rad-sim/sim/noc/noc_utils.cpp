@@ -19,7 +19,7 @@ void set_flit_payload(sc_flit &packetization_flit,
                       int flit_id) {
   unsigned int start_idx = flit_id * NOC_LINKS_PAYLOAD_WIDTH;
   unsigned int end_idx = std::min((flit_id + 1) * NOC_LINKS_PAYLOAD_WIDTH,
-                                  AXIS_TRANSACTION_PAYLOAD_WIDTH);
+                                  AXI_TRANSACTION_MAX_WIDTH);
   *(packetization_flit._payload) = packet_bv.range(end_idx - 1, start_idx);
 }
 

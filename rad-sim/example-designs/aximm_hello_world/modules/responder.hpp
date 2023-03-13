@@ -12,8 +12,6 @@
 
 class responder : public radsim_module {
 private:
-  std::string module_name; // Name of the module
-
   std::queue<uint64_t> req_waddr_fifo; // FIFO to store write request addresses
   std::queue<sc_bv<DATAW>> req_wdata_fifo; // FIFO to store write request data
   std::queue<uint64_t> req_baddr_fifo;  // FIFO to store B address of W request

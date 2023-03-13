@@ -1,5 +1,5 @@
 radsim_root_dir /home/andrew/repos/rad-flow-dev/rad-sim
-radsim_user_design_root_dir /home/andrew/repos/rad-flow-dev/rad-sim/example-designs/mvm
+radsim_user_design_root_dir /home/andrew/repos/rad-flow-dev/rad-sim/example-designs/aximm_hello_world
 num_nocs 1
 noc_period 1.0 
 noc_vcs 5 

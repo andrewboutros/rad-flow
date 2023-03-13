@@ -50,9 +50,6 @@ void responder::Tick() {
   id_counter.write(0);
   wait();
 
-  std::string port_name = module_name + ".aximm_resp_interface";
-  uint64_t port_base_addr = radsim_design.GetPortBaseAddress(port_name);
-
   // Always @ positive edge of the clock
   while (true) {
     // Receiving transaction from AXI-MM interface
@@ -60,13 +57,20 @@ void responder::Tick() {
         aximm_resp_interface.arready.read()) {
       req_araddr_fifo.push(aximm_resp_interface.araddr.read().to_uint64());
       req_raddr_fifo.push(aximm_resp_interface.aruser.read().to_uint64());
+      std::cout << module_name << ": Got AR Transaction (user = "
+                << aximm_resp_interface.aruser.read().to_uint64() << ")!"
+                << std::endl;
     } else if (aximm_resp_interface.awvalid.read() &&
                aximm_resp_interface.awready.read()) {
       req_waddr_fifo.push(aximm_resp_interface.awaddr.read().to_uint64());
       req_baddr_fifo.push(aximm_resp_interface.awuser.read().to_uint64());
+      std::cout << module_name << ": Got AW Transaction (user = "
+                << aximm_resp_interface.awuser.read().to_uint64() << ")!"
+                << std::endl;
     } else if (aximm_resp_interface.wvalid.read() &&
                aximm_resp_interface.wready.read()) {
       req_wdata_fifo.push(aximm_resp_interface.wdata.read());
+      std::cout << module_name << ": Got W Transaction!" << std::endl;
     }
 
     // Executing a request
@@ -102,20 +106,18 @@ void responder::Tick() {
     if (!resp_data_fifo.empty()) {
       uint64_t addr = resp_addr_fifo.front();
       sc_bv<DATAW> data = resp_data_fifo.front();
-      bool type = resp_addr_fifo.front();
+      bool type = resp_type_fifo.front();
       if (type == 0) {
         aximm_resp_interface.rid.write(id_counter.read());
         aximm_resp_interface.rdata.write(data);
         aximm_resp_interface.rlast.write(true);
-        aximm_resp_interface.ruser.write(
-            radsim_design.GetPortBaseAddress(port_name));
+        aximm_resp_interface.ruser.write(addr);
         aximm_resp_interface.rresp.write(0);
         aximm_resp_interface.rvalid.write(true);
         aximm_resp_interface.bvalid.write(false);
       } else {
         aximm_resp_interface.bid.write(id_counter.read());
-        aximm_resp_interface.buser.write(
-            radsim_design.GetPortBaseAddress(port_name));
+        aximm_resp_interface.buser.write(addr);
         aximm_resp_interface.bresp.write(0);
         aximm_resp_interface.bvalid.write(true);
         aximm_resp_interface.rvalid.write(false);
@@ -132,12 +134,16 @@ void responder::Tick() {
       resp_data_fifo.pop();
       resp_type_fifo.pop();
       id_counter.write(id_counter.read() + 1);
+      std::cout << module_name << ": Sending R response to address "
+                << aximm_resp_interface.ruser.read().to_uint64() << std::endl;
     } else if (aximm_resp_interface.bvalid.read() &&
                aximm_resp_interface.bready.read()) {
       resp_addr_fifo.pop();
       resp_data_fifo.pop();
       resp_type_fifo.pop();
       id_counter.write(id_counter.read() + 1);
+      std::cout << module_name << ": Sending B response to address "
+                << aximm_resp_interface.ruser.read().to_uint64() << std::endl;
     }
 
     // Set FIFO full/empty signals
