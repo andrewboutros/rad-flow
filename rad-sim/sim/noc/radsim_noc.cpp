@@ -152,10 +152,10 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
   }
 
   // Create NoC AXI-MM Master adapters
-  _num_aximm_master_endpoints =
+  _num_aximm_slave_endpoints =
       radsim_design.GetNumNoCMasterAdapters(_noc_id, true);
-  noc_aximm_master_ports.init(_num_aximm_master_endpoints);
-  for (unsigned int adapter_id = 0; adapter_id < _num_aximm_master_endpoints;
+  noc_aximm_master_ports.init(_num_aximm_slave_endpoints);
+  for (unsigned int adapter_id = 0; adapter_id < _num_aximm_slave_endpoints;
        adapter_id++) {
 
     // Prepare adapter information
@@ -195,10 +195,10 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
   }
 
   // Create NoC AXI-MM Slave adapters
-  _num_aximm_slave_endpoints =
+  _num_aximm_master_endpoints =
       radsim_design.GetNumNoCSlaveAdapters(_noc_id, true);
-  noc_aximm_slave_ports.init(_num_aximm_slave_endpoints);
-  for (unsigned int adapter_id = 0; adapter_id < _num_aximm_slave_endpoints;
+  noc_aximm_slave_ports.init(_num_aximm_master_endpoints);
+  for (unsigned int adapter_id = 0; adapter_id < _num_aximm_master_endpoints;
        adapter_id++) {
 
     // Prepare adapter information
@@ -217,7 +217,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
         &_config, _booksim_noc,
         _buffer_state[aximm_slave_adapter_info[adapter_id]._node_id],
         _routing_func, _lookahead_routing, _wait_for_tail_credit,
-        _ejected_flits, aximm_master_adapter_info[adapter_id]._port_dataw[0],
+        _ejected_flits, aximm_slave_adapter_info[adapter_id]._port_dataw[0],
         adapter_module_period, adapter_period);
 
     // Connect adapter ports and register NoC port in design context
@@ -254,10 +254,10 @@ radsim_noc::~radsim_noc() {
        adapter_id++)
     delete _axis_master_adapters[adapter_id];
 
-  for (unsigned int adapter_id = 0; adapter_id < _num_aximm_slave_endpoints;
+  for (unsigned int adapter_id = 0; adapter_id < _num_aximm_master_endpoints;
        adapter_id++)
     delete _aximm_slave_adapters[adapter_id];
-  for (unsigned int adapter_id = 0; adapter_id < _num_aximm_master_endpoints;
+  for (unsigned int adapter_id = 0; adapter_id < _num_aximm_slave_endpoints;
        adapter_id++)
     delete _aximm_master_adapters[adapter_id];
 }

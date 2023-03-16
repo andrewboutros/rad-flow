@@ -225,7 +225,9 @@ void RADSimDesignContext::ParseNoCPlacement(
         }
         _node_id_is_aximm[port_noc_placement][port_node_placement] = false;
       } else {
-        if (module_ptr->_ordered_aximm_slave_ports.size() > 0) {
+        for (unsigned int port_id = 0;
+             port_id < module_ptr->_ordered_aximm_slave_ports.size();
+             port_id++) {
           port_name = module_ptr->_ordered_aximm_slave_ports[0];
           _port_placement[port_name] =
               std::make_tuple(port_noc_placement, port_node_placement, 0);
@@ -236,16 +238,26 @@ void RADSimDesignContext::ParseNoCPlacement(
               _node_id_is_aximm[port_noc_placement].end());
 
           // If valid, add the port as the only port of this node
-          std::vector<std::string> port_list;
-          port_list.push_back(port_name);
-          _node_id_ports_list[port_noc_placement][port_node_placement] =
-              port_list;
-          _node_id_is_aximm[port_noc_placement][port_node_placement] = true;
-
+          if (_node_id_ports_list[port_noc_placement].find(
+                  port_node_placement) ==
+              _node_id_ports_list[port_noc_placement].end()) {
+            std::vector<std::string> port_list;
+            port_list.push_back(port_name);
+            _node_id_ports_list[port_noc_placement][port_node_placement] =
+                port_list;
+            _node_id_is_aximm[port_noc_placement][port_node_placement] = true;
+          } else {
+            _node_id_ports_list[port_noc_placement][port_node_placement]
+                .push_back(port_name);
+          }
           // Set base address information
           _aximm_port_base_addresses[port_name] =
               DeterminedBaseAddress(port_noc_placement, port_node_placement);
-        } else {
+        }
+
+        for (unsigned int port_id = 0;
+             port_id < module_ptr->_ordered_aximm_master_ports.size();
+             port_id++) {
           port_name = module_ptr->_ordered_aximm_master_ports[0];
           _port_placement[port_name] =
               std::make_tuple(port_noc_placement, port_node_placement, 0);
@@ -256,12 +268,18 @@ void RADSimDesignContext::ParseNoCPlacement(
               _node_id_is_aximm[port_noc_placement].end());
 
           // If valid, add the port as the only port of this node
-          std::vector<std::string> port_list;
-          port_list.push_back(port_name);
-          _node_id_ports_list[port_noc_placement][port_node_placement] =
-              port_list;
-          _node_id_is_aximm[port_noc_placement][port_node_placement] = true;
-
+          if (_node_id_ports_list[port_noc_placement].find(
+                  port_node_placement) ==
+              _node_id_ports_list[port_noc_placement].end()) {
+            std::vector<std::string> port_list;
+            port_list.push_back(port_name);
+            _node_id_ports_list[port_noc_placement][port_node_placement] =
+                port_list;
+            _node_id_is_aximm[port_noc_placement][port_node_placement] = true;
+          } else {
+            _node_id_ports_list[port_noc_placement][port_node_placement]
+                .push_back(port_name);
+          }
           // Set base address information
           _aximm_port_base_addresses[port_name] =
               DeterminedBaseAddress(port_noc_placement, port_node_placement);

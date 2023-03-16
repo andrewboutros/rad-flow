@@ -291,7 +291,7 @@ radsim_header_params = {
   'axis_tstrb_width' : 8,
   'axis_tuser_width' : 32,
   'axi_id_width' : 8,
-  'axi_user_width' : 32,
+  'axi_user_width' : 64,
   'max_axi_data_width' : 512
 }
 radsim_knobs = {
@@ -314,7 +314,10 @@ radsim_knobs = {
   'log_verbosity' : 0,
   'num_traces' : 2,
   'num_trace_modules' : 1,
-  'trace_names' : ['trace0', 'trace1']
+  'trace_names' : ['trace0', 'trace1'],
+  'dram_controller_freq' : [500.0],
+  'dram_controller_queue_size' : [64],
+  'dram_config_file' : ['HBM2_8Gb_x128']
 }
 
 parse_config_file(config_filename, booksim_params, radsim_header_params, radsim_knobs)

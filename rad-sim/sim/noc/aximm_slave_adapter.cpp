@@ -185,9 +185,9 @@ void aximm_slave_adapter::InputInterface() {
       int unique_sim_id = NoCTransactionTelemetry::RecordTransactionInitiation(
           _node_id, noc_dest, AXI_TYPE_AR, _interface_dataw, _network_id);
       _i_unique_sim_id.write(unique_sim_id);
-      std::cout << this->name() << ": Registered AR transaction (user = "
+      /*std::cout << this->name() << ": Registered AR transaction (user = "
                 << aximm_interface.aruser.read().to_uint64() << ")!"
-                << std::endl;
+                << std::endl;*/
     } else if (aximm_interface.awready.read() &&
                aximm_interface.awvalid.read()) {
       // Capture the values at the AXI AW port
@@ -218,9 +218,9 @@ void aximm_slave_adapter::InputInterface() {
       int unique_sim_id = NoCTransactionTelemetry::RecordTransactionInitiation(
           _node_id, noc_dest, AXI_TYPE_AW, _interface_dataw, _network_id);
       _i_unique_sim_id.write(unique_sim_id);
-      std::cout << this->name() << ": Registered AW transaction (user = "
+      /*std::cout << this->name() << ": Registered AW transaction (user = "
                 << aximm_interface.awuser.read().to_uint64() << ")!"
-                << std::endl;
+                << std::endl;*/
     } else if (aximm_interface.wready.read() && aximm_interface.wvalid.read() &&
                _got_aw.read()) {
       // Capture the values at the AXI W port
@@ -244,9 +244,9 @@ void aximm_slave_adapter::InputInterface() {
           _node_id, (int)_last_awdest.read().to_uint(), AXI_TYPE_W,
           _interface_dataw, _network_id);
       _i_unique_sim_id.write(unique_sim_id);
-      std::cout << this->name() << ": Registered W transaction (user = "
+      /*std::cout << this->name() << ": Registered W transaction (user = "
                 << aximm_interface.wuser.read().to_uint64() << ")!"
-                << std::endl;
+                << std::endl;*/
     } else {
       _i_valid.write(false);
     }
@@ -283,7 +283,8 @@ void aximm_slave_adapter::InputPacketization() {
       // state, then remains idle during the remaining states (analogous to an
       // assymmetric FIFO with input size of N flits & output size of 1 flit)
       if (_packetization_cycle.read() == 0) {
-        std::cout << this->name() << ": Packetized transaction!" << std::endl;
+        // std::cout << this->name() << ": Packetized transaction!" <<
+        // std::endl;
         sc_bv<AXI_TRANSACTION_MAX_WIDTH> packet_bv;
         unsigned int num_flits = 0;
         if ((_i_type.read() == AXI_TYPE_AR) ||
@@ -431,9 +432,9 @@ void aximm_slave_adapter::InputInjection() {
         if (booksim_flit->head)
           NoCTransactionTelemetry::RecordTransactionHeadInjection(
               booksim_flit->id);
-        std::cout << this->name() << ": Injected flit to VC "
+        /*std::cout << this->name() << ": Injected flit to VC "
                   << (int)(_to_be_injected_flit._vc_id.to_uint()) << "!"
-                  << std::endl;
+                  << std::endl;*/
       }
     }
 

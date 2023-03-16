@@ -1,20 +1,23 @@
 radsim_root_dir /home/andrew/repos/rad-flow-dev/rad-sim
-radsim_user_design_root_dir /home/andrew/repos/rad-flow-dev/rad-sim/example-designs/aximm_hello_world
+radsim_user_design_root_dir /home/andrew/repos/rad-flow-dev/rad-sim/example-designs/dlrm
 num_nocs 1
 noc_period 1.0 
 noc_vcs 5 
 noc_payload_width 166 
-noc_num_nodes 16 
-noc_placement_file mvm.place 
-adapter_period 1.25 
+noc_num_nodes 64 
+noc_placement_file dlrm.place 
+adapter_period 1.25 1.0 
 adapter_fifo_size 16 
 adapter_obuff_size 2 
 adapter_in_arbiter fixed_rr 
 adapter_out_arbiter priority_rr 
 adapter_vc_mapping direct 
-module_period 5.0 
+module_period 5.0 2.0 
 sim_driver_period 5.0 
 log_verbosity 2
 num_traces 0
 num_trace_modules 0
 trace_names  
+dram_controller_period 2.0 
+dram_controller_queue_size 64 
+dram_config_file HBM2_8Gb_x128 

@@ -120,8 +120,8 @@ void aximm_master_adapter::OutputEjection() {
     if (_ejected_booksim_flit) {
       // Check if corresponding ejection FIFO can accept a new flit
       int vc_id = _ejected_booksim_flit->vc;
-      std::cout << this->name() << ": Ejected Flit from VC " << vc_id << "!"
-                << std::endl;
+      // std::cout << this->name() << ": Ejected Flit from VC " << vc_id << "!"
+      //           << std::endl;
       int type = InverseVCMapping(vc_id);
       int type_id = (type == AXI_TYPE_AR) ? 0 : (type == AXI_TYPE_AW) ? 1 : 2;
       if (_ejection_afifos[type_id].size() < _ejection_afifo_depth) {
@@ -225,7 +225,7 @@ void aximm_master_adapter::OutputDepacketization() {
           // Adjust ejection FIFOs priority status
           _ejection_afifo_priority.push(_ejection_afifo_priority.front());
           _ejection_afifo_priority.pop();
-          std::cout << this->name() << ": Depacketized packet!" << std::endl;
+          // std::cout << this->name() << ": Depacketized packet!" << std::endl;
         } else {
           _ejection_afifo_is_depacketizing.write(true);
         }
@@ -425,10 +425,10 @@ void aximm_master_adapter::InputInterface() {
       sc_bv<AXI_ADDRW> resp_addr = aximm_interface.ruser.read().to_uint64();
       int noc_dest = GetInputDestinationNode(resp_addr);
       _i_noc_dest.write(noc_dest);
-      std::cout << this->name()
+      /*std::cout << this->name()
                 << ": Registered R transaction with destination node "
                 << noc_dest << " and resp address " << resp_addr.to_uint64()
-                << "!" << std::endl;
+                << "!" << std::endl;*/
 
       // Adjust priority setting and log the initiation of an R transaction
       _injection_priority_setting.write(1);
@@ -447,10 +447,10 @@ void aximm_master_adapter::InputInterface() {
       sc_bv<AXI_ADDRW> resp_addr = aximm_interface.buser.read().to_uint64();
       int noc_dest = GetInputDestinationNode(resp_addr);
       _i_noc_dest.write(noc_dest);
-      std::cout << this->name()
+      /*std::cout << this->name()
                 << ": Registered B transaction with destination node "
                 << noc_dest << " and resp address " << resp_addr.to_uint64()
-                << "!" << std::endl;
+                << "!" << std::endl;*/
 
       // Adjust priority setting and log the initiation of a B transaction
       _injection_priority_setting.write(0);
@@ -624,10 +624,10 @@ void aximm_master_adapter::InputInjection() {
         if (booksim_flit->head)
           NoCTransactionTelemetry::RecordTransactionHeadInjection(
               _to_be_injected_flit._sim_transaction_id);
-        std::cout << this->name() << ": Injected flit to VC "
+        /*std::cout << this->name() << ": Injected flit to VC "
                   << (int)(_to_be_injected_flit._vc_id.to_uint())
                   << " with destination node "
-                  << _to_be_injected_flit._dest.to_uint() << "!" << std::endl;
+                  << _to_be_injected_flit._dest.to_uint() << "!" << std::endl;*/
       }
     }
 

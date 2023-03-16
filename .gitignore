@@ -4,3 +4,12 @@ rad-sim/.vscode/
 .vscode
 .DS_Store
 *.mif
+rad-sim/example-designs/dlrm/compiler/mvm_weights/*.dat
+rad-sim/example-designs/dlrm/compiler/embedding_tables/*.dat
+rad-sim/example-designs/dlrm/compiler/instructions/*.inst
+rad-sim/example-designs/dlrm/compiler/*.in
+rad-sim/example-designs/dlrm/compiler/*.out
+rad-sim/example-designs/dlrm/compiler/*.config
+
+
+
