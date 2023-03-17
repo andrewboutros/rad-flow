@@ -26,40 +26,40 @@ private:
 
   std::vector<mvm_inst> inst_memory;
   sc_signal<mvm_inst> next_inst;
-  sc_signal<uint32_t> pc;
+  sc_signal<unsigned int> pc;
 
-  std::vector<data_vector<sc_int<32>>> accum_memory;
-  sc_signal<data_vector<sc_int<32>>> next_accum;
+  std::vector<data_vector<int16_t>> accum_memory;
+  sc_signal<data_vector<int16_t>> next_accum;
 
-  std::vector<register_file<sc_int<32>> *> matrix_memory;
-  sc_vector<sc_signal<data_vector<sc_int<32>>>> matrix_mem_rdata;
-  sc_signal<data_vector<sc_int<32>>> matrix_mem_wdata;
+  std::vector<register_file<int16_t> *> matrix_memory;
+  sc_vector<sc_signal<data_vector<int16_t>>> matrix_mem_rdata;
+  sc_signal<data_vector<int16_t>> matrix_mem_wdata;
   sc_vector<sc_signal<bool>> matrix_mem_wen;
-  sc_signal<uint32_t> matrix_mem_raddr, matrix_mem_waddr;
+  sc_signal<unsigned int> matrix_mem_raddr, matrix_mem_waddr;
   sc_signal<bool> matrix_mem_clk_en;
 
-  fifo<sc_int<32>> *ififo;
-  sc_signal<data_vector<sc_int<32>>> ififo_wdata_signal, ififo_rdata_signal;
+  fifo<int16_t> *ififo;
+  sc_signal<data_vector<int16_t>> ififo_wdata_signal, ififo_rdata_signal;
   sc_signal<bool> ififo_wen_signal, ififo_ren_signal, ififo_full_signal,
       ififo_empty_signal, ififo_almost_full_signal, ififo_almost_empty_signal;
 
-  fifo<sc_int<32>> *reduce_fifo;
-  sc_signal<data_vector<sc_int<32>>> reduce_fifo_wdata_signal,
+  fifo<int16_t> *reduce_fifo;
+  sc_signal<data_vector<int16_t>> reduce_fifo_wdata_signal,
       reduce_fifo_rdata_signal;
   sc_signal<bool> reduce_fifo_wen_signal, reduce_fifo_ren_signal,
       reduce_fifo_full_signal, reduce_fifo_empty_signal,
       reduce_fifo_almost_full_signal, reduce_fifo_almost_empty_signal;
 
-  sc_vector<sc_signal<data_vector<sc_int<32>>>> ififo_pipeline, reduce_pipeline,
+  sc_vector<sc_signal<data_vector<int16_t>>> ififo_pipeline, reduce_pipeline,
       result_pipeline;
   sc_vector<sc_signal<bool>> valid_pipeline, release_pipeline,
       accum_en_pipeline;
-  sc_vector<sc_signal<uint32_t>> accum_pipeline;
+  sc_vector<sc_signal<unsigned int>> accum_pipeline;
   sc_vector<sc_signal<sc_int<5>>> dest_layer_pipeline;
   sc_vector<sc_signal<sc_uint<5>>> dest_mvm_pipeline;
 
-  fifo<sc_int<32>> *ofifo;
-  sc_signal<data_vector<sc_int<32>>> ofifo_wdata_signal, ofifo_rdata_signal;
+  fifo<int16_t> *ofifo;
+  sc_signal<data_vector<int16_t>> ofifo_wdata_signal, ofifo_rdata_signal;
   sc_signal<bool> ofifo_wen_signal, ofifo_ren_signal, ofifo_full_signal,
       ofifo_empty_signal, ofifo_almost_full_signal, ofifo_almost_empty_signal;
 
@@ -75,14 +75,16 @@ private:
       dm_fifo_empty_signal, dm_fifo_almost_full_signal,
       dm_fifo_almost_empty_signal;
 
-  data_vector<sc_int<32>> tdata_vec;
-  data_vector<sc_int<32>> result;
+  data_vector<int16_t> tdata_vec;
+  data_vector<int16_t> result;
   sc_signal<bool> dot_op, dot_reduce_op;
 
 public:
   sc_in<bool> rst;
-  axis_slave_port rx_interface;
-  axis_master_port tx_interface;
+  axis_slave_port rx_input_interface;
+  axis_slave_port rx_reduce_interface;
+  axis_master_port tx_input_interface;
+  axis_master_port tx_reduce_interface;
 
   mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
       const std::string &inst_filename);

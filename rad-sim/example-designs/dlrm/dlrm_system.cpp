@@ -16,9 +16,9 @@ dlrm_system::dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig,
   driver_inst->lookup_indecies_valid(lookup_indecies_valid_sig);
   driver_inst->lookup_indecies_ready(lookup_indecies_ready_sig);
   driver_inst->received_responses(received_responses_sig);
-  driver_inst->feature_interaction_odata(feature_interaction_odata_sig);
-  driver_inst->feature_interaction_valid(feature_interaction_valid_sig);
-  driver_inst->feature_interaction_ready(feature_interaction_ready_sig);
+  driver_inst->collector_fifo_rdy(collector_fifo_rdy_sig);
+  driver_inst->collector_fifo_ren(collector_fifo_ren_sig);
+  driver_inst->collector_fifo_rdata(collector_fifo_rdata_sig);
 
   // Instantiate design top-level
   dut_inst = new dlrm_top("dut");
@@ -31,9 +31,9 @@ dlrm_system::dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig,
   dut_inst->lookup_indecies_valid(lookup_indecies_valid_sig);
   dut_inst->lookup_indecies_ready(lookup_indecies_ready_sig);
   dut_inst->received_responses(received_responses_sig);
-  dut_inst->feature_interaction_odata(feature_interaction_odata_sig);
-  dut_inst->feature_interaction_valid(feature_interaction_valid_sig);
-  dut_inst->feature_interaction_ready(feature_interaction_ready_sig);
+  dut_inst->collector_fifo_rdy(collector_fifo_rdy_sig);
+  dut_inst->collector_fifo_ren(collector_fifo_ren_sig);
+  dut_inst->collector_fifo_rdata(collector_fifo_rdata_sig);
 }
 
 dlrm_system::~dlrm_system() {

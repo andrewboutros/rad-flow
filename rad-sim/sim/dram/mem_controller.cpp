@@ -321,9 +321,24 @@ void mem_controller::Tick() {
 
   while (true) {
     for (unsigned int ch_id = 0; ch_id < _num_channels; ch_id++) {
+      bool rd_iqueue_ok = _read_address_queue[ch_id].size() < _input_queue_size;
+      bool rd_oqueue_ok =
+          (_outstanding_read_requests[ch_id].size() +
+           _output_read_responses[ch_id].size()) < _output_queue_size;
+      bool wr_oqueue_ok =
+          (_outstanding_write_requests[ch_id].size() +
+           _output_write_responses[ch_id].size()) < _output_queue_size;
+
+      bool awready_flag =
+          _write_address_queue_occupancy[ch_id] < _input_queue_size;
+      bool wready_flag =
+          _write_address_queue_occupancy[ch_id] > 0 &&
+          _write_data_queue_occupancy[ch_id] < _input_queue_size &&
+          wr_oqueue_ok;
+      bool arready_flag = rd_iqueue_ok && rd_oqueue_ok;
+
       // Accepting write address requests
-      if (mem_channels[ch_id].awvalid.read() &&
-          mem_channels[ch_id].awready.read()) {
+      if (mem_channels[ch_id].awvalid.read() && awready_flag) {
         unsigned int transaction_size_in_bytes =
             (1 << mem_channels[ch_id].awsize.read().to_uint());
         unsigned int transaction_size = (unsigned int)ceil(
@@ -343,8 +358,7 @@ void mem_controller::Tick() {
       _write_address_queue_occupancy[ch_id].write(
           _write_address_queue[ch_id].size());
       // Accepting write data requests
-      if (mem_channels[ch_id].wvalid.read() &&
-          mem_channels[ch_id].wready.read()) {
+      if (mem_channels[ch_id].wvalid.read() && wready_flag) {
         uint64_t resp_addr = mem_channels[ch_id].wuser.read().to_uint64();
         sc_bv<AXI_MAX_DATAW> write_data = mem_channels[ch_id].wdata.read();
         _write_data_queue[ch_id].push(std::make_pair(resp_addr, write_data));
@@ -352,8 +366,7 @@ void mem_controller::Tick() {
       }
       _write_data_queue_occupancy[ch_id].write(_write_data_queue[ch_id].size());
       // Accepting read address requests
-      if (mem_channels[ch_id].arvalid.read() &&
-          mem_channels[ch_id].arready.read()) {
+      if (mem_channels[ch_id].arvalid.read() && arready_flag) {
         uint64_t resp_addr = mem_channels[ch_id].aruser.read().to_uint64();
         unsigned int transaction_size_in_bytes =
             (1 << mem_channels[ch_id].arsize.read().to_uint());
@@ -369,7 +382,8 @@ void mem_controller::Tick() {
           _read_address_queue[ch_id].push(
               std::make_tuple(resp_addr, translated_addr, b == burst_size - 1));
         }
-        // std::cout << module_name << ": Got AR Transaction!" << std::endl;
+        // std::cout << module_name << "_" << ch_id << ": Got AR Transaction!"
+        //           << std::endl;
       }
       _read_address_queue_occupancy[ch_id].write(
           _read_address_queue[ch_id].size());
@@ -382,8 +396,21 @@ void mem_controller::Tick() {
       if (mem_channels[ch_id].rvalid.read() &&
           mem_channels[ch_id].rready.read()) {
         _output_read_responses[ch_id].pop();
+        // std::cout << module_name << "_" << ch_id << ": Sent R Response!"
+        //           << std::endl;
       }
     }
+
+    /*for (unsigned int i = 0; i < _num_channels; i++) {
+      std::cout << this->name() << " " << i << ": "
+                << _outstanding_read_requests[i].size() << " "
+                << _out_of_order_read_requests[i].size() << " "
+                << _output_read_responses[i].size() << std::endl;
+      _outstanding_read_requests.resize(_num_channels);
+      _out_of_order_read_requests.resize(_num_channels);
+      _output_read_responses.resize(_num_channels);
+    }*/
+
     wait();
   }
 }
@@ -496,19 +523,19 @@ void mem_controller::Assign() {
   } else {
     for (unsigned int ch_id = 0; ch_id < _num_channels; ch_id++) {
       bool read_input_queue_ok =
-          _read_address_queue_occupancy[ch_id] < _input_queue_size;
+          _read_address_queue_occupancy[ch_id] < _input_queue_size - 4;
       bool read_output_queue_ok =
           (_num_outstanding_read_requests[ch_id] +
-           _output_read_queue_occupancy[ch_id]) < _output_queue_size;
+           _output_read_queue_occupancy[ch_id]) < _output_queue_size - 4;
       bool write_output_queue_ok =
           (_num_outstanding_write_requests[ch_id] +
-           _output_write_queue_occupancy[ch_id]) < _output_queue_size;
+           _output_write_queue_occupancy[ch_id]) < _output_queue_size - 4;
 
       mem_channels[ch_id].awready.write(_write_address_queue_occupancy[ch_id] <
-                                        _input_queue_size);
+                                        _input_queue_size - 2);
       mem_channels[ch_id].wready.write(
           _write_address_queue_occupancy[ch_id] > 0 &&
-          _write_data_queue_occupancy[ch_id] < _input_queue_size &&
+          _write_data_queue_occupancy[ch_id] < _input_queue_size - 4 &&
           write_output_queue_ok);
       mem_channels[ch_id].arready.write(read_input_queue_ok &&
                                         read_output_queue_ok);

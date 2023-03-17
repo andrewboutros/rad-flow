@@ -287,6 +287,7 @@ void aximm_master_adapter::OutputInterface() {
       NoCTransactionTelemetry::RecordTransactionReceipt(
           temp_flit->_sim_transaction_id);
 
+      // std::cout << this->name() << ": Got AR request!" << std::endl;
     } else if (_output_packet_ready &&
                (_output_packet.GetFlit(0)->_type ==
                 Flit::FlitType::WRITE_REQUEST) &&
@@ -425,10 +426,10 @@ void aximm_master_adapter::InputInterface() {
       sc_bv<AXI_ADDRW> resp_addr = aximm_interface.ruser.read().to_uint64();
       int noc_dest = GetInputDestinationNode(resp_addr);
       _i_noc_dest.write(noc_dest);
-      /*std::cout << this->name()
-                << ": Registered R transaction with destination node "
-                << noc_dest << " and resp address " << resp_addr.to_uint64()
-                << "!" << std::endl;*/
+      // std::cout << this->name()
+      //           << ": Registered R response with destination node " <<
+      //           noc_dest
+      //           << std::endl;
 
       // Adjust priority setting and log the initiation of an R transaction
       _injection_priority_setting.write(1);

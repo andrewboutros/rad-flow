@@ -7,11 +7,11 @@ bool ParseInstructions(std::vector<mvm_inst> &inst_mem,
     return false;
 
   std::string line;
-  uint32_t addr = 0;
+  unsigned int addr = 0;
   while (std::getline(inst_file, line)) {
     std::stringstream line_stream(line);
     mvm_inst inst;
-    uint32_t value;
+    unsigned int value;
     line_stream >> value;
     inst.en = value;
     line_stream >> value;
@@ -80,7 +80,7 @@ mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
     mem_name_str =
         "mvm" + std::to_string(mvm_id) + "_matrix_mem" + std::to_string(dot_id);
     std::strcpy(mem_name, mem_name_str.c_str());
-    matrix_memory[dot_id] = new register_file<sc_int<32>>(
+    matrix_memory[dot_id] = new register_file<int16_t>(
         mem_name, dot_id, MEM_DEPTH, LANES, mem_init_file);
     matrix_memory[dot_id]->clk(clk);
     matrix_memory[dot_id]->rst(rst);
@@ -96,7 +96,7 @@ mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
   std::string fifo_name_str;
   fifo_name_str = "mvm" + std::to_string(mvm_id) + "_ififo";
   std::strcpy(fifo_name, fifo_name_str.c_str());
-  ififo = new fifo<sc_int<32>>(fifo_name, FIFO_SIZE, LANES, FIFO_SIZE - 4, 0);
+  ififo = new fifo<int16_t>(fifo_name, FIFO_SIZE, LANES, FIFO_SIZE - 4, 0);
   ififo->clk(clk);
   ififo->rst(rst);
   ififo->wen(ififo_wen_signal);
@@ -111,7 +111,7 @@ mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
   fifo_name_str = "mvm" + std::to_string(mvm_id) + "_reduce_fifo";
   std::strcpy(fifo_name, fifo_name_str.c_str());
   reduce_fifo =
-      new fifo<sc_int<32>>(fifo_name, FIFO_SIZE, LANES, FIFO_SIZE - 4, 0);
+      new fifo<int16_t>(fifo_name, FIFO_SIZE, LANES, FIFO_SIZE - 4, 0);
   reduce_fifo->clk(clk);
   reduce_fifo->rst(rst);
   reduce_fifo->wen(reduce_fifo_wen_signal);
@@ -125,9 +125,8 @@ mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
 
   fifo_name_str = "mvm" + std::to_string(mvm_id) + "_ofifo";
   std::strcpy(fifo_name, fifo_name_str.c_str());
-  ofifo =
-      new fifo<sc_int<32>>(fifo_name, FIFO_SIZE, LANES,
-                           FIFO_SIZE - COMPUTE_LATENCY - RF_RD_LATENCY - 4, 0);
+  ofifo = new fifo<int16_t>(fifo_name, FIFO_SIZE, LANES,
+                            FIFO_SIZE - COMPUTE_LATENCY - RF_RD_LATENCY - 4, 0);
   ofifo->clk(clk);
   ofifo->rst(rst);
   ofifo->wen(ofifo_wen_signal);
@@ -173,7 +172,9 @@ mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
 
   SC_METHOD(Assign);
   sensitive << rst << ofifo_almost_full_signal << ofifo_rdata_signal
-            << tx_interface.tvalid << tx_interface.tready << rx_interface.tuser
+            << tx_input_interface.tvalid << tx_input_interface.tready
+            << tx_reduce_interface.tvalid << tx_reduce_interface.tready
+            << rx_input_interface.tuser << rx_reduce_interface.tuser
             << ififo_almost_full_signal << reduce_fifo_almost_full_signal
             << result_pipeline[COMPUTE_LATENCY - 1]
             << valid_pipeline[RF_RD_LATENCY + COMPUTE_LATENCY - 1]
@@ -181,7 +182,8 @@ mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
             << dl_fifo_rdata_signal << dm_fifo_rdata_signal
             << dest_layer_pipeline[RF_RD_LATENCY + COMPUTE_LATENCY - 1]
             << dest_mvm_pipeline[RF_RD_LATENCY + COMPUTE_LATENCY - 1]
-            << dl_fifo_rdata_signal << dm_fifo_rdata_signal;
+            << dl_fifo_rdata_signal << dm_fifo_rdata_signal
+            << ofifo_empty_signal;
   SC_CTHREAD(Tick, clk.pos());
   reset_signal_is(rst, true);
 
@@ -190,8 +192,8 @@ mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
 
 mvm::~mvm() { delete ofifo; }
 
-sc_int<32> dot(data_vector<sc_int<32>> v1, data_vector<sc_int<32>> v2) {
-  sc_int<32> res = 0;
+int16_t dot(data_vector<int16_t> v1, data_vector<int16_t> v2) {
+  int16_t res = 0;
   for (unsigned int element_id = 0; element_id < v1.size(); element_id++) {
     res += (v1[element_id] * v2[element_id]);
   }
@@ -209,6 +211,13 @@ void mvm::Tick() {
   wait();
   // Sequential logic
   while (true) {
+    /*std::cout << this->name() << " iFIFO occ: " << ififo->occupancy()
+              << " rFIFO occ: " << reduce_fifo->occupancy()
+              << " oFIFO occ: " << ofifo->occupancy()
+              << " dlFIFO occ: " << dl_fifo->occupancy()
+              << " dmFIFO occ: " << dm_fifo->occupancy()
+              << " tvalid: " << tx_input_interface.tvalid.read()
+              << " tready: " << tx_input_interface.tready.read() << std::endl;*/
     // Instruction issue logic
     // next_inst.write(inst_memory[pc.read()]);
 
@@ -228,7 +237,7 @@ void mvm::Tick() {
     } else if (dot_op) {
       // std::cout << "Dot op @ MVM (" << layer_id << ", " << mvm_id << ")" <<
       // std::endl;
-      data_vector<sc_int<32>> zeros(LANES);
+      data_vector<int16_t> zeros(LANES);
       ififo_pipeline[0].write(ififo_rdata_signal.read());
       reduce_pipeline[0].write(zeros);
       valid_pipeline[0].write(true);
@@ -246,11 +255,11 @@ void mvm::Tick() {
     }
 
     if (valid_pipeline[RF_RD_LATENCY - 1].read()) {
-      data_vector<sc_int<32>> reduce_vector =
+      data_vector<int16_t> reduce_vector =
           reduce_pipeline[RF_RD_LATENCY - 1].read();
-      uint32_t accum_addr = accum_pipeline[RF_RD_LATENCY - 1].read();
+      unsigned int accum_addr = accum_pipeline[RF_RD_LATENCY - 1].read();
       bool accum_en = accum_en_pipeline[RF_RD_LATENCY - 1].read();
-      data_vector<sc_int<32>> accum_operand = accum_memory[accum_addr];
+      data_vector<int16_t> accum_operand = accum_memory[accum_addr];
 
       for (unsigned int dot_id = 0; dot_id < DOT_PRODUCTS; dot_id++) {
         result[dot_id] = dot(ififo_pipeline[RF_RD_LATENCY - 1].read(),
@@ -294,50 +303,42 @@ void mvm::Tick() {
           dest_mvm_pipeline[RF_RD_LATENCY + stage_id - 1].read());
     }
 
-    if (rx_interface.tvalid.read() && rx_interface.tready.read()) {
-      sc_bv<AXIS_MAX_DATAW> tdata = rx_interface.tdata.read();
+    if (rx_input_interface.tvalid.read() && rx_input_interface.tready.read()) {
+      sc_bv<AXIS_MAX_DATAW> tdata = rx_input_interface.tdata.read();
 
-      if (rx_interface.tuser.read().range(15, 13).to_uint() == 1) {
-        uint32_t waddr = rx_interface.tuser.read().range(8, 0).to_uint();
+      if (rx_input_interface.tuser.read().range(15, 13).to_uint() == 1) {
+        unsigned int waddr =
+            rx_input_interface.tuser.read().range(8, 0).to_uint();
         mvm_inst inst;
-        inst.from_bv(rx_interface.tdata.read());
+        inst.from_bv(rx_input_interface.tdata.read());
         inst_memory[waddr] = inst;
         ififo_wen_signal.write(false);
-        reduce_fifo_wen_signal.write(false);
         for (unsigned int dot_id = 0; dot_id < DOT_PRODUCTS; dot_id++) {
           matrix_mem_wen[dot_id].write(false);
         }
-      } else if (rx_interface.tuser.read().range(15, 13).to_uint() > 1) {
+      } else if (rx_input_interface.tuser.read().range(15, 13).to_uint() > 1) {
         // Read rx tdata into a vector
         for (unsigned int lane_id = 0; lane_id < LANES; lane_id++) {
           tdata_vec[lane_id] =
-              tdata.range((lane_id + 1) * 32 - 1, lane_id * 32).to_int();
+              tdata.range((lane_id + 1) * BITWIDTH - 1, lane_id * BITWIDTH)
+                  .to_int();
         }
 
         // Push the data vector into the right FIFO/memory
-        if (rx_interface.tuser.read().range(15, 13).to_uint() ==
-            2) { // Reduction FIFO
-          reduce_fifo_wdata_signal.write(tdata_vec);
-          reduce_fifo_wen_signal.write(true);
-          ififo_wen_signal.write(false);
-          for (unsigned int dot_id = 0; dot_id < DOT_PRODUCTS; dot_id++) {
-            matrix_mem_wen[dot_id].write(false);
-          }
-          // std::cout << "Write to reduce FIFO" << std::endl;
-          // std::cout << tdata_vec << std::endl;
-        } else if (rx_interface.tuser.read().range(15, 13).to_uint() ==
-                   3) { // Input FIFO
+        if (rx_input_interface.tuser.read().range(15, 13).to_uint() ==
+            3) { // Input FIFO
           ififo_wdata_signal.write(tdata_vec);
           ififo_wen_signal.write(true);
-          reduce_fifo_wen_signal.write(false);
           for (unsigned int dot_id = 0; dot_id < DOT_PRODUCTS; dot_id++) {
             matrix_mem_wen[dot_id].write(false);
           }
-          // std::cout << "MVM got input data" << std::endl;
-        } else if (rx_interface.tuser.read().range(15, 13).to_uint() ==
+          // std::cout << this->name() << " Got input data" << std::endl;
+        } else if (rx_input_interface.tuser.read().range(15, 13).to_uint() ==
                    4) { // Matrix memory
-          uint32_t waddr = rx_interface.tuser.read().range(8, 0).to_uint();
-          uint32_t wen_id = rx_interface.tuser.read().range(12, 9).to_uint();
+          unsigned int waddr =
+              rx_input_interface.tuser.read().range(8, 0).to_uint();
+          unsigned int wen_id =
+              rx_input_interface.tuser.read().range(12, 9).to_uint();
           matrix_mem_waddr.write(waddr);
           matrix_mem_wdata.write(tdata_vec);
           for (unsigned int dot_id = 0; dot_id < DOT_PRODUCTS; dot_id++) {
@@ -347,27 +348,43 @@ void mvm::Tick() {
               matrix_mem_wen[dot_id].write(false);
           }
           ififo_wen_signal.write(false);
-          reduce_fifo_wen_signal.write(false);
         } else {
           ififo_wen_signal.write(false);
-          reduce_fifo_wen_signal.write(false);
           for (unsigned int dot_id = 0; dot_id < DOT_PRODUCTS; dot_id++) {
             matrix_mem_wen[dot_id].write(false);
           }
         }
       } else {
         ififo_wen_signal.write(false);
-        reduce_fifo_wen_signal.write(false);
         for (unsigned int dot_id = 0; dot_id < DOT_PRODUCTS; dot_id++) {
           matrix_mem_wen[dot_id].write(false);
         }
       }
     } else {
       ififo_wen_signal.write(false);
-      reduce_fifo_wen_signal.write(false);
       for (unsigned int dot_id = 0; dot_id < DOT_PRODUCTS; dot_id++) {
         matrix_mem_wen[dot_id].write(false);
       }
+    }
+
+    if (rx_reduce_interface.tvalid.read() &&
+        rx_reduce_interface.tready.read()) {
+      sc_bv<AXIS_MAX_DATAW> tdata = rx_reduce_interface.tdata.read();
+      assert(rx_reduce_interface.tuser.read().range(15, 13).to_uint() == 2);
+
+      // Read rx tdata into a vector
+      for (unsigned int lane_id = 0; lane_id < LANES; lane_id++) {
+        tdata_vec[lane_id] =
+            tdata.range((lane_id + 1) * BITWIDTH - 1, lane_id * BITWIDTH)
+                .to_int();
+      }
+
+      reduce_fifo_wdata_signal.write(tdata_vec);
+      reduce_fifo_wen_signal.write(true);
+      // std::cout << this->name() << " Write to reduce FIFO" << std::endl;
+      //   std::cout << tdata_vec << std::endl;
+    } else {
+      reduce_fifo_wen_signal.write(false);
     }
     wait();
   }
@@ -375,13 +392,20 @@ void mvm::Tick() {
 
 void mvm::Assign() {
   if (rst.read()) {
-    rx_interface.tready.write(false);
-    tx_interface.tdata.write(0);
-    tx_interface.tvalid.write(false);
-    tx_interface.tstrb.write((2 << AXIS_STRBW) - 1);
-    tx_interface.tkeep.write((2 << AXIS_KEEPW) - 1);
-    tx_interface.tlast.write(0);
-    tx_interface.tuser.write(0);
+    rx_input_interface.tready.write(false);
+    rx_reduce_interface.tready.write(false);
+    tx_input_interface.tdata.write(0);
+    tx_input_interface.tvalid.write(false);
+    tx_input_interface.tstrb.write((2 << AXIS_STRBW) - 1);
+    tx_input_interface.tkeep.write((2 << AXIS_KEEPW) - 1);
+    tx_input_interface.tlast.write(0);
+    tx_input_interface.tuser.write(0);
+    tx_reduce_interface.tdata.write(0);
+    tx_reduce_interface.tvalid.write(false);
+    tx_reduce_interface.tstrb.write((2 << AXIS_STRBW) - 1);
+    tx_reduce_interface.tkeep.write((2 << AXIS_KEEPW) - 1);
+    tx_reduce_interface.tlast.write(0);
+    tx_reduce_interface.tuser.write(0);
     ififo_ren_signal.write(false);
     reduce_fifo_ren_signal.write(false);
     ofifo_wen_signal.write(false);
@@ -393,20 +417,25 @@ void mvm::Assign() {
     dot_op.write(false);
     dot_reduce_op.write(false);
   } else {
-    if (rx_interface.tuser.read().range(15, 13).to_uint() == 1) { // Inst memory
-      rx_interface.tready.write(true);
-    } else if (rx_interface.tuser.read().range(15, 13).to_uint() ==
-               2) { // Reduction FIFO
-      rx_interface.tready.write(!reduce_fifo_almost_full_signal.read());
-    } else if (rx_interface.tuser.read().range(15, 13).to_uint() ==
+    if (rx_input_interface.tuser.read().range(15, 13).to_uint() ==
+        1) { // Inst memory
+      rx_input_interface.tready.write(true);
+    } else if (rx_input_interface.tuser.read().range(15, 13).to_uint() ==
                3) { // Input FIFO
-      rx_interface.tready.write(!ififo_almost_full_signal.read());
-    } else if (rx_interface.tuser.read().range(15, 13).to_uint() ==
+      rx_input_interface.tready.write(!ififo_almost_full_signal.read());
+    } else if (rx_input_interface.tuser.read().range(15, 13).to_uint() ==
                4) { // Matrix memory
-      rx_interface.tready.write(true);
+      rx_input_interface.tready.write(true);
     } else {
-      rx_interface.tready.write(false);
+      rx_input_interface.tready.write(false);
     }
+
+    // if (rx_reduce_interface.tuser.read().range(15, 13).to_uint() ==
+    //     2) { // Reduction FIFO
+    rx_reduce_interface.tready.write(!reduce_fifo_almost_full_signal.read());
+    //} else {
+    //  rx_reduce_interface.tready.write(false);
+    //}
 
     matrix_mem_raddr.write(next_inst.read().raddr);
     next_inst.write(inst_memory[pc.read()]);
@@ -449,7 +478,7 @@ void mvm::Assign() {
         valid_pipeline[COMPUTE_LATENCY + RF_RD_LATENCY - 1].read());
     dm_fifo_wdata_signal.write(dest_mvm);
 
-    data_vector<sc_int<32>> tx_tdata = ofifo_rdata_signal.read();
+    data_vector<int16_t> tx_tdata = ofifo_rdata_signal.read();
     data_vector<sc_int<5>> dest_layer_vec;
     dest_layer_vec = dl_fifo_rdata_signal.read();
     int dest_layer_int = 0;
@@ -470,10 +499,12 @@ void mvm::Assign() {
     }
     dest_id = radsim_design.GetPortDestinationID(dest_name);
 
-    unsigned int dest_interface;
+    unsigned int dest_interface;    // which FIFO
+    unsigned int dest_interface_id; // added for separate ports
     // If destination is the same layer, send to reduce FIFO
     if ((unsigned int)dest_layer_int - 1 == layer_id) {
       dest_interface = 2 << 13;
+      dest_interface_id = 1;
       // if (tx_tdata.size() > 0 && !ofifo_empty_signal)
       // std::cout << this->name() << " sending to interface 2 -- " <<
       // dest_layer_int << std::endl;
@@ -481,37 +512,60 @@ void mvm::Assign() {
     // If destination is a different layer, send to the input FIFO
     else {
       dest_interface = 3 << 13;
+      dest_interface_id = 0;
       // if (tx_tdata.size() > 0 && !ofifo_empty_signal)
       // std::cout << this->name() << " sending to interface 3 -- " <<
       // dest_layer_int << std::endl;
     }
 
-    if (tx_tdata.size() > 0 && !ofifo_empty_signal) {
+    if (tx_tdata.size() > 0 && !ofifo_empty_signal && dest_interface_id == 0) {
       sc_bv<AXIS_MAX_DATAW> tx_tdata_bv;
       for (unsigned int lane_id = 0; lane_id < LANES; lane_id++) {
-        tx_tdata_bv.range((lane_id + 1) * 32 - 1, lane_id * 32) =
+        tx_tdata_bv.range((lane_id + 1) * BITWIDTH - 1, lane_id * BITWIDTH) =
             tx_tdata[lane_id];
       }
-      tx_interface.tdata.write(tx_tdata_bv);
-      tx_interface.tvalid.write(!ofifo_empty_signal);
-      tx_interface.tuser.write(dest_interface);
-      tx_interface.tdest.write(dest_id);
+      tx_input_interface.tdata.write(tx_tdata_bv);
+      tx_input_interface.tvalid.write(true);
+      tx_input_interface.tuser.write(dest_interface);
+      tx_input_interface.tdest.write(dest_id);
+      tx_input_interface.tid.write(dest_interface_id);
+      tx_reduce_interface.tvalid.write(false);
       /*if (dest_interface == 2 << 13 && !ofifo_empty_signal) {
         std::cout << "Sending to reduce FIFO" << std::endl;
         std::cout << tx_tdata << std::endl;
       }*/
       // std::cout << "MVM (" << layer_id << "," << mvm_id << ") pushed data
       // into the NoC with dest " << dest_id << "!" << std::endl;
+    } else if (tx_tdata.size() > 0 && !ofifo_empty_signal &&
+               dest_interface_id == 1) {
+      sc_bv<AXIS_MAX_DATAW> tx_tdata_bv;
+      for (unsigned int lane_id = 0; lane_id < LANES; lane_id++) {
+        tx_tdata_bv.range((lane_id + 1) * BITWIDTH - 1, lane_id * BITWIDTH) =
+            tx_tdata[lane_id];
+      }
+      tx_reduce_interface.tdata.write(tx_tdata_bv);
+      tx_reduce_interface.tvalid.write(true);
+      tx_reduce_interface.tuser.write(dest_interface);
+      tx_reduce_interface.tdest.write(dest_id);
+      tx_reduce_interface.tid.write(dest_interface_id);
+      tx_input_interface.tvalid.write(false);
     } else {
-      tx_interface.tvalid.write(false);
+      tx_input_interface.tvalid.write(false);
+      tx_reduce_interface.tvalid.write(false);
     }
 
-    ofifo_ren_signal.write(tx_interface.tvalid.read() &&
-                           tx_interface.tready.read());
-    dl_fifo_ren_signal.write(tx_interface.tvalid.read() &&
-                             tx_interface.tready.read());
-    dm_fifo_ren_signal.write(tx_interface.tvalid.read() &&
-                             tx_interface.tready.read());
+    ofifo_ren_signal.write((tx_input_interface.tvalid.read() &&
+                            tx_input_interface.tready.read()) ||
+                           (tx_reduce_interface.tvalid.read() &&
+                            tx_reduce_interface.tready.read()));
+    dl_fifo_ren_signal.write((tx_input_interface.tvalid.read() &&
+                              tx_input_interface.tready.read()) ||
+                             (tx_reduce_interface.tvalid.read() &&
+                              tx_reduce_interface.tready.read()));
+    dm_fifo_ren_signal.write((tx_input_interface.tvalid.read() &&
+                              tx_input_interface.tready.read()) ||
+                             (tx_reduce_interface.tvalid.read() &&
+                              tx_reduce_interface.tready.read()));
   }
 }
 
@@ -521,8 +575,11 @@ void mvm::RegisterModuleInfo() {
   _num_noc_axis_master_ports = 0;
 
   port_name = module_name + ".tx_interface";
-  RegisterAxisMasterPort(port_name, &tx_interface, DATAW, 0);
+  RegisterAxisMasterPort(port_name, &tx_input_interface, DATAW, 0);
 
   port_name = module_name + ".rx_interface";
-  RegisterAxisSlavePort(port_name, &rx_interface, DATAW, 0);
+  RegisterAxisSlavePort(port_name, &rx_input_interface, DATAW, 0);
+
+  // port_name = module_name + ".rx_reduce_interface";
+  // RegisterAxisSlavePort(port_name, &rx_reduce_interface, DATAW, 1);
 }

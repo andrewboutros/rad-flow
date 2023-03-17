@@ -145,10 +145,10 @@ void embedding_lookup::Tick() {
       // Receiving transactions from AXI-MM NoC
       if (aximm_req_interface[ch_id].rvalid.read() &&
           aximm_req_interface[ch_id].rready.read()) {
-        std::cout << module_name << ": Received READ response "
+        /*std::cout << module_name << ": Received READ response "
                   << _num_received_responses << " ("
                   << aximm_req_interface[ch_id].rdata.read() << ")!"
-                  << std::endl;
+                  << std::endl;*/
         _num_received_responses++;
       } else if (aximm_req_interface[ch_id].bvalid.read() &&
                  aximm_req_interface[ch_id].bready.read()) {

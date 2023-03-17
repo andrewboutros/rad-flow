@@ -12,13 +12,13 @@ hbm_channels = 8
 hbm_channel_words = 1 * 1024 * 1024 * 1024 / read_bytewidth
 ddr_channels = 0
 ddr_channel_words = 8 * 1024 * 1024 * 1024 / read_bytewidth
-num_test_inputs = 1
+num_test_inputs = 1024
 
 # MLP parameters
 native_dim = int(read_bytewidth / element_bytewidth)
 num_layers = 3
 hidden_dims = [1024, 512, 256]
-num_mvms = [1, 1, 1]
+num_mvms = [4, 2, 2]
 
 # Model parsing
 table_info = []
@@ -277,7 +277,7 @@ def generate_embedding_lookup_inputs(num_inputs):
                     vector_length = get_table_vector_length_by_id(table_info, table_id)
                     mem_addr = base_addr[-1] + input_vec[-1]
                     mem_contents_per_channel[ch][mem_addr] = [
-                        random.randint(-1, 1) for i in range(vector_length)
+                        random.randint(-2, 2) for i in range(vector_length)
                     ]
                     table_count += 1
             for ch in tables_per_hbm_channel:
@@ -292,7 +292,7 @@ def generate_embedding_lookup_inputs(num_inputs):
                     vector_length = get_table_vector_length_by_id(table_info, table_id)
                     mem_addr = base_addr[-1] + input_vec[-1]
                     mem_contents_per_channel[ddr_channels + ch][mem_addr] = [
-                        random.randint(-1, 1) for i in range(vector_length)
+                        random.randint(-2, 2) for i in range(vector_length)
                     ]
                     table_count += 1
             round_id += 1
@@ -359,7 +359,7 @@ def generate_feature_interaction_instructions():
     table_count = 0
     total_flush_count = 0
     flush_counters = np.zeros(ddr_channels + hbm_channels, dtype=int)
-    total_bytes = 0
+    total_pushed_bytes = 0
     while table_count < len(table_info):
         for c in tables_per_ddr_channel:
             if round_id < len(tables_per_ddr_channel[c]):
@@ -369,7 +369,7 @@ def generate_feature_interaction_instructions():
                 num_pops = int(
                     vector_length * element_bytewidth / smallest_table_bytewidth
                 )
-                total_bytes += vector_length * element_bytewidth
+                total_pushed_bytes += vector_length * element_bytewidth
                 for p in range(num_pops):
                     fifo_ids = [c]
                     for fc in range(len(flush_counters)):
@@ -392,7 +392,7 @@ def generate_feature_interaction_instructions():
                 num_pops = int(
                     vector_length * element_bytewidth / smallest_table_bytewidth
                 )
-                total_bytes += vector_length * element_bytewidth
+                total_pushed_bytes += vector_length * element_bytewidth
                 for p in range(num_pops):
                     fifo_ids = [c]
                     for fc in range(len(flush_counters)):
@@ -408,10 +408,11 @@ def generate_feature_interaction_instructions():
 
         round_id += 1
 
-    if total_bytes % read_bytewidth > 0:
-        remaining_bytes = read_bytewidth - (total_bytes % read_bytewidth)
-    else:
-        remaining_bytes = 0
+    padded_input_dim = math.ceil(input_dim / native_dim / num_mvms[0])
+    padded_input_dim = int(padded_input_dim * native_dim * num_mvms[0])
+    total_vector_bytewidth = padded_input_dim * element_bytewidth
+    remaining_bytes = total_vector_bytewidth - total_pushed_bytes
+    assert remaining_bytes % smallest_table_bytewidth == 0
     padding_words = int(remaining_bytes / smallest_table_bytewidth)
     while total_flush_count > 0:
         fifo_ids = []
@@ -497,9 +498,15 @@ def generate_mlp_weights():
             * num_mvms_out
         )
         padded_weights.append(np.zeros(shape=(padded_dimy, padded_dimx), dtype=int))
-        padded_weights[l][: hidden_dims[l], :layer_input_dim] = np.random.randint(
-            -2, 2, size=(hidden_dims[l], layer_input_dim)
-        )
+        for i in range(hidden_dims[l]):
+            sample_indecies = random.sample(
+                range(layer_input_dim), int(0.1 * layer_input_dim)
+            )
+            for idx in sample_indecies:
+                padded_weights[l][i, idx] = np.random.randint(-2, 2)
+        # padded_weights[l][: hidden_dims[l], :layer_input_dim] = np.random.randint(
+        #    -2, 2, size=(hidden_dims[l], layer_input_dim)
+        # )
 
     # Prepare weight MIFs directory
     if not (os.path.exists("./mvm_weights")):
@@ -605,7 +612,16 @@ def generate_mvm_instructions(padded_weights):
 
 def generate_mlp_outputs(padded_weights):
     # Compute test outputs
-    test_inputs = np.transpose(test_feature_interaction_outputs)
+    padded_input_dim = int(
+        math.ceil(input_dim * 1.0 / native_dim / num_mvms[0]) * native_dim * num_mvms[0]
+    )
+    padded_test_feature_interaction_outputs = np.zeros(
+        shape=(num_test_inputs, padded_input_dim), dtype=int
+    )
+    padded_test_feature_interaction_outputs[
+        :, :input_dim
+    ] = test_feature_interaction_outputs
+    test_inputs = np.transpose(padded_test_feature_interaction_outputs)
     test_outputs = np.dot(padded_weights[0], test_inputs)
     # test_outputs = np.maximum(test_outputs, np.zeros(shape=test_outputs.shape, dtype=int))
     for l in range(1, num_layers):
@@ -615,6 +631,9 @@ def generate_mlp_outputs(padded_weights):
 
     # Generate test output MIFs
     output_file = open("./mlp.out", "w")
+    output_file.write(
+        str(test_outputs.shape[0] * int(test_outputs.shape[1] / native_dim)) + "\n"
+    )
     for o in range(test_outputs.shape[0]):
         for c in range(int(test_outputs.shape[1] / native_dim)):
             for e in range(native_dim):

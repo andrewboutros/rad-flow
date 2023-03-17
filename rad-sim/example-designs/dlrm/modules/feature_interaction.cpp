@@ -36,73 +36,39 @@ feature_interaction::feature_interaction(const sc_module_name &name,
                                          unsigned int element_bitwidth,
                                          unsigned int num_mem_channels,
                                          unsigned int fifos_depth,
+                                         unsigned int num_output_channels,
                                          std::string &instructions_file)
-    : radsim_module(name) {
+    : radsim_module(name), _staging_data(dataw / element_bitwidth) {
 
   _fifos_depth = fifos_depth;
+  _afifo_width_ratio = 8;
   _num_received_responses = 0;
   _num_mem_channels = num_mem_channels;
   _dataw = dataw;
   _bitwidth = element_bitwidth;
-  _num_elements = dataw / element_bitwidth;
+  _num_elements_wide = dataw / element_bitwidth;
+  _num_elements_narrow = _num_elements_wide / _afifo_width_ratio;
+  _num_output_channels = num_output_channels;
+  _staging_counter = 0;
 
   aximm_interface.init(_num_mem_channels);
-
-  std::string module_name_str;
-  char module_name[25];
+  axis_interface.init(_num_output_channels);
 
   _input_fifos.resize(_num_mem_channels);
-  _ififo_wdata.init(_num_mem_channels);
-  _ififo_rdata.init(_num_mem_channels);
-  _ififo_wen.init(_num_mem_channels);
-  _ififo_ren.init(_num_mem_channels);
   _ififo_full.init(_num_mem_channels);
-  _ififo_afull.init(_num_mem_channels);
   _ififo_empty.init(_num_mem_channels);
-  for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
-    module_name_str = "ififo_" + std::to_string(ch_id);
-    std::strcpy(module_name, module_name_str.c_str());
-    _input_fifos[ch_id] = new afifo<int16_t>(module_name, _fifos_depth,
-                                             _dataw / 16, 4, _fifos_depth - 4);
-    _input_fifos[ch_id]->clk(clk);
-    _input_fifos[ch_id]->rst(rst);
-    _input_fifos[ch_id]->wen(_ififo_wen[ch_id]);
-    _input_fifos[ch_id]->wdata(_ififo_wdata[ch_id]);
-    _input_fifos[ch_id]->ren(_ififo_ren[ch_id]);
-    _input_fifos[ch_id]->rdata(_ififo_rdata[ch_id]);
-    _input_fifos[ch_id]->full(_ififo_full[ch_id]);
-    _input_fifos[ch_id]->almost_full(_ififo_afull[ch_id]);
-    _input_fifos[ch_id]->empty(_ififo_empty[ch_id]);
-  }
 
-  module_name_str = "ofifo";
-  std::strcpy(module_name, module_name_str.c_str());
-  _output_fifo = new afifo<int16_t>(module_name, _fifos_depth, 4, _dataw / 16,
-                                    _fifos_depth - 4);
-  _output_fifo->clk(clk);
-  _output_fifo->rst(rst);
-  _output_fifo->wen(_ofifo_wen);
-  _output_fifo->wdata(_ofifo_wdata);
-  _output_fifo->ren(_ofifo_ren);
-  _output_fifo->rdata(_ofifo_rdata);
-  _output_fifo->full(_ofifo_full);
-  _output_fifo->almost_full(_ofifo_afull);
-  _output_fifo->empty(_ofifo_empty);
+  _output_fifos.resize(_num_output_channels);
+  _ofifo_full.init(_num_output_channels);
+  _ofifo_empty.init(_num_output_channels);
 
   ParseFeatureInteractionInstructions(instructions_file, _instructions);
 
   // Combinational logic and its sensitivity list
   SC_METHOD(Assign);
-  sensitive << rst << _ofifo_empty << _ofifo_rdata << feature_interaction_valid
-            << feature_interaction_ready;
+  sensitive << rst;
   for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
     sensitive << _ififo_full[ch_id];
-  }
-  // Combinational logic and its sensitivity list
-  SC_METHOD(AssignPC);
-  sensitive << rst << _pc << _ofifo_afull;
-  for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
-    sensitive << _ififo_empty[ch_id] << _ififo_rdata[ch_id];
   }
   // Sequential logic and its clock/reset setup
   SC_CTHREAD(Tick, clk.pos());
@@ -113,12 +79,7 @@ feature_interaction::feature_interaction(const sc_module_name &name,
   this->RegisterModuleInfo();
 }
 
-feature_interaction::~feature_interaction() {
-  for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
-    delete _input_fifos[ch_id];
-  }
-  delete _output_fifo;
-}
+feature_interaction::~feature_interaction() {}
 
 void feature_interaction::Assign() {
   if (rst) {
@@ -126,64 +87,11 @@ void feature_interaction::Assign() {
       aximm_interface[ch_id].bready.write(false);
       aximm_interface[ch_id].rready.write(false);
     }
-    feature_interaction_valid.write(false);
-    _ofifo_ren.write(false);
   } else {
-    // Always ready to accept read/write response from the AXI-MM NoC
-    // interface
+    // Set ready signals to accept read/write response from the AXI-MM NoC
     for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
       aximm_interface[ch_id].bready.write(false);
       aximm_interface[ch_id].rready.write(!_ififo_full[ch_id].read());
-    }
-    feature_interaction_valid.write(!_ofifo_empty.read());
-    feature_interaction_odata.write(_ofifo_rdata.read());
-    _ofifo_ren.write(feature_interaction_valid.read() &&
-                     feature_interaction_ready.read());
-  }
-}
-
-void feature_interaction::AssignPC() {
-  if (rst) {
-    for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
-      _ififo_ren[ch_id].write(false);
-    }
-    _ofifo_wen.write(false);
-  } else {
-    // Check that all FIFOs to be popped are not empty
-    bool ififos_rd_ok = true;
-    for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
-      if (_instructions[_pc.read()].fifo_pops[ch_id]) {
-        ififos_rd_ok = ififos_rd_ok && !_ififo_empty[ch_id].read();
-      }
-    }
-
-    // If iFIFOs are ok, pop all & push one (or padding) to the oFIFO
-    if (ififos_rd_ok && !_ofifo_afull.read()) {
-      for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
-        _ififo_ren[ch_id].write(_instructions[_pc.read()].fifo_pops[ch_id]);
-      }
-
-      unsigned int mux_select = _instructions[_pc.read()].mux_select;
-      if (mux_select == _num_mem_channels + 1) {
-        data_vector<int16_t> all_zeros(_num_elements);
-        _ofifo_wdata.write(all_zeros);
-        _ofifo_wen.write(true);
-      } else if (mux_select > 0) {
-        _ofifo_wdata.write(_ififo_rdata[mux_select - 1].read());
-        _ofifo_wen.write(true);
-        data_vector<int16_t> rdata = _ififo_rdata[mux_select - 1].read();
-        // std::cout << GetSimulationCycle(5.0) << ": Steer iFIFO "
-        //           << mux_select - 1 << " to oFIFO (PC = " << _pc.read()
-        //           << "): " << rdata << std::endl;
-      } else {
-        _ofifo_wen.write(false);
-      }
-
-    } else {
-      for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
-        _ififo_ren[ch_id].write(false);
-      }
-      _ofifo_wen.write(false);
     }
   }
 }
@@ -192,66 +100,190 @@ void feature_interaction::bv_to_data_vector(sc_bv<AXI_MAX_DATAW> &bitvector,
                                             data_vector<int16_t> &datavector) {
 
   unsigned int start_idx, end_idx;
-  for (unsigned int element_id = 0; element_id < _num_elements; element_id++) {
-    start_idx = element_id * _bitwidth;
-    end_idx = (element_id + 1) * _bitwidth;
-    datavector[element_id] = bitvector.range(end_idx - 1, start_idx).to_int();
+  for (unsigned int e = 0; e < _num_elements_wide; e++) {
+    start_idx = e * _bitwidth;
+    end_idx = (e + 1) * _bitwidth;
+    datavector[e] = bitvector.range(end_idx - 1, start_idx).to_int();
   }
 }
 
+void feature_interaction::data_vector_to_bv(data_vector<int16_t> &datavector,
+                                            sc_bv<AXIS_MAX_DATAW> &bitvector) {
+
+  unsigned int start_idx, end_idx;
+  for (unsigned int e = 0; e < _num_elements_wide; e++) {
+    start_idx = e * _bitwidth;
+    end_idx = (e + 1) * _bitwidth;
+    bitvector.range(end_idx - 1, start_idx) = datavector[e];
+  }
+}
+
+bool are_ififos_ready(sc_vector<sc_signal<bool>> &ififo_empty,
+                      feature_interaction_inst &inst) {
+
+  bool ready = true;
+  bool fifos_popped = (inst.mux_select > 0);
+  for (unsigned int ch_id = 0; ch_id < inst.fifo_pops.size(); ch_id++) {
+    if (inst.fifo_pops[ch_id]) {
+      fifos_popped = true;
+      ready &= !ififo_empty[ch_id].read();
+    }
+  }
+  return (ready && fifos_popped);
+}
+
 void feature_interaction::Tick() {
-  // Reset logic
+  // Reset ports
   for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
     aximm_interface[ch_id].arvalid.write(false);
     aximm_interface[ch_id].awvalid.write(false);
     aximm_interface[ch_id].wvalid.write(false);
-    _ififo_wen[ch_id].write(false);
   }
+  // feature_interaction_valid.write(false);
   received_responses.write(0);
+  // Reset signals
+  for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
+    _ififo_full[ch_id].write(false);
+    _ififo_empty[ch_id].write(true);
+  }
+  for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
+    _ofifo_full[ch_id].write(false);
+    _ofifo_empty[ch_id].write(true);
+    axis_interface[ch_id].tvalid.write(false);
+  }
+  _dest_ofifo.write(0);
+  _src_ofifo.write(0);
+  _pc.write(0);
   wait();
 
   // Always @ positive edge of the clock
   while (true) {
-    // Receiving transactions from AXI-MM NoC
+    // Accept R responses from the NoC
     for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
-      if (aximm_interface[ch_id].rvalid.read() &&
-          aximm_interface[ch_id].rready.read()) {
-        data_vector<int16_t> rdata(_num_elements);
-        sc_bv<AXI_MAX_DATAW> bitvector = aximm_interface[ch_id].rdata.read();
-        bv_to_data_vector(bitvector, rdata);
-        _ififo_wdata[ch_id].write(rdata);
-        _ififo_wen[ch_id].write(true);
-        // std::cout << "IFIFO " << ch_id << " PUSH: " << rdata << std::endl;
-        // std::cout << module_name << ": Pushed read response to input FIFO "
-        //            << ch_id << " [" << rdata << "]" << std::endl;
+      if (_input_fifos[ch_id].size() < _fifos_depth &&
+          aximm_interface[ch_id].rvalid.read()) {
+        sc_bv<AXI_MAX_DATAW> rdata_bv = aximm_interface[ch_id].rdata.read();
+        data_vector<int16_t> rdata(_num_elements_wide);
+        bv_to_data_vector(rdata_bv, rdata);
+        for (unsigned int c = 0; c < _afifo_width_ratio; c++) {
+          data_vector<int16_t> sliced_data(_num_elements_narrow);
+          for (unsigned int e = 0; e < sliced_data.size(); e++) {
+            sliced_data[e] = rdata[(c * sliced_data.size()) + e];
+          }
+          _input_fifos[ch_id].push(sliced_data);
+        }
         _num_received_responses++;
-      } else if (aximm_interface[ch_id].bvalid.read() &&
-                 aximm_interface[ch_id].bready.read()) {
-        _num_received_responses++;
-        _ififo_wen[ch_id].write(false);
-      } else {
-        _ififo_wen[ch_id].write(false);
+        // std::cout << GetSimulationCycle(5.0) << " === "
+        //           << "Pushed response to iFIFO " << ch_id << " "
+        //           << _input_fifos[ch_id].size() << std::endl;
       }
     }
 
-    // Check that all FIFOs to be popped are not empty
-    bool ififos_rd_ok = true;
-    for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
-      if (_instructions[_pc.read()].fifo_pops[ch_id]) {
-        ififos_rd_ok = ififos_rd_ok && !_ififo_empty[ch_id].read();
+    // Pop from input FIFOs to staging register
+    bool ififos_ready =
+        are_ififos_ready(_ififo_empty, _instructions[_pc.read()]);
+    if (ififos_ready && !_ofifo_full[_dest_ofifo.read()]) {
+      // Pick the right iFIFO (or zeros) to push to staging register
+      unsigned int mux_select = _instructions[_pc.read()].mux_select;
+      if (mux_select == _num_mem_channels + 1) {
+        for (unsigned int e = 0; e < _num_elements_narrow; e++) {
+          _staging_data[(_staging_counter * _num_elements_narrow) + e] = 0;
+        }
+      } else if (mux_select > 0) {
+        data_vector<int16_t> popped_data = _input_fifos[mux_select - 1].front();
+        for (unsigned int e = 0; e < _num_elements_narrow; e++) {
+          _staging_data[(_staging_counter * _num_elements_narrow) + e] =
+              popped_data[e];
+        }
       }
-    }
 
-    // If iFIFOs are ok, pop all & push one (or padding) to the oFIFO
-    if (ififos_rd_ok && !_ofifo_afull.read()) {
+      if (mux_select > 0) {
+        if (_staging_counter == _afifo_width_ratio - 1) {
+          _staging_counter = 0;
+          _output_fifos[_dest_ofifo.read()].push(_staging_data);
+          if (_dest_ofifo.read() == _num_output_channels - 1) {
+            _dest_ofifo.write(0);
+          } else {
+            _dest_ofifo.write(_dest_ofifo.read() + 1);
+          }
+        } else {
+          _staging_counter++;
+        }
+      }
+
+      // Pop selected iFIFOs
+      for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
+        if (_instructions[_pc.read()].fifo_pops[ch_id]) {
+          _input_fifos[ch_id].pop();
+        }
+      }
+
+      // Advance Instructions Pointer
       if (_pc.read() == _instructions.size() - 1) {
         _pc.write(0);
+        assert(_staging_counter == 0);
       } else {
         _pc.write(_pc.read() + 1);
       }
     }
 
+    // Interface with AXI-S NoC
+    for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
+      if (axis_interface[ch_id].tready.read() &&
+          axis_interface[ch_id].tvalid.read()) {
+        _output_fifos[ch_id].pop();
+      }
+
+      if (!_output_fifos[ch_id].empty()) {
+        data_vector<int16_t> tx_tdata = _output_fifos[ch_id].front();
+        sc_bv<AXIS_MAX_DATAW> tx_tdata_bv;
+        data_vector_to_bv(tx_tdata, tx_tdata_bv);
+        axis_interface[ch_id].tvalid.write(true);
+        axis_interface[ch_id].tdata.write(tx_tdata_bv);
+        axis_interface[ch_id].tuser.write(3 << 13);
+        axis_interface[ch_id].tid.write(0);
+        std::string dest_name =
+            "layer0_mvm" + std::to_string(ch_id) + ".rx_interface";
+        axis_interface[ch_id].tdest.write(
+            radsim_design.GetPortDestinationID(dest_name));
+      } else {
+        axis_interface[ch_id].tvalid.write(false);
+      }
+    }
+
+    // Interface with testbench
+    /*if (!_ofifo_empty[_src_ofifo.read()] && feature_interaction_ready.read())
+    { feature_interaction_valid.write(true);
+      feature_interaction_odata.write(_output_fifos[_src_ofifo.read()].front());
+      _output_fifos[_src_ofifo.read()].pop();
+      if (_src_ofifo.read() == _num_output_channels - 1) {
+        _src_ofifo.write(0);
+      } else {
+        _src_ofifo.write(_src_ofifo.read() + 1);
+      }
+    } else {
+      feature_interaction_valid.write(false);
+    }*/
+
+    // Set FIFO signals
+    for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
+      _ififo_empty[ch_id].write(_input_fifos[ch_id].empty());
+      _ififo_full[ch_id].write(_input_fifos[ch_id].size() >=
+                               (_fifos_depth - _afifo_width_ratio));
+    }
+    for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
+      _ofifo_empty[ch_id].write(_output_fifos[ch_id].empty());
+      _ofifo_full[ch_id].write(_output_fifos[ch_id].size() >= _fifos_depth - 2);
+    }
     received_responses.write(_num_received_responses);
+    /*for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
+      std::cout << "iFIFO " << ch_id
+                << " occupancy = " << _input_fifos[ch_id].size() << std::endl;
+    }
+    for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
+      std::cout << "oFIFO " << ch_id
+                << " occupancy = " << _output_fifos[ch_id].size() << std::endl;
+    }*/
     wait();
   }
 }
@@ -266,5 +298,10 @@ void feature_interaction::RegisterModuleInfo() {
   for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
     port_name = module_name + ".aximm_interface_" + std::to_string(ch_id);
     RegisterAximmMasterPort(port_name, &aximm_interface[ch_id], _dataw);
+  }
+
+  for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
+    port_name = module_name + ".axis_interface_" + std::to_string(ch_id);
+    RegisterAxisMasterPort(port_name, &axis_interface[ch_id], _dataw, 0);
   }
 }

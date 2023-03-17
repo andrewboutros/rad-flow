@@ -20,6 +20,14 @@ fifo<dtype>::fifo(const sc_module_name &name, unsigned int depth,
 
 template <class dtype> fifo<dtype>::~fifo() {}
 
+template <class dtype> bool fifo<dtype>::not_full() {
+  return mem.size() < capacity;
+}
+
+template <class dtype> unsigned int fifo<dtype>::occupancy() {
+  return mem.size();
+}
+
 template <class dtype> void fifo<dtype>::Tick() {
   // Reset logic
   while (!mem.empty())
@@ -72,6 +80,7 @@ template <class dtype> void fifo<dtype>::Tick() {
   }
 }
 
+template class fifo<int16_t>;
 template class fifo<sc_int<32>>;
 template class fifo<sc_int<5>>;
 template class fifo<sc_uint<5>>;

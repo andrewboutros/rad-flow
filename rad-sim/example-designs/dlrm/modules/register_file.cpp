@@ -100,4 +100,4 @@ template <class dtype> void register_file<dtype>::Tick() {
   }
 }
 
-template class register_file<sc_int<32>>;
+template class register_file<int16_t>;

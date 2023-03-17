@@ -10,8 +10,7 @@ collector::collector(const sc_module_name &name)
   std::string fifo_name_str;
   fifo_name_str = "collector_data_fifo";
   std::strcpy(fifo_name, fifo_name_str.c_str());
-  data_fifo =
-      new fifo<sc_int<32>>(fifo_name, FIFO_SIZE, LANES, FIFO_SIZE - 1, 0);
+  data_fifo = new fifo<int16_t>(fifo_name, FIFO_SIZE, LANES, FIFO_SIZE - 1, 0);
   data_fifo->clk(clk);
   data_fifo->rst(rst);
   data_fifo->wen(data_fifo_wen_signal);
@@ -42,12 +41,13 @@ void collector::Assign() {
                                rx_interface.tready.read());
     data_fifo_rdy.write(!data_fifo_empty_signal);
 
-    data_vector<sc_int<32>> tx_tdata(LANES);
+    data_vector<int16_t> tx_tdata(LANES);
     sc_bv<AXIS_MAX_DATAW> tx_tdata_bv = rx_interface.tdata.read();
     if (rx_interface.tvalid.read() && rx_interface.tready.read()) {
       for (unsigned int lane_id = 0; lane_id < LANES; lane_id++) {
         tx_tdata[lane_id] =
-            tx_tdata_bv.range((lane_id + 1) * 32 - 1, lane_id * 32).to_int();
+            tx_tdata_bv.range((lane_id + 1) * BITWIDTH - 1, lane_id * BITWIDTH)
+                .to_int();
       }
       data_fifo_wdata_signal.write(tx_tdata);
     }

@@ -43,22 +43,15 @@ template <class dtype> void afifo<dtype>::Tick() {
       _mem.pop();
     }
 
-    // Output ports
-    data_vector<dtype> tmp(_output_width);
-    if (_mem.size() > 0) {
-      tmp = _mem.front();
-    }
-    rdata.write(tmp);
-    empty.write(_mem.size() == 0);
-    full.write(_mem.size() >= _capacity);
-    almost_full.write(_mem.size() >= _fifo_almost_full_size);
-
     // Push logic
     data_vector<dtype> wdata_vector;
     if (wen.read()) {
       if (_wide_to_narrow) {
         if (_mem.size() > _capacity - _width_ratio) {
-          sim_log.log(error, "FIFO is overflowing!", this->name());
+          sim_log.log(error,
+                      "FIFO is overflowing! Size = " +
+                          std::to_string(_mem.size()),
+                      this->name());
         }
         wdata_vector = wdata.read();
         for (unsigned int i = 0; i < _width_ratio; i++) {
@@ -75,6 +68,12 @@ template <class dtype> void afifo<dtype>::Tick() {
               wdata_vector[i];
         }
         if (_staging_counter == _width_ratio - 1) {
+          if (_mem.size() >= _capacity) {
+            sim_log.log(error,
+                        "FIFO is overflowing! Size = " +
+                            std::to_string(_mem.size()),
+                        this->name());
+          }
           _staging_counter = 0;
           _mem.push(_staging_vector);
         } else {
@@ -83,6 +82,20 @@ template <class dtype> void afifo<dtype>::Tick() {
       }
     }
 
+    empty.write(_mem.size() == 0);
+    if (_wide_to_narrow)
+      full.write(_mem.size() > _capacity - _width_ratio);
+    else
+      full.write(_mem.size() >= _capacity);
+    almost_full.write(_mem.size() > _capacity - 2 * _width_ratio);
+    data_vector<dtype> tmp(_output_width);
+    if (_mem.size() > 0) {
+      tmp = _mem.front();
+    }
+    rdata.write(tmp);
+
+    // std::cout << this->name() << ": " << _mem.size() << " "
+    //           << (_mem.size() >= _fifo_almost_full_size) << std::endl;
     wait();
   }
 }

@@ -8,10 +8,10 @@ public:
   bool en;
   bool jump;
   bool reduce;
-  uint32_t accum;
+  unsigned int accum;
   bool accum_en;
   bool release;
-  uint32_t raddr;
+  unsigned int raddr;
   bool last;
   sc_int<5> dest_layer;
   sc_uint<5> dest_mvm;

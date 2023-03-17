@@ -185,9 +185,9 @@ void aximm_slave_adapter::InputInterface() {
       int unique_sim_id = NoCTransactionTelemetry::RecordTransactionInitiation(
           _node_id, noc_dest, AXI_TYPE_AR, _interface_dataw, _network_id);
       _i_unique_sim_id.write(unique_sim_id);
-      /*std::cout << this->name() << ": Registered AR transaction (user = "
-                << aximm_interface.aruser.read().to_uint64() << ")!"
-                << std::endl;*/
+      // std::cout << this->name() << ": Registered AR transaction (user = "
+      //           << aximm_interface.aruser.read().to_uint64() << ")!"
+      //           << std::endl;
     } else if (aximm_interface.awready.read() &&
                aximm_interface.awvalid.read()) {
       // Capture the values at the AXI AW port
@@ -646,7 +646,6 @@ void aximm_slave_adapter::OutputInterface() {
       _output_packet_ready = false;
       NoCTransactionTelemetry::RecordTransactionReceipt(
           temp_flit->_sim_transaction_id);
-
     } else if (_output_packet_ready &&
                (_output_packet.GetFlit(0)->_type ==
                 Flit::FlitType::READ_REPLY) &&
@@ -674,6 +673,9 @@ void aximm_slave_adapter::OutputInterface() {
       _output_packet_ready = false;
       NoCTransactionTelemetry::RecordTransactionReceipt(
           temp_flit->_sim_transaction_id);
+
+      // std::cout << GetSimulationCycle(5.0) << " === " << this->name()
+      //           << ": Got R response!" << std::endl;
     } else {
       aximm_interface.rvalid.write(false);
       aximm_interface.bvalid.write(false);

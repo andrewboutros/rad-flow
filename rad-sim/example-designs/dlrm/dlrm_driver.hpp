@@ -15,7 +15,9 @@ private:
   std::vector<data_vector<unsigned int>> _target_channels;
   std::vector<data_vector<uint64_t>> _base_addresses;
   std::vector<std::vector<int16_t>> _feature_interaction_outputs;
-  unsigned int _num_outputs;
+  std::vector<std::vector<int16_t>> _mlp_outputs;
+  unsigned int _num_feature_interaction_outputs;
+  unsigned int _num_mlp_outputs;
   unsigned int _start_cycle, _end_cycle;
 
 public:
@@ -27,14 +29,16 @@ public:
   sc_out<bool> lookup_indecies_valid;
   sc_in<bool> lookup_indecies_ready;
 
-  sc_in<data_vector<int16_t>> feature_interaction_odata;
-  sc_in<bool> feature_interaction_valid;
-  sc_out<bool> feature_interaction_ready;
   sc_in<unsigned int> received_responses;
+
+  sc_in<bool> collector_fifo_rdy;
+  sc_out<bool> collector_fifo_ren;
+  sc_in<data_vector<int16_t>> collector_fifo_rdata;
 
   dlrm_driver(const sc_module_name &name);
   ~dlrm_driver();
 
+  void assign();
   void source();
   void sink();
 

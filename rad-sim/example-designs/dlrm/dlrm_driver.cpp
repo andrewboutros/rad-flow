@@ -46,9 +46,8 @@ bool ParseInputs(std::vector<data_vector<uint64_t>> &lookup_indecies,
   return true;
 }
 
-bool ParseFeatureInteractionOutputs(
-    std::vector<std::vector<int16_t>> &fi_outputs, std::string &io_filename,
-    unsigned int &num_outputs) {
+bool ParseOutputs(std::vector<std::vector<int16_t>> &fi_outputs,
+                  std::string &io_filename, unsigned int &num_outputs) {
   std::ifstream io_file(io_filename);
   if (!io_file)
     return false;
@@ -86,21 +85,27 @@ dlrm_driver::dlrm_driver(const sc_module_name &name) : sc_module(name) {
 
   std::string feature_interaction_outputs_filename =
       design_root_dir + "/compiler/feature_interaction.out";
-  ParseFeatureInteractionOutputs(_feature_interaction_outputs,
-                                 feature_interaction_outputs_filename,
-                                 _num_outputs);
+  ParseOutputs(_feature_interaction_outputs,
+               feature_interaction_outputs_filename,
+               _num_feature_interaction_outputs);
 
+  std::string mlp_outputs_filename = design_root_dir + "/compiler/mlp.out";
+  ParseOutputs(_mlp_outputs, mlp_outputs_filename, _num_mlp_outputs);
+
+  SC_METHOD(assign);
+  sensitive << collector_fifo_rdy;
   SC_CTHREAD(source, clk.pos());
   SC_CTHREAD(sink, clk.pos());
 }
 
 dlrm_driver::~dlrm_driver() {}
 
+void dlrm_driver::assign() { collector_fifo_ren.write(collector_fifo_rdy); }
+
 void dlrm_driver::source() {
   // Reset
   rst.write(true);
   lookup_indecies_valid.write(false);
-  feature_interaction_ready.write(true);
   wait();
   rst.write(false);
   wait();
@@ -121,49 +126,70 @@ void dlrm_driver::source() {
     }
   }
   lookup_indecies_valid.write(false);
-  std::cout << this->name()
-            << ": Finished sending all inputs to embedding lookup module!"
+  std::cout << "Finished sending all inputs to embedding lookup module!"
             << std::endl;
   wait();
 }
 
+void print_progress_bar(unsigned int outputs_count, unsigned int total) {
+  unsigned int loading_bar_width = 50;
+  std::cout << "[";
+  float progress = 1.0 * outputs_count / total;
+  unsigned int pos = loading_bar_width * progress;
+  for (unsigned int i = 0; i < loading_bar_width; ++i) {
+    if (i < pos)
+      std::cout << "=";
+    else if (i == pos)
+      std::cout << ">";
+    else
+      std::cout << " ";
+  }
+  if (outputs_count == total) {
+    std::cout << "] " << int(progress * 100.0) << " %\n";
+  } else {
+    std::cout << "] " << int(progress * 100.0) << " %\r";
+  }
+  std::cout.flush();
+}
+
 void dlrm_driver::sink() {
+  std::ofstream mismatching_outputs_file;
+  mismatching_outputs_file.open("mismatching.log");
+
   unsigned int outputs_count = 0;
   data_vector<int16_t> dut_output;
   bool all_outputs_matching = true;
-  while (outputs_count < _num_outputs) {
-    if (feature_interaction_ready.read() && feature_interaction_valid.read()) {
+  while (outputs_count < _num_mlp_outputs) {
+    dut_output = collector_fifo_rdata.read();
+    if (collector_fifo_rdy.read() && dut_output.size() > 0) {
       bool matching = true;
-      dut_output = feature_interaction_odata.read();
-      for (unsigned int element_id = 0; element_id < dut_output.size();
-           element_id++) {
-        matching = (dut_output[element_id] ==
-                    _feature_interaction_outputs[outputs_count][element_id]);
+      for (unsigned int e = 0; e < dut_output.size(); e++) {
+        matching = (dut_output[e] == _mlp_outputs[outputs_count][e]);
       }
       if (!matching) {
-        std::cout << "Output " << outputs_count << " does not match!"
-                  << std::endl;
-        std::cout << "TRUE: [ ";
-        for (unsigned int element_id = 0;
-             element_id < _feature_interaction_outputs[outputs_count].size();
-             element_id++) {
-          std::cout << _feature_interaction_outputs[outputs_count][element_id]
-                    << " ";
+        mismatching_outputs_file << "Output " << outputs_count
+                                 << " does not match!\n";
+        mismatching_outputs_file << "TRUE: [ ";
+        for (unsigned int e = 0; e < _mlp_outputs[outputs_count].size(); e++) {
+          mismatching_outputs_file << _mlp_outputs[outputs_count][e] << " ";
         }
-        std::cout << std::endl;
-        std::cout << "DUT : [ ";
-        for (unsigned int element_id = 0; element_id < dut_output.size();
-             element_id++) {
-          std::cout << dut_output[element_id] << " ";
+        mismatching_outputs_file << "]\n";
+        mismatching_outputs_file << "DUT : [ ";
+        for (unsigned int e = 0; e < dut_output.size(); e++) {
+          mismatching_outputs_file << dut_output[e] << " ";
         }
-        std::cout << std::endl;
-        std::cout << "-------------------------------" << std::endl;
+        mismatching_outputs_file << "]\n";
+        mismatching_outputs_file << "-------------------------------\n";
       }
       outputs_count++;
       all_outputs_matching &= matching;
+
+      print_progress_bar(outputs_count, _num_mlp_outputs);
     }
     wait();
   }
+  std::cout << "Got " << outputs_count << " output(s)!\n";
+
   if (all_outputs_matching) {
     std::cout << "Simulation PASSED! All outputs matching!" << std::endl;
   } else {
@@ -174,5 +200,9 @@ void dlrm_driver::sink() {
       GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
   std::cout << "Simulated " << (_end_cycle - _start_cycle) << " cycle(s)"
             << std::endl;
+
+  for (unsigned int i = 0; i < 10; i++) {
+    wait();
+  }
   sc_stop();
 }

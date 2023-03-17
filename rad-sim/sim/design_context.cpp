@@ -483,12 +483,15 @@ void RADSimDesignContext::ConnectModulesToNoC() {
   for (auto module_it = _design_modules.begin();
        module_it != _design_modules.end(); module_it++) {
     radsim_module *module_ptr = module_it->second;
+    // std::cout << "MODULE " << module_ptr->name() << std::endl;
 
     // Connect AXI-S Slave ports of the module
+    // std::cout << "AXI-S slave ports: ";
     for (auto slave_port_it = module_ptr->_axis_slave_ports.begin();
          slave_port_it != module_ptr->_axis_slave_ports.end();
          slave_port_it++) {
       std::string port_name = slave_port_it->first;
+      // std::cout << port_name << ", ";
       unsigned int noc_id = std::get<0>(_port_placement[port_name]);
       _axis_signals[axis_signal_id].Connect(
           *(_noc_axis_master_ports[noc_id][port_name]),
@@ -497,10 +500,12 @@ void RADSimDesignContext::ConnectModulesToNoC() {
     }
 
     // Connect AXI-S Master ports of the module
+    // std::cout << "\nAXI-S master ports: ";
     for (auto master_port_it = module_ptr->_axis_master_ports.begin();
          master_port_it != module_ptr->_axis_master_ports.end();
          master_port_it++) {
       std::string port_name = master_port_it->first;
+      // std::cout << port_name << ", ";
       unsigned int noc_id = std::get<0>(_port_placement[port_name]);
       _axis_signals[axis_signal_id].Connect(
           *(master_port_it->second),
@@ -509,10 +514,12 @@ void RADSimDesignContext::ConnectModulesToNoC() {
     }
 
     // Connect AXI-MM Slave ports of the module
+    // std::cout << "\nAXI-MM slave ports: ";
     for (auto slave_port_it = module_ptr->_aximm_slave_ports.begin();
          slave_port_it != module_ptr->_aximm_slave_ports.end();
          slave_port_it++) {
       std::string port_name = slave_port_it->first;
+      // std::cout << port_name << ", ";
       unsigned int noc_id = std::get<0>(_port_placement[port_name]);
       _aximm_signals[aximm_signal_id].Connect(
           *(_noc_aximm_master_ports[noc_id][port_name]),
@@ -521,16 +528,19 @@ void RADSimDesignContext::ConnectModulesToNoC() {
     }
 
     // Connect AXI-MM Master ports of the module
+    // std::cout << "\nAXI-MM master ports: ";
     for (auto master_port_it = module_ptr->_aximm_master_ports.begin();
          master_port_it != module_ptr->_aximm_master_ports.end();
          master_port_it++) {
       std::string port_name = master_port_it->first;
+      // std::cout << port_name << ", ";
       unsigned int noc_id = std::get<0>(_port_placement[port_name]);
       _aximm_signals[aximm_signal_id].Connect(
           *(master_port_it->second),
           *(_noc_aximm_slave_ports[noc_id][port_name]));
       aximm_signal_id++;
     }
+    // std::cout << "\n";
   }
 }
 

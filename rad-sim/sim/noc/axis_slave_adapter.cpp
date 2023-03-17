@@ -157,6 +157,7 @@ void axis_slave_adapter::InputInterface() {
         _input_axis_transaction_id.write(unique_sim_packet_id);
         _input_axis_transaction_type.write(_interface_types[interface_id]);
         _input_axis_transaction_interface.write(interface_id);
+
         break;
       }
     }

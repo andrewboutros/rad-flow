@@ -34,6 +34,9 @@ public:
        unsigned int almost_full_size, unsigned int almost_empty_size);
   ~fifo();
 
+  bool not_full();
+  unsigned int occupancy();
+
   void Tick();
   SC_HAS_PROCESS(fifo);
 };

@@ -1,8 +1,10 @@
 #pragma once
 
+#include <collector.hpp>
 #include <embedding_lookup.hpp>
 #include <feature_interaction.hpp>
 #include <mem_controller.hpp>
+#include <mvm.hpp>
 #include <radsim_config.hpp>
 #include <systemc.h>
 #include <vector>
@@ -11,7 +13,11 @@ class dlrm_top : public sc_module {
 private:
   embedding_lookup *embedding_lookup_inst;
   feature_interaction *feature_interaction_inst;
+  std::vector<std::vector<mvm *>> mvms;
+  collector *output_collector;
   mem_controller *ext_mem;
+
+  std::vector<axis_signal> axis_sig;
 
 public:
   sc_in<bool> rst;
@@ -23,10 +29,11 @@ public:
   sc_in<bool> lookup_indecies_valid;
   sc_out<bool> lookup_indecies_ready;
 
-  sc_out<data_vector<int16_t>> feature_interaction_odata;
-  sc_out<bool> feature_interaction_valid;
-  sc_in<bool> feature_interaction_ready;
   sc_out<unsigned int> received_responses;
+
+  sc_out<bool> collector_fifo_rdy;
+  sc_in<bool> collector_fifo_ren;
+  sc_out<data_vector<int16_t>> collector_fifo_rdata;
 
   dlrm_top(const sc_module_name &name);
   ~dlrm_top();

@@ -13,10 +13,11 @@ private:
   sc_signal<bool> lookup_indecies_valid_sig;
   sc_signal<bool> lookup_indecies_ready_sig;
 
-  sc_signal<data_vector<int16_t>> feature_interaction_odata_sig;
-  sc_signal<bool> feature_interaction_valid_sig;
-  sc_signal<bool> feature_interaction_ready_sig;
   sc_signal<unsigned int> received_responses_sig;
+
+  sc_signal<bool> collector_fifo_rdy_sig;
+  sc_signal<bool> collector_fifo_ren_sig;
+  sc_signal<data_vector<int16_t>> collector_fifo_rdata_sig;
 
 public:
   sc_signal<bool> rst_sig;
