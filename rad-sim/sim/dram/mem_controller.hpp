@@ -19,6 +19,7 @@ class mem_controller : public radsim_module {
 private:
   // The DRAMsim memory system model
   dramsim3::MemorySystem *_dramsim;
+  unsigned int _mem_id;
   // Number of memory channels and interfaces of the controller (specified by
   // DRAMsim)
   unsigned int _num_channels;

@@ -8,6 +8,7 @@ void mem_controller::InitializeMemoryContents(std::string &init_filename) {
   unsigned int base_idx = std::stoi(base_idx_str);
 
   for (unsigned int ch_id = 0; ch_id < _num_channels; ch_id++) {
+    // std::cout << this->name() << " channel " << ch_id << std::endl;
     std::string full_name = name + std::to_string(ch_id + base_idx) + ".dat";
     std::ifstream io_file(full_name);
     if (!io_file)
@@ -20,9 +21,11 @@ void mem_controller::InitializeMemoryContents(std::string &init_filename) {
       std::stringstream line_stream(line);
       line_stream >> addr;
       line_stream >> data;
+      // std::cout << addr << std::endl;
       addr = AddressMapping(addr, ch_id);
       _mem_contents[ch_id][addr] = data;
     }
+    // std::cout << "-----------------" << std::endl;
   }
 }
 
@@ -43,6 +46,7 @@ mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
       std::bind(&mem_controller::MemReadCallback, this, std::placeholders::_1),
       std::bind(&mem_controller::MemWriteCallback, this, std::placeholders::_1),
       dram_id);
+  _mem_id = dram_id;
   _num_channels = _dramsim->GetChannels();
   mem_channels.init(_num_channels);
 
@@ -61,8 +65,9 @@ mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
     sim_log.log(error,
                 "Controller/memory bitwidths (" +
                     std::to_string(_controller_channel_bitwidth) + ", " +
-                    std::to_string(_memory_channel_bitwidth) +
-                    ") & periods do not match!",
+                    std::to_string(_memory_channel_bitwidth) + ") & periods (" +
+                    std::to_string(_controller_clk_period_ns) + ", " +
+                    std::to_string(_memory_clk_period_ns) + ") do not match!",
                 name);
   }
 
@@ -195,6 +200,9 @@ void mem_controller::MemReadCallback(uint64_t addr) {
           _out_of_order_read_requests[ch_id].erase(
               _out_of_order_read_requests[ch_id].begin() + rq_id);
           _outstanding_read_requests[ch_id].pop();
+          // if (data_word == 0)
+          //   sim_log.log(warning, "Memory read from an unwritten address",
+          //               this->name());
           break;
         } else if (rq_id == _out_of_order_read_requests[ch_id].size() - 1) {
           flag = false;
@@ -382,7 +390,8 @@ void mem_controller::Tick() {
           _read_address_queue[ch_id].push(
               std::make_tuple(resp_addr, translated_addr, b == burst_size - 1));
         }
-        // std::cout << module_name << "_" << ch_id << ": Got AR Transaction!"
+        // std::cout << module_name << "_" << ch_id
+        //           << ": Got AR Transaction addr  = " << (uint32_t)base_addr
         //           << std::endl;
       }
       _read_address_queue_occupancy[ch_id].write(
@@ -396,6 +405,7 @@ void mem_controller::Tick() {
       if (mem_channels[ch_id].rvalid.read() &&
           mem_channels[ch_id].rready.read()) {
         _output_read_responses[ch_id].pop();
+        sim_trace_probe.record_event(1 + _mem_id, 1 + _mem_id);
         // std::cout << module_name << "_" << ch_id << ": Sent R Response!"
         //           << std::endl;
       }

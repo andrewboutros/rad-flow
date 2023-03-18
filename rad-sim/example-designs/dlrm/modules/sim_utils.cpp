@@ -55,6 +55,10 @@ template <class dtype> unsigned int data_vector<dtype>::size() {
   return v.size();
 }
 
+template <class dtype> void data_vector<dtype>::resize(unsigned int size) {
+  return v.resize(size);
+}
+
 template <class dtype>
 ostream &operator<<(ostream &o, const data_vector<dtype> &dvector) {
   for (unsigned int i = 0; i < dvector.v.size(); i++)

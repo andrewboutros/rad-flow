@@ -236,8 +236,10 @@ void axis_master_adapter::write_sc_packet_to_axis_output(
   data_end_idx = std::min(data_end_idx, AXIS_MAX_DATAW);
   AXIS_TDATA(packet_bv).range(_interface_dataw[interface_id] - 1, 0) =
       AXIS_TDATA(packet_payload_bv).range(data_end_idx - 1, data_start_idx);
-  AXIS_TDATA(packet_bv).range(AXIS_MAX_DATAW - 1,
-                              _interface_dataw[interface_id]) = 0;
+  if (_interface_dataw[interface_id] < AXIS_MAX_DATAW) {
+    AXIS_TDATA(packet_bv).range(AXIS_MAX_DATAW - 1,
+                                _interface_dataw[interface_id]) = 0;
+  }
 
   // Write to AXI-streaming output interface
   axis_port.tvalid.write(true);

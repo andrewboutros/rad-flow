@@ -30,7 +30,6 @@ int sc_main(int argc, char *argv[]) {
 
   sc_clock *driver_clk_sig = new sc_clock(
       "node_clk0", radsim_config.GetDoubleKnob("sim_driver_period"), SC_NS);
-  sc_clock *mem_clk_sig = new sc_clock("mem_clk", 1.0, SC_NS);
 
   // INSTANTIATE YOUR SYSTEM DESIGN HERE
   // mlp_system *system = new mlp_system("mlp_system", driver_clk_sig);
@@ -40,8 +39,7 @@ int sc_main(int argc, char *argv[]) {
   // aximm_hello_world_system *system =
   //    new aximm_hello_world_system("aximm_hello_world_system",
   //    driver_clk_sig);
-  dlrm_system *system =
-      new dlrm_system("dlrm_system", driver_clk_sig, mem_clk_sig);
+  dlrm_system *system = new dlrm_system("dlrm_system", driver_clk_sig);
   sc_start();
 
   // system->dut_inst->PrintStats();
@@ -53,6 +51,7 @@ int sc_main(int argc, char *argv[]) {
   f->FreeAll();
   Credit *c = Credit::New();
   c->FreeAll();
+  sim_trace_probe.dump_traces();
   (void)argc;
   (void)argv;
   return 0;

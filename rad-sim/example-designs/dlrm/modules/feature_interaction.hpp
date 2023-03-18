@@ -4,6 +4,7 @@
 #include <aximm_interface.hpp>
 #include <axis_interface.hpp>
 #include <design_context.hpp>
+#include <mvm.hpp>
 #include <queue>
 #include <radsim_defines.hpp>
 #include <radsim_module.hpp>
@@ -20,7 +21,8 @@ struct feature_interaction_inst {
 class feature_interaction : public radsim_module {
 private:
   unsigned int _fifos_depth; // Depth of input/output FIFOs
-  unsigned int _afifo_width_ratio;
+  unsigned int _afifo_width_ratio_in;
+  unsigned int _afifo_width_ratio_out;
   std::vector<feature_interaction_inst> _instructions; // Instruction mem
   sc_signal<unsigned int> _pc;                         // Program counter
 
@@ -38,10 +40,12 @@ private:
   unsigned int _num_mem_channels; // No. of memory channels
   unsigned int _dataw;            // Data interface bitwidth
   unsigned int _num_received_responses;
-  unsigned int _num_elements_wide;
+  unsigned int _num_elements_wide_in;
   unsigned int _num_elements_narrow;
+  unsigned int _num_elements_wide_out;
   unsigned int _bitwidth;
   unsigned int _num_output_channels;
+  unsigned int _num_expected_responses;
 
 public:
   sc_in<bool> rst;
@@ -61,9 +65,11 @@ public:
   void Assign(); // Combinational logic process
   void Tick();   // Sequential logic process
   void bv_to_data_vector(sc_bv<AXI_MAX_DATAW> &bitvector,
-                         data_vector<int16_t> &datavector);
+                         data_vector<int16_t> &datavector,
+                         unsigned int num_elements);
   void data_vector_to_bv(data_vector<int16_t> &datavector,
-                         sc_bv<AXIS_MAX_DATAW> &bitvector);
+                         sc_bv<AXIS_MAX_DATAW> &bitvector,
+                         unsigned int num_elements);
   SC_HAS_PROCESS(feature_interaction);
   void RegisterModuleInfo();
 };

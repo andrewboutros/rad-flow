@@ -8,14 +8,14 @@ import numpy as np
 model_csv = "ab_small.csv"
 read_bytewidth = 64
 element_bytewidth = 2
-hbm_channels = 8
+hbm_channels = 16
 hbm_channel_words = 1 * 1024 * 1024 * 1024 / read_bytewidth
-ddr_channels = 0
+ddr_channels = 2
 ddr_channel_words = 8 * 1024 * 1024 * 1024 / read_bytewidth
-num_test_inputs = 1024
+num_test_inputs = 64
 
 # MLP parameters
-native_dim = int(read_bytewidth / element_bytewidth)
+native_dim = 16  # int(read_bytewidth / element_bytewidth)
 num_layers = 3
 hidden_dims = [1024, 512, 256]
 num_mvms = [4, 2, 2]
@@ -256,7 +256,7 @@ def print_allocation():
 
 def generate_embedding_lookup_inputs(num_inputs):
     f = open("embedding_indecies.in", "w")
-    f.write(str(len(table_info)) + "\n")
+    f.write(str(len(table_info)) + " " + str(num_inputs) + "\n")
     for i in range(num_inputs):
         input_vec = []
         target_ch = []
@@ -454,8 +454,6 @@ def generate_feature_interaction_outputs():
             idx = test_input_data[input_id][idx_id]
             base = test_input_base_addr[input_id][idx_id]
             ch = test_input_target_ch[input_id][idx_id]
-            if ch >= ddr_channels:
-                ch += ddr_channels
             mem_content = mem_contents_per_channel[ch][base + idx]
             for e in mem_content:
                 output_vec.append(e)

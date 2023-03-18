@@ -10,13 +10,13 @@
 #include <systemc.h>
 #include <vector>
 
-#define LANES 32
+#define BITWIDTH 16
+#define LANES 16
 #define FIFO_SIZE 512
 #define COMPUTE_LATENCY 8
-#define DOT_PRODUCTS 32
 #define MEM_DEPTH 1025
-#define DATAW 512
-#define BITWIDTH 16
+#define DOT_PRODUCTS LANES
+#define DATAW (BITWIDTH * LANES)
 
 class mvm : public radsim_module {
 private:

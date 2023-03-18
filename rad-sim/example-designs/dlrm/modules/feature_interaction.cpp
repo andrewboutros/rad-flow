@@ -2,14 +2,26 @@
 
 void ParseFeatureInteractionInstructions(
     std::string &instructions_file,
-    std::vector<feature_interaction_inst> &instructions) {
+    std::vector<feature_interaction_inst> &instructions,
+    std::string &responses_file, unsigned int &num_expected_responses) {
+
+  std::ifstream resp_file(responses_file);
+  if (!resp_file) {
+    sim_log.log(error, "Cannot find feature interaction responses file!");
+  }
+  std::string line;
+  std::getline(resp_file, line);
+  std::stringstream ls(line);
+  unsigned int lookups, num_inputs;
+  ls >> lookups >> num_inputs;
+  num_expected_responses = lookups * num_inputs;
+  resp_file.close();
 
   std::ifstream inst_file(instructions_file);
   if (!inst_file) {
     sim_log.log(error, "Cannot find feature interaction instructions file!");
   }
 
-  std::string line;
   unsigned int mux_select;
   std::string pop_signals;
   while (std::getline(inst_file, line)) {
@@ -29,6 +41,7 @@ void ParseFeatureInteractionInstructions(
     }
     instructions.push_back(instruction);
   }
+  inst_file.close();
 }
 
 feature_interaction::feature_interaction(const sc_module_name &name,
@@ -38,18 +51,21 @@ feature_interaction::feature_interaction(const sc_module_name &name,
                                          unsigned int fifos_depth,
                                          unsigned int num_output_channels,
                                          std::string &instructions_file)
-    : radsim_module(name), _staging_data(dataw / element_bitwidth) {
+    : radsim_module(name) {
 
   _fifos_depth = fifos_depth;
-  _afifo_width_ratio = 8;
+  _afifo_width_ratio_in = 32 / 4;
+  _afifo_width_ratio_out = LANES / 4;
   _num_received_responses = 0;
   _num_mem_channels = num_mem_channels;
   _dataw = dataw;
   _bitwidth = element_bitwidth;
-  _num_elements_wide = dataw / element_bitwidth;
-  _num_elements_narrow = _num_elements_wide / _afifo_width_ratio;
+  _num_elements_wide_in = dataw / element_bitwidth;
+  _num_elements_narrow = _num_elements_wide_in / _afifo_width_ratio_in;
+  _num_elements_wide_out = _num_elements_narrow * _afifo_width_ratio_out;
   _num_output_channels = num_output_channels;
   _staging_counter = 0;
+  _staging_data.resize(_num_elements_wide_out);
 
   aximm_interface.init(_num_mem_channels);
   axis_interface.init(_num_output_channels);
@@ -62,7 +78,11 @@ feature_interaction::feature_interaction(const sc_module_name &name,
   _ofifo_full.init(_num_output_channels);
   _ofifo_empty.init(_num_output_channels);
 
-  ParseFeatureInteractionInstructions(instructions_file, _instructions);
+  std::string resp_filename =
+      radsim_config.GetStringKnob("radsim_user_design_root_dir") +
+      "/compiler/embedding_indecies.in";
+  ParseFeatureInteractionInstructions(instructions_file, _instructions,
+                                      resp_filename, _num_expected_responses);
 
   // Combinational logic and its sensitivity list
   SC_METHOD(Assign);
@@ -97,10 +117,11 @@ void feature_interaction::Assign() {
 }
 
 void feature_interaction::bv_to_data_vector(sc_bv<AXI_MAX_DATAW> &bitvector,
-                                            data_vector<int16_t> &datavector) {
+                                            data_vector<int16_t> &datavector,
+                                            unsigned int num_elements) {
 
   unsigned int start_idx, end_idx;
-  for (unsigned int e = 0; e < _num_elements_wide; e++) {
+  for (unsigned int e = 0; e < num_elements; e++) {
     start_idx = e * _bitwidth;
     end_idx = (e + 1) * _bitwidth;
     datavector[e] = bitvector.range(end_idx - 1, start_idx).to_int();
@@ -108,10 +129,11 @@ void feature_interaction::bv_to_data_vector(sc_bv<AXI_MAX_DATAW> &bitvector,
 }
 
 void feature_interaction::data_vector_to_bv(data_vector<int16_t> &datavector,
-                                            sc_bv<AXIS_MAX_DATAW> &bitvector) {
+                                            sc_bv<AXIS_MAX_DATAW> &bitvector,
+                                            unsigned int num_elements) {
 
   unsigned int start_idx, end_idx;
-  for (unsigned int e = 0; e < _num_elements_wide; e++) {
+  for (unsigned int e = 0; e < num_elements; e++) {
     start_idx = e * _bitwidth;
     end_idx = (e + 1) * _bitwidth;
     bitvector.range(end_idx - 1, start_idx) = datavector[e];
@@ -163,9 +185,9 @@ void feature_interaction::Tick() {
       if (_input_fifos[ch_id].size() < _fifos_depth &&
           aximm_interface[ch_id].rvalid.read()) {
         sc_bv<AXI_MAX_DATAW> rdata_bv = aximm_interface[ch_id].rdata.read();
-        data_vector<int16_t> rdata(_num_elements_wide);
-        bv_to_data_vector(rdata_bv, rdata);
-        for (unsigned int c = 0; c < _afifo_width_ratio; c++) {
+        data_vector<int16_t> rdata(_num_elements_wide_in);
+        bv_to_data_vector(rdata_bv, rdata, _num_elements_wide_in);
+        for (unsigned int c = 0; c < _afifo_width_ratio_in; c++) {
           data_vector<int16_t> sliced_data(_num_elements_narrow);
           for (unsigned int e = 0; e < sliced_data.size(); e++) {
             sliced_data[e] = rdata[(c * sliced_data.size()) + e];
@@ -173,6 +195,10 @@ void feature_interaction::Tick() {
           _input_fifos[ch_id].push(sliced_data);
         }
         _num_received_responses++;
+        if (_num_received_responses == _num_expected_responses) {
+          std::cout << this->name() << ": Got all memory responses at cycle "
+                    << GetSimulationCycle(5.0) << "!" << std::endl;
+        }
         // std::cout << GetSimulationCycle(5.0) << " === "
         //           << "Pushed response to iFIFO " << ch_id << " "
         //           << _input_fifos[ch_id].size() << std::endl;
@@ -198,7 +224,7 @@ void feature_interaction::Tick() {
       }
 
       if (mux_select > 0) {
-        if (_staging_counter == _afifo_width_ratio - 1) {
+        if (_staging_counter == _afifo_width_ratio_out - 1) {
           _staging_counter = 0;
           _output_fifos[_dest_ofifo.read()].push(_staging_data);
           if (_dest_ofifo.read() == _num_output_channels - 1) {
@@ -232,12 +258,15 @@ void feature_interaction::Tick() {
       if (axis_interface[ch_id].tready.read() &&
           axis_interface[ch_id].tvalid.read()) {
         _output_fifos[ch_id].pop();
+        sim_trace_probe.record_event(5, 5);
+        // std::cout << "FI sent out vector to MVM " << ch_id << " at cycle "
+        //           << GetSimulationCycle(5.0) << std::endl;
       }
 
       if (!_output_fifos[ch_id].empty()) {
         data_vector<int16_t> tx_tdata = _output_fifos[ch_id].front();
         sc_bv<AXIS_MAX_DATAW> tx_tdata_bv;
-        data_vector_to_bv(tx_tdata, tx_tdata_bv);
+        data_vector_to_bv(tx_tdata, tx_tdata_bv, _num_elements_wide_out);
         axis_interface[ch_id].tvalid.write(true);
         axis_interface[ch_id].tdata.write(tx_tdata_bv);
         axis_interface[ch_id].tuser.write(3 << 13);
@@ -269,7 +298,7 @@ void feature_interaction::Tick() {
     for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
       _ififo_empty[ch_id].write(_input_fifos[ch_id].empty());
       _ififo_full[ch_id].write(_input_fifos[ch_id].size() >=
-                               (_fifos_depth - _afifo_width_ratio));
+                               (_fifos_depth - _afifo_width_ratio_in));
     }
     for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
       _ofifo_empty[ch_id].write(_output_fifos[ch_id].empty());
@@ -302,6 +331,6 @@ void feature_interaction::RegisterModuleInfo() {
 
   for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
     port_name = module_name + ".axis_interface_" + std::to_string(ch_id);
-    RegisterAxisMasterPort(port_name, &axis_interface[ch_id], _dataw, 0);
+    RegisterAxisMasterPort(port_name, &axis_interface[ch_id], DATAW, 0);
   }
 }

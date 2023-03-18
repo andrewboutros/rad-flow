@@ -15,13 +15,13 @@ private:
   feature_interaction *feature_interaction_inst;
   std::vector<std::vector<mvm *>> mvms;
   collector *output_collector;
-  mem_controller *ext_mem;
+  std::vector<mem_controller *> ext_mem;
 
   std::vector<axis_signal> axis_sig;
+  std::vector<sc_clock *> mem_clks;
 
 public:
   sc_in<bool> rst;
-  sc_in<bool> mem_clk;
 
   sc_in<data_vector<uint64_t>> lookup_indecies_data;
   sc_in<data_vector<unsigned int>> lookup_indecies_target_channels;

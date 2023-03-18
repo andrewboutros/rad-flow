@@ -33,6 +33,7 @@ aximm_master_adapter::aximm_master_adapter(
   for (int i = 0; i < AXI_NUM_REQ_TYPES; i++) {
     _ejection_afifo_priority.push(i);
   }
+  _ejected_booksim_flit = nullptr;
 
   // Request pipeline modules described as SystemC methods and threads
   SC_CTHREAD(OutputEjection, noc_clk.pos());
@@ -97,7 +98,7 @@ int aximm_master_adapter::InverseVCMapping(int vc_id) {
   } else if (vc_id >= w_vc_start && vc_id <= w_vc_end) {
     return AXI_TYPE_W;
   } else {
-    cerr << "Request VC ID (" << vc_id
+    cerr << this->name() << " Request VC ID (" << vc_id
          << ") does not correspond to a Request VC" << endl;
     exit(1);
   }

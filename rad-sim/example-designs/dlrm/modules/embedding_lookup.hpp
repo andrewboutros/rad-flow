@@ -20,10 +20,10 @@ private:
   sc_vector<sc_signal<bool>> _fifo_full; // Signals flagging FIFOs are full
   sc_vector<sc_signal<unsigned int>> _id_count; // Counters for transaction IDs
   unsigned int _num_received_responses; // Coutnter for received responses
-  unsigned int _num_mem_channels;       // No. of memory channels
-  unsigned int _num_mem_controllers;    // No. of memory controllers
-  unsigned int _num_mem_channels_per_controller; // No. of channels/controller
-  unsigned int _dataw;                           // Data interface bitwidth
+  std::vector<unsigned int> _num_channels_per_ctrl; // # channels / controller
+  unsigned int _total_num_channels;         // Total number of memory channels
+  unsigned int _dataw;                      // Data interface bitwidth
+  std::vector<std::string> _dst_port_names; // Mem controller port names
 
 public:
   sc_in<bool> rst;
@@ -37,8 +37,8 @@ public:
   sc_vector<aximm_master_port> aximm_req_interface;
 
   embedding_lookup(const sc_module_name &name, unsigned int dataw,
-                   unsigned int num_mem_channels,
-                   unsigned int num_mem_controllers, unsigned int fifo_depth);
+                   std::vector<unsigned int> &num_mem_channels_per_controller,
+                   unsigned int fifo_depth);
   ~embedding_lookup();
 
   void Assign(); // Combinational logic process

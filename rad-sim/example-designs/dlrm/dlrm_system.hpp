@@ -24,7 +24,6 @@ public:
   dlrm_driver *driver_inst;
   dlrm_top *dut_inst;
 
-  dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig,
-              sc_clock *mem_clk_sig);
+  dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig);
   ~dlrm_system();
 };

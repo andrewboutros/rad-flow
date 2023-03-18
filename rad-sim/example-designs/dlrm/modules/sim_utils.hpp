@@ -30,6 +30,7 @@ public:
   bool operator==(const std::vector<dtype> &rhs);
   dtype &operator[](unsigned int idx);
   unsigned int size();
+  void resize(unsigned int size);
   friend ostream &operator<< <dtype>(ostream &o,
                                      const data_vector<dtype> &dvector);
   friend data_vector operator+

@@ -1,30 +1,37 @@
 #include <embedding_lookup.hpp>
 
-embedding_lookup::embedding_lookup(const sc_module_name &name,
-                                   unsigned int dataw,
-                                   unsigned int num_mem_channels,
-                                   unsigned int num_mem_controllers,
-                                   unsigned int fifo_depth)
+embedding_lookup::embedding_lookup(
+    const sc_module_name &name, unsigned int dataw,
+    std::vector<unsigned int> &num_mem_channels_per_controller,
+    unsigned int fifo_depth)
     : radsim_module(name) {
 
-  _lookup_indecies_fifo.resize(num_mem_channels);
-  _base_addresses_fifo.resize(num_mem_channels);
+  _total_num_channels = 0;
+  unsigned int ctrl_id = 0;
+  for (auto &num_channels : num_mem_channels_per_controller) {
+    _num_channels_per_ctrl.push_back(num_channels);
+    _total_num_channels += num_channels;
+    for (unsigned int ch_id = 0; ch_id < num_channels; ch_id++) {
+      std::string port_name =
+          "ext_mem_" + to_string(ctrl_id) + ".mem_channel_" + to_string(ch_id);
+      _dst_port_names.push_back(port_name);
+    }
+    ctrl_id++;
+  }
+  _lookup_indecies_fifo.resize(_total_num_channels);
+  _base_addresses_fifo.resize(_total_num_channels);
   _fifo_depth = fifo_depth;
-  _fifo_full.init(num_mem_channels);
-  _id_count.init(num_mem_channels);
+  _fifo_full.init(_total_num_channels);
+  _id_count.init(_total_num_channels);
   _num_received_responses = 0;
-  _num_mem_channels = num_mem_channels;
-  _num_mem_controllers = num_mem_controllers;
-  assert(num_mem_channels % num_mem_controllers == 0);
-  _num_mem_channels_per_controller = num_mem_channels / num_mem_controllers;
   _dataw = dataw;
 
-  aximm_req_interface.init(_num_mem_channels);
+  aximm_req_interface.init(_total_num_channels);
 
   // Combinational logic and its sensitivity list
   SC_METHOD(Assign);
   sensitive << rst;
-  for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
+  for (unsigned int ch_id = 0; ch_id < _total_num_channels; ch_id++) {
     sensitive << _fifo_full[ch_id];
   }
   // Sequential logic and its clock/reset setup
@@ -41,7 +48,7 @@ embedding_lookup::~embedding_lookup() {}
 void embedding_lookup::Assign() {
   if (rst) {
     lookup_indecies_ready.write(true);
-    for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
+    for (unsigned int ch_id = 0; ch_id < _total_num_channels; ch_id++) {
       aximm_req_interface[ch_id].bready.write(false);
       aximm_req_interface[ch_id].rready.write(false);
     }
@@ -50,7 +57,7 @@ void embedding_lookup::Assign() {
 
     // Always ready to accept read/write response from the AXI-MM NoC
     // interface
-    for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
+    for (unsigned int ch_id = 0; ch_id < _total_num_channels; ch_id++) {
       aximm_req_interface[ch_id].bready.write(true);
       aximm_req_interface[ch_id].rready.write(true);
       all_fifos_not_full = all_fifos_not_full && !_fifo_full[ch_id].read();
@@ -64,7 +71,7 @@ void embedding_lookup::Assign() {
 
 void embedding_lookup::Tick() {
   // Reset logic
-  for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
+  for (unsigned int ch_id = 0; ch_id < _total_num_channels; ch_id++) {
     aximm_req_interface[ch_id].arvalid.write(false);
     aximm_req_interface[ch_id].awvalid.write(false);
     aximm_req_interface[ch_id].wvalid.write(false);
@@ -94,67 +101,69 @@ void embedding_lookup::Tick() {
     }
 
     // Set FIFO full signals
-    for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
-      _fifo_full[ch_id].write(_lookup_indecies_fifo.size() >= _fifo_depth);
+    for (unsigned int ch_id = 0; ch_id < _total_num_channels; ch_id++) {
+      _fifo_full[ch_id].write(_lookup_indecies_fifo[ch_id].size() >=
+                              _fifo_depth);
     }
 
     // Sending transactions to AXI-MM NoC
-    for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
-      if (!_lookup_indecies_fifo[ch_id].empty()) {
-        unsigned int lookup_index = _lookup_indecies_fifo[ch_id].front();
-        unsigned int table_base_addr = _base_addresses_fifo[ch_id].front();
-        unsigned int mem_controller_id =
-            ch_id / _num_mem_channels_per_controller;
-        unsigned int mem_controller_channel_id =
-            ch_id - (mem_controller_id * _num_mem_channels_per_controller);
+    unsigned int ch_id = 0;
+    for (unsigned int ctrl_id = 0; ctrl_id < _num_channels_per_ctrl.size();
+         ctrl_id++) {
+      for (unsigned int c = 0; c < _num_channels_per_ctrl[ctrl_id]; c++) {
+        if (!_lookup_indecies_fifo[ch_id].empty()) {
+          unsigned int lookup_index = _lookup_indecies_fifo[ch_id].front();
+          unsigned int table_base_addr = _base_addresses_fifo[ch_id].front();
 
-        std::string dst_port_name =
-            "ext_mem_" + std::to_string(mem_controller_id) + ".mem_channel_" +
-            std::to_string(mem_controller_channel_id);
-        uint64_t dst_addr = radsim_design.GetPortBaseAddress(dst_port_name) +
-                            table_base_addr + lookup_index;
-        std::string src_port_name =
-            "feature_interaction_inst.aximm_interface_" + std::to_string(ch_id);
-        uint64_t src_addr = radsim_design.GetPortBaseAddress(src_port_name);
+          std::string dst_port_name = _dst_port_names[ch_id];
+          uint64_t dst_addr = radsim_design.GetPortBaseAddress(dst_port_name) +
+                              table_base_addr + lookup_index;
+          std::string src_port_name =
+              "feature_interaction_inst.aximm_interface_" +
+              std::to_string(ch_id);
+          uint64_t src_addr = radsim_design.GetPortBaseAddress(src_port_name);
 
-        aximm_req_interface[ch_id].araddr.write(dst_addr);
-        aximm_req_interface[ch_id].arid.write(_id_count[ch_id].read());
-        aximm_req_interface[ch_id].arlen.write(0);
-        aximm_req_interface[ch_id].arburst.write(0);
-        aximm_req_interface[ch_id].arsize.write(0);
-        aximm_req_interface[ch_id].aruser.write(src_addr);
-        aximm_req_interface[ch_id].arvalid.write(true);
-        aximm_req_interface[ch_id].awvalid.write(false);
-        aximm_req_interface[ch_id].wvalid.write(false);
-      } else {
-        aximm_req_interface[ch_id].arvalid.write(false);
-        aximm_req_interface[ch_id].awvalid.write(false);
-        aximm_req_interface[ch_id].wvalid.write(false);
-      }
+          aximm_req_interface[ch_id].araddr.write(dst_addr);
+          aximm_req_interface[ch_id].arid.write(_id_count[ch_id].read());
+          aximm_req_interface[ch_id].arlen.write(0);
+          aximm_req_interface[ch_id].arburst.write(0);
+          aximm_req_interface[ch_id].arsize.write(0);
+          aximm_req_interface[ch_id].aruser.write(src_addr);
+          aximm_req_interface[ch_id].arvalid.write(true);
+          aximm_req_interface[ch_id].awvalid.write(false);
+          aximm_req_interface[ch_id].wvalid.write(false);
+        } else {
+          aximm_req_interface[ch_id].arvalid.write(false);
+          aximm_req_interface[ch_id].awvalid.write(false);
+          aximm_req_interface[ch_id].wvalid.write(false);
+        }
 
-      // Pop the FIFO if the transaction is accepted
-      if (aximm_req_interface[ch_id].arvalid.read() &&
-          aximm_req_interface[ch_id].arready.read()) {
-        _lookup_indecies_fifo[ch_id].pop();
-        _base_addresses_fifo[ch_id].pop();
-        _id_count[ch_id].write(_id_count[ch_id].read() + 1);
-        // std::cout << module_name << ": Sent AR transaction for channel "
-        //           << ch_id << "!" << std::endl;
-      }
+        // Pop the FIFO if the transaction is accepted
+        if (aximm_req_interface[ch_id].arvalid.read() &&
+            aximm_req_interface[ch_id].arready.read()) {
+          _lookup_indecies_fifo[ch_id].pop();
+          _base_addresses_fifo[ch_id].pop();
+          _id_count[ch_id].write(_id_count[ch_id].read() + 1);
+          sim_trace_probe.record_event(0, 0);
+          // std::cout << module_name << ": Sent AR transaction for channel "
+          //           << ch_id << "!" << std::endl;
+        }
 
-      // Receiving transactions from AXI-MM NoC
-      if (aximm_req_interface[ch_id].rvalid.read() &&
-          aximm_req_interface[ch_id].rready.read()) {
-        /*std::cout << module_name << ": Received READ response "
-                  << _num_received_responses << " ("
-                  << aximm_req_interface[ch_id].rdata.read() << ")!"
-                  << std::endl;*/
-        _num_received_responses++;
-      } else if (aximm_req_interface[ch_id].bvalid.read() &&
-                 aximm_req_interface[ch_id].bready.read()) {
-        // std::cout << module_name << ": Received WRITE response!" <<
-        // std::endl;
-        _num_received_responses++;
+        // Receiving transactions from AXI-MM NoC
+        if (aximm_req_interface[ch_id].rvalid.read() &&
+            aximm_req_interface[ch_id].rready.read()) {
+          /*std::cout << module_name << ": Received READ response "
+                    << _num_received_responses << " ("
+                    << aximm_req_interface[ch_id].rdata.read() << ")!"
+                    << std::endl;*/
+          _num_received_responses++;
+        } else if (aximm_req_interface[ch_id].bvalid.read() &&
+                   aximm_req_interface[ch_id].bready.read()) {
+          // std::cout << module_name << ": Received WRITE response!" <<
+          // std::endl;
+          _num_received_responses++;
+        }
+        ch_id++;
       }
     }
     wait();
@@ -168,7 +177,7 @@ void embedding_lookup::RegisterModuleInfo() {
   _num_noc_aximm_slave_ports = 0;
   _num_noc_aximm_master_ports = 0;
 
-  for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
+  for (unsigned int ch_id = 0; ch_id < _total_num_channels; ch_id++) {
     port_name = module_name + ".aximm_req_interface_" + std::to_string(ch_id);
     // std::cout << "----" << port_name << std::endl;
     RegisterAximmMasterPort(port_name, &aximm_req_interface[ch_id], _dataw);

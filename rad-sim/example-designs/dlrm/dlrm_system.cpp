@@ -1,7 +1,6 @@
 #include <dlrm_system.hpp>
 
-dlrm_system::dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig,
-                         sc_clock *mem_clk_sig)
+dlrm_system::dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig)
     : sc_module(name) {
 
   // Instantiate driver
@@ -22,7 +21,6 @@ dlrm_system::dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig,
 
   // Instantiate design top-level
   dut_inst = new dlrm_top("dut");
-  dut_inst->mem_clk(*mem_clk_sig);
   dut_inst->rst(rst_sig);
   dut_inst->lookup_indecies_data(lookup_indecies_data_sig);
   dut_inst->lookup_indecies_target_channels(

@@ -247,9 +247,20 @@ void mvm::Tick() {
       dest_layer_pipeline[0].write(next_inst.read().dest_layer);
       dest_mvm_pipeline[0].write(next_inst.read().dest_mvm);
       pc.write(pc.read() + 1);
+      if (mvm_id == 0 && layer_id == 0 && pc.read() == 0) {
+        sim_trace_probe.record_event(6, 6);
+        // std::cout << "MVMs started compute at cycle " <<
+        // GetSimulationCycle(5.0)
+        //           << std::endl;
+      }
     } else if (next_inst.read().en && next_inst.read().jump) {
       valid_pipeline[0].write(false);
       pc.write(next_inst.read().raddr);
+      if (mvm_id == 1 && layer_id == 2) {
+        sim_trace_probe.record_event(7, 7);
+        // std::cout << "MVMs finished compute at cycle "
+        //           << GetSimulationCycle(5.0) << std::endl;
+      }
     } else {
       valid_pipeline[0].write(false);
     }
@@ -332,7 +343,8 @@ void mvm::Tick() {
           for (unsigned int dot_id = 0; dot_id < DOT_PRODUCTS; dot_id++) {
             matrix_mem_wen[dot_id].write(false);
           }
-          // std::cout << this->name() << " Got input data" << std::endl;
+          // if (mvm_id == 0 && layer_id == 0)
+          //   std::cout << tdata_vec << std::endl;
         } else if (rx_input_interface.tuser.read().range(15, 13).to_uint() ==
                    4) { // Matrix memory
           unsigned int waddr =
@@ -530,12 +542,11 @@ void mvm::Assign() {
       tx_input_interface.tdest.write(dest_id);
       tx_input_interface.tid.write(dest_interface_id);
       tx_reduce_interface.tvalid.write(false);
-      /*if (dest_interface == 2 << 13 && !ofifo_empty_signal) {
-        std::cout << "Sending to reduce FIFO" << std::endl;
-        std::cout << tx_tdata << std::endl;
-      }*/
-      // std::cout << "MVM (" << layer_id << "," << mvm_id << ") pushed data
-      // into the NoC with dest " << dest_id << "!" << std::endl;
+      // if (mvm_id == 1 && layer_id == 2 && !ofifo_empty_signal) {
+      //   std::cout << ">>>>>> " << tx_tdata << std::endl;
+      // }
+      //  std::cout << "MVM (" << layer_id << "," << mvm_id << ") pushed data
+      //  into the NoC with dest " << dest_id << "!" << std::endl;
     } else if (tx_tdata.size() > 0 && !ofifo_empty_signal &&
                dest_interface_id == 1) {
       sc_bv<AXIS_MAX_DATAW> tx_tdata_bv;

@@ -126,7 +126,8 @@ void dlrm_driver::source() {
     }
   }
   lookup_indecies_valid.write(false);
-  std::cout << "Finished sending all inputs to embedding lookup module!"
+  std::cout << this->name()
+            << ": Finished sending all inputs to embedding lookup module!"
             << std::endl;
   wait();
 }
@@ -153,8 +154,7 @@ void print_progress_bar(unsigned int outputs_count, unsigned int total) {
 }
 
 void dlrm_driver::sink() {
-  std::ofstream mismatching_outputs_file;
-  mismatching_outputs_file.open("mismatching.log");
+  std::ofstream mismatching_outputs_file("mismatching.log");
 
   unsigned int outputs_count = 0;
   data_vector<int16_t> dut_output;
@@ -167,19 +167,18 @@ void dlrm_driver::sink() {
         matching = (dut_output[e] == _mlp_outputs[outputs_count][e]);
       }
       if (!matching) {
-        mismatching_outputs_file << "Output " << outputs_count
-                                 << " does not match!\n";
-        mismatching_outputs_file << "TRUE: [ ";
+        std::cout << "Output " << outputs_count << " does not match!\n";
+        std::cout << "TRUE: [ ";
         for (unsigned int e = 0; e < _mlp_outputs[outputs_count].size(); e++) {
-          mismatching_outputs_file << _mlp_outputs[outputs_count][e] << " ";
+          std::cout << _mlp_outputs[outputs_count][e] << " ";
         }
-        mismatching_outputs_file << "]\n";
-        mismatching_outputs_file << "DUT : [ ";
+        std::cout << "]\n";
+        std::cout << "DUT : [ ";
         for (unsigned int e = 0; e < dut_output.size(); e++) {
-          mismatching_outputs_file << dut_output[e] << " ";
+          std::cout << dut_output[e] << " ";
         }
-        mismatching_outputs_file << "]\n";
-        mismatching_outputs_file << "-------------------------------\n";
+        std::cout << "]\n";
+        std::cout << "-------------------------------\n";
       }
       outputs_count++;
       all_outputs_matching &= matching;
@@ -189,6 +188,8 @@ void dlrm_driver::sink() {
     wait();
   }
   std::cout << "Got " << outputs_count << " output(s)!\n";
+  mismatching_outputs_file.flush();
+  mismatching_outputs_file.close();
 
   if (all_outputs_matching) {
     std::cout << "Simulation PASSED! All outputs matching!" << std::endl;

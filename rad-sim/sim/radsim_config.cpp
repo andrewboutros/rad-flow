@@ -182,7 +182,8 @@ void ParseRADSimKnobs(const std::string &knobs_filename) {
       std::getline(ss, value, ' ');
       radsim_config.AddStringKnob(param, value);
     } else if ((param == "num_nocs") || (param == "log_verbosity") ||
-               (param == "num_traces") || (param == "num_trace_modules")) {
+               (param == "num_traces") || (param == "num_trace_modules") ||
+               (param == "dram_controllers")) {
       std::string value_str;
       std::getline(ss, value_str, ' ');
       int value = std::stoi(value_str);

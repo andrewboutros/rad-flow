@@ -1,6 +1,6 @@
 // Topology
 topology = mesh;
-k = 8;
+k = 16;
 n = 2;
 
 // Routing
