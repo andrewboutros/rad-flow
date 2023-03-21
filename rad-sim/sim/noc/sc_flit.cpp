@@ -1,7 +1,7 @@
 #include <sc_flit.hpp>
 
-std::stack<sc_bv<NOC_LINKS_PAYLOAD_WIDTH>*> sc_flit::_all;
-std::stack<sc_bv<NOC_LINKS_PAYLOAD_WIDTH>*> sc_flit::_free;
+std::stack<sc_bv<NOC_LINKS_PAYLOAD_WIDTH> *> sc_flit::_all;
+std::stack<sc_bv<NOC_LINKS_PAYLOAD_WIDTH> *> sc_flit::_free;
 
 sc_flit::sc_flit() {
   _head = false;
@@ -14,10 +14,10 @@ sc_flit::sc_flit() {
   _payload = AllocateFlitPayload();
 }
 
-sc_flit::sc_flit(bool head, bool tail, Flit::FlitType type, unsigned int vc_id, 
-                 const sc_uint<NOC_LINKS_DEST_WIDTH>& dest,
-                 const sc_bv<NOC_LINKS_DEST_INTERFACE_WIDTH>& dest_interface,
-                 const sc_bv<NOC_LINKS_PACKETID_WIDTH>& packet_id, 
+sc_flit::sc_flit(bool head, bool tail, Flit::FlitType type, unsigned int vc_id,
+                 const sc_uint<NOC_LINKS_DEST_WIDTH> &dest,
+                 const sc_bv<NOC_LINKS_DEST_INFC_WIDTH> &dest_interface,
+                 const sc_bv<NOC_LINKS_PACKETID_WIDTH> &packet_id,
                  unsigned int sim_transaction_id) {
   _head = head;
   _tail = tail;
@@ -30,7 +30,7 @@ sc_flit::sc_flit(bool head, bool tail, Flit::FlitType type, unsigned int vc_id,
   _sim_transaction_id = sim_transaction_id;
 }
 
-sc_flit::sc_flit(const sc_flit& f) {
+sc_flit::sc_flit(const sc_flit &f) {
   _head = f._head;
   _tail = f._tail;
   _type = f._type;
@@ -43,11 +43,9 @@ sc_flit::sc_flit(const sc_flit& f) {
   _sim_transaction_id = f._sim_transaction_id;
 }
 
-sc_flit::~sc_flit() {
-  
-}
+sc_flit::~sc_flit() {}
 
-sc_flit& sc_flit::operator= (const sc_flit& f) {
+sc_flit &sc_flit::operator=(const sc_flit &f) {
   _head = f._head;
   _tail = f._tail;
   _type = f._type;
@@ -61,8 +59,8 @@ sc_flit& sc_flit::operator= (const sc_flit& f) {
   return *this;
 }
 
-sc_bv<NOC_LINKS_PAYLOAD_WIDTH>* sc_flit::AllocateFlitPayload() {
-  sc_bv<NOC_LINKS_PAYLOAD_WIDTH>* payload_ptr;
+sc_bv<NOC_LINKS_PAYLOAD_WIDTH> *sc_flit::AllocateFlitPayload() {
+  sc_bv<NOC_LINKS_PAYLOAD_WIDTH> *payload_ptr;
   if (_free.empty()) {
     payload_ptr = new sc_bv<NOC_LINKS_PAYLOAD_WIDTH>();
     _all.push(payload_ptr);
@@ -84,52 +82,44 @@ void sc_flit::FreeAllFlits() {
 
 unsigned int sc_flit::GetStreamID() { return _vc_id.to_uint(); }
 
-sc_packet::sc_packet() {
-  _stream_id = 0;
-}
+sc_packet::sc_packet() { _stream_id = 0; }
 
-unsigned int sc_packet::GetNumValidFlits() { 
-  return _flits.size(); 
-}
+unsigned int sc_packet::GetNumValidFlits() { return _flits.size(); }
 
-sc_flit* sc_packet::GetFlit(unsigned int idx) {
+sc_flit *sc_packet::GetFlit(unsigned int idx) {
   assert(idx < _flits.size());
   return &_flits[idx];
 }
 
-void sc_packet::AddFlit(sc_flit flit) {
-  _flits.push_back(flit);
-}
+void sc_packet::AddFlit(sc_flit flit) { _flits.push_back(flit); }
 
 void sc_packet::Reset() {
   _flits.clear();
   _stream_id = 0;
 }
 
-void sc_packet::SetStreamID(unsigned int id) { 
-  _stream_id = id; 
-}
+void sc_packet::SetStreamID(unsigned int id) { _stream_id = id; }
 
-unsigned int sc_packet::GetStreamID() { 
-  return _stream_id; 
-}
+unsigned int sc_packet::GetStreamID() { return _stream_id; }
 
-void sc_packet::PrintFlitContents() { 
+void sc_packet::PrintFlitContents() {
   for (unsigned int flit_id = 0; flit_id < _flits.size(); flit_id++)
     cerr << *(_flits[flit_id]._payload);
-  if (_flits.size() != 0) cerr << endl;
+  if (_flits.size() != 0)
+    cerr << endl;
 }
 
-std::ostream& operator<<(std::ostream& os, sc_flit& flit) {
-  os << "|" << flit._head << "|" << flit._tail << "|" << flit._vc_id << "|" << flit._packet_id << "|"
+std::ostream &operator<<(std::ostream &os, sc_flit &flit) {
+  os << "|" << flit._head << "|" << flit._tail << "|" << flit._vc_id << "|"
+     << flit._packet_id << "|"
      << "|" << flit._payload->to_string(SC_HEX) << "|" << std::dec;
   return os;
 }
 
-std::ostream& operator<<(std::ostream& os, sc_packet& packet) {
+std::ostream &operator<<(std::ostream &os, sc_packet &packet) {
   if (packet.GetNumValidFlits() > 0) {
-    os << "Pacekt " << packet.GetFlit(0)->_packet_id.to_uint() << " has " << packet.GetNumValidFlits()
-       << " valid flits";
+    os << "Pacekt " << packet.GetFlit(0)->_packet_id.to_uint() << " has "
+       << packet.GetNumValidFlits() << " valid flits";
   }
   return os;
 }

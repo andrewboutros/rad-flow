@@ -26,7 +26,7 @@ public:
   sc_bv<NOC_LINKS_PACKETID_WIDTH> _packet_id; // Packet ID this flit belongs to
   sc_bv<NOC_LINKS_DEST_WIDTH> _dest;          // Packet destination
   sc_bv<NOC_LINKS_PAYLOAD_WIDTH> *_payload;   // Payload data of the flit
-  sc_bv<NOC_LINKS_DEST_INTERFACE_WIDTH>
+  sc_bv<NOC_LINKS_DEST_INFC_WIDTH>
       _dest_interface; // Packet destination interface ID
   unsigned int
       _sim_transaction_id; // Unique simulation transaction ID for this flit
@@ -35,7 +35,7 @@ public:
   sc_flit(const sc_flit &f);
   sc_flit(bool head, bool tail, Flit::FlitType type, unsigned int vc_id,
           const sc_uint<NOC_LINKS_DEST_WIDTH> &dest,
-          const sc_bv<NOC_LINKS_DEST_INTERFACE_WIDTH> &dest_interface,
+          const sc_bv<NOC_LINKS_DEST_INFC_WIDTH> &dest_interface,
           const sc_bv<NOC_LINKS_PACKETID_WIDTH> &packet_id,
           unsigned int sim_transaction_id);
   ~sc_flit();

@@ -52,7 +52,7 @@ private:
   // Response Interface variables
   sc_signal<sc_uint<AXI4_IDW>> _i_id;
   sc_signal<sc_bv<AXI4_MAX_DATAW>> _i_payload;
-  sc_signal<sc_bv<AXI_CTRLW>> _i_ctrl;
+  sc_signal<sc_bv<AXI4_CTRLW>> _i_ctrl;
   sc_signal<sc_bv<AXI4_USERW>> _i_user;
   sc_signal<sc_bv<AXI4_RESPW>> _i_resp;
   sc_signal<sc_bv<1>> _i_last;

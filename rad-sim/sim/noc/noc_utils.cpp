@@ -15,11 +15,10 @@ int VCIDFromType(Flit::FlitType type, BookSimConfig *config) {
 }
 
 void set_flit_payload(sc_flit &packetization_flit,
-                      sc_bv<AXI_TRANSACTION_MAX_WIDTH> &packet_bv,
-                      int flit_id) {
+                      sc_bv<AXI4_PAYLOADW> &packet_bv, int flit_id) {
   unsigned int start_idx = flit_id * NOC_LINKS_PAYLOAD_WIDTH;
-  unsigned int end_idx = std::min((flit_id + 1) * NOC_LINKS_PAYLOAD_WIDTH,
-                                  AXI_TRANSACTION_MAX_WIDTH);
+  unsigned int end_idx =
+      std::min((flit_id + 1) * NOC_LINKS_PAYLOAD_WIDTH, AXI4_PAYLOADW);
   *(packetization_flit._payload) = packet_bv.range(end_idx - 1, start_idx);
 }
 

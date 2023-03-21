@@ -47,8 +47,8 @@ aximm_master_adapter::aximm_master_adapter(
   _injection_afifo_depth =
       radsim_config.GetIntVectorKnob("adapter_fifo_size", _network_id);
   _axi_transaction_width = AXI4_USERW;
-  if ((AXI4_ADDRW + AXI_CTRLW) > (_interface_dataw + AXI4_RESPW + 1)) {
-    _axi_transaction_width += (AXI4_ADDRW + AXI_CTRLW);
+  if ((AXI4_ADDRW + AXI4_CTRLW) > (_interface_dataw + AXI4_RESPW + 1)) {
+    _axi_transaction_width += (AXI4_ADDRW + AXI4_CTRLW);
   } else {
     _axi_transaction_width += (_interface_dataw + AXI4_RESPW + 1);
   }
@@ -256,13 +256,13 @@ void aximm_master_adapter::OutputInterface() {
         (_output_packet.GetFlit(0)->_type == Flit::FlitType::READ_REQUEST) &&
         aximm_interface.arready.read()) {
 
-      sc_bv<AXI_TRANSACTION_MAX_WIDTH> temp_bv;
+      sc_bv<AXI4_PAYLOADW> temp_bv;
       sc_flit *temp_flit = _output_packet.GetFlit(0);
 
       for (unsigned int i = 0; i < _output_packet.GetNumValidFlits(); i++) {
         unsigned int start_idx = i * NOC_LINKS_PAYLOAD_WIDTH;
-        unsigned int end_idx = min((int)AXI_TRANSACTION_MAX_WIDTH,
-                                   (int)(i + 1) * NOC_LINKS_PAYLOAD_WIDTH);
+        unsigned int end_idx =
+            min((int)AXI4_PAYLOADW, (int)(i + 1) * NOC_LINKS_PAYLOAD_WIDTH);
         sc_bv<NOC_LINKS_PAYLOAD_WIDTH> flit_payload =
             *(_output_packet.GetFlit(i)->_payload);
         temp_bv.range(end_idx - 1, start_idx) = flit_payload;
@@ -272,9 +272,9 @@ void aximm_master_adapter::OutputInterface() {
       aximm_interface.wvalid.write(false);
       aximm_interface.arvalid.write(true);
       aximm_interface.arid.write(temp_flit->_packet_id);
-      aximm_interface.araddr.write(AXI_ADDR(temp_bv));
-      aximm_interface.aruser.write(AXI_USER(temp_bv));
-      sc_bv<AXI_CTRLW> ctrl_temp = AXI_CTRL(temp_bv);
+      aximm_interface.araddr.write(AXI4_ADDR(temp_bv));
+      aximm_interface.aruser.write(AXI4_USER(temp_bv));
+      sc_bv<AXI4_CTRLW> ctrl_temp = AXI4_CTRL(temp_bv);
       unsigned int offset = 0;
       aximm_interface.arburst.write(
           temp_bv.range(offset + AXI4_BURSTW - 1, offset).to_uint());
@@ -294,13 +294,13 @@ void aximm_master_adapter::OutputInterface() {
                 Flit::FlitType::WRITE_REQUEST) &&
                aximm_interface.awready.read()) {
 
-      sc_bv<AXI_TRANSACTION_MAX_WIDTH> temp_bv;
+      sc_bv<AXI4_PAYLOADW> temp_bv;
       sc_flit *temp_flit = _output_packet.GetFlit(0);
 
       for (unsigned int i = 0; i < _output_packet.GetNumValidFlits(); i++) {
         unsigned int start_idx = i * NOC_LINKS_PAYLOAD_WIDTH;
-        unsigned int end_idx = min((int)AXI_TRANSACTION_MAX_WIDTH,
-                                   (int)(i + 1) * NOC_LINKS_PAYLOAD_WIDTH);
+        unsigned int end_idx =
+            min((int)AXI4_PAYLOADW, (int)(i + 1) * NOC_LINKS_PAYLOAD_WIDTH);
         sc_bv<NOC_LINKS_PAYLOAD_WIDTH> flit_payload =
             *(_output_packet.GetFlit(i)->_payload);
         temp_bv.range(end_idx - 1, start_idx) = flit_payload;
@@ -310,9 +310,9 @@ void aximm_master_adapter::OutputInterface() {
       aximm_interface.wvalid.write(false);
       aximm_interface.awvalid.write(true);
       aximm_interface.awid.write(temp_flit->_packet_id);
-      aximm_interface.awaddr.write(AXI_ADDR(temp_bv));
-      aximm_interface.awuser.write(AXI_USER(temp_bv));
-      sc_bv<AXI_CTRLW> ctrl_temp = AXI_CTRL(temp_bv);
+      aximm_interface.awaddr.write(AXI4_ADDR(temp_bv));
+      aximm_interface.awuser.write(AXI4_USER(temp_bv));
+      sc_bv<AXI4_CTRLW> ctrl_temp = AXI4_CTRL(temp_bv);
       unsigned int offset = 0;
       aximm_interface.awburst.write(
           temp_bv.range(offset + AXI4_BURSTW - 1, offset).to_uint());
@@ -331,13 +331,13 @@ void aximm_master_adapter::OutputInterface() {
                 Flit::FlitType::WRITE_DATA) &&
                aximm_interface.wready.read()) {
 
-      sc_bv<AXI_TRANSACTION_MAX_WIDTH> temp_bv;
+      sc_bv<AXI4_PAYLOADW> temp_bv;
       sc_flit *temp_flit = _output_packet.GetFlit(0);
 
       for (unsigned int i = 0; i < _output_packet.GetNumValidFlits(); i++) {
         unsigned int start_idx = i * NOC_LINKS_PAYLOAD_WIDTH;
-        unsigned int end_idx = min((int)AXI_TRANSACTION_MAX_WIDTH,
-                                   (int)(i + 1) * NOC_LINKS_PAYLOAD_WIDTH);
+        unsigned int end_idx =
+            min((int)AXI4_PAYLOADW, (int)(i + 1) * NOC_LINKS_PAYLOAD_WIDTH);
         sc_bv<NOC_LINKS_PAYLOAD_WIDTH> flit_payload =
             *(_output_packet.GetFlit(i)->_payload);
         temp_bv.range(end_idx - 1, start_idx) = flit_payload;
@@ -347,9 +347,9 @@ void aximm_master_adapter::OutputInterface() {
       aximm_interface.awvalid.write(false);
       aximm_interface.wvalid.write(true);
       aximm_interface.wid.write(temp_flit->_packet_id);
-      aximm_interface.wlast.write(AXI_LAST(temp_bv).to_uint());
-      aximm_interface.wdata.write(AXI_DATA(temp_bv));
-      aximm_interface.wuser.write(AXI_USER(temp_bv));
+      aximm_interface.wlast.write(AXI4_LAST(temp_bv).to_uint());
+      aximm_interface.wdata.write(AXI4_DATA(temp_bv));
+      aximm_interface.wuser.write(AXI4_USER(temp_bv));
       _output_packet_ready = false;
       NoCTransactionTelemetry::RecordTransactionReceipt(
           temp_flit->_sim_transaction_id);
@@ -488,14 +488,14 @@ void aximm_master_adapter::InputPacketization() {
       // state, then remains idle during the remaining states (analogous to an
       // assymmetric FIFO with input size of N flits & output size of 1 flit)
       if (_packetization_cycle.read() == 0) {
-        sc_bv<AXI_TRANSACTION_MAX_WIDTH> packet_bv;
+        sc_bv<AXI4_PAYLOADW> packet_bv;
         unsigned int num_flits = 0;
         if (_i_type.read() == AXI_TYPE_B) {
 
           num_flits = (unsigned int)(ceil((AXI4_RESPW + AXI4_USERW) * 1.0 /
                                           NOC_LINKS_PAYLOAD_WIDTH));
-          AXI_USER(packet_bv) = _i_user.read();
-          AXI_RESP(packet_bv) = _i_resp.read();
+          AXI4_USER(packet_bv) = _i_user.read();
+          AXI4_RESP(packet_bv) = _i_resp.read();
           Flit::FlitType flit_type = Flit::WRITE_REPLY;
           int flit_vc_id = VCIDFromType(flit_type, _noc_config);
 
@@ -513,10 +513,10 @@ void aximm_master_adapter::InputPacketization() {
           num_flits = (unsigned int)(ceil(
               (_interface_dataw + AXI4_RESPW + AXI4_USERW + 1) * 1.0 /
               NOC_LINKS_PAYLOAD_WIDTH));
-          AXI_USER(packet_bv) = _i_user.read();
-          AXI_RESP(packet_bv) = _i_resp.read();
-          AXI_LAST(packet_bv) = _i_last.read();
-          AXI_DATA(packet_bv) = _i_payload.read();
+          AXI4_USER(packet_bv) = _i_user.read();
+          AXI4_RESP(packet_bv) = _i_resp.read();
+          AXI4_LAST(packet_bv) = _i_last.read();
+          AXI4_DATA(packet_bv) = _i_payload.read();
           Flit::FlitType flit_type = Flit::READ_REPLY;
           int flit_vc_id = VCIDFromType(flit_type, _noc_config);
 
