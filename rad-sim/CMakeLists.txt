@@ -11,6 +11,6 @@ message(STATUS "Compiling the ${DESIGN} design")
 add_subdirectory(sim)
 add_subdirectory(example-designs)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wuninitialized -Weffc++ -pedantic")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")

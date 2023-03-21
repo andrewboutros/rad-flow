@@ -200,8 +200,7 @@ void feature_interaction::Tick() {
                     << GetSimulationCycle(5.0) << "!" << std::endl;
         }
         // std::cout << GetSimulationCycle(5.0) << " === "
-        //           << "Pushed response to iFIFO " << ch_id << " "
-        //           << _input_fifos[ch_id].size() << std::endl;
+        //           << "Pushed response to iFIFO " << rdata << std::endl;
       }
     }
 

@@ -12,10 +12,10 @@ hbm_channels = 16
 hbm_channel_words = 1 * 1024 * 1024 * 1024 / read_bytewidth
 ddr_channels = 2
 ddr_channel_words = 8 * 1024 * 1024 * 1024 / read_bytewidth
-num_test_inputs = 64
+num_test_inputs = 256
 
 # MLP parameters
-native_dim = 16  # int(read_bytewidth / element_bytewidth)
+native_dim = 64  # int(read_bytewidth / element_bytewidth)
 num_layers = 3
 hidden_dims = [1024, 512, 256]
 num_mvms = [4, 2, 2]
@@ -268,7 +268,7 @@ def generate_embedding_lookup_inputs(num_inputs):
             for ch in tables_per_ddr_channel:
                 if round_id < len(tables_per_ddr_channel[ch]):
                     table_id = tables_per_ddr_channel[ch][round_id]
-                    limit = get_table_entries_by_id(table_info, table_id) - 1
+                    limit = int(get_table_entries_by_id(table_info, table_id) / 2)
                     input_vec.append(random.randint(0, limit) * read_bytewidth)
                     target_ch.append(ch)
                     base_addr.append(
@@ -283,7 +283,7 @@ def generate_embedding_lookup_inputs(num_inputs):
             for ch in tables_per_hbm_channel:
                 if round_id < len(tables_per_hbm_channel[ch]):
                     table_id = tables_per_hbm_channel[ch][round_id]
-                    limit = get_table_entries_by_id(table_info, table_id) - 1
+                    limit = int(get_table_entries_by_id(table_info, table_id) / 2)
                     input_vec.append(random.randint(0, limit) * read_bytewidth)
                     target_ch.append(ddr_channels + ch)
                     base_addr.append(

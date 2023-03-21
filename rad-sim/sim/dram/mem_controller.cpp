@@ -171,19 +171,58 @@ void mem_controller::MemReadCallback(uint64_t addr) {
   if (_mem_contents[ch_id].find(addr) != _mem_contents[ch_id].end()) {
     data_word = _mem_contents[ch_id][addr];
   } else {
+    sim_log.log(warning, "Read from uninitialized address = " + to_string(addr),
+                this->name());
     data_word = 0;
   }
 
   // Reorder if out-of-order
   if (read_addr != addr) {
-    _out_of_order_read_requests[ch_id].push_back(
-        std::make_tuple(addr, data_word));
+    if (_out_of_order_read_requests[ch_id].find(addr) !=
+        _out_of_order_read_requests[ch_id].end()) {
+      _out_of_order_read_requests[ch_id][addr]++;
+    } else {
+      _out_of_order_read_requests[ch_id][addr] = 1;
+    }
   } else {
+    bool flag;
     _outstanding_read_requests[ch_id].pop();
     _output_read_responses[ch_id].push(
         std::make_tuple(resp_addr, data_word, last));
 
-    bool flag = _out_of_order_read_requests[ch_id].size() > 0;
+    do {
+      flag = false;
+      uint64_t front_addr =
+          std::get<0>(_outstanding_read_requests[ch_id].front());
+      if (_out_of_order_read_requests[ch_id].find(front_addr) !=
+          _out_of_order_read_requests[ch_id].end()) {
+        read_addr = front_addr;
+        resp_addr = std::get<1>(_outstanding_read_requests[ch_id].front());
+        last = std::get<2>(_outstanding_read_requests[ch_id].front());
+        if (_out_of_order_read_requests[ch_id][front_addr] == 1) {
+          _out_of_order_read_requests[ch_id].erase(front_addr);
+        } else {
+          _out_of_order_read_requests[ch_id][front_addr]--;
+        }
+
+        if (_mem_contents[ch_id].find(front_addr) !=
+            _mem_contents[ch_id].end()) {
+          data_word = _mem_contents[ch_id][front_addr];
+        } else {
+          sim_log.log(warning,
+                      "Read from uninitialized address = " +
+                          to_string(front_addr),
+                      this->name());
+          data_word = 0;
+        }
+        _outstanding_read_requests[ch_id].pop();
+        _output_read_responses[ch_id].push(
+            std::make_tuple(resp_addr, data_word, last));
+        flag = true;
+      }
+    } while (flag);
+
+    /*bool flag = _out_of_order_read_requests[ch_id].size() > 0;
     while (flag) {
       flag = _out_of_order_read_requests[ch_id].size() > 0;
       read_addr = std::get<0>(_outstanding_read_requests[ch_id].front());
@@ -200,15 +239,12 @@ void mem_controller::MemReadCallback(uint64_t addr) {
           _out_of_order_read_requests[ch_id].erase(
               _out_of_order_read_requests[ch_id].begin() + rq_id);
           _outstanding_read_requests[ch_id].pop();
-          // if (data_word == 0)
-          //   sim_log.log(warning, "Memory read from an unwritten address",
-          //               this->name());
           break;
         } else if (rq_id == _out_of_order_read_requests[ch_id].size() - 1) {
           flag = false;
         }
       }
-    }
+    }*/
   }
   return;
 }
@@ -250,6 +286,7 @@ void mem_controller::PrintMemParameters() {
   std::cout << "\t\tro = " << _field_widths["ro"] << std::endl;
   std::cout << "\t\tco = " << _field_widths["co"] << std::endl;
   std::cout << "\t\tbl = " << _field_widths["bl"] << std::endl;
+  cin.get();
 }
 
 uint64_t mem_controller::AddressMapping(uint64_t addr,
@@ -409,6 +446,17 @@ void mem_controller::Tick() {
         // std::cout << module_name << "_" << ch_id << ": Sent R Response!"
         //           << std::endl;
       }
+
+      mem_channels[ch_id].rvalid.write(_output_read_responses[ch_id].size() >
+                                       0);
+      if (_output_read_responses[ch_id].size() > 0) {
+        mem_channels[ch_id].rdata.write(
+            std::get<1>(_output_read_responses[ch_id].front()));
+        mem_channels[ch_id].rlast.write(
+            std::get<2>(_output_read_responses[ch_id].front()));
+        mem_channels[ch_id].ruser.write(
+            std::get<0>(_output_read_responses[ch_id].front()));
+      }
     }
 
     /*for (unsigned int i = 0; i < _num_channels; i++) {
@@ -435,13 +483,15 @@ void mem_controller::MemTick() {
   wait();
 
   while (true) {
-    _dramsim->ClockTick();
     for (unsigned int ch_id = 0; ch_id < _num_channels; ch_id++) {
       _output_write_queue_occupancy[ch_id].write(
           _output_write_responses[ch_id].size());
       _output_read_queue_occupancy[ch_id].write(
           _output_read_responses[ch_id].size());
     }
+
+    _dramsim->ClockTick();
+
     if (_read_before_write) {
       for (unsigned int ch_id = 0; ch_id < _num_channels; ch_id++) {
         // Issue read request to DRAMsim
@@ -528,24 +578,24 @@ void mem_controller::Assign() {
       mem_channels[ch_id].wready.write(false);
       mem_channels[ch_id].bvalid.write(false);
       mem_channels[ch_id].arready.write(false);
-      mem_channels[ch_id].rvalid.write(false);
+      // mem_channels[ch_id].rvalid.write(false);
     }
   } else {
     for (unsigned int ch_id = 0; ch_id < _num_channels; ch_id++) {
       bool read_input_queue_ok =
-          _read_address_queue_occupancy[ch_id] < _input_queue_size - 4;
+          _read_address_queue_occupancy[ch_id] < _input_queue_size - 8;
       bool read_output_queue_ok =
           (_num_outstanding_read_requests[ch_id] +
-           _output_read_queue_occupancy[ch_id]) < _output_queue_size - 4;
+           _output_read_queue_occupancy[ch_id]) < _output_queue_size - 8;
       bool write_output_queue_ok =
           (_num_outstanding_write_requests[ch_id] +
-           _output_write_queue_occupancy[ch_id]) < _output_queue_size - 4;
+           _output_write_queue_occupancy[ch_id]) < _output_queue_size - 8;
 
       mem_channels[ch_id].awready.write(_write_address_queue_occupancy[ch_id] <
-                                        _input_queue_size - 2);
+                                        _input_queue_size - 8);
       mem_channels[ch_id].wready.write(
           _write_address_queue_occupancy[ch_id] > 0 &&
-          _write_data_queue_occupancy[ch_id] < _input_queue_size - 4 &&
+          _write_data_queue_occupancy[ch_id] < _input_queue_size - 8 &&
           write_output_queue_ok);
       mem_channels[ch_id].arready.write(read_input_queue_ok &&
                                         read_output_queue_ok);
@@ -554,16 +604,6 @@ void mem_controller::Assign() {
                                        0);
       if (_output_write_responses[ch_id].size() > 0) {
         mem_channels[ch_id].buser.write(_output_write_responses[ch_id].front());
-      }
-
-      mem_channels[ch_id].rvalid.write(_output_read_queue_occupancy[ch_id] > 0);
-      if (_output_read_responses[ch_id].size() > 0) {
-        mem_channels[ch_id].rdata.write(
-            std::get<1>(_output_read_responses[ch_id].front()));
-        mem_channels[ch_id].rlast.write(
-            std::get<2>(_output_read_responses[ch_id].front()));
-        mem_channels[ch_id].ruser.write(
-            std::get<0>(_output_read_responses[ch_id].front()));
       }
     }
   }

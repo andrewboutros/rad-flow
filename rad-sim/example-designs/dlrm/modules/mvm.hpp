@@ -11,9 +11,9 @@
 #include <vector>
 
 #define BITWIDTH 16
-#define LANES 16
+#define LANES 64
 #define FIFO_SIZE 512
-#define COMPUTE_LATENCY 8
+#define COMPUTE_LATENCY 9
 #define MEM_DEPTH 1025
 #define DOT_PRODUCTS LANES
 #define DATAW (BITWIDTH * LANES)

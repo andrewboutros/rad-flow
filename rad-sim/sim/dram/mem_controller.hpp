@@ -50,7 +50,7 @@ private:
       _outstanding_write_requests;
   std::vector<std::queue<std::tuple<uint64_t, uint64_t, bool>>>
       _outstanding_read_requests;
-  std::vector<std::vector<std::tuple<uint64_t, sc_bv<AXI_MAX_DATAW>>>>
+  std::vector<std::unordered_map<uint64_t, unsigned int>>
       _out_of_order_read_requests;
   // Queue for responses populated by read/write callback functions
   std::vector<std::queue<std::tuple<uint64_t, sc_bv<AXI_MAX_DATAW>, bool>>>
