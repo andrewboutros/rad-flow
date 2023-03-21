@@ -1,0 +1,7 @@
+#define BITWIDTH 16
+#define LANES 16
+#define FIFO_SIZE 512
+#define COMPUTE_LATENCY 7
+#define MEM_DEPTH 1025
+#define DOT_PRODUCTS LANES
+#define DATAW (BITWIDTH * LANES)

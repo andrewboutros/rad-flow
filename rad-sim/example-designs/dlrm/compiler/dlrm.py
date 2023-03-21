@@ -3,6 +3,7 @@ import random
 import os
 import glob
 import numpy as np
+import sys
 
 # Input parameters
 model_csv = "ab_small.csv"
@@ -15,10 +16,11 @@ ddr_channel_words = 8 * 1024 * 1024 * 1024 / read_bytewidth
 num_test_inputs = 256
 
 # MLP parameters
-native_dim = 64  # int(read_bytewidth / element_bytewidth)
+native_dim = 32  # int(read_bytewidth / element_bytewidth)
 num_layers = 3
 hidden_dims = [1024, 512, 256]
 num_mvms = [4, 2, 2]
+hard_mvms = False
 
 # Model parsing
 table_info = []
@@ -649,11 +651,66 @@ def generate_mvms_config():
     config_file.close()
 
 
+def generate_dlrm_defines_hpp():
+    dlrm_defines = open("../modules/dlrm_defines.hpp", "w")
+    dlrm_defines.write("#define BITWIDTH 16\n")
+    dlrm_defines.write("#define LANES " + str(native_dim) + "\n")
+    dlrm_defines.write("#define FIFO_SIZE 512\n")
+    dlrm_defines.write(
+        "#define COMPUTE_LATENCY " + str(int(math.log2(native_dim)) + 3) + "\n"
+    )
+    dlrm_defines.write("#define MEM_DEPTH 1025\n")
+    dlrm_defines.write("#define DOT_PRODUCTS LANES\n")
+    dlrm_defines.write("#define DATAW (BITWIDTH * LANES)\n")
+    dlrm_defines.close()
+
+
+def generate_radsim_clocks_file():
+    dlrm_clks = open("../dlrm.clks", "w")
+    dlrm_clks.write("embedding_lookup_inst 0 0\n")
+    dlrm_clks.write("feature_interaction_inst 0 0\n")
+    dlrm_clks.write("ext_mem_0 2 2\n")
+    dlrm_clks.write("ext_mem_1 2 2\n")
+    dlrm_clks.write("ext_mem_2 1 1\n")
+    dlrm_clks.write("ext_mem_3 1 1\n")
+    for l in range(len(num_mvms)):
+        for m in range(num_mvms[l]):
+            if hard_mvms:
+                dlrm_clks.write("layer" + str(l) + "_mvm" + str(m) + " 0 3\n")
+            else:
+                dlrm_clks.write("layer" + str(l) + "_mvm" + str(m) + " 0 0\n")
+    dlrm_clks.write("output_collector 0 0")
+    dlrm_clks.close()
+
+
+if "-h" in sys.argv or "--help" in sys.argv:
+    print("python dlrm.py -l <mvm_lanes> -n <num_test_inputs> -m <model_csv>")
+    exit(1)
+
+# Parse command line arguments
+if "-n" in sys.argv:
+    if sys.argv.index("-n") + 1 >= len(sys.argv):
+        sys.exit(1)
+    num_test_inputs = int(sys.argv[sys.argv.index("-n") + 1])
+
+if "-l" in sys.argv:
+    if sys.argv.index("-l") + 1 >= len(sys.argv):
+        sys.exit(1)
+    native_dim = int(sys.argv[sys.argv.index("-l") + 1])
+
+if "-m" in sys.argv:
+    if sys.argv.index("-m") + 1 >= len(sys.argv):
+        sys.exit(1)
+    model_csv = sys.argv[sys.argv.index("-m") + 1]
+
+if "-a" in sys.argv:
+    hard_mvms = True
+
 parse_dlrm_description(model_csv)
 sort_tables()
-print_dlrm_description()
+# print_dlrm_description()
 greedy_allocation()
-print_allocation()
+# print_allocation()
 generate_embedding_lookup_inputs(num_test_inputs)
 generate_mem_channel_contents()
 generate_feature_interaction_instructions()
@@ -662,3 +719,5 @@ padded_weights = generate_mlp_weights()
 generate_mvm_instructions(padded_weights)
 generate_mlp_outputs(padded_weights)
 generate_mvms_config()
+generate_dlrm_defines_hpp()
+generate_radsim_clocks_file()

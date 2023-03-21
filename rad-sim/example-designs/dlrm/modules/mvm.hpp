@@ -2,6 +2,7 @@
 
 #include <axis_interface.hpp>
 #include <design_context.hpp>
+#include <dlrm_defines.hpp>
 #include <fifo.hpp>
 #include <instructions.hpp>
 #include <radsim_defines.hpp>
@@ -9,14 +10,6 @@
 #include <string>
 #include <systemc.h>
 #include <vector>
-
-#define BITWIDTH 16
-#define LANES 64
-#define FIFO_SIZE 512
-#define COMPUTE_LATENCY 9
-#define MEM_DEPTH 1025
-#define DOT_PRODUCTS LANES
-#define DATAW (BITWIDTH * LANES)
 
 class mvm : public radsim_module {
 private:

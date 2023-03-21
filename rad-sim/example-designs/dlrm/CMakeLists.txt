@@ -40,6 +40,7 @@ set(hdrfiles
   modules/fifo.hpp
   modules/instructions.hpp
   modules/collector.hpp
+  modules/dlrm_defines.hpp
   dlrm_top.hpp
   dlrm_driver.hpp
   dlrm_system.hpp
