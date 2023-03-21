@@ -38,7 +38,6 @@ private:
   std::queue<unsigned int> _axis_interface_priority;
   std::vector<bool> _tready_values;
   sc_signal<bool> _injection_afifo_full;
-  sc_signal<bool> _packetization_busy;
 
   // Input interfacing variables
   axis_signal _input_axis_transaction;
@@ -49,7 +48,8 @@ private:
   // Input packetization variables
   std::queue<sc_flit> _injection_afifo;
   unsigned int _injection_afifo_depth;
-  int _packetization_cycle;
+  sc_signal<uint8_t> _packetization_cycle;
+  sc_signal<uint8_t> _num_packetization_flits;
 
   // Input injection variables
   bool _injection_flit_ready;

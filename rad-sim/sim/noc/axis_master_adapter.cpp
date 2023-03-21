@@ -12,16 +12,13 @@ axis_master_adapter::axis_master_adapter(
   _network_id = network_id;
   _num_axis_interfaces = interface_types.size();
   _num_flits.resize(_num_axis_interfaces);
-  _max_num_flits =
-      (int)ceil(AXIS_TRANSACTION_PAYLOAD_WIDTH * 1.0 / NOC_LINKS_PAYLOAD_WIDTH);
   _interface_dataw = interface_dataw;
   for (unsigned int interface_id = 0; interface_id < _num_axis_interfaces;
        interface_id++) {
-    int payload_dataw = AXIS_TRANSACTION_PAYLOAD_WIDTH - AXIS_MAX_DATAW +
-                        interface_dataw[interface_id];
+    int payload_dataw =
+        AXIS_PAYLOADW - AXIS_MAX_DATAW + interface_dataw[interface_id];
     _num_flits[interface_id] =
         (int)ceil(payload_dataw * 1.0 / NOC_LINKS_PAYLOAD_WIDTH);
-    ;
   }
   _num_vcs = radsim_config.GetIntVectorKnob("noc_vcs", _network_id);
   axis_interfaces.init(_num_axis_interfaces);
@@ -171,9 +168,8 @@ void axis_master_adapter::OutputDepacketization() {
       _ejection_afifos[highest_priority_fifo_id].pop();
       _constructed_packet.AddFlit(processed_flit);
       if (processed_flit._head) {
-        sc_bv<NOC_LINKS_PAYLOAD_WIDTH> head_payload =
-            *(processed_flit._payload);
-        _constructed_packet.SetStreamID(AXIS_TID(head_payload).to_uint());
+        _constructed_packet.SetStreamID(
+            processed_flit._dest_interface.to_uint());
       }
       _ejected_flits->insert(make_pair(_node_id, highest_priority_fifo_id));
 
@@ -211,34 +207,24 @@ void axis_master_adapter::OutputDepacketization() {
 }
 
 void axis_master_adapter::write_sc_packet_to_axis_output(
-    sc_packet &packet, axis_master_port &axis_port, int output_chunk,
-    unsigned int interface_id) {
-  sc_bv<AXIS_TRANSACTION_WIDTH> packet_bv;
-  sc_bv<AXIS_TRANSACTION_PAYLOAD_WIDTH> packet_payload_bv;
+    sc_packet &packet, axis_master_port &axis_port) {
+
+  sc_bv<AXIS_PAYLOADW> packet_bv;
   int start_idx, end_idx;
-  for (unsigned int flit_id = 0; flit_id < packet.GetNumValidFlits();
-       flit_id++) {
+  unsigned int num_flits = packet.GetNumValidFlits();
+  unsigned int dest, dest_interface;
+
+  for (unsigned int flit_id = 0; flit_id < num_flits; flit_id++) {
     if (flit_id == 0) {
-      AXIS_TDEST(packet_bv) = packet.GetFlit(flit_id)->_dest;
+      dest = packet.GetFlit(flit_id)->_dest.to_uint();
+      dest_interface = packet.GetFlit(flit_id)->_dest_interface.to_uint();
     }
     start_idx = flit_id * NOC_LINKS_PAYLOAD_WIDTH;
-    end_idx = std::min(AXIS_TRANSACTION_PAYLOAD_WIDTH,
-                       (int)((flit_id + 1) * NOC_LINKS_PAYLOAD_WIDTH));
-    packet_payload_bv.range(end_idx - 1, start_idx) =
+    end_idx =
+        std::min(AXIS_PAYLOADW, (int)((flit_id + 1) * NOC_LINKS_PAYLOAD_WIDTH));
+    packet_bv.range(end_idx - 1, start_idx) =
         packet.GetFlit(flit_id)->_payload->range(NOC_LINKS_PAYLOAD_WIDTH - 1,
                                                  0);
-  }
-  AXIS_TID(packet_bv) = AXIS_TID(packet_payload_bv);
-  AXIS_TLAST(packet_bv) = AXIS_TLAST(packet_payload_bv);
-  AXIS_TUSER(packet_bv) = AXIS_TUSER(packet_payload_bv);
-  int data_start_idx = output_chunk * _interface_dataw[interface_id];
-  int data_end_idx = data_start_idx + _interface_dataw[interface_id];
-  data_end_idx = std::min(data_end_idx, AXIS_MAX_DATAW);
-  AXIS_TDATA(packet_bv).range(_interface_dataw[interface_id] - 1, 0) =
-      AXIS_TDATA(packet_payload_bv).range(data_end_idx - 1, data_start_idx);
-  if (_interface_dataw[interface_id] < AXIS_MAX_DATAW) {
-    AXIS_TDATA(packet_bv).range(AXIS_MAX_DATAW - 1,
-                                _interface_dataw[interface_id]) = 0;
   }
 
   // Write to AXI-streaming output interface
@@ -248,8 +234,8 @@ void axis_master_adapter::write_sc_packet_to_axis_output(
     axis_port.tlast.write(true);
   else
     axis_port.tlast.write(false);
-  axis_port.tid.write(AXIS_TID(packet_bv));
-  axis_port.tdest.write(AXIS_TDEST(packet_bv));
+  axis_port.tid.write(dest_interface);
+  axis_port.tdest.write(dest);
   axis_port.tuser.write(AXIS_TUSER(packet_bv));
   axis_port.tstrb.write(0);
   axis_port.tkeep.write(0);
@@ -290,9 +276,8 @@ void axis_master_adapter::OutputInterface() {
 
       if (!_output_afifos[interface_id].empty()) {
         sc_packet output_packet = _output_afifos[interface_id].front();
-        write_sc_packet_to_axis_output(
-            output_packet, axis_interfaces[interface_id],
-            _output_chunk[interface_id], interface_id);
+        write_sc_packet_to_axis_output(output_packet,
+                                       axis_interfaces[interface_id]);
       } else {
         axis_interfaces[interface_id].tvalid.write(false);
       }

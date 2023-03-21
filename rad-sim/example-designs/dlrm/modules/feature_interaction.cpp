@@ -116,7 +116,7 @@ void feature_interaction::Assign() {
   }
 }
 
-void feature_interaction::bv_to_data_vector(sc_bv<AXI_MAX_DATAW> &bitvector,
+void feature_interaction::bv_to_data_vector(sc_bv<AXI4_MAX_DATAW> &bitvector,
                                             data_vector<int16_t> &datavector,
                                             unsigned int num_elements) {
 
@@ -184,7 +184,7 @@ void feature_interaction::Tick() {
     for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
       if (_input_fifos[ch_id].size() < _fifos_depth &&
           aximm_interface[ch_id].rvalid.read()) {
-        sc_bv<AXI_MAX_DATAW> rdata_bv = aximm_interface[ch_id].rdata.read();
+        sc_bv<AXI4_MAX_DATAW> rdata_bv = aximm_interface[ch_id].rdata.read();
         data_vector<int16_t> rdata(_num_elements_wide_in);
         bv_to_data_vector(rdata_bv, rdata, _num_elements_wide_in);
         for (unsigned int c = 0; c < _afifo_width_ratio_in; c++) {

@@ -50,11 +50,11 @@ private:
   bool _output_packet_ready;
 
   // Response Interface variables
-  sc_signal<sc_uint<AXI_IDW>> _i_id;
-  sc_signal<sc_bv<AXI_MAX_DATAW>> _i_payload;
+  sc_signal<sc_uint<AXI4_IDW>> _i_id;
+  sc_signal<sc_bv<AXI4_MAX_DATAW>> _i_payload;
   sc_signal<sc_bv<AXI_CTRLW>> _i_ctrl;
-  sc_signal<sc_bv<AXI_USERW>> _i_user;
-  sc_signal<sc_bv<AXI_RESPW>> _i_resp;
+  sc_signal<sc_bv<AXI4_USERW>> _i_user;
+  sc_signal<sc_bv<AXI4_RESPW>> _i_resp;
   sc_signal<sc_bv<1>> _i_last;
   sc_signal<bool> _i_valid;
   sc_signal<sc_uint<3>> _i_type;
@@ -100,7 +100,7 @@ public:
   void InputReady();
   void InputInterface();
   void InputPacketization();
-  int GetInputDestinationNode(sc_bv<AXI_ADDRW> &addr);
+  int GetInputDestinationNode(sc_bv<AXI4_ADDRW> &addr);
   int VCMapping(sc_flit &flit);
   int InverseVCMapping(int vc_id);
   void InputInjection();

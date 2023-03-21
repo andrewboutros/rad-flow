@@ -82,7 +82,7 @@ uint64_t DeterminedBaseAddress(int noc_id, int node_id) {
   int node_bits = (int)ceil(log2(max_num_nodes));
   uint64_t base_addr = noc_id << node_bits;
   base_addr += node_id;
-  base_addr <<= (AXI_ADDRW - noc_bits - node_bits);
+  base_addr <<= (AXI4_ADDRW - noc_bits - node_bits);
   return base_addr;
 }
 

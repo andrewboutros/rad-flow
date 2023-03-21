@@ -15,19 +15,36 @@
 #define NOC_LINKS_DEST_WIDTH 8
 #define NOC_LINKS_DEST_INTERFACE_WIDTH 5
 
-// AXI-Streaming Parameters
+// AXI Parameters
 #define AXIS_MAX_DATAW 1024
-#define AXIS_STRBW 8
-#define AXIS_KEEPW 8
-#define AXIS_USERW 32
+#define AXI4_MAX_DATAW 512
+#define AXIS_USERW 66
+#define AXI4_USERW 64
+// (Almost always) Constant AXI Parameters
+#define AXIS_STRBW 8 // tstrb is not supported for now (dummy)
+#define AXIS_KEEPW 8 // tkeep is not supported for now (dummy)
+#define AXIS_IDW NOC_LINKS_PACKETID_WIDTH // tid specifies dest interface
+#define AXIS_DESTW NOC_LINKS_DEST_WIDTH
+#define AXI4_IDW NOC_LINKS_PACKETID_WIDTH
+#define AXI4_ADDRW 64
+#define AXI4_LENW 8
+#define AXI4_SIZEW 3
+#define AXI4_BURSTW 2
+#define AXI4_RESPW 2
+
+// AXI Packetization Defines
+#define AXIS_PAYLOADW (AXIS_MAX_DATAW + AXIS_USERW + 1)
+#define AXIS_TLAST(t) t.range(0, 0)
+#define AXIS_TUSER(t) t.range(AXIS_USERW, 1)
+#define AXIS_TDATA(t) t.range(AXIS_MAX_DATAW + AXIS_USERW, AXIS_USERW + 1)
+#define AXI4_PAYLOADW (AXI4_MAX_DATAW + AXI4_RESPW + AXI4_USERW + 1)
 
 // Deduced Parameters
 #define NOC_LINKS_WIDTH                                                        \
   (NOC_LINKS_PAYLOAD_WIDTH + NOC_LINKS_VCID_WIDTH + NOC_LINKS_PACKETID_WIDTH + \
    NOC_LINKS_DEST_WIDTH + NOC_LINKS_DEST_INTERFACE_WIDTH)
-#define AXIS_IDW NOC_LINKS_DEST_INTERFACE_WIDTH
-#define AXIS_DESTW NOC_LINKS_DEST_WIDTH
-#define AXIS_TRANSACTION_WIDTH                                                 \
+
+/*#define AXIS_TRANSACTION_WIDTH \
   (AXIS_MAX_DATAW + AXIS_STRBW + AXIS_KEEPW + AXIS_IDW + AXIS_DESTW +          \
    AXIS_USERW + 1)
 #define AXIS_TRANSACTION_PAYLOAD_WIDTH                                         \
@@ -40,30 +57,20 @@
 #define AXIS_TDEST(t)                                                          \
   t.range(AXIS_DESTW + AXIS_MAX_DATAW + AXIS_USERW + AXIS_IDW,                 \
           AXIS_MAX_DATAW + AXIS_USERW + AXIS_IDW + 1)
-#define AXIS_PAYLOAD(t) t.range(AXIS_IDW + AXIS_MAX_DATAW + AXIS_USERW, 0)
-
-// AXI-MM Parameters
-#define AXI_IDW 8
-#define AXI_USERW 64
-#define AXI_MAX_DATAW 512
+#define AXIS_PAYLOAD(t) t.range(AXIS_IDW + AXIS_MAX_DATAW + AXIS_USERW, 0)*/
 
 // AXI-MM Constants
-#define AXI_ADDRW 64
-#define AXI_LENW 8
-#define AXI_SIZEW 3
-#define AXI_BURSTW 2
-#define AXI_RESPW 2
-#define AXI_CTRLW (AXI_LENW + AXI_SIZEW + AXI_BURSTW)
+#define AXI_CTRLW (AXI4_LENW + AXI4_SIZEW + AXI4_BURSTW)
 #define AXI_TRANSACTION_MAX_WIDTH                                              \
-  (AXI_MAX_DATAW + AXI_RESPW + 1 + AXI_IDW + AXI_USERW)
-#define AXI_USER(t) t.range(AXI_USERW - 1, 0)
-#define AXI_CTRL(t) t.range(AXI_USERW + AXI_CTRLW - 1, AXI_USERW)
+  (AXI4_MAX_DATAW + AXI4_RESPW + 1 + AXI4_IDW + AXI4_USERW)
+#define AXI_USER(t) t.range(AXI4_USERW - 1, 0)
+#define AXI_CTRL(t) t.range(AXI4_USERW + AXI_CTRLW - 1, AXI4_USERW)
 #define AXI_ADDR(t)                                                            \
-  t.range(AXI_USERW + AXI_CTRLW + AXI_ADDRW - 1, AXI_USERW + AXI_CTRLW)
-#define AXI_RESP(t) t.range(AXI_USERW + AXI_RESPW - 1, AXI_USERW)
-#define AXI_LAST(t) t.range(AXI_USERW + AXI_RESPW, AXI_USERW + AXI_RESPW)
+  t.range(AXI4_USERW + AXI_CTRLW + AXI4_ADDRW - 1, AXI4_USERW + AXI_CTRLW)
+#define AXI_RESP(t) t.range(AXI4_USERW + AXI4_RESPW - 1, AXI4_USERW)
+#define AXI_LAST(t) t.range(AXI4_USERW + AXI4_RESPW, AXI4_USERW + AXI4_RESPW)
 #define AXI_DATA(t)                                                            \
-  t.range(AXI_USERW + AXI_RESPW + AXI_MAX_DATAW, AXI_USERW + AXI_RESPW + 1)
+  t.range(AXI4_USERW + AXI4_RESPW + AXI4_MAX_DATAW, AXI4_USERW + AXI4_RESPW + 1)
 
 #define AXI_TYPE_AR 0
 #define AXI_TYPE_AW 1

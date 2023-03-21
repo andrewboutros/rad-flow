@@ -35,25 +35,26 @@ private:
   bool _read_before_write;
   // Book-keeping of memory contents for each channel (hashtable of address ->
   // data)
-  std::vector<std::unordered_map<uint64_t, sc_bv<AXI_MAX_DATAW>>> _mem_contents;
+  std::vector<std::unordered_map<uint64_t, sc_bv<AXI4_MAX_DATAW>>>
+      _mem_contents;
   // Input request queues expanding burst transactions into multiple read/write
   // For each channel, keep a queue of address & is_write pair
   std::vector<std::queue<std::pair<uint64_t, bool>>> _write_address_queue;
-  std::vector<std::queue<std::pair<uint64_t, sc_bv<AXI_MAX_DATAW>>>>
+  std::vector<std::queue<std::pair<uint64_t, sc_bv<AXI4_MAX_DATAW>>>>
       _write_data_queue;
   std::vector<std::queue<std::tuple<uint64_t, uint64_t, bool>>>
       _read_address_queue;
   // Queue for requests already dispatched to DRAMsim but waiting for responses
   // (assuming in-order) For each channel, keep a queue of response address (and
   // data if write request)
-  std::vector<std::queue<std::tuple<uint64_t, sc_bv<AXI_MAX_DATAW>, bool>>>
+  std::vector<std::queue<std::tuple<uint64_t, sc_bv<AXI4_MAX_DATAW>, bool>>>
       _outstanding_write_requests;
   std::vector<std::queue<std::tuple<uint64_t, uint64_t, bool>>>
       _outstanding_read_requests;
   std::vector<std::unordered_map<uint64_t, unsigned int>>
       _out_of_order_read_requests;
   // Queue for responses populated by read/write callback functions
-  std::vector<std::queue<std::tuple<uint64_t, sc_bv<AXI_MAX_DATAW>, bool>>>
+  std::vector<std::queue<std::tuple<uint64_t, sc_bv<AXI4_MAX_DATAW>, bool>>>
       _output_read_responses;
   std::vector<std::queue<uint64_t>> _output_write_responses;
   // Sizes and current occupancy of different queues

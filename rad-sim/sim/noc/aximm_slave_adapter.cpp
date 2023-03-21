@@ -30,11 +30,11 @@ aximm_slave_adapter::aximm_slave_adapter(
   _injection_afifo_depth =
       radsim_config.GetIntVectorKnob("adapter_fifo_size", _network_id);
 
-  _axi_transaction_width = AXI_USERW;
-  if ((AXI_ADDRW + AXI_CTRLW) > (_interface_dataw + AXI_RESPW + 1)) {
-    _axi_transaction_width += (AXI_ADDRW + AXI_CTRLW);
+  _axi_transaction_width = AXI4_USERW;
+  if ((AXI4_ADDRW + AXI_CTRLW) > (_interface_dataw + AXI4_RESPW + 1)) {
+    _axi_transaction_width += (AXI4_ADDRW + AXI_CTRLW);
   } else {
-    _axi_transaction_width += (_interface_dataw + AXI_RESPW + 1);
+    _axi_transaction_width += (_interface_dataw + AXI4_RESPW + 1);
   }
   _max_flits_per_transaction =
       (int)ceil(_axi_transaction_width / NOC_LINKS_PAYLOAD_WIDTH);
@@ -162,19 +162,19 @@ void aximm_slave_adapter::InputInterface() {
       _i_id.write(aximm_interface.arid.read());
       _i_payload.write(aximm_interface.araddr.read());
       unsigned int offset = 0;
-      tmp_ctrl.range(offset + AXI_BURSTW - 1, offset) =
+      tmp_ctrl.range(offset + AXI4_BURSTW - 1, offset) =
           aximm_interface.arburst.read();
-      offset += AXI_BURSTW;
-      tmp_ctrl.range(offset + AXI_SIZEW - 1, offset) =
+      offset += AXI4_BURSTW;
+      tmp_ctrl.range(offset + AXI4_SIZEW - 1, offset) =
           aximm_interface.arsize.read();
-      offset += AXI_SIZEW;
-      tmp_ctrl.range(offset + AXI_LENW - 1, offset) =
+      offset += AXI4_SIZEW;
+      tmp_ctrl.range(offset + AXI4_LENW - 1, offset) =
           aximm_interface.arlen.read();
       _i_ctrl.write(tmp_ctrl);
       _i_user.write(aximm_interface.aruser.read());
       _i_valid.write(aximm_interface.arvalid.read());
       _i_type.write(AXI_TYPE_AR);
-      sc_bv<AXI_ADDRW> araddr = aximm_interface.araddr.read();
+      sc_bv<AXI4_ADDRW> araddr = aximm_interface.araddr.read();
       int noc_dest = GetInputDestinationNode(araddr);
       _i_noc_dest.write(noc_dest);
 
@@ -194,19 +194,19 @@ void aximm_slave_adapter::InputInterface() {
       _i_id.write(aximm_interface.awid.read());
       _i_payload = aximm_interface.awaddr.read();
       unsigned int offset = 0;
-      tmp_ctrl.range(offset + AXI_BURSTW - 1, offset) =
+      tmp_ctrl.range(offset + AXI4_BURSTW - 1, offset) =
           aximm_interface.awburst.read();
-      offset += AXI_BURSTW;
-      tmp_ctrl.range(offset + AXI_SIZEW - 1, offset) =
+      offset += AXI4_BURSTW;
+      tmp_ctrl.range(offset + AXI4_SIZEW - 1, offset) =
           aximm_interface.awsize.read();
-      offset += AXI_SIZEW;
-      tmp_ctrl.range(offset + AXI_LENW - 1, offset) =
+      offset += AXI4_SIZEW;
+      tmp_ctrl.range(offset + AXI4_LENW - 1, offset) =
           aximm_interface.awlen.read();
       _i_ctrl.write(tmp_ctrl);
       _i_user.write(aximm_interface.awuser.read());
       _i_valid.write(aximm_interface.awvalid.read());
       _i_type.write(AXI_TYPE_AW);
-      sc_bv<AXI_ADDRW> awaddr = aximm_interface.awaddr.read();
+      sc_bv<AXI4_ADDRW> awaddr = aximm_interface.awaddr.read();
       int noc_dest = GetInputDestinationNode(awaddr);
       _i_noc_dest.write(noc_dest);
       _got_aw.write(true);
@@ -259,8 +259,9 @@ void aximm_slave_adapter::InputInterface() {
 // address space into num_nodes equal portions (i.e. destination node is
 // specified by the N most-significant address bits, such that num_nodes =
 // log2(N))
-int aximm_slave_adapter::GetInputDestinationNode(sc_bv<AXI_ADDRW> &addr) {
-  return addr.range(AXI_ADDRW - 1, AXI_ADDRW - NOC_LINKS_DEST_WIDTH).to_uint();
+int aximm_slave_adapter::GetInputDestinationNode(sc_bv<AXI4_ADDRW> &addr) {
+  return addr.range(AXI4_ADDRW - 1, AXI4_ADDRW - NOC_LINKS_DEST_WIDTH)
+      .to_uint();
 }
 
 // Implements the packetization logic of the selected transaction into N flits,
@@ -290,8 +291,9 @@ void aximm_slave_adapter::InputPacketization() {
         if ((_i_type.read() == AXI_TYPE_AR) ||
             (_i_type.read() == AXI_TYPE_AW)) {
 
-          num_flits = (unsigned int)(ceil((AXI_ADDRW + AXI_CTRLW + AXI_USERW) *
-                                          1.0 / NOC_LINKS_PAYLOAD_WIDTH));
+          num_flits =
+              (unsigned int)(ceil((AXI4_ADDRW + AXI_CTRLW + AXI4_USERW) * 1.0 /
+                                  NOC_LINKS_PAYLOAD_WIDTH));
           AXI_USER(packet_bv) = _i_user.read();
           AXI_CTRL(packet_bv) = _i_ctrl.read();
           AXI_ADDR(packet_bv) = _i_payload.read();
@@ -310,13 +312,13 @@ void aximm_slave_adapter::InputPacketization() {
           }
 
           if (_i_type.read() == AXI_TYPE_AW) {
-            sc_bv<AXI_ADDRW> addr = _i_payload.read();
+            sc_bv<AXI4_ADDRW> addr = _i_payload.read();
             _last_awdest.write(GetInputDestinationNode(addr));
           }
         } else if (_i_type.read() == AXI_TYPE_W) {
 
           num_flits = (unsigned int)(ceil(
-              (_interface_dataw + AXI_RESPW + AXI_USERW + 1) * 1.0 /
+              (_interface_dataw + AXI4_RESPW + AXI4_USERW + 1) * 1.0 /
               NOC_LINKS_PAYLOAD_WIDTH));
           AXI_USER(packet_bv) = _i_user.read();
           AXI_RESP(packet_bv) = 0;

@@ -24,8 +24,8 @@ axis_slave_adapter::axis_slave_adapter(
   _freq_ratio = (int)ceil(_node_period * 1.0 / _adapter_period);
   for (unsigned int interface_id = 0; interface_id < _num_axis_interfaces;
        interface_id++) {
-    int payload_dataw = AXIS_TRANSACTION_PAYLOAD_WIDTH - AXIS_MAX_DATAW +
-                        interface_dataw[interface_id];
+    int payload_dataw =
+        AXIS_PAYLOADW - AXIS_MAX_DATAW + interface_dataw[interface_id];
     _num_flits_per_packet[interface_id] =
         (int)ceil(payload_dataw * 1.0 / NOC_LINKS_PAYLOAD_WIDTH);
     _max_num_flits_per_packet =
@@ -51,7 +51,7 @@ axis_slave_adapter::axis_slave_adapter(
   _injection_flit_ready = false;
 
   SC_METHOD(InputReady);
-  sensitive << _injection_afifo_full << rst << _packetization_busy;
+  sensitive << _injection_afifo_full << rst << _packetization_cycle;
   for (unsigned int interface_id = 0; interface_id < _num_axis_interfaces;
        interface_id++)
     sensitive << axis_interfaces[interface_id].tvalid;
@@ -79,7 +79,7 @@ void axis_slave_adapter::InputReady() {
 
   // If packetization is busy, skip arbitration logic since adapter can't accept
   // new transaction anyway
-  if (!_packetization_busy.read()) {
+  if (_packetization_cycle.read() == 0) {
     // Go over interfaces (in order of their current priority) -- if the
     // injection FIFO is not full, the first interface with valid data is going
     // to be accepted and its corresponding tready value is set to true
@@ -104,7 +104,8 @@ void axis_slave_adapter::InputReady() {
   // Set tready output ports to their corresponding values
   for (unsigned int interface_id = 0; interface_id < _num_axis_interfaces;
        interface_id++)
-    axis_interfaces[interface_id].tready.write(_tready_values[interface_id]);
+    axis_interfaces[interface_id].tready.write(
+        (_packetization_cycle.read() == 0) && _tready_values[interface_id]);
 }
 
 // Sequential logic for registering an AXI streaming transaction from one of the
@@ -173,25 +174,25 @@ void axis_slave_adapter::InputInterface() {
 // Sequential logic for packetizing a registered AXI streaming transaction
 void axis_slave_adapter::InputPacketization() {
   _injection_afifo_full.write(false);
-  _packetization_busy.write(false);
+  _packetization_cycle.write(0);
   _packetization_cycle = 0;
   wait();
 
   while (true) {
     int used_interface_id = _input_axis_transaction_interface.read();
-    if (_input_axis_transaction.tvalid.read() || _packetization_busy.read()) {
+    if (_input_axis_transaction.tvalid.read() &&
+        (_injection_afifo.size() < _injection_afifo_depth)) {
       // During the first packetization cycle, form as many flits as needed by
       // this transaction and push them to the injection FIFO -- In hardware,
       // this happens over P clock cycles where a flit is formed and buffered
       // each cycle, but is modeled by doing all the work in the 1st cycle &
       // remaining idle for (P-1) cycles
-      if (_packetization_cycle == 0) {
+      if (_packetization_cycle.read() == 0) {
         // Put the AXI-streaming transaction in bit vector format
-        sc_bv<AXIS_TRANSACTION_WIDTH> packet_bv;
+        sc_bv<AXIS_PAYLOADW> packet_bv;
+        unsigned int num_flits = _num_flits_per_packet[used_interface_id];
         AXIS_TLAST(packet_bv) = _input_axis_transaction.tlast.read();
         AXIS_TUSER(packet_bv) = _input_axis_transaction.tuser.read();
-        AXIS_TDEST(packet_bv) = _input_axis_transaction.tdest.read();
-        AXIS_TID(packet_bv) = _input_axis_transaction.tid.read();
         AXIS_TDATA(packet_bv) = _input_axis_transaction.tdata.read();
 
         // Form flits and push them to the injection FIFO
@@ -202,32 +203,34 @@ void axis_slave_adapter::InputPacketization() {
               flit_id == _num_flits_per_packet[used_interface_id] - 1,
               _input_axis_transaction_type,
               VCIDFromType(_input_axis_transaction_type, _noc_config),
-              AXIS_TDEST(packet_bv).to_uint(), AXIS_TID(packet_bv).to_uint(),
+              _input_axis_transaction.tdest.read(),
+              _input_axis_transaction.tid.read(),
               _input_axis_transaction_id.read(),
               _input_axis_transaction_id.read());
           set_flit_payload(packetization_flit, packet_bv, flit_id);
           _injection_afifo.push(packetization_flit);
         }
-        _packetization_cycle += 1;
-
-        // If number of flits to be formed needs more than 1 node clock period,
-        // set the packetization busy flag to be true such that the adapter does
-        // not accept a new transaction before finishing the packetization of
-        // the previous one
-        _packetization_busy.write(_num_flits_per_packet[used_interface_id] >
-                                  _freq_ratio);
-      } else if (_packetization_cycle ==
-                 std::max((int)_num_flits_per_packet[used_interface_id],
-                          (int)_freq_ratio) -
-                     1) {
-        _packetization_cycle = 0;
-        _packetization_busy.write(false);
-        NoCTransactionTelemetry::RecordTransactionTailPacketization(
-            _input_axis_transaction_id.read());
-      } else {
-        _packetization_cycle += 1;
+        _num_packetization_flits.write(num_flits);
+        _packetization_cycle.write(_packetization_cycle.read() + 1);
       }
     }
+
+    if (_packetization_cycle.read() > 0) {
+      uint8_t limit;
+      if (_num_packetization_flits.read() >= _freq_ratio) {
+        limit = _num_packetization_flits.read() - 1;
+      } else {
+        limit = _freq_ratio - 1;
+      }
+      if (_packetization_cycle.read() == limit) {
+        NoCTransactionTelemetry::RecordTransactionTailPacketization(
+            _input_axis_transaction_id.read());
+        _packetization_cycle.write(0);
+      } else {
+        _packetization_cycle.write(_packetization_cycle.read() + 1);
+      }
+    }
+
     _injection_afifo_full.write(_injection_afifo.size() >=
                                 _injection_afifo_depth -
                                     _max_num_flits_per_packet);

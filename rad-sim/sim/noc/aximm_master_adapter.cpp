@@ -46,11 +46,11 @@ aximm_master_adapter::aximm_master_adapter(
   // Initialize response interface (B, R) member variables
   _injection_afifo_depth =
       radsim_config.GetIntVectorKnob("adapter_fifo_size", _network_id);
-  _axi_transaction_width = AXI_USERW;
-  if ((AXI_ADDRW + AXI_CTRLW) > (_interface_dataw + AXI_RESPW + 1)) {
-    _axi_transaction_width += (AXI_ADDRW + AXI_CTRLW);
+  _axi_transaction_width = AXI4_USERW;
+  if ((AXI4_ADDRW + AXI_CTRLW) > (_interface_dataw + AXI4_RESPW + 1)) {
+    _axi_transaction_width += (AXI4_ADDRW + AXI_CTRLW);
   } else {
-    _axi_transaction_width += (_interface_dataw + AXI_RESPW + 1);
+    _axi_transaction_width += (_interface_dataw + AXI4_RESPW + 1);
   }
   _max_flits_per_transaction =
       (int)ceil(_axi_transaction_width / NOC_LINKS_PAYLOAD_WIDTH);
@@ -277,13 +277,13 @@ void aximm_master_adapter::OutputInterface() {
       sc_bv<AXI_CTRLW> ctrl_temp = AXI_CTRL(temp_bv);
       unsigned int offset = 0;
       aximm_interface.arburst.write(
-          temp_bv.range(offset + AXI_BURSTW - 1, offset).to_uint());
-      offset += AXI_BURSTW;
+          temp_bv.range(offset + AXI4_BURSTW - 1, offset).to_uint());
+      offset += AXI4_BURSTW;
       aximm_interface.arsize.write(
-          temp_bv.range(offset + AXI_SIZEW - 1, offset).to_uint());
-      offset += AXI_SIZEW;
+          temp_bv.range(offset + AXI4_SIZEW - 1, offset).to_uint());
+      offset += AXI4_SIZEW;
       aximm_interface.arlen.write(
-          temp_bv.range(offset + AXI_LENW - 1, offset).to_uint());
+          temp_bv.range(offset + AXI4_LENW - 1, offset).to_uint());
       _output_packet_ready = false;
       NoCTransactionTelemetry::RecordTransactionReceipt(
           temp_flit->_sim_transaction_id);
@@ -315,13 +315,13 @@ void aximm_master_adapter::OutputInterface() {
       sc_bv<AXI_CTRLW> ctrl_temp = AXI_CTRL(temp_bv);
       unsigned int offset = 0;
       aximm_interface.awburst.write(
-          temp_bv.range(offset + AXI_BURSTW - 1, offset).to_uint());
-      offset += AXI_BURSTW;
+          temp_bv.range(offset + AXI4_BURSTW - 1, offset).to_uint());
+      offset += AXI4_BURSTW;
       aximm_interface.awsize.write(
-          temp_bv.range(offset + AXI_SIZEW - 1, offset).to_uint());
-      offset += AXI_SIZEW;
+          temp_bv.range(offset + AXI4_SIZEW - 1, offset).to_uint());
+      offset += AXI4_SIZEW;
       aximm_interface.awlen.write(
-          temp_bv.range(offset + AXI_LENW - 1, offset).to_uint());
+          temp_bv.range(offset + AXI4_LENW - 1, offset).to_uint());
       _output_packet_ready = false;
       NoCTransactionTelemetry::RecordTransactionReceipt(
           temp_flit->_sim_transaction_id);
@@ -391,8 +391,9 @@ void aximm_master_adapter::InputReady() {
   aximm_interface.bready.write((_packetization_cycle.read() == 0) && _bready);
 }
 
-int aximm_master_adapter::GetInputDestinationNode(sc_bv<AXI_ADDRW> &addr) {
-  return addr.range(AXI_ADDRW - 1, AXI_ADDRW - NOC_LINKS_DEST_WIDTH).to_uint();
+int aximm_master_adapter::GetInputDestinationNode(sc_bv<AXI4_ADDRW> &addr) {
+  return addr.range(AXI4_ADDRW - 1, AXI4_ADDRW - NOC_LINKS_DEST_WIDTH)
+      .to_uint();
 }
 
 // Implements the input interface capturing into the reduced set of signals to
@@ -424,7 +425,7 @@ void aximm_master_adapter::InputInterface() {
       _i_user.write(aximm_interface.ruser.read());
       _i_valid.write(aximm_interface.rvalid.read());
       _i_type.write(AXI_TYPE_R);
-      sc_bv<AXI_ADDRW> resp_addr = aximm_interface.ruser.read().to_uint64();
+      sc_bv<AXI4_ADDRW> resp_addr = aximm_interface.ruser.read().to_uint64();
       int noc_dest = GetInputDestinationNode(resp_addr);
       _i_noc_dest.write(noc_dest);
       // std::cout << this->name()
@@ -446,7 +447,7 @@ void aximm_master_adapter::InputInterface() {
       _i_user.write(aximm_interface.buser.read());
       _i_valid.write(aximm_interface.bvalid.read());
       _i_type.write(AXI_TYPE_B);
-      sc_bv<AXI_ADDRW> resp_addr = aximm_interface.buser.read().to_uint64();
+      sc_bv<AXI4_ADDRW> resp_addr = aximm_interface.buser.read().to_uint64();
       int noc_dest = GetInputDestinationNode(resp_addr);
       _i_noc_dest.write(noc_dest);
       /*std::cout << this->name()
@@ -491,7 +492,7 @@ void aximm_master_adapter::InputPacketization() {
         unsigned int num_flits = 0;
         if (_i_type.read() == AXI_TYPE_B) {
 
-          num_flits = (unsigned int)(ceil((AXI_RESPW + AXI_USERW) * 1.0 /
+          num_flits = (unsigned int)(ceil((AXI4_RESPW + AXI4_USERW) * 1.0 /
                                           NOC_LINKS_PAYLOAD_WIDTH));
           AXI_USER(packet_bv) = _i_user.read();
           AXI_RESP(packet_bv) = _i_resp.read();
@@ -510,7 +511,7 @@ void aximm_master_adapter::InputPacketization() {
         } else if (_i_type.read() == AXI_TYPE_R) {
 
           num_flits = (unsigned int)(ceil(
-              (_interface_dataw + AXI_RESPW + AXI_USERW + 1) * 1.0 /
+              (_interface_dataw + AXI4_RESPW + AXI4_USERW + 1) * 1.0 /
               NOC_LINKS_PAYLOAD_WIDTH));
           AXI_USER(packet_bv) = _i_user.read();
           AXI_RESP(packet_bv) = _i_resp.read();

@@ -16,7 +16,7 @@ void mem_controller::InitializeMemoryContents(std::string &init_filename) {
 
     std::string line;
     uint64_t addr;
-    sc_bv<AXI_MAX_DATAW> data;
+    sc_bv<AXI4_MAX_DATAW> data;
     while (std::getline(io_file, line)) {
       std::stringstream line_stream(line);
       line_stream >> addr;
@@ -167,7 +167,7 @@ void mem_controller::MemReadCallback(uint64_t addr) {
   uint64_t read_addr = std::get<0>(_outstanding_read_requests[ch_id].front());
   uint64_t resp_addr = std::get<1>(_outstanding_read_requests[ch_id].front());
   bool last = std::get<2>(_outstanding_read_requests[ch_id].front());
-  sc_bv<AXI_MAX_DATAW> data_word;
+  sc_bv<AXI4_MAX_DATAW> data_word;
   if (_mem_contents[ch_id].find(addr) != _mem_contents[ch_id].end()) {
     data_word = _mem_contents[ch_id][addr];
   } else {
@@ -253,7 +253,7 @@ void mem_controller::MemWriteCallback(uint64_t addr) {
   unsigned int ch_id = ChannelFromAddr(addr);
   assert(!_outstanding_write_requests[ch_id].empty());
   uint64_t resp_addr = std::get<0>(_outstanding_write_requests[ch_id].front());
-  sc_bv<AXI_MAX_DATAW> data_word =
+  sc_bv<AXI4_MAX_DATAW> data_word =
       std::get<1>(_outstanding_write_requests[ch_id].front());
   bool last = std::get<2>(_outstanding_write_requests[ch_id].front());
   _outstanding_write_requests[ch_id].pop();
@@ -405,7 +405,7 @@ void mem_controller::Tick() {
       // Accepting write data requests
       if (mem_channels[ch_id].wvalid.read() && wready_flag) {
         uint64_t resp_addr = mem_channels[ch_id].wuser.read().to_uint64();
-        sc_bv<AXI_MAX_DATAW> write_data = mem_channels[ch_id].wdata.read();
+        sc_bv<AXI4_MAX_DATAW> write_data = mem_channels[ch_id].wdata.read();
         _write_data_queue[ch_id].push(std::make_pair(resp_addr, write_data));
         // std::cout << module_name << ": Got W Transaction!" << std::endl;
       }
@@ -512,7 +512,7 @@ void mem_controller::MemTick() {
           uint64_t resp_addr = _write_data_queue[ch_id].front().first;
           uint64_t write_addr = _write_address_queue[ch_id].front().first;
           bool last = _write_address_queue[ch_id].front().second;
-          sc_bv<AXI_MAX_DATAW> write_data =
+          sc_bv<AXI4_MAX_DATAW> write_data =
               _write_data_queue[ch_id].front().second;
           if (_dramsim->WillAcceptTransaction(write_addr, true)) {
             _dramsim->AddTransaction(write_addr, true);
@@ -536,7 +536,7 @@ void mem_controller::MemTick() {
           uint64_t resp_addr = _write_data_queue[ch_id].front().first;
           uint64_t write_addr = _write_address_queue[ch_id].front().first;
           bool last = _write_address_queue[ch_id].front().second;
-          sc_bv<AXI_MAX_DATAW> write_data =
+          sc_bv<AXI4_MAX_DATAW> write_data =
               _write_data_queue[ch_id].front().second;
           if (_dramsim->WillAcceptTransaction(write_addr, true)) {
             _dramsim->AddTransaction(write_addr, true);

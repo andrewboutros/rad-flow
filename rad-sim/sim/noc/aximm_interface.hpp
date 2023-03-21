@@ -10,42 +10,42 @@ struct aximm_master_port {
   // Write address channel
   sc_out<bool> awvalid;
   sc_in<bool> awready;
-  sc_out<sc_bv<AXI_IDW>> awid;
-  sc_out<sc_bv<AXI_ADDRW>> awaddr;
-  sc_out<sc_bv<AXI_LENW>> awlen;
-  sc_out<sc_bv<AXI_SIZEW>> awsize;
-  sc_out<sc_bv<AXI_BURSTW>> awburst;
-  sc_out<sc_bv<AXI_USERW>> awuser;
+  sc_out<sc_bv<AXI4_IDW>> awid;
+  sc_out<sc_bv<AXI4_ADDRW>> awaddr;
+  sc_out<sc_bv<AXI4_LENW>> awlen;
+  sc_out<sc_bv<AXI4_SIZEW>> awsize;
+  sc_out<sc_bv<AXI4_BURSTW>> awburst;
+  sc_out<sc_bv<AXI4_USERW>> awuser;
   // Write data channel
   sc_out<bool> wvalid;
   sc_in<bool> wready;
-  sc_out<sc_bv<AXI_IDW>> wid;
-  sc_out<sc_bv<AXI_MAX_DATAW>> wdata;
+  sc_out<sc_bv<AXI4_IDW>> wid;
+  sc_out<sc_bv<AXI4_MAX_DATAW>> wdata;
   sc_out<bool> wlast;
-  sc_out<sc_bv<AXI_USERW>> wuser;
+  sc_out<sc_bv<AXI4_USERW>> wuser;
   // Write response channel
   sc_in<bool> bvalid;
   sc_out<bool> bready;
-  sc_in<sc_bv<AXI_IDW>> bid;
-  sc_in<sc_bv<AXI_RESPW>> bresp;
-  sc_in<sc_bv<AXI_USERW>> buser;
+  sc_in<sc_bv<AXI4_IDW>> bid;
+  sc_in<sc_bv<AXI4_RESPW>> bresp;
+  sc_in<sc_bv<AXI4_USERW>> buser;
   // Read address channel
   sc_out<bool> arvalid;
   sc_in<bool> arready;
-  sc_out<sc_bv<AXI_IDW>> arid;
-  sc_out<sc_bv<AXI_ADDRW>> araddr;
-  sc_out<sc_bv<AXI_LENW>> arlen;
-  sc_out<sc_bv<AXI_SIZEW>> arsize;
-  sc_out<sc_bv<AXI_BURSTW>> arburst;
-  sc_out<sc_bv<AXI_USERW>> aruser;
+  sc_out<sc_bv<AXI4_IDW>> arid;
+  sc_out<sc_bv<AXI4_ADDRW>> araddr;
+  sc_out<sc_bv<AXI4_LENW>> arlen;
+  sc_out<sc_bv<AXI4_SIZEW>> arsize;
+  sc_out<sc_bv<AXI4_BURSTW>> arburst;
+  sc_out<sc_bv<AXI4_USERW>> aruser;
   // Read data channel
   sc_in<bool> rvalid;
   sc_out<bool> rready;
-  sc_in<sc_bv<AXI_IDW>> rid;
-  sc_in<sc_bv<AXI_MAX_DATAW>> rdata;
-  sc_in<sc_bv<AXI_RESPW>> rresp;
+  sc_in<sc_bv<AXI4_IDW>> rid;
+  sc_in<sc_bv<AXI4_MAX_DATAW>> rdata;
+  sc_in<sc_bv<AXI4_RESPW>> rresp;
   sc_in<bool> rlast;
-  sc_in<sc_bv<AXI_USERW>> ruser;
+  sc_in<sc_bv<AXI4_USERW>> ruser;
 
   aximm_master_port()
       : awvalid(), awready(), awid(), awaddr(), awlen(), awsize(), awburst(),
@@ -137,42 +137,42 @@ struct aximm_slave_port {
   // Write address channel
   sc_in<bool> awvalid;
   sc_out<bool> awready;
-  sc_in<sc_bv<AXI_IDW>> awid;
-  sc_in<sc_bv<AXI_ADDRW>> awaddr;
-  sc_in<sc_bv<AXI_LENW>> awlen;
-  sc_in<sc_bv<AXI_SIZEW>> awsize;
-  sc_in<sc_bv<AXI_BURSTW>> awburst;
-  sc_in<sc_bv<AXI_USERW>> awuser;
+  sc_in<sc_bv<AXI4_IDW>> awid;
+  sc_in<sc_bv<AXI4_ADDRW>> awaddr;
+  sc_in<sc_bv<AXI4_LENW>> awlen;
+  sc_in<sc_bv<AXI4_SIZEW>> awsize;
+  sc_in<sc_bv<AXI4_BURSTW>> awburst;
+  sc_in<sc_bv<AXI4_USERW>> awuser;
   // Write data channel
   sc_in<bool> wvalid;
   sc_out<bool> wready;
-  sc_in<sc_bv<AXI_IDW>> wid;
-  sc_in<sc_bv<AXI_MAX_DATAW>> wdata;
+  sc_in<sc_bv<AXI4_IDW>> wid;
+  sc_in<sc_bv<AXI4_MAX_DATAW>> wdata;
   sc_in<bool> wlast;
-  sc_in<sc_bv<AXI_USERW>> wuser;
+  sc_in<sc_bv<AXI4_USERW>> wuser;
   // Write response channel
   sc_out<bool> bvalid;
   sc_in<bool> bready;
-  sc_out<sc_bv<AXI_IDW>> bid;
-  sc_out<sc_bv<AXI_RESPW>> bresp;
-  sc_out<sc_bv<AXI_USERW>> buser;
+  sc_out<sc_bv<AXI4_IDW>> bid;
+  sc_out<sc_bv<AXI4_RESPW>> bresp;
+  sc_out<sc_bv<AXI4_USERW>> buser;
   // Read address channel
   sc_in<bool> arvalid;
   sc_out<bool> arready;
-  sc_in<sc_bv<AXI_IDW>> arid;
-  sc_in<sc_bv<AXI_ADDRW>> araddr;
-  sc_in<sc_bv<AXI_LENW>> arlen;
-  sc_in<sc_bv<AXI_SIZEW>> arsize;
-  sc_in<sc_bv<AXI_BURSTW>> arburst;
-  sc_in<sc_bv<AXI_USERW>> aruser;
+  sc_in<sc_bv<AXI4_IDW>> arid;
+  sc_in<sc_bv<AXI4_ADDRW>> araddr;
+  sc_in<sc_bv<AXI4_LENW>> arlen;
+  sc_in<sc_bv<AXI4_SIZEW>> arsize;
+  sc_in<sc_bv<AXI4_BURSTW>> arburst;
+  sc_in<sc_bv<AXI4_USERW>> aruser;
   // Read data channel
   sc_out<bool> rvalid;
   sc_in<bool> rready;
-  sc_out<sc_bv<AXI_IDW>> rid;
-  sc_out<sc_bv<AXI_MAX_DATAW>> rdata;
-  sc_out<sc_bv<AXI_RESPW>> rresp;
+  sc_out<sc_bv<AXI4_IDW>> rid;
+  sc_out<sc_bv<AXI4_MAX_DATAW>> rdata;
+  sc_out<sc_bv<AXI4_RESPW>> rresp;
   sc_out<bool> rlast;
-  sc_out<sc_bv<AXI_USERW>> ruser;
+  sc_out<sc_bv<AXI4_USERW>> ruser;
 
   aximm_slave_port()
       : awvalid(), awready(), awid(), awaddr(), awlen(), awsize(), awburst(),
@@ -255,42 +255,42 @@ struct aximm_signal {
   // Write address channel
   sc_signal<bool> awvalid;
   sc_signal<bool> awready;
-  sc_signal<sc_bv<AXI_IDW>> awid;
-  sc_signal<sc_bv<AXI_ADDRW>> awaddr;
-  sc_signal<sc_bv<AXI_LENW>> awlen;
-  sc_signal<sc_bv<AXI_SIZEW>> awsize;
-  sc_signal<sc_bv<AXI_BURSTW>> awburst;
-  sc_signal<sc_bv<AXI_USERW>> awuser;
+  sc_signal<sc_bv<AXI4_IDW>> awid;
+  sc_signal<sc_bv<AXI4_ADDRW>> awaddr;
+  sc_signal<sc_bv<AXI4_LENW>> awlen;
+  sc_signal<sc_bv<AXI4_SIZEW>> awsize;
+  sc_signal<sc_bv<AXI4_BURSTW>> awburst;
+  sc_signal<sc_bv<AXI4_USERW>> awuser;
   // Write data channel
   sc_signal<bool> wvalid;
   sc_signal<bool> wready;
-  sc_signal<sc_bv<AXI_IDW>> wid;
-  sc_signal<sc_bv<AXI_MAX_DATAW>> wdata;
+  sc_signal<sc_bv<AXI4_IDW>> wid;
+  sc_signal<sc_bv<AXI4_MAX_DATAW>> wdata;
   sc_signal<bool> wlast;
-  sc_signal<sc_bv<AXI_USERW>> wuser;
+  sc_signal<sc_bv<AXI4_USERW>> wuser;
   // Write response channel
   sc_signal<bool> bvalid;
   sc_signal<bool> bready;
-  sc_signal<sc_bv<AXI_IDW>> bid;
-  sc_signal<sc_bv<AXI_RESPW>> bresp;
-  sc_signal<sc_bv<AXI_USERW>> buser;
+  sc_signal<sc_bv<AXI4_IDW>> bid;
+  sc_signal<sc_bv<AXI4_RESPW>> bresp;
+  sc_signal<sc_bv<AXI4_USERW>> buser;
   // Read address channel
   sc_signal<bool> arvalid;
   sc_signal<bool> arready;
-  sc_signal<sc_bv<AXI_IDW>> arid;
-  sc_signal<sc_bv<AXI_ADDRW>> araddr;
-  sc_signal<sc_bv<AXI_LENW>> arlen;
-  sc_signal<sc_bv<AXI_SIZEW>> arsize;
-  sc_signal<sc_bv<AXI_BURSTW>> arburst;
-  sc_signal<sc_bv<AXI_USERW>> aruser;
+  sc_signal<sc_bv<AXI4_IDW>> arid;
+  sc_signal<sc_bv<AXI4_ADDRW>> araddr;
+  sc_signal<sc_bv<AXI4_LENW>> arlen;
+  sc_signal<sc_bv<AXI4_SIZEW>> arsize;
+  sc_signal<sc_bv<AXI4_BURSTW>> arburst;
+  sc_signal<sc_bv<AXI4_USERW>> aruser;
   // Read data channel
   sc_signal<bool> rvalid;
   sc_signal<bool> rready;
-  sc_signal<sc_bv<AXI_IDW>> rid;
-  sc_signal<sc_bv<AXI_MAX_DATAW>> rdata;
-  sc_signal<sc_bv<AXI_RESPW>> rresp;
+  sc_signal<sc_bv<AXI4_IDW>> rid;
+  sc_signal<sc_bv<AXI4_MAX_DATAW>> rdata;
+  sc_signal<sc_bv<AXI4_RESPW>> rresp;
   sc_signal<bool> rlast;
-  sc_signal<sc_bv<AXI_USERW>> ruser;
+  sc_signal<sc_bv<AXI4_USERW>> ruser;
 
   aximm_signal()
       : awvalid(), awready(), awid(), awaddr(), awlen(), awsize(), awburst(),

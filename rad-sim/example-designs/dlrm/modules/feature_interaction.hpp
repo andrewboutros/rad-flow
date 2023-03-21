@@ -64,7 +64,7 @@ public:
 
   void Assign(); // Combinational logic process
   void Tick();   // Sequential logic process
-  void bv_to_data_vector(sc_bv<AXI_MAX_DATAW> &bitvector,
+  void bv_to_data_vector(sc_bv<AXI4_MAX_DATAW> &bitvector,
                          data_vector<int16_t> &datavector,
                          unsigned int num_elements);
   void data_vector_to_bv(data_vector<int16_t> &datavector,

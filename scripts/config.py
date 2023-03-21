@@ -305,45 +305,45 @@ def generate_radsim_params_header(radsim_header_params):
     radsim_params_header_file.write("// AXI-MM Parameters\n")
     # Setting definitions for AXI-MemoryMapped bitwidths
     radsim_params_header_file.write(
-        "#define AXI_IDW " + str(radsim_header_params["axi_id_width"]) + "\n"
+        "#define AXI4_IDW " + str(radsim_header_params["axi_id_width"]) + "\n"
     )
     radsim_params_header_file.write(
-        "#define AXI_USERW " + str(radsim_header_params["axi_user_width"]) + "\n"
+        "#define AXI4_USERW " + str(radsim_header_params["axi_user_width"]) + "\n"
     )
     radsim_params_header_file.write(
-        "#define AXI_MAX_DATAW "
+        "#define AXI4_MAX_DATAW "
         + str(radsim_header_params["max_axi_data_width"])
         + "\n\n"
     )
 
     radsim_params_header_file.write("// AXI-MM Constants\n")
     # Setting AXI-MemoryMapped deduced parameter definitions
-    radsim_params_header_file.write("#define AXI_ADDRW 64\n")
-    radsim_params_header_file.write("#define AXI_LENW 8\n")
-    radsim_params_header_file.write("#define AXI_SIZEW 3\n")
-    radsim_params_header_file.write("#define AXI_BURSTW 2\n")
-    radsim_params_header_file.write("#define AXI_RESPW 2\n")
+    radsim_params_header_file.write("#define AXI4_ADDRW 64\n")
+    radsim_params_header_file.write("#define AXI4_LENW 8\n")
+    radsim_params_header_file.write("#define AXI4_SIZEW 3\n")
+    radsim_params_header_file.write("#define AXI4_BURSTW 2\n")
+    radsim_params_header_file.write("#define AXI4_RESPW 2\n")
     radsim_params_header_file.write(
-        "#define AXI_CTRLW (AXI_LENW + AXI_SIZEW + AXI_BURSTW)\n"
+        "#define AXI_CTRLW (AXI4_LENW + AXI4_SIZEW + AXI4_BURSTW)\n"
     )
     radsim_params_header_file.write(
-        "#define AXI_TRANSACTION_MAX_WIDTH (AXI_MAX_DATAW + AXI_RESPW + 1 + AXI_IDW + AXI_USERW)\n"
+        "#define AXI_TRANSACTION_MAX_WIDTH (AXI4_MAX_DATAW + AXI4_RESPW + 1 + AXI4_IDW + AXI4_USERW)\n"
     )
-    radsim_params_header_file.write("#define AXI_USER(t) t.range(AXI_USERW - 1, 0)\n")
+    radsim_params_header_file.write("#define AXI_USER(t) t.range(AXI4_USERW - 1, 0)\n")
     radsim_params_header_file.write(
-        "#define AXI_CTRL(t) t.range(AXI_USERW + AXI_CTRLW - 1, AXI_USERW)\n"
-    )
-    radsim_params_header_file.write(
-        "#define AXI_ADDR(t) t.range(AXI_USERW + AXI_CTRLW + AXI_ADDRW - 1, AXI_USERW + AXI_CTRLW)\n"
+        "#define AXI_CTRL(t) t.range(AXI4_USERW + AXI_CTRLW - 1, AXI4_USERW)\n"
     )
     radsim_params_header_file.write(
-        "#define AXI_RESP(t) t.range(AXI_USERW + AXI_RESPW - 1, AXI_USERW)\n"
+        "#define AXI_ADDR(t) t.range(AXI4_USERW + AXI_CTRLW + AXI4_ADDRW - 1, AXI4_USERW + AXI_CTRLW)\n"
     )
     radsim_params_header_file.write(
-        "#define AXI_LAST(t) t.range(AXI_USERW + AXI_RESPW, AXI_USERW + AXI_RESPW)\n"
+        "#define AXI_RESP(t) t.range(AXI4_USERW + AXI4_RESPW - 1, AXI4_USERW)\n"
     )
     radsim_params_header_file.write(
-        "#define AXI_DATA(t) t.range(AXI_USERW + AXI_RESPW + AXI_MAX_DATAW, AXI_USERW + AXI_RESPW + 1)\n\n"
+        "#define AXI_LAST(t) t.range(AXI4_USERW + AXI4_RESPW, AXI4_USERW + AXI4_RESPW)\n"
+    )
+    radsim_params_header_file.write(
+        "#define AXI_DATA(t) t.range(AXI4_USERW + AXI4_RESPW + AXI4_MAX_DATAW, AXI4_USERW + AXI4_RESPW + 1)\n\n"
     )
 
     radsim_params_header_file.write("#define AXI_TYPE_AR 0\n")
