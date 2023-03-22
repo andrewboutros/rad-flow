@@ -61,7 +61,7 @@ dlrm_top::dlrm_top(const sc_module_name &name) : sc_module(name) {
   std::string feature_interaction_inst_file =
       radsim_config.GetStringKnob("radsim_user_design_root_dir") +
       "/compiler/instructions/feature_interaction.inst";
-  feature_interaction_inst = new feature_interaction(
+  feature_interaction_inst = new custom_feature_interaction(
       module_name, line_bitwidth, element_bitwidth, total_mem_channels,
       feature_interaction_fifos_depth, num_mvms[0],
       feature_interaction_inst_file);

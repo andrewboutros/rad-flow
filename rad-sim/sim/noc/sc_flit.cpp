@@ -43,7 +43,7 @@ sc_flit::sc_flit(const sc_flit &f) {
   _sim_transaction_id = f._sim_transaction_id;
 }
 
-sc_flit::~sc_flit() {}
+sc_flit::~sc_flit() { _dest_interface = NULL; }
 
 sc_flit &sc_flit::operator=(const sc_flit &f) {
   _head = f._head;

@@ -25,6 +25,8 @@ private:
   unsigned int _dataw;                      // Data interface bitwidth
   std::vector<std::string> _dst_port_names; // Mem controller port names
 
+  unsigned int _debug_sent_request_counter;
+
 public:
   sc_in<bool> rst;
   // Interface to driver logic

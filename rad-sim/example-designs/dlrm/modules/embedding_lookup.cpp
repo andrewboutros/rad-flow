@@ -41,6 +41,7 @@ embedding_lookup::embedding_lookup(
   // This function must be defined & called for any RAD-Sim module to register
   // its info for automatically connecting to the NoC
   this->RegisterModuleInfo();
+  _debug_sent_request_counter = 0;
 }
 
 embedding_lookup::~embedding_lookup() {}
@@ -145,8 +146,10 @@ void embedding_lookup::Tick() {
           _base_addresses_fifo[ch_id].pop();
           _id_count[ch_id].write(_id_count[ch_id].read() + 1);
           sim_trace_probe.record_event(0, 0);
-          // std::cout << module_name << ": Sent AR transaction for channel "
-          //           << ch_id << "!" << std::endl;
+          /*_debug_sent_request_counter++;
+          std::cout << module_name << ": Sent AR transaction "
+                    << _debug_sent_request_counter << " @ channel " << ch_id
+                    << "!" << std::endl;*/
         }
 
         // Receiving transactions from AXI-MM NoC

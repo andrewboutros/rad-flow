@@ -101,7 +101,8 @@ fig.update_yaxes(
 )
 fig.update_yaxes(showgrid=False)
 
-fig.update_layout(xaxis_range=[0, max_val + 10])
+#fig.update_layout(xaxis_range=[0, max_val + 10])
+fig.update_layout(xaxis_range=[0, 5000 + 10])
 fig.update_layout(plot_bgcolor="white")
 fig.update_layout(showlegend=False)
 

@@ -196,7 +196,6 @@ void axis_master_adapter::OutputDepacketization() {
       } else {
         _ejection_afifo_is_depacketizing.write(true);
       }
-      processed_flit.FreeFlit();
     } else {
       _ejection_afifo_priority.push(_ejection_afifo_priority.front());
       _ejection_afifo_priority.pop();
@@ -265,10 +264,10 @@ void axis_master_adapter::OutputInterface() {
         int num_chunks =
             (int)ceil(total_num_flits * 1.0 / _num_flits[interface_id]);
         if (_output_chunk[interface_id] == num_chunks) {
-          for (unsigned int flit_id = 0;
+          /*for (unsigned int flit_id = 0;
                flit_id < output_packet.GetNumValidFlits(); flit_id++) {
             output_packet.GetFlit(flit_id)->FreeFlit();
-          }
+          }*/
           _output_afifos[interface_id].pop();
           _output_chunk[interface_id] = 0;
         }

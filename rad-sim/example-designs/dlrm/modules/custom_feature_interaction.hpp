@@ -13,18 +13,18 @@
 #include <systemc.h>
 #include <vector>
 
-struct feature_interaction_inst {
-  unsigned int mux_select;
-  std::vector<bool> fifo_pops;
+struct custom_feature_interaction_inst {
+  std::vector<unsigned int> xbar_schedule;
+  std::vector<unsigned int> start_element;
+  std::vector<unsigned int> end_element;
+  std::vector<bool> pop_fifo;
 };
 
-class feature_interaction : public radsim_module {
+class custom_feature_interaction : public radsim_module {
 private:
   unsigned int _fifos_depth; // Depth of input/output FIFOs
-  unsigned int _afifo_width_ratio_in;
-  unsigned int _afifo_width_ratio_out;
-  std::vector<feature_interaction_inst> _instructions; // Instruction mem
-  sc_signal<unsigned int> _pc;                         // Program counter
+  std::vector<custom_feature_interaction_inst> _instructions; // Instruction mem
+  sc_signal<unsigned int> _pc;                                // Program counter
 
   std::vector<std::queue<data_vector<int16_t>>> _input_fifos; // Input FIFOs
   sc_vector<sc_signal<bool>> _ififo_full;  // Signals FIFOs full
@@ -33,21 +33,18 @@ private:
   std::vector<std::queue<data_vector<int16_t>>> _output_fifos; // Output FIFO
   sc_vector<sc_signal<bool>> _ofifo_full;  // Signals oFIFO full
   sc_vector<sc_signal<bool>> _ofifo_empty; // Signals oFIFO empty
-  sc_signal<unsigned int> _dest_ofifo, _src_ofifo;
-  data_vector<int16_t> _staging_data;
-  unsigned int _staging_counter;
+  sc_signal<unsigned int> _dest_ofifo;
 
   unsigned int _num_mem_channels; // No. of memory channels
   unsigned int _dataw;            // Data interface bitwidth
   unsigned int _num_received_responses;
-  unsigned int _num_elements_wide_in;
-  unsigned int _num_elements_narrow;
-  unsigned int _num_elements_wide_out;
+  unsigned int _num_input_elements;
+  unsigned int _num_output_elements;
   unsigned int _bitwidth;
   unsigned int _num_output_channels;
   unsigned int _num_expected_responses;
 
-  ofstream *_debug_feature_interaction_out;
+  // ofstream *_debug_feature_interaction_out;
 
 public:
   sc_in<bool> rst;
@@ -57,12 +54,13 @@ public:
   sc_vector<aximm_master_port> aximm_interface;
   sc_vector<axis_master_port> axis_interface;
 
-  feature_interaction(const sc_module_name &name, unsigned int dataw,
-                      unsigned int element_bitwidth,
-                      unsigned int num_mem_channels, unsigned int fifos_depth,
-                      unsigned int num_output_channels,
-                      std::string &instructions_file);
-  ~feature_interaction();
+  custom_feature_interaction(const sc_module_name &name, unsigned int dataw,
+                             unsigned int element_bitwidth,
+                             unsigned int num_mem_channels,
+                             unsigned int fifos_depth,
+                             unsigned int num_output_channels,
+                             std::string &instructions_file);
+  ~custom_feature_interaction();
 
   void Assign(); // Combinational logic process
   void Tick();   // Sequential logic process
@@ -72,6 +70,6 @@ public:
   void data_vector_to_bv(data_vector<int16_t> &datavector,
                          sc_bv<AXIS_MAX_DATAW> &bitvector,
                          unsigned int num_elements);
-  SC_HAS_PROCESS(feature_interaction);
+  SC_HAS_PROCESS(custom_feature_interaction);
   void RegisterModuleInfo();
 };

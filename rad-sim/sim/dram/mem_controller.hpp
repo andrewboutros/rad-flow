@@ -75,6 +75,9 @@ private:
   std::unordered_map<std::string, unsigned int> _field_widths;
   std::vector<std::string> _mem_addr_fields;
 
+  std::vector<unsigned int> _debug_sent_responses_counter;
+  std::vector<unsigned int> _debug_received_requests_counter;
+
 public:
   sc_in<bool> mem_clk;
   sc_in<bool> rst;

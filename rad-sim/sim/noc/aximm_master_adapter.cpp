@@ -287,7 +287,6 @@ void aximm_master_adapter::OutputInterface() {
       _output_packet_ready = false;
       NoCTransactionTelemetry::RecordTransactionReceipt(
           temp_flit->_sim_transaction_id);
-
       // std::cout << this->name() << ": Got AR request!" << std::endl;
     } else if (_output_packet_ready &&
                (_output_packet.GetFlit(0)->_type ==
@@ -325,7 +324,6 @@ void aximm_master_adapter::OutputInterface() {
       _output_packet_ready = false;
       NoCTransactionTelemetry::RecordTransactionReceipt(
           temp_flit->_sim_transaction_id);
-
     } else if (_output_packet_ready &&
                (_output_packet.GetFlit(0)->_type ==
                 Flit::FlitType::WRITE_DATA) &&
@@ -482,7 +480,7 @@ void aximm_master_adapter::InputPacketization() {
   while (true) {
     // If a valid transaction is selected and asynchronous injection FIFO has
     // empty slots
-    if (_i_valid.read() && (_injection_afifo.size() < _injection_afifo_depth)) {
+    if (_i_valid.read()) {
       // Packetization is simulated by generating all flits and pushing them
       // into the asynchronous injection FIFO in the first FSM packetization
       // state, then remains idle during the remaining states (analogous to an
@@ -555,6 +553,8 @@ void aximm_master_adapter::InputPacketization() {
     _injection_afifo_full.write(
         (_injection_afifo.size() + _max_flits_per_transaction) >
         _injection_afifo_depth);
+    // std::cout << this->name() << ": " << _injection_afifo.size() <<
+    // std::endl;
     wait();
   }
 }

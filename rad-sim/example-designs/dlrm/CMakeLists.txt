@@ -18,6 +18,7 @@ include_directories(
 set(srcfiles
   modules/embedding_lookup.cpp
   modules/feature_interaction.cpp
+  modules/custom_feature_interaction.cpp
   modules/sim_utils.cpp
   modules/afifo.cpp
   modules/register_file.cpp
@@ -33,6 +34,7 @@ set(srcfiles
 set(hdrfiles
   modules/embedding_lookup.hpp
   modules/feature_interaction.hpp
+  modules/custom_feature_interaction.hpp
   modules/sim_utils.hpp
   modules/afifo.hpp
   modules/register_file.hpp

@@ -441,6 +441,113 @@ def generate_feature_interaction_instructions():
     f.close()
 
 
+def generate_custom_feature_interaction_instructions():
+    global smallest_table_bytewidth
+    round_id = 0
+    table_count = 0
+    running_byte_count = 0
+    total_pushed_bytes = 0
+    output_bytewidth = int(read_bytewidth * int(native_dim / int(read_bytewidth / element_bytewidth)))
+    schedule = []
+    schedule_step = []
+    while table_count < len(table_info):
+        for ch in tables_per_ddr_channel:
+            if round_id < len(tables_per_ddr_channel[ch]):
+                vector_length = get_table_vector_length_by_id(table_info, tables_per_ddr_channel[ch][round_id])
+                running_byte_count += vector_length * element_bytewidth
+                if (vector_length > native_dim):
+                    for i in range(int(vector_length/native_dim)):
+                        schedule_step.append(ch + 1)
+                        schedule_step.append(i * native_dim)
+                        schedule_step.append((i+1) * native_dim - 1)
+                        if (i == int(vector_length/native_dim) - 1):
+                            schedule_step.append(1)
+                            schedule.append(schedule_step)
+                            schedule_step = []
+                            running_byte_count = 0
+                        else:
+                            schedule_step.append(0)
+                            schedule.append(schedule_step)
+                            schedule_step = []
+                else:
+                    schedule_step.append(ch + 1)
+                    schedule_step.append(0)
+                    schedule_step.append(vector_length-1)
+                    schedule_step.append(1)
+                if (running_byte_count == native_dim * element_bytewidth):
+                    schedule.append(schedule_step)
+                    running_byte_count = 0
+                    schedule_step = []
+                table_count += 1
+                total_pushed_bytes += (vector_length * element_bytewidth)
+        
+        for c in tables_per_hbm_channel:
+            ch = ddr_channels + c
+            if round_id < len(tables_per_hbm_channel[c]):
+                vector_length = get_table_vector_length_by_id(table_info, tables_per_hbm_channel[c][round_id])
+                running_byte_count += vector_length * element_bytewidth
+                if (vector_length > native_dim):
+                    for i in range(int(vector_length/native_dim)):
+                        schedule_step.append(ch + 1)
+                        schedule_step.append(i * native_dim)
+                        schedule_step.append((i+1) * native_dim - 1)
+                        schedule_step.append(int(i == int(vector_length/native_dim)))
+                        schedule.append(schedule_step)
+                        schedule_step = []
+                else:
+                    schedule_step.append(ch + 1)
+                    schedule_step.append(0)
+                    schedule_step.append(vector_length-1)
+                    schedule_step.append(1)
+                if (running_byte_count == native_dim * element_bytewidth):
+                    schedule.append(schedule_step)
+                    running_byte_count = 0
+                    schedule_step = []
+                table_count += 1
+                total_pushed_bytes += (vector_length * element_bytewidth)
+
+        round_id += 1
+
+    if running_byte_count > 0 and running_byte_count < native_dim * element_bytewidth:
+        remaining_bytes = (native_dim * element_bytewidth) - running_byte_count
+        schedule_step.append(0)
+        schedule_step.append(0)
+        schedule_step.append(int(remaining_bytes / element_bytewidth)-1)
+        schedule_step.append(0)
+        running_byte_count = 0
+        schedule.append(schedule_step)
+        schedule_step = []
+        total_pushed_bytes += remaining_bytes
+
+    padded_input_dim = math.ceil(input_dim / native_dim / num_mvms[0])
+    padded_input_dim = int(padded_input_dim * native_dim * num_mvms[0])
+    total_vector_bytewidth = padded_input_dim * element_bytewidth
+    remaining_bytes = total_vector_bytewidth - total_pushed_bytes
+    assert remaining_bytes % read_bytewidth == 0
+    padding_words = int(remaining_bytes / native_dim / element_bytewidth)
+    for i in range(padding_words):
+        schedule_step.append(0)
+        schedule_step.append(0)
+        schedule_step.append(native_dim-1)
+        schedule_step.append(0)
+        schedule.append(schedule_step)
+        schedule_step = []
+    
+    if not (os.path.exists("./instructions")):
+        os.mkdir("instructions")
+    else:
+        files = glob.glob("instructions/*.inst")
+        for file in files:
+            os.remove(file)
+    f = open("instructions/feature_interaction.inst", "w")
+    for step in schedule:
+        for s in step:
+            f.write(str(s) + " ")
+        f.write("\n")
+    f.close()
+    #for s in schedule:
+    #    print(s)
+
 def generate_feature_interaction_outputs():
     f = open("feature_interaction.out", "w")
     feature_interaction_vector_length = 0
@@ -710,10 +817,11 @@ parse_dlrm_description(model_csv)
 sort_tables()
 # print_dlrm_description()
 greedy_allocation()
-# print_allocation()
+#print_allocation()
 generate_embedding_lookup_inputs(num_test_inputs)
 generate_mem_channel_contents()
-generate_feature_interaction_instructions()
+#generate_feature_interaction_instructions()
+generate_custom_feature_interaction_instructions()
 generate_feature_interaction_outputs()
 padded_weights = generate_mlp_weights()
 generate_mvm_instructions(padded_weights)

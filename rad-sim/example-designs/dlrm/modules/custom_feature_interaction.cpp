@@ -1,8 +1,8 @@
-#include <feature_interaction.hpp>
+#include <custom_feature_interaction.hpp>
 
 void ParseFeatureInteractionInstructions(
     std::string &instructions_file,
-    std::vector<feature_interaction_inst> &instructions,
+    std::vector<custom_feature_interaction_inst> &instructions,
     std::string &responses_file, unsigned int &num_expected_responses) {
 
   std::ifstream resp_file(responses_file);
@@ -22,50 +22,37 @@ void ParseFeatureInteractionInstructions(
     sim_log.log(error, "Cannot find feature interaction instructions file!");
   }
 
-  unsigned int mux_select;
-  std::string pop_signals;
+  unsigned int fifo_id, start_element, end_element;
+  bool pop;
   while (std::getline(inst_file, line)) {
-    feature_interaction_inst instruction;
+    custom_feature_interaction_inst instruction;
     std::stringstream line_stream(line);
-    line_stream >> mux_select;
-    instruction.mux_select = mux_select;
-    line_stream >> pop_signals;
-    uint8_t idx = 0;
-    for (char &c : pop_signals) {
-      if (c == '1') {
-        instruction.fifo_pops.push_back(true);
-      } else {
-        instruction.fifo_pops.push_back(false);
-      }
-      idx++;
+    while (line_stream >> fifo_id >> start_element >> end_element >> pop) {
+      instruction.xbar_schedule.push_back(fifo_id);
+      instruction.start_element.push_back(start_element);
+      instruction.end_element.push_back(end_element);
+      instruction.pop_fifo.push_back(pop);
     }
     instructions.push_back(instruction);
   }
   inst_file.close();
 }
 
-feature_interaction::feature_interaction(const sc_module_name &name,
-                                         unsigned int dataw,
-                                         unsigned int element_bitwidth,
-                                         unsigned int num_mem_channels,
-                                         unsigned int fifos_depth,
-                                         unsigned int num_output_channels,
-                                         std::string &instructions_file)
+custom_feature_interaction::custom_feature_interaction(
+    const sc_module_name &name, unsigned int dataw,
+    unsigned int element_bitwidth, unsigned int num_mem_channels,
+    unsigned int fifos_depth, unsigned int num_output_channels,
+    std::string &instructions_file)
     : radsim_module(name) {
 
   _fifos_depth = fifos_depth;
-  _afifo_width_ratio_in = 32 / 4;
-  _afifo_width_ratio_out = LANES / 4;
   _num_received_responses = 0;
   _num_mem_channels = num_mem_channels;
   _dataw = dataw;
   _bitwidth = element_bitwidth;
-  _num_elements_wide_in = dataw / element_bitwidth;
-  _num_elements_narrow = _num_elements_wide_in / _afifo_width_ratio_in;
-  _num_elements_wide_out = _num_elements_narrow * _afifo_width_ratio_out;
+  _num_input_elements = dataw / element_bitwidth;
+  _num_output_elements = DATAW / element_bitwidth;
   _num_output_channels = num_output_channels;
-  _staging_counter = 0;
-  _staging_data.resize(_num_elements_wide_out);
 
   aximm_interface.init(_num_mem_channels);
   axis_interface.init(_num_output_channels);
@@ -97,14 +84,15 @@ feature_interaction::feature_interaction(const sc_module_name &name,
   // This function must be defined & called for any RAD-Sim module to register
   // its info for automatically connecting to the NoC
   this->RegisterModuleInfo();
-  _debug_feature_interaction_out = new ofstream("dut_feature_interaction.out");
+  //_debug_feature_interaction_out = new
+  // ofstream("dut_feature_interaction.out");
 }
 
-feature_interaction::~feature_interaction() {
-  delete _debug_feature_interaction_out;
+custom_feature_interaction::~custom_feature_interaction() {
+  // delete _debug_feature_interaction_out;
 }
 
-void feature_interaction::Assign() {
+void custom_feature_interaction::Assign() {
   if (rst) {
     for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
       aximm_interface[ch_id].bready.write(false);
@@ -119,9 +107,9 @@ void feature_interaction::Assign() {
   }
 }
 
-void feature_interaction::bv_to_data_vector(sc_bv<AXI4_MAX_DATAW> &bitvector,
-                                            data_vector<int16_t> &datavector,
-                                            unsigned int num_elements) {
+void custom_feature_interaction::bv_to_data_vector(
+    sc_bv<AXI4_MAX_DATAW> &bitvector, data_vector<int16_t> &datavector,
+    unsigned int num_elements) {
 
   unsigned int start_idx, end_idx;
   for (unsigned int e = 0; e < num_elements; e++) {
@@ -131,9 +119,9 @@ void feature_interaction::bv_to_data_vector(sc_bv<AXI4_MAX_DATAW> &bitvector,
   }
 }
 
-void feature_interaction::data_vector_to_bv(data_vector<int16_t> &datavector,
-                                            sc_bv<AXIS_MAX_DATAW> &bitvector,
-                                            unsigned int num_elements) {
+void custom_feature_interaction::data_vector_to_bv(
+    data_vector<int16_t> &datavector, sc_bv<AXIS_MAX_DATAW> &bitvector,
+    unsigned int num_elements) {
 
   unsigned int start_idx, end_idx;
   for (unsigned int e = 0; e < num_elements; e++) {
@@ -144,27 +132,25 @@ void feature_interaction::data_vector_to_bv(data_vector<int16_t> &datavector,
 }
 
 bool are_ififos_ready(sc_vector<sc_signal<bool>> &ififo_empty,
-                      feature_interaction_inst &inst) {
+                      custom_feature_interaction_inst &inst) {
 
   bool ready = true;
-  bool fifos_popped = (inst.mux_select > 0);
-  for (unsigned int ch_id = 0; ch_id < inst.fifo_pops.size(); ch_id++) {
-    if (inst.fifo_pops[ch_id]) {
-      fifos_popped = true;
-      ready &= !ififo_empty[ch_id].read();
-    }
+  for (auto &f : inst.xbar_schedule) {
+    if (f == 0)
+      ready &= true;
+    else
+      ready &= !ififo_empty[f - 1].read();
   }
-  return (ready && fifos_popped);
+  return ready;
 }
 
-void feature_interaction::Tick() {
+void custom_feature_interaction::Tick() {
   // Reset ports
   for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
     aximm_interface[ch_id].arvalid.write(false);
     aximm_interface[ch_id].awvalid.write(false);
     aximm_interface[ch_id].wvalid.write(false);
   }
-  // feature_interaction_valid.write(false);
   received_responses.write(0);
   // Reset signals
   for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
@@ -177,7 +163,6 @@ void feature_interaction::Tick() {
     axis_interface[ch_id].tvalid.write(false);
   }
   _dest_ofifo.write(0);
-  _src_ofifo.write(0);
   _pc.write(0);
   wait();
 
@@ -188,79 +173,59 @@ void feature_interaction::Tick() {
       if (_input_fifos[ch_id].size() < _fifos_depth &&
           aximm_interface[ch_id].rvalid.read()) {
         sc_bv<AXI4_MAX_DATAW> rdata_bv = aximm_interface[ch_id].rdata.read();
-        data_vector<int16_t> rdata(_num_elements_wide_in);
-        bv_to_data_vector(rdata_bv, rdata, _num_elements_wide_in);
-        for (unsigned int c = 0; c < _afifo_width_ratio_in; c++) {
-          data_vector<int16_t> sliced_data(_num_elements_narrow);
-          for (unsigned int e = 0; e < sliced_data.size(); e++) {
-            sliced_data[e] = rdata[(c * sliced_data.size()) + e];
-          }
-          _input_fifos[ch_id].push(sliced_data);
-        }
+        data_vector<int16_t> rdata(_num_input_elements);
+        bv_to_data_vector(rdata_bv, rdata, _num_input_elements);
+        _input_fifos[ch_id].push(rdata);
         _num_received_responses++;
         if (_num_received_responses == _num_expected_responses) {
           std::cout << this->name() << ": Got all memory responses at cycle "
                     << GetSimulationCycle(5.0) << "!" << std::endl;
         }
-        // std::cout << GetSimulationCycle(5.0) << " === "
-        //           << "Pushed response to iFIFO " << rdata << std::endl;
       }
     }
 
-    // Pop from input FIFOs to staging register
+    // Pop from input FIFOs
     bool ififos_ready =
         are_ififos_ready(_ififo_empty, _instructions[_pc.read()]);
     if (ififos_ready && !_ofifo_full[_dest_ofifo.read()]) {
-      // Pick the right iFIFO (or zeros) to push to staging register
-      unsigned int mux_select = _instructions[_pc.read()].mux_select;
-      if (mux_select == _num_mem_channels + 1) {
-        for (unsigned int e = 0; e < _num_elements_narrow; e++) {
-          _staging_data[(_staging_counter * _num_elements_narrow) + e] = 0;
+      data_vector<int16_t> ofifo_data_vector(_num_output_elements);
+      custom_feature_interaction_inst instruction = _instructions[_pc.read()];
+      unsigned int num_steps = instruction.xbar_schedule.size();
+      unsigned int element_id = 0;
+      unsigned int fifo_id, start_idx, end_idx;
+      for (unsigned int step = 0; step < num_steps; step++) {
+        fifo_id = instruction.xbar_schedule[step];
+        start_idx = instruction.start_element[step];
+        end_idx = instruction.end_element[step];
+        data_vector<int16_t> tmp(_num_input_elements);
+        if (fifo_id != 0) {
+          tmp = _input_fifos[fifo_id - 1].front();
+          if (instruction.pop_fifo[step]) {
+            _input_fifos[fifo_id - 1].pop();
+          }
         }
-      } else if (mux_select > 0) {
-        data_vector<int16_t> popped_data = _input_fifos[mux_select - 1].front();
-        for (unsigned int e = 0; e < _num_elements_narrow; e++) {
-          _staging_data[(_staging_counter * _num_elements_narrow) + e] =
-              popped_data[e];
+        for (unsigned int element = start_idx; element <= end_idx; element++) {
+          assert(element_id < ofifo_data_vector.size());
+          ofifo_data_vector[element_id] = tmp[element];
+          element_id++;
         }
       }
+      /*if (fifo_id != 0) {
+        *_debug_feature_interaction_out << ofifo_data_vector << "\n";
+        _debug_feature_interaction_out->flush();
+      }*/
+      _output_fifos[_dest_ofifo.read()].push(ofifo_data_vector);
 
-      if (mux_select > 0) {
-        if (_staging_counter == _afifo_width_ratio_out - 1) {
-          _staging_counter = 0;
-          _output_fifos[_dest_ofifo.read()].push(_staging_data);
-          bool padding = true;
-          for (unsigned int i = 0; i < _staging_data.size(); i++) {
-            if (_staging_data[i] != 0) {
-              padding = false;
-              break;
-            }
-          }
-          if (!padding) {
-            *_debug_feature_interaction_out << _staging_data << "\n";
-          }
-          _debug_feature_interaction_out->flush();
-          if (_dest_ofifo.read() == _num_output_channels - 1) {
-            _dest_ofifo.write(0);
-          } else {
-            _dest_ofifo.write(_dest_ofifo.read() + 1);
-          }
-        } else {
-          _staging_counter++;
-        }
-      }
-
-      // Pop selected iFIFOs
-      for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
-        if (_instructions[_pc.read()].fifo_pops[ch_id]) {
-          _input_fifos[ch_id].pop();
-        }
+      // Advance destination FIFO pointer
+      if (_dest_ofifo.read() == _num_output_channels - 1) {
+        _dest_ofifo.write(0);
+      } else {
+        _dest_ofifo.write(_dest_ofifo.read() + 1);
       }
 
       // Advance Instructions Pointer
       if (_pc.read() == _instructions.size() - 1) {
         _pc.write(0);
-        assert(_staging_counter == 0);
       } else {
         _pc.write(_pc.read() + 1);
       }
@@ -272,14 +237,12 @@ void feature_interaction::Tick() {
           axis_interface[ch_id].tvalid.read()) {
         _output_fifos[ch_id].pop();
         sim_trace_probe.record_event(5, 5);
-        // std::cout << "FI sent out vector to MVM " << ch_id << " at cycle "
-        //           << GetSimulationCycle(5.0) << std::endl;
       }
 
       if (!_output_fifos[ch_id].empty()) {
         data_vector<int16_t> tx_tdata = _output_fifos[ch_id].front();
         sc_bv<AXIS_MAX_DATAW> tx_tdata_bv;
-        data_vector_to_bv(tx_tdata, tx_tdata_bv, _num_elements_wide_out);
+        data_vector_to_bv(tx_tdata, tx_tdata_bv, _num_output_elements);
         axis_interface[ch_id].tvalid.write(true);
         axis_interface[ch_id].tdata.write(tx_tdata_bv);
         axis_interface[ch_id].tuser.write(3 << 13);
@@ -293,52 +256,21 @@ void feature_interaction::Tick() {
       }
     }
 
-    // Interface with testbench
-    /*if (!_ofifo_empty[_src_ofifo.read()] && feature_interaction_ready.read())
-    { feature_interaction_valid.write(true);
-      feature_interaction_odata.write(_output_fifos[_src_ofifo.read()].front());
-      _output_fifos[_src_ofifo.read()].pop();
-      if (_src_ofifo.read() == _num_output_channels - 1) {
-        _src_ofifo.write(0);
-      } else {
-        _src_ofifo.write(_src_ofifo.read() + 1);
-      }
-    } else {
-      feature_interaction_valid.write(false);
-    }*/
-
     // Set FIFO signals
     for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
       _ififo_empty[ch_id].write(_input_fifos[ch_id].empty());
-      _ififo_full[ch_id].write(_input_fifos[ch_id].size() >=
-                               (_fifos_depth - _afifo_width_ratio_in));
+      _ififo_full[ch_id].write(_input_fifos[ch_id].size() >= _fifos_depth - 4);
     }
     for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
       _ofifo_empty[ch_id].write(_output_fifos[ch_id].empty());
       _ofifo_full[ch_id].write(_output_fifos[ch_id].size() >= _fifos_depth - 2);
     }
     received_responses.write(_num_received_responses);
-    /*for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
-      std::cout << "iFIFO " << ch_id
-                << " occupancy = " << _input_fifos[ch_id].size() << std::endl;
-    }
-    for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
-      std::cout << "oFIFO " << ch_id
-                << " occupancy = " << _output_fifos[ch_id].size() << std::endl;
-    }
-    for (unsigned int i = 0; i < _num_mem_channels; i++) {
-      std::cout << this->name() << " - " << i << ": " << _input_fifos[i].size()
-                << std::endl;
-    }
-    for (unsigned int i = 0; i < _num_output_channels; i++) {
-      std::cout << this->name() << " - " << i << ": " << _output_fifos[i].size()
-                << std::endl;
-    }*/
     wait();
   }
 }
 
-void feature_interaction::RegisterModuleInfo() {
+void custom_feature_interaction::RegisterModuleInfo() {
   std::string port_name;
   _num_noc_axis_slave_ports = 0;
   _num_noc_axis_master_ports = 0;

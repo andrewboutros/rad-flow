@@ -278,7 +278,7 @@ void aximm_slave_adapter::InputPacketization() {
   while (true) {
     // If a valid transaction is selected and asynchronous injection FIFO has
     // empty slots
-    if (_i_valid.read() && (_injection_afifo.size() < _injection_afifo_depth)) {
+    if (_i_valid.read()) {
       // Packetization is simulated by generating all flits and pushing them
       // into the asynchronous injection FIFO in the first FSM packetization
       // state, then remains idle during the remaining states (analogous to an
@@ -362,6 +362,8 @@ void aximm_slave_adapter::InputPacketization() {
     _injection_afifo_full.write(
         (_injection_afifo.size() + _max_flits_per_transaction) >
         _injection_afifo_depth);
+    // std::cout << this->name() << ": " << _injection_afifo.size() <<
+    // std::endl;
     wait();
   }
 }
@@ -675,7 +677,6 @@ void aximm_slave_adapter::OutputInterface() {
       _output_packet_ready = false;
       NoCTransactionTelemetry::RecordTransactionReceipt(
           temp_flit->_sim_transaction_id);
-
       // std::cout << GetSimulationCycle(5.0) << " === " << this->name()
       //           << ": Got R response!" << std::endl;
     } else {
