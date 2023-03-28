@@ -1,24 +1,24 @@
 radsim_root_dir /home/andrew/repos/rad-flow-dev/rad-sim
 radsim_user_design_root_dir /home/andrew/repos/rad-flow-dev/rad-sim/example-designs/dlrm
 num_nocs 1
-noc_period 0.5714
+noc_period 1.0 
 noc_vcs 5 
-noc_payload_width 166 
-noc_num_nodes 256 
+noc_payload_width 82 
+noc_num_nodes 100 
 noc_placement_file dlrm.place 
-adapter_period 1.0 1.0 2.24 
-adapter_fifo_size 32 
+adapter_period 1.25 1.25 1.25 
+adapter_fifo_size 16 
 adapter_obuff_size 2 
 adapter_in_arbiter fixed_rr 
 adapter_out_arbiter priority_rr 
 adapter_vc_mapping direct 
-module_period 5.0 2.0 4.28 1.25
+module_period 5.0 2.0 3.32 1.5 
 sim_driver_period 5.0
 log_verbosity 2
-num_traces 8
-num_trace_modules 8
+num_traces 14
+num_trace_modules 14
 trace_names EmbeddingLU Mem0 Mem1 Mem2 Mem3 FeatureInter. MVMfirst MVMlast 
 dram_controllers 4
-dram_controller_period 4.28 4.28 2.0 2.0 
-dram_controller_queue_size 64 64 128 128 
-dram_config_file DDR3_8Gb_x16_1866 DDR3_8Gb_x16_1866 HBM2_8Gb_x128 HBM2_8Gb_x128 
+dram_controller_period 3.32 3.32 2.0 2.0 
+dram_controller_queue_size 64 64 64 64 
+dram_config_file DDR4_8Gb_x16_2400 DDR4_8Gb_x16_2400 HBM2_8Gb_x128 HBM2_8Gb_x128 

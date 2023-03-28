@@ -139,7 +139,7 @@ mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
   }
   SC_CTHREAD(Tick, clk.pos());
   reset_signal_is(rst, true);
-  SC_CTHREAD(MemTick, mem_clk.pos());
+  SC_CTHREAD(MemTick, clk.pos());
   reset_signal_is(rst, true);
 
   // this->PrintMemParameters();

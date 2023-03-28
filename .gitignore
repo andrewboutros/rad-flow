@@ -15,3 +15,5 @@ rad-sim/sim/*.out
 rad-sim/example-designs/dlrm/modules/*.bak
 rad-sim/logs/*.txt
 rad-sim/logs/*.json
+rad-sim/example-designs/dlrm/compiler/reports
+rad-sim/example-designs/dlrm/compiler/*.html

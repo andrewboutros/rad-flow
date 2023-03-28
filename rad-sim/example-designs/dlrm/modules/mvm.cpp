@@ -58,14 +58,14 @@ mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
   mvm_id = id_mvm;
   layer_id = id_layer;
 
-  inst_memory.resize(MEM_DEPTH);
+  inst_memory.resize(INST_MEM_DEPTH);
   if (!inst_filename.empty()) {
     if (!ParseInstructions(inst_memory, inst_filename)) {
       std::cerr << "Parsing instructions failed!" << std::endl;
       exit(1);
     }
   }
-  accum_memory.resize(MEM_DEPTH);
+  accum_memory.resize(ACCUM_MEM_DEPTH);
 
   char mem_name[25];
   std::string mem_name_str;
@@ -81,7 +81,7 @@ mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
         "mvm" + std::to_string(mvm_id) + "_matrix_mem" + std::to_string(dot_id);
     std::strcpy(mem_name, mem_name_str.c_str());
     matrix_memory[dot_id] = new register_file<int16_t>(
-        mem_name, dot_id, MEM_DEPTH, LANES, mem_init_file);
+        mem_name, dot_id, RF_MEM_DEPTH, LANES, mem_init_file);
     matrix_memory[dot_id]->clk(clk);
     matrix_memory[dot_id]->rst(rst);
     matrix_memory[dot_id]->raddr(matrix_mem_raddr);
@@ -247,20 +247,25 @@ void mvm::Tick() {
       dest_layer_pipeline[0].write(next_inst.read().dest_layer);
       dest_mvm_pipeline[0].write(next_inst.read().dest_mvm);
       pc.write(pc.read() + 1);
-      if (mvm_id == 0 && layer_id == 0 && pc.read() == 0) {
-        sim_trace_probe.record_event(6, 6);
-        // std::cout << "MVMs started compute at cycle " <<
-        // GetSimulationCycle(5.0)
-        //           << std::endl;
-      }
+      // if (mvm_id == 0 && layer_id == 0 && pc.read() == 0) {
+      if (layer_id == 0)
+        sim_trace_probe.record_event(6 + mvm_id, 6 + mvm_id);
+      else if (layer_id == 1)
+        sim_trace_probe.record_event(10 + mvm_id, 10 + mvm_id);
+      else
+        sim_trace_probe.record_event(12 + mvm_id, 12 + mvm_id);
+      // std::cout << "MVMs started compute at cycle " <<
+      // GetSimulationCycle(5.0)
+      //           << std::endl;
+      //}
     } else if (next_inst.read().en && next_inst.read().jump) {
       valid_pipeline[0].write(false);
       pc.write(next_inst.read().raddr);
-      if (mvm_id == 1 && layer_id == 2) {
-        sim_trace_probe.record_event(7, 7);
-        // std::cout << "MVMs finished compute at cycle "
-        //           << GetSimulationCycle(5.0) << std::endl;
-      }
+      // if (mvm_id == 1 && layer_id == 2) {
+      //   sim_trace_probe.record_event(7, 7);
+      //  std::cout << "MVMs finished compute at cycle "
+      //            << GetSimulationCycle(5.0) << std::endl;
+      //}
     } else {
       valid_pipeline[0].write(false);
     }

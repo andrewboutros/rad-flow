@@ -44,7 +44,7 @@ private:
   unsigned int _num_output_channels;
   unsigned int _num_expected_responses;
 
-  // ofstream *_debug_feature_interaction_out;
+  ofstream *_debug_feature_interaction_out;
 
 public:
   sc_in<bool> rst;

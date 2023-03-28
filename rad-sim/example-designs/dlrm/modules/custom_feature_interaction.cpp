@@ -84,12 +84,11 @@ custom_feature_interaction::custom_feature_interaction(
   // This function must be defined & called for any RAD-Sim module to register
   // its info for automatically connecting to the NoC
   this->RegisterModuleInfo();
-  //_debug_feature_interaction_out = new
-  // ofstream("dut_feature_interaction.out");
+  _debug_feature_interaction_out = new ofstream("dut_feature_interaction.out");
 }
 
 custom_feature_interaction::~custom_feature_interaction() {
-  // delete _debug_feature_interaction_out;
+  delete _debug_feature_interaction_out;
 }
 
 void custom_feature_interaction::Assign() {
@@ -210,10 +209,10 @@ void custom_feature_interaction::Tick() {
           element_id++;
         }
       }
-      /*if (fifo_id != 0) {
+      if (fifo_id != 0) {
         *_debug_feature_interaction_out << ofifo_data_vector << "\n";
         _debug_feature_interaction_out->flush();
-      }*/
+      }
       _output_fifos[_dest_ofifo.read()].push(ofifo_data_vector);
 
       // Advance destination FIFO pointer

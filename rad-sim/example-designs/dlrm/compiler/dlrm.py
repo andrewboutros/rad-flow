@@ -447,7 +447,6 @@ def generate_custom_feature_interaction_instructions():
     table_count = 0
     running_byte_count = 0
     total_pushed_bytes = 0
-    output_bytewidth = int(read_bytewidth * int(native_dim / int(read_bytewidth / element_bytewidth)))
     schedule = []
     schedule_step = []
     while table_count < len(table_info):
@@ -492,8 +491,15 @@ def generate_custom_feature_interaction_instructions():
                         schedule_step.append(i * native_dim)
                         schedule_step.append((i+1) * native_dim - 1)
                         schedule_step.append(int(i == int(vector_length/native_dim)))
-                        schedule.append(schedule_step)
-                        schedule_step = []
+                        if (i == int(vector_length/native_dim) - 1):
+                            schedule_step.append(1)
+                            schedule.append(schedule_step)
+                            schedule_step = []
+                            running_byte_count = 0
+                        else:
+                            schedule_step.append(0)
+                            schedule.append(schedule_step)
+                            schedule_step = []
                 else:
                     schedule_step.append(ch + 1)
                     schedule_step.append(0)
@@ -545,8 +551,10 @@ def generate_custom_feature_interaction_instructions():
             f.write(str(s) + " ")
         f.write("\n")
     f.close()
+    #idx = 0
     #for s in schedule:
-    #    print(s)
+    #    print(str(idx) + ": " + str(s))
+    #    idx += 1
 
 def generate_feature_interaction_outputs():
     f = open("feature_interaction.out", "w")
@@ -764,9 +772,14 @@ def generate_dlrm_defines_hpp():
     dlrm_defines.write("#define LANES " + str(native_dim) + "\n")
     dlrm_defines.write("#define FIFO_SIZE 512\n")
     dlrm_defines.write(
-        "#define COMPUTE_LATENCY " + str(int(math.log2(native_dim)) + 3) + "\n"
+        "#define COMPUTE_LATENCY " + str(int(math.log2(native_dim)) + 5) + "\n"
     )
-    dlrm_defines.write("#define MEM_DEPTH 1025\n")
+    if (native_dim == 16):
+        dlrm_defines.write("#define RF_MEM_DEPTH 1024\n")
+    else:
+        dlrm_defines.write("#define RF_MEM_DEPTH 512\n")
+    dlrm_defines.write("#define ACCUM_MEM_DEPTH 64\n")
+    dlrm_defines.write("#define INST_MEM_DEPTH 2048\n")
     dlrm_defines.write("#define DOT_PRODUCTS LANES\n")
     dlrm_defines.write("#define DATAW (BITWIDTH * LANES)\n")
     dlrm_defines.close()
@@ -828,4 +841,4 @@ generate_mvm_instructions(padded_weights)
 generate_mlp_outputs(padded_weights)
 generate_mvms_config()
 generate_dlrm_defines_hpp()
-generate_radsim_clocks_file()
+#generate_radsim_clocks_file()

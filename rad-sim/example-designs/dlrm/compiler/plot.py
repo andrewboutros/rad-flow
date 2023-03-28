@@ -5,10 +5,13 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import numpy as np
 from numpy import loadtxt
+import sys
 
 pio.orca.config.use_xvfb = False
 
-num_traces = 8
+num_traces = 14
+
+root_dir = sys.argv[1]
 
 vspacing = 0.25
 vspacing_step = vspacing / 5.0
@@ -20,8 +23,14 @@ traces_names = [
     "Mem2 Resp",
     "Mem3 Resp",
     "Feat. Inter. Out",
-    "MLP Start",
-    "MLP End",
+    "MVM0",
+    "MVM1",
+    "MVM2",
+    "MVM3",
+    "MVM4",
+    "MVM5",
+    "MVM6",
+    "MVM7",
 ]
 traces_color = [
     "#003f5c",
@@ -30,7 +39,13 @@ traces_color = [
     "#a05195",
     "#d45087",
     "#f95d6a",
-    "#ff7c43",
+    "#ffa600",
+    "#ffa600",
+    "#ffa600",
+    "#ffa600",
+    "#ffa600",
+    "#ffa600",
+    "#ffa600",
     "#ffa600",
 ]
 
@@ -42,7 +57,7 @@ for i in range(num_traces):
 
 trace_count = 0
 max_val = 0
-with open("../../../sim/sim.trace") as traces_file:
+with open(root_dir+"sim/sim.trace") as traces_file:
     for line in traces_file:
         # Extract integer values of a trace
         trace = line.strip().split(" ")
@@ -101,11 +116,16 @@ fig.update_yaxes(
 )
 fig.update_yaxes(showgrid=False)
 
-#fig.update_layout(xaxis_range=[0, max_val + 10])
-fig.update_layout(xaxis_range=[0, 5000 + 10])
+fig.update_layout(xaxis_range=[0, max_val + 10])
+#fig.update_layout(xaxis_range=[0, 5000 + 10])
 fig.update_layout(plot_bgcolor="white")
 fig.update_layout(showlegend=False)
 
 fig.update_layout(height=num_traces * 55)
 
-fig.show()
+filename = sys.argv[2]
+
+#fig.write_image(filename+".pdf")
+fig.write_html(filename+".html")
+
+#fig.show()

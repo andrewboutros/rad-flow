@@ -78,6 +78,8 @@ void embedding_lookup::Tick() {
     aximm_req_interface[ch_id].wvalid.write(false);
     while (!_lookup_indecies_fifo[ch_id].empty()) {
       _lookup_indecies_fifo[ch_id].pop();
+    }
+    while (!_base_addresses_fifo[ch_id].empty()) {
       _base_addresses_fifo[ch_id].pop();
     }
     _fifo_full[ch_id].write(false);
@@ -104,7 +106,7 @@ void embedding_lookup::Tick() {
     // Set FIFO full signals
     for (unsigned int ch_id = 0; ch_id < _total_num_channels; ch_id++) {
       _fifo_full[ch_id].write(_lookup_indecies_fifo[ch_id].size() >=
-                              _fifo_depth);
+                              _fifo_depth - 4);
     }
 
     // Sending transactions to AXI-MM NoC
@@ -113,8 +115,8 @@ void embedding_lookup::Tick() {
          ctrl_id++) {
       for (unsigned int c = 0; c < _num_channels_per_ctrl[ctrl_id]; c++) {
         if (!_lookup_indecies_fifo[ch_id].empty()) {
-          unsigned int lookup_index = _lookup_indecies_fifo[ch_id].front();
-          unsigned int table_base_addr = _base_addresses_fifo[ch_id].front();
+          uint64_t lookup_index = _lookup_indecies_fifo[ch_id].front();
+          uint64_t table_base_addr = _base_addresses_fifo[ch_id].front();
 
           std::string dst_port_name = _dst_port_names[ch_id];
           uint64_t dst_addr = radsim_design.GetPortBaseAddress(dst_port_name) +
@@ -123,6 +125,11 @@ void embedding_lookup::Tick() {
               "feature_interaction_inst.aximm_interface_" +
               std::to_string(ch_id);
           uint64_t src_addr = radsim_design.GetPortBaseAddress(src_port_name);
+
+          /*if (ctrl_id == 0) {
+            std::cout << "Base address: " << table_base_addr << std::endl;
+            std::cout << "Index: " << lookup_index << std::endl;
+          }*/
 
           aximm_req_interface[ch_id].araddr.write(dst_addr);
           aximm_req_interface[ch_id].arid.write(_id_count[ch_id].read());
@@ -142,6 +149,12 @@ void embedding_lookup::Tick() {
         // Pop the FIFO if the transaction is accepted
         if (aximm_req_interface[ch_id].arvalid.read() &&
             aximm_req_interface[ch_id].arready.read()) {
+          /*if (ctrl_id == 0) {
+            std::cout << "ELU sent address "
+                      << aximm_req_interface[ch_id].araddr.read().to_uint64()
+                      << std::endl;
+            cin.get();
+          }*/
           _lookup_indecies_fifo[ch_id].pop();
           _base_addresses_fifo[ch_id].pop();
           _id_count[ch_id].write(_id_count[ch_id].read() + 1);
