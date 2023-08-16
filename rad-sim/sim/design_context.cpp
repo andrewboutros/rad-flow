@@ -161,7 +161,7 @@ void RADSimDesignContext::ParseNoCPlacement(
       std::getline(ss, module_name, ' ');
       std::getline(ss, port_noc_placement_str, ' ');
       std::getline(ss, port_node_placement_str, ' ');
-      std::getline(ss, port_axi_type, ' ');
+      std::getline(ss, port_axi_type, '\n');
 
       int port_noc_placement = std::stoi(port_noc_placement_str);
       int port_node_placement = std::stoi(port_node_placement_str);
@@ -486,7 +486,7 @@ void RADSimDesignContext::ConnectModulesToNoC() {
     // std::cout << "MODULE " << module_ptr->name() << std::endl;
 
     // Connect AXI-S Slave ports of the module
-    // std::cout << "AXI-S slave ports: ";
+    // std::cout << "AXI-S slave ports: " << std::endl;
     for (auto slave_port_it = module_ptr->_axis_slave_ports.begin();
          slave_port_it != module_ptr->_axis_slave_ports.end();
          slave_port_it++) {

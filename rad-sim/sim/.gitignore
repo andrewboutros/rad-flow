@@ -2,3 +2,5 @@
 .DS_store
 *.json
 *.txt
+*.csv
+*.xml

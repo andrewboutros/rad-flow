@@ -195,15 +195,15 @@ idx = 0
 for l in range(num_layers):
   for m in range(num_mvms[l]):
     mvm_name = 'layer' + str(l) + '_mvm' + str(m)
-    placement_file.write(mvm_name + ' 0 ' + str(router_ids[idx]) + '\n')
+    placement_file.write(mvm_name + ' 0 ' + str(router_ids[idx]) + ' axis\n')
     idx = idx + 1
     clocks_file.write(mvm_name + ' 0 0\n')
 for m in range(num_mvms[0]):
   dispatcher_name = 'input_dispatcher' + str(m)
-  placement_file.write(dispatcher_name + ' 0 ' + str(router_ids[idx]) + '\n')
+  placement_file.write(dispatcher_name + ' 0 ' + str(router_ids[idx]) + ' axis\n')
   idx = idx + 1
   clocks_file.write(dispatcher_name + ' 0 0\n')
-placement_file.write('output_collector 0 ' + str(router_ids[idx]) + '\n')
+placement_file.write('output_collector 0 ' + str(router_ids[idx]) + ' axis\n')
 idx = idx + 1
 clocks_file.write('output_collector 0 0\n')
 placement_file.close()
