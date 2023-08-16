@@ -248,12 +248,6 @@ void mvm::Tick() {
       dest_mvm_pipeline[0].write(next_inst.read().dest_mvm);
       pc.write(pc.read() + 1);
       // if (mvm_id == 0 && layer_id == 0 && pc.read() == 0) {
-      if (layer_id == 0)
-        sim_trace_probe.record_event(6 + mvm_id, 6 + mvm_id);
-      else if (layer_id == 1)
-        sim_trace_probe.record_event(10 + mvm_id, 10 + mvm_id);
-      else
-        sim_trace_probe.record_event(12 + mvm_id, 12 + mvm_id);
       // std::cout << "MVMs started compute at cycle " <<
       // GetSimulationCycle(5.0)
       //           << std::endl;
@@ -262,7 +256,6 @@ void mvm::Tick() {
       valid_pipeline[0].write(false);
       pc.write(next_inst.read().raddr);
       // if (mvm_id == 1 && layer_id == 2) {
-      //   sim_trace_probe.record_event(7, 7);
       //  std::cout << "MVMs finished compute at cycle "
       //            << GetSimulationCycle(5.0) << std::endl;
       //}

@@ -36,7 +36,7 @@ mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
   std::string config_file =
       radsim_config.GetStringKnob("radsim_root_dir") +
       "/sim/dram/DRAMsim3/configs/" +
-      radsim_config.GetStringVectorKnob("dram_config_file", dram_id) + ".ini";
+      radsim_config.GetStringVectorKnob("dram_config_files", dram_id) + ".ini";
 
   std::string output_dir =
       radsim_config.GetStringKnob("radsim_root_dir") + "/logs";
@@ -55,7 +55,7 @@ mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
       _dramsim->GetBusBits() * _dramsim->GetBurstLength();
   _memory_clk_period_ns = _dramsim->GetTCK();
   _controller_clk_period_ns =
-      radsim_config.GetDoubleVectorKnob("dram_controller_period", dram_id);
+      radsim_config.GetDoubleVectorKnob("dram_clk_periods", dram_id);
   double bitwidth_ratio =
       1.0 * _controller_channel_bitwidth / _memory_channel_bitwidth;
   double clk_period_ratio =
@@ -89,9 +89,9 @@ mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
   _output_write_queue_occupancy.init(_num_channels);
   _output_read_queue_occupancy.init(_num_channels);
   _input_queue_size =
-      radsim_config.GetIntVectorKnob("dram_controller_queue_size", dram_id);
+      radsim_config.GetIntVectorKnob("dram_queue_sizes", dram_id);
   _output_queue_size =
-      radsim_config.GetIntVectorKnob("dram_controller_queue_size", dram_id);
+      radsim_config.GetIntVectorKnob("dram_queue_sizes", dram_id);
 
   _num_ranks = _dramsim->GetRanks();
   _num_bank_groups = _dramsim->GetBankGroups();
@@ -447,7 +447,6 @@ void mem_controller::Tick() {
       if (mem_channels[ch_id].rvalid.read() &&
           mem_channels[ch_id].rready.read()) {
         _output_read_responses[ch_id].pop();
-        sim_trace_probe.record_event(1 + _mem_id, 1 + _mem_id);
         // std::cout << module_name << "_" << ch_id << ": Sent R Response!"
         //           << std::endl;
       }

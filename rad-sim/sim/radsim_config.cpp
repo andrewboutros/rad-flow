@@ -177,21 +177,21 @@ void ParseRADSimKnobs(const std::string &knobs_filename) {
     // Based on parameter name, parse a single or a vector of values of int,
     // double or string data types
     if ((param == "radsim_root_dir") ||
-        (param == "radsim_user_design_root_dir")) {
+        (param == "radsim_user_design_root_dir") ||
+        (param == "design_name")) {
       std::string value;
       std::getline(ss, value, ' ');
       radsim_config.AddStringKnob(param, value);
-    } else if ((param == "num_nocs") || (param == "log_verbosity") ||
-               (param == "num_traces") || (param == "num_trace_modules") ||
-               (param == "dram_controllers")) {
+    } else if ((param == "noc_num_nocs") || (param == "telemetry_log_verbosity") ||
+               (param == "dram_num_controllers")) {
       std::string value_str;
       std::getline(ss, value_str, ' ');
       int value = std::stoi(value_str);
       radsim_config.AddIntKnob(param, value);
     } else if ((param == "noc_payload_width") || (param == "noc_vcs") ||
-               (param == "noc_num_nodes") || (param == "adapter_fifo_size") ||
-               (param == "adapter_obuff_size") ||
-               (param == "dram_controller_queue_size")) {
+               (param == "noc_num_nodes") || (param == "noc_adapters_fifo_size") ||
+               (param == "noc_adapters_obuff_size") ||
+               (param == "dram_queue_sizes")) {
       std::vector<int> value;
       std::string value_element_str;
       int value_element;
@@ -208,9 +208,9 @@ void ParseRADSimKnobs(const std::string &knobs_filename) {
         max_period = value;
       }
       radsim_config.AddDoubleKnob(param, value);
-    } else if ((param == "noc_period") || (param == "adapter_period") ||
-               (param == "module_period") ||
-               (param == "dram_controller_period")) {
+    } else if ((param == "noc_clk_period") || (param == "noc_adapters_clk_period") ||
+               (param == "design_clk_periods") ||
+               (param == "dram_clk_periods")) {
       std::vector<double> value;
       std::string value_element_str;
       double value_element;
@@ -222,17 +222,20 @@ void ParseRADSimKnobs(const std::string &knobs_filename) {
         value.push_back(value_element);
       }
       radsim_config.AddDoubleVectorKnob(param, value);
-    } else if ((param == "noc_placement_file") ||
-               (param == "adapter_in_arbiter") ||
-               (param == "adapter_out_arbiter") ||
-               (param == "adapter_vc_mapping") || (param == "trace_names") ||
-               (param == "dram_config_file")) {
+    } else if ((param == "design_noc_placement") ||
+               (param == "noc_adapters_in_arbiter") ||
+               (param == "noc_adapters_out_arbiter") ||
+               (param == "noc_adapters_vc_mapping") || (param == "telemetry_traces") ||
+               (param == "dram_config_files")) {
       std::vector<std::string> value;
       std::string value_element;
       while (getline(ss, value_element, ' ')) {
         value.push_back(value_element);
       }
       radsim_config.AddStringVectorKnob(param, value);
+      if (param == "telemetry_traces") {
+        radsim_config.AddIntKnob("telemetry_num_traces", value.size());
+      }
     } else {
       std::cerr << "Undefined RADSim knob \"" << param << "\"" << std::endl;
       exit(1);

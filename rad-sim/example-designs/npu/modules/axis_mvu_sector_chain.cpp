@@ -126,11 +126,11 @@ void axis_mvu_sector_chain::RegisterModuleInfo() {
   std::string port_name;
   for (unsigned int thread_id = 0; thread_id < THREADS; thread_id++) {
     port_name = _name + ".sector_inst_interface_" + std::to_string(thread_id);
-    RegisterSlavePort(port_name, &sector_inst_interface[thread_id], MVU_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
+    RegisterAxisSlavePort(port_name, &sector_inst_interface[thread_id], MVU_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
   }
 
   for (unsigned int thread_id = 0; thread_id < THREADS; thread_id++) {
     port_name = _name + ".sector_ofifo_interface_" + std::to_string(thread_id);
-    RegisterMasterPort(port_name, &sector_ofifo_interface[thread_id], MVU_FEEDFORWARD_INTERFACE_DATAW, FEEDFORWARD_INTERFACE);
+    RegisterAxisMasterPort(port_name, &sector_ofifo_interface[thread_id], MVU_FEEDFORWARD_INTERFACE_DATAW, FEEDFORWARD_INTERFACE);
   }
 }

@@ -13,7 +13,7 @@ class colors:
 
 # Set default values
 num_tiles = 7
-num_sectors = 5
+num_sectors = 10
 num_threads = 4
 num_dpes = 40
 num_lanes = 40

@@ -93,17 +93,16 @@ class SimLog {
 
 class SimTraceRecording {
  private:
-  std::vector<std::vector<std::vector<unsigned int>>> trace_cycles;
+  std::vector<std::vector<unsigned int>> trace_cycles;
   unsigned int num_traces_monitored;
-  unsigned int num_modules_monitored;
   std::string trace_filename;
 
  public:
   SimTraceRecording();
-  SimTraceRecording(std::string filename, unsigned int num_traces, unsigned int num_modules);
+  SimTraceRecording(std::string filename, unsigned int num_traces);
   ~SimTraceRecording();
-  void SetTraceRecordingSettings(std::string filename, unsigned int num_traces, unsigned int num_modules);
-  void record_event(unsigned int module_id, unsigned int trace_id);
+  void SetTraceRecordingSettings(std::string filename, unsigned int num_traces);
+  void record_event(unsigned int trace_id);
   void dump_traces();
 };
 

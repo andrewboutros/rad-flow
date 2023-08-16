@@ -372,7 +372,6 @@ void mvu_sector::Tick() {
                       "Thread " + std::to_string(thread_id) + " tag is updated to " +
                           std::to_string(current_tag[thread_id].read() + 1),
                       this->name());
-          sim_trace_probe.record_event(sector_id * (NUM_PIPELINE_BLOCKS - 1), TAG_UPDATE_TRACE);
         }
       }
     }
@@ -458,18 +457,6 @@ void mvu_sector::Tick() {
         }
       }
     }
-
-    if (inst_fifo_ren[thread_id].read())
-      sim_trace_probe.record_event(sector_id * (NUM_PIPELINE_BLOCKS - 1), UOP_ISSUE_TRACE);
-    if (ofifo_wen_signal[thread_id_pipeline[SECTOR_INST_PIPELINE - 2].read()].read()){
-      sim_trace_probe.record_event(sector_id * (NUM_PIPELINE_BLOCKS - 1), UOP_RETIRE_TRACE);
-      //std::cout << "Wrote to sector " << sector_id << " output fifo" << std::endl;
-    }
-    if (inst_fifo_rdata[thread_id].read().first_uop && inst_fifo_ren[thread_id].read())
-      sim_trace_probe.record_event(sector_id * (NUM_PIPELINE_BLOCKS - 1), FIRST_UOP_ISSUE_TRACE);
-    if (inst_pipeline[SECTOR_INST_PIPELINE - 2].read().last_uop &&
-        ofifo_wen_signal[thread_id_pipeline[SECTOR_INST_PIPELINE - 2].read()].read())
-      sim_trace_probe.record_event(sector_id * (NUM_PIPELINE_BLOCKS - 1), LAST_UOP_RETIRE_TRACE);
 
     /*std::cout << this->name() << " ";
     for(unsigned int i = 0; i < THREADS; i++)

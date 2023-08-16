@@ -342,17 +342,6 @@ void loader::Tick() {
         data_pipeline[stage_id][core_id].write(data_pipeline[stage_id - 1][core_id].read());
     }
 
-    if (inst_fifo_ren.read()) sim_trace_probe.record_event(SECTORS * (NUM_PIPELINE_BLOCKS - 1), UOP_ISSUE_TRACE);
-    if (ext_output_fifo_wen_pipeline[LD_PIPELINE - 1].read() || wb0_fifo_wen_pipeline[LD_PIPELINE - 1].read() ||
-        wb1_fifo_wen_pipeline[LD_PIPELINE - 1].read())
-      sim_trace_probe.record_event(SECTORS * (NUM_PIPELINE_BLOCKS - 1), UOP_RETIRE_TRACE);
-    if (inst_fifo_ren.read() && inst_fifo_rdata.read().first_uop)
-      sim_trace_probe.record_event(SECTORS * (NUM_PIPELINE_BLOCKS - 1), FIRST_UOP_ISSUE_TRACE);
-    if ((ext_output_fifo_wen_pipeline[LD_PIPELINE - 1].read() || wb0_fifo_wen_pipeline[LD_PIPELINE - 1].read() ||
-         wb1_fifo_wen_pipeline[LD_PIPELINE - 1].read()) &&
-        inst_pipeline[LD_PIPELINE - 1].read().last_uop)
-      sim_trace_probe.record_event(SECTORS * (NUM_PIPELINE_BLOCKS - 1), LAST_UOP_RETIRE_TRACE);
-
     wait();
   }
 }

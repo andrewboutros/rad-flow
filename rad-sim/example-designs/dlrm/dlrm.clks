@@ -1,9 +1,9 @@
 embedding_lookup_inst 0 0
 feature_interaction_inst 0 0
-ext_mem_0 2 2
-ext_mem_1 2 2
-ext_mem_2 1 1
-ext_mem_3 1 1
+ext_mem_0 0 2
+ext_mem_1 0 2
+ext_mem_2 0 1
+ext_mem_3 0 1
 layer0_mvm0 0 3
 layer0_mvm1 0 3
 layer0_mvm2 0 3

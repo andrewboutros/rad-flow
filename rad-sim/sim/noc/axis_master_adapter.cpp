@@ -33,7 +33,7 @@ axis_master_adapter::axis_master_adapter(
 
   _ejected_booksim_flit = nullptr;
   _ejection_afifo_depth =
-      radsim_config.GetIntVectorKnob("adapter_fifo_size", _network_id);
+      radsim_config.GetIntVectorKnob("noc_adapters_fifo_size", _network_id);
   _ejection_afifos.resize(_num_vcs);
   _ejection_afifo_push_counter.init(_num_vcs);
   _ejection_afifo_pop_counter.init(_num_vcs);
@@ -44,7 +44,7 @@ axis_master_adapter::axis_master_adapter(
   _output_afifos.resize(_num_axis_interfaces);
   _output_packet_ready.resize(_num_axis_interfaces);
   _output_afifo_depth =
-      radsim_config.GetIntVectorKnob("adapter_obuff_size", _network_id);
+      radsim_config.GetIntVectorKnob("noc_adapters_obuff_size", _network_id);
   _constructed_packet = sc_packet();
   _output_chunk.resize(_num_axis_interfaces);
 

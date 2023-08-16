@@ -120,9 +120,9 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
          it != axis_slave_adapter_info[adapter_id]._port_types.end(); it++)
       adapter_port_types.push_back(static_cast<Flit::FlitType>(*it));
     double adapter_module_period = radsim_config.GetDoubleVectorKnob(
-        "module_period", axis_slave_adapter_info[adapter_id]._module_clk_idx);
+        "design_clk_periods", axis_slave_adapter_info[adapter_id]._module_clk_idx);
     double adapter_period = radsim_config.GetDoubleVectorKnob(
-        "adapter_period", axis_slave_adapter_info[adapter_id]._adapter_clk_idx);
+        "noc_adapters_clk_period", axis_slave_adapter_info[adapter_id]._adapter_clk_idx);
 
     // Create adapter
     axis_slave_adapter *slave_adapter = new axis_slave_adapter(
@@ -163,9 +163,9 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
         "aximm_master_adapter_" + std::to_string(adapter_id);
     const char *adapter_name = adapter_name_str.c_str();
     double adapter_module_period = radsim_config.GetDoubleVectorKnob(
-        "module_period", aximm_master_adapter_info[adapter_id]._module_clk_idx);
+        "design_clk_periods", aximm_master_adapter_info[adapter_id]._module_clk_idx);
     double adapter_period = radsim_config.GetDoubleVectorKnob(
-        "adapter_period",
+        "noc_adapters_clk_period",
         aximm_master_adapter_info[adapter_id]._adapter_clk_idx);
 
     // Create adapter
@@ -206,9 +206,9 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
         "aximm_slave_adapter_" + std::to_string(adapter_id);
     const char *adapter_name = adapter_name_str.c_str();
     double adapter_module_period = radsim_config.GetDoubleVectorKnob(
-        "module_period", aximm_slave_adapter_info[adapter_id]._module_clk_idx);
+        "design_clk_periods", aximm_slave_adapter_info[adapter_id]._module_clk_idx);
     double adapter_period = radsim_config.GetDoubleVectorKnob(
-        "adapter_period",
+        "noc_adapters_clk_period",
         aximm_slave_adapter_info[adapter_id]._adapter_clk_idx);
 
     // Create adapter

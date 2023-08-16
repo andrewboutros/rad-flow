@@ -1,6 +1,6 @@
 // Topology
 topology = mesh;
-k = 10;
+k = 4;
 n = 2;
 
 // Routing
@@ -8,7 +8,7 @@ routing_function = dim_order;
 
 // Flow control
 num_vcs = 5;
-vc_buf_size = 16;
+vc_buf_size = 8;
 output_buffer_size = 8;
 read_request_begin_vc = 0;
 read_request_end_vc = 0;

@@ -345,22 +345,22 @@ void axis_vector_elementwise::RegisterModuleInfo() {
   std::string port_name;
   for (unsigned int sector_id = 0; sector_id < SECTORS; sector_id++) {
     port_name = _name + ".evrf_inst_interface_" + std::to_string(sector_id);
-    RegisterSlavePort(port_name, &evrf_inst_interfaces[sector_id], VEW_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
+    RegisterAxisSlavePort(port_name, &evrf_inst_interfaces[sector_id], VEW_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
 
     port_name = _name + ".mfu0_inst_interface_" + std::to_string(sector_id);
-    RegisterSlavePort(port_name, &mfu0_inst_interfaces[sector_id], VEW_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
+    RegisterAxisSlavePort(port_name, &mfu0_inst_interfaces[sector_id], VEW_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
 
     port_name = _name + ".mfu1_inst_interface_" + std::to_string(sector_id);
-    RegisterSlavePort(port_name, &mfu1_inst_interfaces[sector_id], VEW_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
+    RegisterAxisSlavePort(port_name, &mfu1_inst_interfaces[sector_id], VEW_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
   }
   port_name = _name + ".loader_inst_interface";
-  RegisterSlavePort(port_name, &loader_inst_interface, VEW_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
+  RegisterAxisSlavePort(port_name, &loader_inst_interface, VEW_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
 
   for (unsigned int sector_id = 0; sector_id < SECTORS; sector_id++) {
     port_name = _name + ".evrf_ififo_interface_" + std::to_string(sector_id);
-    RegisterSlavePort(port_name, &evrf_ififo_interfaces[sector_id], VEW_FEEDFORWARD_INTERFACE_DATAW, FEEDFORWARD_INTERFACE);
+    RegisterAxisSlavePort(port_name, &evrf_ififo_interfaces[sector_id], VEW_FEEDFORWARD_INTERFACE_DATAW, FEEDFORWARD_INTERFACE);
   }
 
   port_name = _name + ".loader_wb0_interface";
-  RegisterMasterPort(port_name, &loader_wb0_interface, VEW_WB0_INTERFACE_DATAW, MVU_WRITEBACK_INTERFACE);
+  RegisterAxisMasterPort(port_name, &loader_wb0_interface, VEW_WB0_INTERFACE_DATAW, MVU_WRITEBACK_INTERFACE);
 }

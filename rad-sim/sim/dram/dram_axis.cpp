@@ -126,12 +126,12 @@ void dram_axis::Assign() {
 
 /*void dram_axis::RegisterModuleInfo() {
   std::string port_name;
-  _num_noc_slave_ports = 0;
-  _num_noc_master_ports = 0;
+  _num_noc_axis_slave_ports = 0;
+  _num_noc_axis_master_ports = 0;
 
   port_name = module_name + ".tx_interface";
-  RegisterMasterPort(port_name, &tx_interface, _mem.GetBusBits(), 0);
+  RegisterAxisMasterPort(port_name, &tx_interface, _mem.GetBusBits(), 0);
 
   port_name = module_name + ".rx_interface";
-  RegisterSlavePort(port_name, &rx_interface, _mem.GetBusBits(), 0);
+  RegisterAxisSlavePort(port_name, &rx_interface, _mem.GetBusBits(), 0);
 }*/

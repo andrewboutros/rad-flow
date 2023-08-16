@@ -149,21 +149,21 @@ axis_inst_dispatch::~axis_inst_dispatch() {
 
 void axis_inst_dispatch::RegisterModuleInfo() {
   std::string port_name;
-  _num_noc_slave_ports = 0;
-  _num_noc_master_ports = 0;
+  _num_noc_axis_slave_ports = 0;
+  _num_noc_axis_master_ports = 0;
   for (unsigned int sector_id = 0; sector_id < SECTORS; sector_id++) {
     port_name = _name + ".sector_mop_interface_" + std::to_string(sector_id);
-    RegisterMasterPort(port_name, &sector_mop_interface[sector_id], DEC_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
+    RegisterAxisMasterPort(port_name, &sector_mop_interface[sector_id], DEC_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
 
     port_name = _name + ".evrf_mop_interface_" + std::to_string(sector_id);
-    RegisterMasterPort(port_name, &evrf_mop_interface[sector_id], DEC_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
+    RegisterAxisMasterPort(port_name, &evrf_mop_interface[sector_id], DEC_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
 
     port_name = _name + ".mfu0_mop_interface_" + std::to_string(sector_id);
-    RegisterMasterPort(port_name, &mfu0_mop_interface[sector_id], DEC_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
+    RegisterAxisMasterPort(port_name, &mfu0_mop_interface[sector_id], DEC_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
 
     port_name = _name + ".mfu1_mop_interface_" + std::to_string(sector_id);
-    RegisterMasterPort(port_name, &mfu1_mop_interface[sector_id], DEC_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
+    RegisterAxisMasterPort(port_name, &mfu1_mop_interface[sector_id], DEC_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
   }
   port_name = _name + ".ld_mop_interface";
-  RegisterMasterPort(port_name, &ld_mop_interface, DEC_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
+  RegisterAxisMasterPort(port_name, &ld_mop_interface, DEC_INSTRUCTION_INTERFACE_DATAW, INSTRUCTION_INTERFACE);
 }

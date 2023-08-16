@@ -235,7 +235,6 @@ void custom_feature_interaction::Tick() {
       if (axis_interface[ch_id].tready.read() &&
           axis_interface[ch_id].tvalid.read()) {
         _output_fifos[ch_id].pop();
-        sim_trace_probe.record_event(5, 5);
       }
 
       if (!_output_fifos[ch_id].empty()) {

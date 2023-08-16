@@ -281,7 +281,6 @@ void mfu::Tick() {
         if (current_tag.read() == MAX_TAG - 1) sim_log.log(error, "Tag value is overflowing!", this->name());
         current_tag.write(current_tag.read() + 1);
         sim_log.log(sim_trace, "Tag is updated to " + std::to_string(current_tag.read() + 1), this->name());
-        sim_trace_probe.record_event((sector_id * (NUM_PIPELINE_BLOCKS - 1)) + 2 + mfu_id, TAG_UPDATE_TRACE);
       }
     }
 
@@ -321,15 +320,6 @@ void mfu::Tick() {
         compute_to_ofifo_data_pipeline[stage_id][core_id].write(
             compute_to_ofifo_data_pipeline[stage_id - 1][core_id].read());
     }
-
-    if (inst_fifo_ren.read())
-      sim_trace_probe.record_event((sector_id * (NUM_PIPELINE_BLOCKS - 1)) + 2 + mfu_id, UOP_ISSUE_TRACE);
-    if (inst_valid_pipeline[MFU_PIPELINE - 1].read())
-      sim_trace_probe.record_event((sector_id * (NUM_PIPELINE_BLOCKS - 1)) + 2 + mfu_id, UOP_RETIRE_TRACE);
-    if (inst_fifo_ren.read() && inst_fifo_rdata.read().first_uop)
-      sim_trace_probe.record_event((sector_id * (NUM_PIPELINE_BLOCKS - 1)) + 2 + mfu_id, FIRST_UOP_ISSUE_TRACE);
-    if (inst_valid_pipeline[MFU_PIPELINE - 1].read() && inst_pipeline[MFU_PIPELINE - 1].read().last_uop)
-      sim_trace_probe.record_event((sector_id * (NUM_PIPELINE_BLOCKS - 1)) + 2 + mfu_id, LAST_UOP_RETIRE_TRACE);
 
     wait();
   }

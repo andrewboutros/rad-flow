@@ -158,7 +158,6 @@ void embedding_lookup::Tick() {
           _lookup_indecies_fifo[ch_id].pop();
           _base_addresses_fifo[ch_id].pop();
           _id_count[ch_id].write(_id_count[ch_id].read() + 1);
-          sim_trace_probe.record_event(0, 0);
           /*_debug_sent_request_counter++;
           std::cout << module_name << ": Sent AR transaction "
                     << _debug_sent_request_counter << " @ channel " << ch_id

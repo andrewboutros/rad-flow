@@ -66,7 +66,7 @@ void NoCTransactionTelemetry::DumpStatsToFile(const std::string& filename) {
 std::vector<double> NoCTransactionTelemetry::DumpTrafficFlows(const std::string& filename, unsigned int cycle_count, 
   std::vector<std::vector<std::set<std::string>>>& node_module_names) {
   double sim_driver_period = radsim_config.GetDoubleKnob("sim_driver_period") / 1000000000.0;
-  unsigned int num_nocs = radsim_config.GetIntKnob("num_nocs");
+  unsigned int num_nocs = radsim_config.GetIntKnob("noc_num_nocs");
   std::vector<std::vector<std::unordered_map<unsigned int, unsigned int>>> traffic_bits(num_nocs);
   std::vector<std::vector<std::unordered_map<unsigned int, unsigned int>>> traffic_num_hops(num_nocs);
   for (unsigned int noc_id = 0; noc_id < num_nocs; noc_id++) {
@@ -181,41 +181,32 @@ void SimLog::log(fatal_t, std::string msg, sc_module_name module, bool log_to_fi
 
 SimTraceRecording::SimTraceRecording() {
   num_traces_monitored = 0;
-  num_modules_monitored = 0;
 }
 
-SimTraceRecording::SimTraceRecording(std::string filename, unsigned int num_traces, unsigned int num_modules) {
+SimTraceRecording::SimTraceRecording(std::string filename, unsigned int num_traces) {
   num_traces_monitored = num_traces;
-  num_modules_monitored = num_modules;
   trace_filename = filename;
   trace_cycles.resize(num_traces_monitored);
-  for (unsigned int trace_id = 0; trace_id < num_traces_monitored; trace_id++)
-    trace_cycles[trace_id].resize(num_modules_monitored);
 }
 
 SimTraceRecording::~SimTraceRecording() {}
 
-void SimTraceRecording::SetTraceRecordingSettings(std::string filename, unsigned int num_traces, unsigned int num_modules) {
+void SimTraceRecording::SetTraceRecordingSettings(std::string filename, unsigned int num_traces) {
   num_traces_monitored = num_traces;
-  num_modules_monitored = num_modules;
   trace_filename = filename;
   trace_cycles.resize(num_traces_monitored);
-  for (unsigned int trace_id = 0; trace_id < num_traces_monitored; trace_id++)
-    trace_cycles[trace_id].resize(num_modules_monitored);
 }
 
-void SimTraceRecording::record_event(unsigned int module_id, unsigned int trace_id) {
-  trace_cycles[trace_id][module_id].push_back(GetSimulationCycle());
+void SimTraceRecording::record_event(unsigned int trace_id) {
+  trace_cycles[trace_id].push_back(GetSimulationCycle());
 }
 
 void SimTraceRecording::dump_traces() {
   std::ofstream trace_file;
   trace_file.open(trace_filename);
-  for (unsigned int module_id = 0; module_id < num_modules_monitored; module_id++) {
-    for (unsigned int trace_id = 0; trace_id < num_traces_monitored; trace_id++) {
-      for (unsigned int i = 0; i < trace_cycles[trace_id][module_id].size(); i++)
-        trace_file << trace_cycles[trace_id][module_id][i] << " ";
-      trace_file << "\n";
-    }
+  for (unsigned int trace_id = 0; trace_id < num_traces_monitored; trace_id++) {
+    for (unsigned int i = 0; i < trace_cycles[trace_id].size(); i++)
+      trace_file << trace_cycles[trace_id][i] << " ";
+    trace_file << "\n";
   }
 }

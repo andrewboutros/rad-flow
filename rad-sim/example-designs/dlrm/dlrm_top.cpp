@@ -8,7 +8,7 @@ dlrm_top::dlrm_top(const sc_module_name &name) : sc_module(name) {
   unsigned int embedding_lookup_fifos_depth = 16;
   unsigned int feature_interaction_fifos_depth = 64;
   unsigned int num_mem_controllers =
-      radsim_config.GetIntKnob("dram_controllers");
+      radsim_config.GetIntKnob("dram_num_controllers");
   assert(num_mem_controllers == mem_channels.size());
   unsigned int total_mem_channels = 0;
   for (auto &num_channels : mem_channels) {
@@ -120,7 +120,7 @@ dlrm_top::dlrm_top(const sc_module_name &name) : sc_module(name) {
       "/compiler/embedding_tables/channel_";
   for (unsigned int ctrl_id = 0; ctrl_id < num_mem_controllers; ctrl_id++) {
     double mem_clk_period =
-        radsim_config.GetDoubleVectorKnob("dram_controller_period", ctrl_id);
+        radsim_config.GetDoubleVectorKnob("dram_clk_periods", ctrl_id);
     module_name_str = "ext_mem_" + to_string(ctrl_id) + "_clk";
     std::strcpy(module_name, module_name_str.c_str());
     mem_clks[ctrl_id] = new sc_clock(module_name, mem_clk_period, SC_NS);
