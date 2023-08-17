@@ -16,7 +16,7 @@ sc_flit::sc_flit() {
 
 sc_flit::sc_flit(bool head, bool tail, Flit::FlitType type, unsigned int vc_id,
                  const sc_uint<NOC_LINKS_DEST_WIDTH> &dest,
-                 const sc_bv<NOC_LINKS_DEST_INFC_WIDTH> &dest_interface,
+                 const sc_bv<NOC_LINKS_DEST_INTERFACE_WIDTH> &dest_interface,
                  const sc_bv<NOC_LINKS_PACKETID_WIDTH> &packet_id,
                  unsigned int sim_transaction_id) {
   _head = head;

@@ -132,26 +132,26 @@ void axis_master_fifo_adapter<fifo_type, bv_type>::insert_payload_into_buffer() 
 
     // Set different fields of the AXI-stream transfer. In case of an NPU writeback interface, the
     // destination ID is part of the payload and write address is specified in the TUSER field.
-    AXIS_TDATA(buffer_wdata) = payload_bitvector.range(end_idx - 1, start_idx);
-    AXIS_TSTRB(buffer_wdata) = (int)pow(2, AXIS_STRBW) - 1;
-    AXIS_TKEEP(buffer_wdata) = (int)pow(2, AXIS_KEEPW) - 1;
+    TDATA(buffer_wdata) = payload_bitvector.range(end_idx - 1, start_idx);
+    TSTRB(buffer_wdata) = (int)pow(2, AXIS_STRBW) - 1;
+    TKEEP(buffer_wdata) = (int)pow(2, AXIS_KEEPW) - 1;
     if (interface_type == MVU_WRITEBACK_INTERFACE) {
       TUSER_FLAG(buffer_wdata) = payload_bitvector.get_bit(flag_idx);
       TUSER_ADDR(buffer_wdata) = payload_bitvector.range(addr_start_idx + VRF_ADDRW - 1, addr_start_idx);
       TUSER_VRFID(buffer_wdata) = payload_bitvector.range(vrf_id_start_idx + VRF_WB_SELW - 1, vrf_id_start_idx);
-      AXIS_TDEST(buffer_wdata) = radsim_design.GetPortDestinationID(destination_port);
+      TDEST(buffer_wdata) = radsim_design.GetPortDestinationID(destination_port);
     } else if (interface_type == VEW_WRITEBACK_INTERFACE) {
       TUSER_FLAG(buffer_wdata) = payload_bitvector.get_bit(flag_idx);
       TUSER_ADDR(buffer_wdata) = payload_bitvector.range(addr_start_idx + VRF_ADDRW - 1, addr_start_idx);
       TUSER_VRFID(buffer_wdata) = payload_bitvector.range(vrf_id_start_idx + VRF_WB_SELW - 1, vrf_id_start_idx);
-      AXIS_TDEST(buffer_wdata) = payload_bitvector.range(block_id_start_idx + BLOCK_WB_SELW - 1, block_id_start_idx);
+      TDEST(buffer_wdata) = payload_bitvector.range(block_id_start_idx + BLOCK_WB_SELW - 1, block_id_start_idx);
     } else {
       TUSER_FLAG(buffer_wdata) = 0;
       TUSER_ADDR(buffer_wdata) = 0;
-      AXIS_TDEST(buffer_wdata) = radsim_design.GetPortDestinationID(destination_port);
+      TDEST(buffer_wdata) = radsim_design.GetPortDestinationID(destination_port);
     }
-    AXIS_TID(buffer_wdata) = radsim_design.GetPortInterfaceID(destination_port);
-    AXIS_TLAST(buffer_wdata) = (transfer_id == transfers_per_axis_packet - 1);
+    TID(buffer_wdata) = radsim_design.GetPortInterfaceID(destination_port);
+    TLAST(buffer_wdata) = (transfer_id == transfers_per_axis_packet - 1);
     buffer.push(buffer_wdata);
     assert(buffer.size() <= buffer_capacity);
     //std::cout << "Destination Port " << destination_port << " is at node " << radsim_design.GetPortDestinationID(destination_port) << " interface " << radsim_design.GetPortInterfaceID(destination_port) << std::endl;
@@ -186,13 +186,13 @@ void axis_master_fifo_adapter<fifo_type, bv_type>::Tick() {
       pushed_into_buffer = true;
       axis_port.tvalid.write(true);
       sc_bv<AXIS_TRANSACTION_WIDTH> buffer_front = buffer.front();
-      axis_port.tdata.write(AXIS_TDATA(buffer_front));
-      axis_port.tstrb.write(AXIS_TSTRB(buffer_front));
-      axis_port.tkeep.write(AXIS_TKEEP(buffer_front));
-      axis_port.tuser.write(AXIS_TUSER(buffer_front));
-      axis_port.tdest.write(AXIS_TDEST(buffer_front));
-      axis_port.tid.write(AXIS_TID(buffer_front));
-      if (AXIS_TLAST(buffer_front) == 1)
+      axis_port.tdata.write(TDATA(buffer_front));
+      axis_port.tstrb.write(TSTRB(buffer_front));
+      axis_port.tkeep.write(TKEEP(buffer_front));
+      axis_port.tuser.write(TUSER(buffer_front));
+      axis_port.tdest.write(TDEST(buffer_front));
+      axis_port.tid.write(TID(buffer_front));
+      if (TLAST(buffer_front) == 1)
         axis_port.tlast.write(true);
       else
         axis_port.tlast.write(false);
@@ -208,13 +208,13 @@ void axis_master_fifo_adapter<fifo_type, bv_type>::Tick() {
       axis_port.tvalid.write(!buffer.empty());
       if (!buffer.empty()) {
         sc_bv<AXIS_TRANSACTION_WIDTH> buffer_front = buffer.front();
-        axis_port.tdata.write(AXIS_TDATA(buffer_front));
-        axis_port.tstrb.write(AXIS_TSTRB(buffer_front));
-        axis_port.tkeep.write(AXIS_TKEEP(buffer_front));
-        axis_port.tuser.write(AXIS_TUSER(buffer_front));
-        axis_port.tdest.write(AXIS_TDEST(buffer_front));
-        axis_port.tid.write(AXIS_TID(buffer_front));
-        if (AXIS_TLAST(buffer_front) == 1)
+        axis_port.tdata.write(TDATA(buffer_front));
+        axis_port.tstrb.write(TSTRB(buffer_front));
+        axis_port.tkeep.write(TKEEP(buffer_front));
+        axis_port.tuser.write(TUSER(buffer_front));
+        axis_port.tdest.write(TDEST(buffer_front));
+        axis_port.tid.write(TID(buffer_front));
+        if (TLAST(buffer_front) == 1)
           axis_port.tlast.write(true);
         else
           axis_port.tlast.write(false);
