@@ -214,13 +214,6 @@ void evrf::Tick() {
       }
     }
 
-    if (inst_fifo_ren.read()){
-      //std::cout << this->name() << " read evrf inst" << std::endl;
-    }
-    if (vrf_to_ofifo_valid_pipeline[EVRF_RF_TO_OFIFO_PIPELINE - 1][0].read()){
-      //std::cout << this->name() << " wrote to evrf ofifo" << std::endl;
-    }
-
     wait();
   }
 }
