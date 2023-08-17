@@ -18,3 +18,5 @@ rad-sim/logs/*.json
 rad-sim/example-designs/dlrm/compiler/reports
 rad-sim/example-designs/dlrm/compiler/*.html
 rad-sim/example-designs/mvm/compiler/weight_mifs/*.mif
+
+docs/_build/
