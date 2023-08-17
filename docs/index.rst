@@ -3,27 +3,50 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to RAD Flow's documentation!
-====================================
+The RAD Flow
+=============
+
+Introduction
+------------
+
+The RAD flow is an open source academic architecture exploration and evaluation flow for novel beyond-FPGA 
+reconfigurable acceleration devices (RADs). These devices incorporate conventional FPGA fabrics, several coarse-grained 
+domain-specialized accelerator blocks, and high-performance packet-switched networks-on-chip (NoCs) for system-level 
+communication. The flow consists of the following tools:
+
+- **RAD-Sim:** A SystemC simulator for rapid design space exploration and architecture-application co-design
+
+- **RAD-Gen:** A push button tool for silicon area/timing/power implementation results of hard (ASIC) RAD components, FPGA fabric circuitry, and different 3D considerations (Under development)
+
+.. image:: _static/radflow.png
+  :width: 1000
+  :alt: RAD Flow Overview
+
+How to Cite
+-----------
+
+The following paper may be used as a general citation for RAD-Sim:
+
+.. code-block:: bibtex
+
+   @article{rad-sim,
+      title={{Architecture and Application Co-Design for Beyond-FPGA Reconfigurable Acceleration Devices}},
+      author={Boutros, Andrew and Nurvitadhi, Eriko and Betz, Vaughn},
+      journal={IEEE Access},
+      volume={10},
+      pages={95067--95082},
+      year={2022},
+      publisher={IEEE}
+   }
 
 .. toctree::
-   Home <self>
-   installation
-   notes
+   :caption: RAD-Sim Documentation
+   :maxdepth: 3
 
-In the `toctree`, you should list all the pages you want to appear in the sidebar and also the table of contents. This tells ReadTheDocs what pages to render.
+   rad-sim-quick-start
 
-You may be interested in the :doc:`installation` section (doc reference).
+.. toctree::
+   :caption: RAD-Gen Documentation
+   :maxdepth: 3
 
-We can also do inline references too. For example, :ref:`this is a link to the fourth paragraph <fourth_paragraph_index>`.
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla bibendum dui eget felis pretium gravida. Aliquam sollicitudin arcu sed erat gravida sollicitudin. Nulla lacus augue, fringilla volutpat elit eu, blandit egestas arcu. Cras condimentum odio sed lorem condimentum sagittis. Etiam placerat erat vitae arcu pharetra, nec maximus orci finibus. Vestibulum placerat, est placerat vehicula gravida, leo nulla elementum mi, non blandit sem ante aliquam erat. Nullam dictum accumsan tellus non dapibus. Mauris eu porta lorem. Nunc pulvinar eros massa, vel dapibus leo bibendum nec. Phasellus interdum urna eu odio suscipit porta. Vestibulum hendrerit aliquet ligula eget gravida. Suspendisse elementum malesuada dolor ut faucibus. In id condimentum nunc. Morbi consectetur in est sit amet iaculis. Curabitur blandit et purus in vehicula. Nullam ac dolor nisi.
-
-Nullam dignissim dolor mollis augue interdum rutrum. Suspendisse consequat, neque sed convallis feugiat, lectus orci eleifend lectus, in venenatis metus nibh sit amet ligula. Donec sapien sem, suscipit ac eleifend quis, venenatis eget odio. Vestibulum tempus scelerisque euismod. Mauris ultrices consequat sem, ut pharetra ex suscipit vitae. Aenean finibus nunc felis, sed aliquam turpis blandit vitae. Etiam tristique aliquam tortor, eu iaculis turpis elementum ac. Duis gravida risus non consectetur ornare. Morbi eu ipsum rhoncus felis ullamcorper aliquet. Nunc tempor aliquet tortor, quis euismod dui elementum et.
-
-Pellentesque finibus varius lorem, a blandit urna porttitor at. Curabitur congue quis augue mollis fermentum. Mauris id nisi porta, dignissim velit eget, tempor enim. Nunc sit amet maximus purus, eu egestas lectus. Nam sed augue magna. Maecenas ac blandit purus. Integer tellus lacus, maximus id faucibus id, fermentum eget mi. Nullam a dapibus ex. Nam vestibulum lobortis leo, sit amet bibendum est placerat vitae. Aliquam quis ullamcorper leo.
-
-.. _fourth_paragraph_index:
-Donec scelerisque fringilla hendrerit. Ut id ex ut felis posuere tempor. Etiam bibendum accumsan neque quis porta. Quisque congue, purus id aliquam ultrices, est velit dignissim tellus, sit amet interdum nibh turpis quis quam. Maecenas suscipit, arcu sit amet egestas congue, nibh lorem molestie erat, a finibus odio eros id lacus. Fusce viverra sagittis nibh sit amet convallis. Nulla purus nisl, pretium vel nulla ut, porttitor aliquam turpis. Nulla imperdiet turpis at malesuada scelerisque.
-
-Maecenas fermentum lacinia varius. Sed elementum mi nisl, eget hendrerit lacus imperdiet malesuada. Nullam suscipit et tellus ac feugiat. Cras mollis diam sed urna rutrum rutrum. Nullam tempus maximus ipsum. Integer non nibh sodales, pretium tortor sed, dapibus nunc. Cras sit amet sodales risus, non dictum lorem. Nullam sagittis consectetur mi, aliquam dapibus enim malesuada ac. Pellentesque vel condimentum neque, vitae malesuada lorem. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Curabitur nec tincidunt quam.
+   rad-gen-quick-start
