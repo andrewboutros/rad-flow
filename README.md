@@ -1,6 +1,6 @@
 # RAD Flow
 
-![CI Status](https://github.com/andrewboutros/rad-flow/.github/workflows/rad_sim_ci.yml/badge.svg)
+![CI Status](https://github.com/andrewboutros/rad-flow/actions/workflows/rad_sim_ci.yml/badge.svg)
 
 ## Documentation
 The flow's full documentation can be found [here](https://rad-flow.readthedocs.io/en/latest/index.html).
