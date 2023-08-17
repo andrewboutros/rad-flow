@@ -187,9 +187,9 @@ def generate_radsim_params_header(radsim_header_params):
     radsim_params_header_file.write("#define NOC_LINKS_DEST_WIDTH      " + str(max_destination_bitwidth) + "\n")
 
     dest_interface_bitwidth = int(math.ceil(math.log(radsim_header_params["noc_max_num_router_dest_interfaces"], 2)))
-    radsim_params_header_file.write("#define NOC_LINKS_DEST_INFC_WIDTH " + str(dest_interface_bitwidth) + "\n")
+    radsim_params_header_file.write("#define NOC_LINKS_DEST_INTERFACE_WIDTH " + str(dest_interface_bitwidth) + "\n")
     radsim_params_header_file.write("#define NOC_LINKS_WIDTH           (NOC_LINKS_PAYLOAD_WIDTH + NOC_LINKS_VCID_WIDTH \
-        + NOC_LINKS_PACKETID_WIDTH + NOC_LINKS_DEST_WIDTH + NOC_LINKS_DEST_INFC_WIDTH)\n\n")
+        + NOC_LINKS_PACKETID_WIDTH + NOC_LINKS_DEST_WIDTH + NOC_LINKS_DEST_INTERFACE_WIDTH)\n\n")
 
     radsim_params_header_file.write("// AXI Parameters\n")
     radsim_params_header_file.write("#define AXIS_MAX_DATAW " + 
@@ -224,6 +224,7 @@ def generate_radsim_params_header(radsim_header_params):
     radsim_params_header_file.write("#define AXIS_TID(t)   t.range(AXIS_MAX_DATAW + AXIS_USERW + AXIS_STRBW + AXIS_KEEPW + AXIS_IDW, AXIS_MAX_DATAW + AXIS_USERW + AXIS_STRBW + AXIS_KEEPW + 1)\n")
     radsim_params_header_file.write("#define AXIS_TDEST(t) t.range(AXIS_MAX_DATAW + AXIS_USERW + AXIS_STRBW + AXIS_KEEPW + AXIS_IDW + AXIS_DESTW, AXIS_MAX_DATAW + AXIS_USERW + AXIS_STRBW + AXIS_KEEPW + AXIS_IDW + 1)\n")
     radsim_params_header_file.write("#define AXIS_TUSER_RANGE(t, s, e) t.range(1 + e, 1 + s)\n")
+    radsim_params_header_file.write("#define AXIS_TRANSACTION_WIDTH (AXIS_MAX_DATAW + AXIS_STRBW + AXIS_KEEPW + AXIS_IDW + AXIS_DESTW + AXIS_USERW + 1)\n")
     radsim_params_header_file.write("#define AXI4_PAYLOADW (AXI4_MAX_DATAW + AXI4_RESPW + AXI4_USERW + 1)\n")
     radsim_params_header_file.write("#define AXI4_LAST(t)  t.range(0, 0)\n")
     radsim_params_header_file.write("#define AXI4_USER(t)  t.range(AXI4_USERW, 1)\n")

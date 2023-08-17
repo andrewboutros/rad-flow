@@ -12,8 +12,8 @@ from npu_layers import *
 ###### START OF MODEL DEFINITION ######
 
 # Define constants
-INPUT_SIZE = 1792
-L1_SIZE = 1792
+INPUT_SIZE = 512
+L1_SIZE = 512
 
 # Define model architecture using Keras Sequential Model
 model = NPUSequential([

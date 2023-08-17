@@ -2,31 +2,24 @@
 
 ![CI Status](https://github.com/andrewboutros/rad-flow/.github/workflows/rad_sim_ci.yml/badge.svg)
 
-## Introduction
-The RAD flow is an open source academic architecture exploration and evaluation flow for novel beyond-FPGA reconfigurable acceleration devices (RADs).
-These devices incorporate conventional FPGA fabrics, several coarse-grained domain-specialized accelerator blocks, and high-performance packet-switched networks-on-chip (NoCs) for system-level communication.
-The flow consists of the following tools:
-- **RAD-Sim** for rapid design space exploration and architecture-application co-design
-- **RAD-Gen** for silicon area/timing/power implementation results of hard (ASIC) RAD components **(Under development)**
-
-<img src="https://drive.google.com/uc?export=view&id=1m8ChChTQlDjKXf8buyGt05LwFYkPiHV6" width="1000"/>
-
 ## Documentation
-The flow's full documentation can be found [here](https://www.notion.so/RAD-Sim-Documentation-7adde413148a4286bc5cc85648564672).
+The flow's full documentation can be found [here](https://rad-flow.readthedocs.io/en/latest/index.html).
 
 ## How to Cite
 The following paper may be used as a general citation for RAD-Sim:
 
-A. Boutros, E. Nurvitadhi, and V. Betz, "RAD-Sim: Rapid Architecture Exploration for Novel Reconfigurable Acceleration Devices", International Conference on Field Programmable Logic and Applications (FPL), 2022
+A. Boutros, E. Nurvitadhi, and V. Betz, "Architecture and Application Co-Design for Beyond-FPGA Reconfigurable Acceleration Devices", IEEE Access, 2022
 
 Bibtex:
 ```
-@inproceedings{radsim,
-  title={{RAD-Sim: Rapid Architecture Exploration for Novel Reconfigurable Acceleration Devices}},
-  author={Boutros, Andrew and Nurvitadhi, Eriko and Betz, Vaughn},
-  booktitle={International Conference on Field Programmable Logic and Applications (FPL)},
-  year={2022},
-  organization={IEEE}
+@article{rad-sim,
+   title={{Architecture and Application Co-Design for Beyond-FPGA Reconfigurable Acceleration Devices}},
+   author={Boutros, Andrew and Nurvitadhi, Eriko and Betz, Vaughn},
+   journal={IEEE Access},
+   volume={10},
+   pages={95067--95082},
+   year={2022},
+   publisher={IEEE}
 }
 ```
 
