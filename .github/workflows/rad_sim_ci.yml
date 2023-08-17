@@ -1,0 +1,36 @@
+name: RAD-Sim CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup systemc
+      run: ./scripts/setup_system_c.sh
+    - name: setup anaconda env
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        activate-environment: radflow
+        environment-file: rad-flow-env.yml
+        python-version: 3.8
+    - name: build rad-sim
+      run: |
+        cd rad-sim
+        python config.py mlp
+    - name: generate test cases
+      run: |
+        cd rad-sim/example-designs/mlp/compiler
+        python gen_testcase.py 4 512 512 512 256 128 4 3 2 2
+    - name: run tests
+      run: |
+        cd rad-sim/build
+        make run
