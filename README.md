@@ -1,14 +1,5 @@
 # RAD Flow
 
-## Introduction
-The RAD flow is an open source academic architecture exploration and evaluation flow for novel beyond-FPGA reconfigurable acceleration devices (RADs).
-These devices incorporate conventional FPGA fabrics, several coarse-grained domain-specialized accelerator blocks, and high-performance packet-switched networks-on-chip (NoCs) for system-level communication.
-The flow consists of the following tools:
-- **RAD-Sim** for rapid design space exploration and architecture-application co-design
-- **RAD-Gen** for silicon area/timing/power implementation results of hard (ASIC) RAD components **(Under development)**
-
-<img src="https://drive.google.com/uc?export=view&id=1m8ChChTQlDjKXf8buyGt05LwFYkPiHV6" width="1000"/>
-
 ## Documentation
 The flow's full documentation can be found [here](https://rad-flow.readthedocs.io/en/latest/index.html).
 
