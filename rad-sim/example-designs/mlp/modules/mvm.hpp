@@ -18,7 +18,7 @@
 #define DOT_PRODUCTS 16
 #define MEM_DEPTH 1025
 
-class mvm : public radsim_module {
+class mvm : public RADSimModule {
  private:
   std::string module_name;
   unsigned int mvm_id;

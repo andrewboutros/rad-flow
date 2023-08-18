@@ -22,7 +22,7 @@ private:
       _port_placement;
   std::unordered_map<std::string, std::pair<unsigned int, unsigned int>>
       _module_clk_settings;
-  std::unordered_map<std::string, radsim_module *> _design_modules;
+  std::unordered_map<std::string, RADSimModule *> _design_modules;
   std::vector<std::unordered_map<unsigned int, bool>> _node_id_is_aximm;
   std::vector<std::unordered_map<unsigned int, std::vector<std::string>>>
       _node_id_ports_list;
@@ -57,7 +57,7 @@ public:
   ~RADSimDesignContext();
   void ParseNoCPlacement(const std::string &placement_filename);
   void ParseClockSettings(const std::string &clks_filename);
-  void RegisterModule(std::string module_name, radsim_module *module_ptr);
+  void RegisterModule(std::string module_name, RADSimModule *module_ptr);
   void BuildDesignContext(const std::string &placement_filename,
                           const std::string &clks_filename);
   void CreateSystemNoCs(sc_in<bool> &rst);

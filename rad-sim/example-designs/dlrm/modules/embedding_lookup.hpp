@@ -10,7 +10,7 @@
 #include <systemc.h>
 #include <vector>
 
-class embedding_lookup : public radsim_module {
+class embedding_lookup : public RADSimModule {
 private:
   std::vector<std::queue<uint64_t>>
       _lookup_indecies_fifo; // Lookup indecies FIFO per channel

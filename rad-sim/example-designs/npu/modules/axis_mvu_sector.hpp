@@ -9,7 +9,7 @@
 #include <radsim_module.hpp>
 #include <vector>
 
-class axis_mvu_sector : public radsim_module {
+class axis_mvu_sector : public RADSimModule {
  private:
   std::string _name;
   unsigned int _sector_id;

@@ -1,7 +1,7 @@
 #include "collector.hpp"
 
 collector::collector(const sc_module_name &name)
-    : radsim_module(name), rst("rst"), data_fifo_rdy("data_fifo_rdy"),
+    : RADSimModule(name), rst("rst"), data_fifo_rdy("data_fifo_rdy"),
       data_fifo_ren("data_fifo_ren"), data_fifo_rdata("data_fifo_rdata") {
 
   module_name = name;

@@ -1,7 +1,7 @@
 #include "dispatcher.hpp"
 
 dispatcher::dispatcher(const sc_module_name &name, unsigned int id)
-    : radsim_module(name), rst("rst"), data_fifo_rdy("data_fifo_rdy"),
+    : RADSimModule(name), rst("rst"), data_fifo_rdy("data_fifo_rdy"),
       data_fifo_wen("data_fifo_wen"), data_fifo_wdata("data_fifo_wdata") {
 
   module_name = name;

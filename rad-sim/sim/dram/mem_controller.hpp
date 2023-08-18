@@ -15,7 +15,7 @@
 #include <unordered_map>
 #include <vector>
 
-class mem_controller : public radsim_module {
+class mem_controller : public RADSimModule {
 private:
   // The DRAMsim memory system model
   dramsim3::MemorySystem *_dramsim;

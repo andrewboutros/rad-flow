@@ -1,7 +1,7 @@
 #include <requester.hpp>
 
 requester::requester(const sc_module_name &name, unsigned int fifo_depth)
-    : radsim_module(name) {
+    : RADSimModule(name) {
 
   req_fifo_depth = fifo_depth;
   num_received_responses = 0;

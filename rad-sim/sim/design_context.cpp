@@ -46,7 +46,7 @@ RADSimDesignContext::RADSimDesignContext() {
 
 RADSimDesignContext::~RADSimDesignContext() {}
 
-bool IsSlavePort(std::string &port_name, radsim_module *module_ptr) {
+bool IsSlavePort(std::string &port_name, RADSimModule *module_ptr) {
   bool is_axis_slave = (module_ptr->_axis_slave_ports.find(port_name) !=
                         module_ptr->_axis_slave_ports.end());
   bool is_aximm_slave = (module_ptr->_aximm_slave_ports.find(port_name) !=
@@ -165,7 +165,7 @@ void RADSimDesignContext::ParseNoCPlacement(
 
       int port_noc_placement = std::stoi(port_noc_placement_str);
       int port_node_placement = std::stoi(port_node_placement_str);
-      radsim_module *module_ptr = _design_modules[module_name];
+      RADSimModule *module_ptr = _design_modules[module_name];
 
       if (port_axi_type == "axis") {
         // Loop over all the slave ports of this module
@@ -315,7 +315,7 @@ void RADSimDesignContext::ParseClockSettings(const std::string &clks_filename) {
 }
 
 void RADSimDesignContext::RegisterModule(std::string module_name,
-                                         radsim_module *module_ptr) {
+                                         RADSimModule *module_ptr) {
   if (_design_modules.find(module_name) != _design_modules.end())
     sim_log.log(error, "Module with the same name \"" + module_name +
                            "\" already exists!");
@@ -361,7 +361,7 @@ void RADSimDesignContext::BuildDesignContext(
       for (unsigned int port_id = 0; port_id < port_list.size(); port_id++) {
         std::string port_name = port_list[port_id];
         module_name = GetModuleNameFromPortName(port_name);
-        radsim_module *module_ptr = _design_modules[module_name];
+        RADSimModule *module_ptr = _design_modules[module_name];
         bool is_slave = IsSlavePort(port_name, module_ptr);
         if (!is_slave) {
           slave_port_names.push_back(port_name);
@@ -428,7 +428,7 @@ void RADSimDesignContext::BuildDesignContext(
   for (auto module_it = _design_modules.begin();
        module_it != _design_modules.end(); module_it++) {
     std::string module_name = module_it->first;
-    radsim_module *module_ptr = module_it->second;
+    RADSimModule *module_ptr = module_it->second;
     unsigned int module_clk_idx = _module_clk_settings[module_name].second;
     module_ptr->clk(*_module_clks[module_clk_idx]);
   }
@@ -482,7 +482,7 @@ void RADSimDesignContext::ConnectModulesToNoC() {
 
   for (auto module_it = _design_modules.begin();
        module_it != _design_modules.end(); module_it++) {
-    radsim_module *module_ptr = module_it->second;
+    RADSimModule *module_ptr = module_it->second;
     // std::cout << "MODULE " << module_ptr->name() << std::endl;
 
     // Connect AXI-S Slave ports of the module

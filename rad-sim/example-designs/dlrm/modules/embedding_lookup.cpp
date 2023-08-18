@@ -4,7 +4,7 @@ embedding_lookup::embedding_lookup(
     const sc_module_name &name, unsigned int dataw,
     std::vector<unsigned int> &num_mem_channels_per_controller,
     unsigned int fifo_depth)
-    : radsim_module(name) {
+    : RADSimModule(name) {
 
   _total_num_channels = 0;
   unsigned int ctrl_id = 0;

@@ -1,7 +1,7 @@
 #include <axis_vector_elementwise.hpp>
 
 axis_vector_elementwise::axis_vector_elementwise(const sc_module_name& name, unsigned int thread_id)
-    : radsim_module(name),
+    : RADSimModule(name),
       evrf_ififo_rdy_signal("evrf_ififo_rdy_signal"),
       evrf_ififo_ren_signal("evrf_ififo_ren_signal"),
       evrf_ififo_rdata_signal("evrf_ififo_rdata_signal"),

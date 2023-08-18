@@ -10,7 +10,7 @@
 #include "mvm.hpp"
 #include "radsim_module.hpp"
 
-class dispatcher : public radsim_module {
+class dispatcher : public RADSimModule {
  private:
   std::string module_name;
   unsigned int dispatcher_id;

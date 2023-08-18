@@ -51,7 +51,7 @@ feature_interaction::feature_interaction(const sc_module_name &name,
                                          unsigned int fifos_depth,
                                          unsigned int num_output_channels,
                                          std::string &instructions_file)
-    : radsim_module(name) {
+    : RADSimModule(name) {
 
   _fifos_depth = fifos_depth;
   _afifo_width_ratio_in = 32 / 4;

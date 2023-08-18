@@ -1,7 +1,7 @@
 Quick Start Guide
 =================
 
-Installing C++ compiler and CMake
+Installing C++ Compiler and CMake
 ---------------------------------
 Building RAD-Sim requires a C++ compiler and CMake (3.19 or higher), so make sure these are installed on your system or install them using the following command:
 

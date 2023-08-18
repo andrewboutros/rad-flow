@@ -20,7 +20,7 @@ struct custom_feature_interaction_inst {
   std::vector<bool> pop_fifo;
 };
 
-class custom_feature_interaction : public radsim_module {
+class custom_feature_interaction : public RADSimModule {
 private:
   unsigned int _fifos_depth; // Depth of input/output FIFOs
   std::vector<custom_feature_interaction_inst> _instructions; // Instruction mem

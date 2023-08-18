@@ -10,7 +10,7 @@
 #include "mvm.hpp"
 #include "radsim_module.hpp"
 
-class collector : public radsim_module {
+class collector : public RADSimModule {
  private:
   std::string module_name;
 

@@ -1,7 +1,7 @@
 #include "axis_mvu_sector_chain.hpp"
 
 axis_mvu_sector_chain::axis_mvu_sector_chain(const sc_module_name& name, unsigned int sector_id)
-    : radsim_module(name),
+    : RADSimModule(name),
       ofifo_rdy_signal("ofifo_rdy_signal"),
       ofifo_ren_signal("ofifo_ren_signal"),
       ofifo_rdata_signal("ofifo_rdata_signal"),

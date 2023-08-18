@@ -10,7 +10,7 @@
 #include <systemc.h>
 #include <vector>
 
-class responder : public radsim_module {
+class responder : public RADSimModule {
 private:
   std::queue<uint64_t> req_waddr_fifo; // FIFO to store write request addresses
   std::queue<sc_bv<DATAW>> req_wdata_fifo; // FIFO to store write request data

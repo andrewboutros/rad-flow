@@ -11,7 +11,7 @@
 
 #define DATAW 512
 
-class requester : public radsim_module {
+class requester : public RADSimModule {
 private:
   std::queue<uint64_t> req_addr_fifo;      // FIFO to store request addresses
   std::queue<sc_bv<DATAW>> req_wdata_fifo; // FIFO to store request data

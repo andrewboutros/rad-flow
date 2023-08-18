@@ -44,6 +44,7 @@ The following paper may be used as a general citation for RAD-Sim:
    :maxdepth: 3
 
    rad-sim-quick-start
+   rad-sim-code-structure
 
 .. toctree::
    :caption: RAD-Gen Documentation
