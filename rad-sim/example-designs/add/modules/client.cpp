@@ -72,7 +72,6 @@ void client::Tick() {
 
     if (axis_client_interface.tvalid.read() &&
         axis_client_interface.tready.read()) {
-      axis_client_interface.tvalid.write(false);
       client_tdata_fifo.pop();
       std::cout << module_name << ": Sent Transaction!" << std::endl;
     }

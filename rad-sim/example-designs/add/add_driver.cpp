@@ -1,6 +1,6 @@
 #include <add_driver.hpp>
 
-#define NUM_ADDENDS 100
+#define NUM_ADDENDS 3
 
 add_driver::add_driver(const sc_module_name &name)
     : sc_module(name) {
@@ -13,7 +13,7 @@ add_driver::add_driver(const sc_module_name &name)
   for (unsigned int i = 0; i < NUM_ADDENDS; i++) {
     unsigned int r_num = std::rand() % 10 + 1;
     std::cout << r_num << " ";
-    numbers_to_send.push_back(r_num);
+    numbers_to_send.push(r_num);
   }
   std::cout << std::endl << "----------------------------------------" << std::endl;
 
@@ -31,20 +31,19 @@ void add_driver::source() {
   rst.write(false);
   wait();
 
-  unsigned int idx = 0;
-  while (idx < numbers_to_send.size()) {
-    client_tdata.write(numbers_to_send[idx]);
-    client_tlast.write(idx >= (numbers_to_send.size() - 1));
+  while (!numbers_to_send.empty()) {
+    client_tdata.write(numbers_to_send.front());
+    client_tlast.write(numbers_to_send.size() <= 1);
     client_valid.write(true);
 
     wait();
 
     if (client_valid.read() && client_ready.read()) {
-      idx++;
+      numbers_to_send.pop();
     }
   }
   client_valid.write(false);
-  std::cout << "Finished sending all numbers to adder module!" << std::endl;
+  std::cout << "Finished sending all numbers to client module!" << std::endl;
   wait();
 }
 

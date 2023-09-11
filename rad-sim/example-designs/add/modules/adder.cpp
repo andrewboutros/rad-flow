@@ -19,6 +19,7 @@ adder::~adder() {}
 
 void adder::Assign() {
   if (rst) {
+    adder_rolling_sum = 0;
     axis_adder_interface.tready.write(false);
   } else {
     // Always ready to accept the transaction
@@ -45,7 +46,7 @@ void adder::Tick() {
 
     // Print Sum and Exit
     if (t_finished.read()) {
-        std::cout << "The final sum of all the addends in the transactions is: " << adder_rolling_sum.to_uint64() << std::endl;
+        std::cout << module_name << ": The final sum of all the addends in the transactions is: " << adder_rolling_sum.to_uint64() << std::endl;
         sc_stop();
     }
     wait();

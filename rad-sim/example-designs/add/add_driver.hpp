@@ -6,11 +6,11 @@
 #include <stdlib.h>
 #include <systemc.h>
 #include <time.h>
-#include <vector>
+#include <queue>
 
 class add_driver : public sc_module {
 private:
-  std::vector<int> numbers_to_send;
+  std::queue<int> numbers_to_send;
   
 public:
   sc_in<bool> clk;
