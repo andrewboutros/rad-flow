@@ -9,7 +9,7 @@
 #include <systemc.h>
 #include <vector>
 
-#define DATAW 512
+#define DATAW 128
 
 class client : public radsim_module {
 private:
