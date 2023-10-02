@@ -9,6 +9,8 @@ adder_wrapper::adder_wrapper(const sc_module_name &name) : radsim_module(name) {
   vadder->axis_adder_interface_tready(axis_adder_interface.tready);
   vadder->axis_adder_interface_tlast(axis_adder_interface.tlast);
   vadder->axis_adder_interface_tdata(axis_adder_interface.tdata);
+  vadder->response(response);
+  vadder->response_valid(response_valid);
 
   // This function must be defined & called for any RAD-Sim module to register
   // its info for automatically connecting to the NoC

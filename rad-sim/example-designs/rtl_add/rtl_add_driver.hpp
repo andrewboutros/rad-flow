@@ -11,6 +11,7 @@
 class rtl_add_driver : public sc_module {
 private:
   std::queue<int> numbers_to_send;
+  int actual_sum;
   
 public:
   sc_in<bool> clk;
@@ -19,6 +20,8 @@ public:
   sc_out<bool> client_tlast;
   sc_out<bool> client_valid;
   sc_in<bool> client_ready;
+  sc_in<sc_bv<DATAW>> response;
+  sc_in<bool> response_valid;
 
   rtl_add_driver(const sc_module_name &name);
   ~rtl_add_driver();

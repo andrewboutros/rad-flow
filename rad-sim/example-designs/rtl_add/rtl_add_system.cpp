@@ -11,6 +11,8 @@ rtl_add_system::rtl_add_system(const sc_module_name &name, sc_clock *driver_clk_
   driver_inst->client_tlast(client_tlast_sig);
   driver_inst->client_valid(client_valid_sig);
   driver_inst->client_ready(client_ready_sig);
+  driver_inst->response(response_sig);
+  driver_inst->response_valid(response_valid_sig);
 
   // Instantiate design top-level
   dut_inst = new rtl_add_top("dut");
@@ -19,6 +21,8 @@ rtl_add_system::rtl_add_system(const sc_module_name &name, sc_clock *driver_clk_
   dut_inst->client_tlast(client_tlast_sig);
   dut_inst->client_valid(client_valid_sig);
   dut_inst->client_ready(client_ready_sig);
+  dut_inst->response(response_sig);
+  dut_inst->response_valid(response_valid_sig);
 }
 
 rtl_add_system::~rtl_add_system() {

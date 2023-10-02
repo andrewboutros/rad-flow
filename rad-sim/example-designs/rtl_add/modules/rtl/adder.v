@@ -3,7 +3,7 @@
 
 `include "static_params.vh"
  
-module adder (clk, rst, axis_adder_interface_tvalid, axis_adder_interface_tlast, axis_adder_interface_tdata, axis_adder_interface_tready);
+module adder (clk, rst, axis_adder_interface_tvalid, axis_adder_interface_tlast, axis_adder_interface_tdata, axis_adder_interface_tready, response, response_valid);
     input clk;
     input rst;
     input axis_adder_interface_tvalid;
@@ -11,6 +11,8 @@ module adder (clk, rst, axis_adder_interface_tvalid, axis_adder_interface_tlast,
     input [`AXIS_MAX_DATAW-1:0] axis_adder_interface_tdata;
 	 
 	 output reg axis_adder_interface_tready;
+     output reg [`DATAW-1:0] response;
+     output reg response_valid;
  
     reg [`DATAW-1:0] adder_rolling_sum;
     reg t_finished;
@@ -26,15 +28,20 @@ module adder (clk, rst, axis_adder_interface_tvalid, axis_adder_interface_tlast,
     end
  
     always @(posedge clk) begin
-        if (axis_adder_interface_tready && axis_adder_interface_tvalid) begin
-            $display("Adder: Received %d!", axis_adder_interface_tdata[63:0]);
-            adder_rolling_sum = adder_rolling_sum + axis_adder_interface_tdata[`DATAW-1:0];
-            t_finished = axis_adder_interface_tlast;
-        end
- 
-        if (t_finished) begin
-            $display("The final sum of all the addends in the transactions is: %d", adder_rolling_sum[63:0]);
-            $finish;
+        if (rst) begin
+            response = {`DATAW{1'b0}};
+            response_valid = 1'b0;
+        end else begin
+            if (axis_adder_interface_tready && axis_adder_interface_tvalid) begin
+                $display("Adder: Received %d!", axis_adder_interface_tdata[63:0]);
+                adder_rolling_sum = adder_rolling_sum + axis_adder_interface_tdata[`DATAW-1:0];
+                t_finished = axis_adder_interface_tlast;
+            end
+    
+            if (t_finished) begin
+                response = adder_rolling_sum;
+                response_valid = 1'b1;
+            end
         end
     end
 endmodule
