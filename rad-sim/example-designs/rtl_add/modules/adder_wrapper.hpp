@@ -13,7 +13,6 @@ class adder_wrapper : public radsim_module {
 private:
   sc_bv<DATAW> adder_rolling_sum; // Sum to store result
   sc_signal<bool> t_finished; // Signal flagging that the transaction has terminated
-  sc_signal<sc_bv<DATAW>> tempData;
 
 public:
   sc_in<bool> rst;
