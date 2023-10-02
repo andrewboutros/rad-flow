@@ -7,6 +7,7 @@ add_driver::add_driver(const sc_module_name &name)
 
   // Random Seed
   srand (time(NULL));
+  actual_sum = 0;
 
   // Generate random numbers to be added together by the adder
   std::cout << "Generating Random Numbers to be added ..." << std::endl;
@@ -14,6 +15,7 @@ add_driver::add_driver(const sc_module_name &name)
     unsigned int r_num = std::rand() % 10 + 1;
     std::cout << r_num << " ";
     numbers_to_send.push(r_num);
+    actual_sum += r_num;
   }
   std::cout << std::endl << "----------------------------------------" << std::endl;
 
@@ -48,4 +50,14 @@ void add_driver::source() {
 }
 
 void add_driver::sink() {
+  while (!response_valid.read()) {
+    wait();
+  }
+  std::cout << "Received " << response.read().to_uint64() << " sum from the adder!" << std::endl;
+  std::cout << "The actual sum is " << actual_sum << std::endl;
+
+  if (response.read() != actual_sum) std::cout << "FAILURE - Output is not matching!" << std::endl;
+  else std::cout << "SUCCESS - Output is matching!" << std::endl;
+
+  sc_stop();
 }

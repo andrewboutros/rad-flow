@@ -28,6 +28,8 @@ void adder::Assign() {
 }
 
 void adder::Tick() {
+  response_valid.write(0);
+  response.write(0);
   wait();
 
   // Always @ positive edge of the clock
@@ -46,8 +48,8 @@ void adder::Tick() {
 
     // Print Sum and Exit
     if (t_finished.read()) {
-        std::cout << module_name << ": The final sum of all the addends in the transactions is: " << adder_rolling_sum.to_uint64() << std::endl;
-        sc_stop();
+        response_valid.write(1);
+        response.write(adder_rolling_sum);
     }
     wait();
   }
