@@ -20,6 +20,8 @@ add_top::add_top(const sc_module_name &name)
   std::strcpy(module_name, module_name_str.c_str());
   adder_inst = new adder(module_name);
   adder_inst->rst(rst);
+  adder_inst->response(response);
+  adder_inst->response_valid(response_valid);
 
   radsim_design.BuildDesignContext("add.place",
                                    "add.clks");

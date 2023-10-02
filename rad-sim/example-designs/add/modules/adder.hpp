@@ -17,6 +17,8 @@ private:
 
 public:
   sc_in<bool> rst;
+  sc_out<bool> response_valid;
+  sc_out<sc_bv<DATAW>> response;
   // Interface to the NoC
   axis_slave_port axis_adder_interface;
 
