@@ -11,7 +11,7 @@
 #include <systemc.h>
 #include <vector>
 
-class mvm : public radsim_module {
+class mvm : public RADSimModule {
 private:
   std::string module_name;
   unsigned int mvm_id;

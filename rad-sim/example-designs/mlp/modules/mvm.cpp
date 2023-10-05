@@ -40,7 +40,7 @@ bool ParseInstructions(std::vector<mvm_inst> &inst_mem,
 
 mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
          const std::string &inst_filename)
-    : radsim_module(name), matrix_mem_rdata("matrix_mem_rdata", DOT_PRODUCTS),
+    : RADSimModule(name), matrix_mem_rdata("matrix_mem_rdata", DOT_PRODUCTS),
       matrix_mem_wen("matrix_mem_wen", DOT_PRODUCTS),
       ififo_pipeline("ififo_pipeline", RF_RD_LATENCY),
       reduce_pipeline("reduce_pipeline", RF_RD_LATENCY),

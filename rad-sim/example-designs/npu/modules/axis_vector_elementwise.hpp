@@ -10,7 +10,7 @@
 #include <mfu.hpp>
 #include <radsim_module.hpp>
 
-class axis_vector_elementwise : public radsim_module {
+class axis_vector_elementwise : public RADSimModule {
  private:
   std::string _name;
   unsigned int _thread_id;

@@ -1,7 +1,7 @@
 #include <design_context.hpp>
 #include <radsim_module.hpp>
 
-radsim_module::radsim_module(const sc_module_name &name) : sc_module(name) {
+RADSimModule::RADSimModule(const sc_module_name &name) : sc_module(name) {
   module_name = name;
   std::string name_str(static_cast<const char *>(name));
   radsim_design.RegisterModule(name_str, this);
@@ -11,9 +11,9 @@ radsim_module::radsim_module(const sc_module_name &name) : sc_module(name) {
   _num_noc_aximm_master_ports = 0;
 }
 
-radsim_module::~radsim_module() {}
+RADSimModule::~RADSimModule() {}
 
-void radsim_module::RegisterAxisSlavePort(std::string &port_name,
+void RADSimModule::RegisterAxisSlavePort(std::string &port_name,
                                           axis_slave_port *port_ptr,
                                           unsigned int port_dataw,
                                           unsigned int port_type) {
@@ -25,7 +25,7 @@ void radsim_module::RegisterAxisSlavePort(std::string &port_name,
   _num_noc_axis_slave_ports++;
 }
 
-void radsim_module::RegisterAxisMasterPort(std::string &port_name,
+void RADSimModule::RegisterAxisMasterPort(std::string &port_name,
                                            axis_master_port *port_ptr,
                                            unsigned int port_dataw,
                                            unsigned int port_type) {
@@ -37,7 +37,7 @@ void radsim_module::RegisterAxisMasterPort(std::string &port_name,
   _num_noc_axis_master_ports++;
 }
 
-void radsim_module::RegisterAximmSlavePort(std::string &port_name,
+void RADSimModule::RegisterAximmSlavePort(std::string &port_name,
                                            aximm_slave_port *port_ptr,
                                            unsigned int port_dataw) {
   _ordered_aximm_slave_ports.push_back(port_name);
@@ -48,7 +48,7 @@ void radsim_module::RegisterAximmSlavePort(std::string &port_name,
   _num_noc_aximm_slave_ports++;
 }
 
-void radsim_module::RegisterAximmMasterPort(std::string &port_name,
+void RADSimModule::RegisterAximmMasterPort(std::string &port_name,
                                             aximm_master_port *port_ptr,
                                             unsigned int port_dataw) {
   _ordered_aximm_master_ports.push_back(port_name);

@@ -18,7 +18,7 @@ struct feature_interaction_inst {
   std::vector<bool> fifo_pops;
 };
 
-class feature_interaction : public radsim_module {
+class feature_interaction : public RADSimModule {
 private:
   unsigned int _fifos_depth; // Depth of input/output FIFOs
   unsigned int _afifo_width_ratio_in;

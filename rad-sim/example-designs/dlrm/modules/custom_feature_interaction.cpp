@@ -43,7 +43,7 @@ custom_feature_interaction::custom_feature_interaction(
     unsigned int element_bitwidth, unsigned int num_mem_channels,
     unsigned int fifos_depth, unsigned int num_output_channels,
     std::string &instructions_file)
-    : radsim_module(name) {
+    : RADSimModule(name) {
 
   _fifos_depth = fifos_depth;
   _num_received_responses = 0;

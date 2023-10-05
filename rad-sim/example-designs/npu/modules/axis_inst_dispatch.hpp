@@ -9,7 +9,7 @@
 
 // This class defines the AXI-streaming wrapper for the top-level instruction dispatcher. It contains the dispatcher
 // block and AXI-streaming interfaces for all its output FIFOs
-class axis_inst_dispatch : public radsim_module {
+class axis_inst_dispatch : public RADSimModule {
  private:
   std::string _name;
   unsigned int _thread_id;

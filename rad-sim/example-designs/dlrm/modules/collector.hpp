@@ -9,7 +9,7 @@
 #include <systemc.h>
 #include <vector>
 
-class collector : public radsim_module {
+class collector : public RADSimModule {
 private:
   std::string module_name;
 
