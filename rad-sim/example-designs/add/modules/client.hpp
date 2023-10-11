@@ -11,7 +11,7 @@
 
 #define DATAW 128
 
-class client : public radsim_module {
+class client : public RADSimModule {
 private:
   std::queue<sc_bv<DATAW>> client_tdata_fifo; // FIFO to store numbers
   unsigned int client_fifo_depth;    // MAXIMUM number of addends to store in FIFO

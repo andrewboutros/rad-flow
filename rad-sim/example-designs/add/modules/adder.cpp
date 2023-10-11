@@ -1,7 +1,7 @@
 #include <adder.hpp>
 
 adder::adder(const sc_module_name &name)
-    : radsim_module(name) {
+    : RADSimModule(name) {
 
   // Combinational logic and its sensitivity list
   SC_METHOD(Assign);
