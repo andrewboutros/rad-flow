@@ -2,7 +2,7 @@
 
 #include <chrono>
 #include <radsim_config.hpp>
-#include <client_wrapper.hpp>
+#include <rtl_add_top.hpp>
 #include <stdlib.h>
 #include <systemc.h>
 #include <time.h>

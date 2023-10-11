@@ -1,3 +1,4 @@
 .vscode
 .DS_store
 radsim_knobs
+__pycache__

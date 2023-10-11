@@ -16,7 +16,4 @@
 `define AXIS_USERW 66
 `define AXIS_MAX_DATAW 1024
 
-`define DEST_ADDR `AXIS_DESTW'b0
-`define SRC_ADDR `AXIS_USERW'b11
-
 `endif //_static_params_vh_

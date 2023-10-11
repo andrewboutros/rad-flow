@@ -14,16 +14,16 @@ include_directories(
 )
 
 set(srcfiles
-  modules/adder_wrapper.cpp
-  modules/client_wrapper.cpp
+  modules/adder.cpp
+  modules/client.cpp
   rtl_add_top.cpp
   rtl_add_driver.cpp
   rtl_add_system.cpp
 )
 
 set(hdrfiles
-  modules/adder_wrapper.hpp
-  modules/client_wrapper.hpp
+  modules/adder.hpp
+  modules/client.hpp
   rtl_add_top.hpp
   rtl_add_driver.hpp
   rtl_add_system.hpp

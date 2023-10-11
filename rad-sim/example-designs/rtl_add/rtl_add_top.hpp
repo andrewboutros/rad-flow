@@ -1,15 +1,17 @@
 #pragma once
 
 #include <radsim_config.hpp>
-#include <adder_wrapper.hpp>
-#include <client_wrapper.hpp>
+#include <adder.hpp>
+#include <client.hpp>
 #include <systemc.h>
 #include <vector>
 
+#define DATAW 128
+
 class rtl_add_top : public sc_module {
 private:
-  adder_wrapper *adder_inst;
-  client_wrapper *client_inst;
+  adder *adder_inst;
+  client *client_inst;
 
 public:
   sc_in<bool> rst;

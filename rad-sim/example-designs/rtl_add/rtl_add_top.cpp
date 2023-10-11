@@ -9,7 +9,7 @@ rtl_add_top::rtl_add_top(const sc_module_name &name)
   module_name_str = "client_inst";
   std::strcpy(module_name, module_name_str.c_str());
 
-  client_inst = new client_wrapper(module_name);
+  client_inst = new client(module_name);
   client_inst->rst(rst);
   client_inst->client_tdata(client_tdata);
   client_inst->client_tlast(client_tlast);
@@ -18,7 +18,7 @@ rtl_add_top::rtl_add_top(const sc_module_name &name)
 
   module_name_str = "adder_inst";
   std::strcpy(module_name, module_name_str.c_str());
-  adder_inst = new adder_wrapper(module_name);
+  adder_inst = new adder(module_name);
   adder_inst->rst(rst);
   adder_inst->response(response);
   adder_inst->response_valid(response_valid);
