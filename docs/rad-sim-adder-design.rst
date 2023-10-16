@@ -243,7 +243,7 @@ In addition to the standard items in the CMakeLists.txt file required for the bu
 
 config.yml
 ^^^^^^^^^^
-As this is a basic primitive design of RAD-Sim, the example config provided in :doc:`rad-sim-code-structure` is used.
+The example config provided in :doc:`rad-sim-code-structure` is used.
 
 Running the Example
 -------------------
