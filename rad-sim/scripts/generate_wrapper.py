@@ -3,8 +3,8 @@
 # Arguments:
 #   [1] => Path to the design folder
 #   [2...] => Modules to generate wrapper code for
-import sys
-import os.path
+import argparse
+from pathlib import Path
 
 port_type_translation = {
   "input": "sc_in",
@@ -12,16 +12,11 @@ port_type_translation = {
   "inout": "sc_inout"
 }
 
-design_folder = sys.argv[1]
-modules_folder = design_folder + "/modules"
-rtl_folder = modules_folder + "/rtl"
-port_map_file_path = rtl_folder + "/port.map"
-
 def generate_source_wrapper(design_name, modules_folder, dataw, mappings, axis_role):
     verilated_design = "V" + design_name
     design_inst = "v" + design_name
 
-    with open(modules_folder + "/" + design_name + ".cpp", "w") as wrapper_cpp_file:
+    with open(modules_folder / (design_name + ".cpp"), "w") as wrapper_cpp_file:
       wrapper_cpp_file.write("#include <" + verilated_design + ".h>\n")
       wrapper_cpp_file.write("#include <" + design_name + ".hpp>\n\n")
 
@@ -62,7 +57,7 @@ def generate_header_wrapper(design_name, modules_folder, mappings, axis_role):
     verilated_design = "V" + design_name
     design_inst = "v" + design_name
 
-    with open(modules_folder + "/" + design_name + ".hpp", "w") as wrapper_hpp_file:
+    with open(modules_folder / (design_name + ".hpp"), "w") as wrapper_hpp_file:
       wrapper_hpp_file.write("#pragma once\n\n")
       wrapper_hpp_file.write("#include <axis_interface.hpp>\n")
       wrapper_hpp_file.write("#include <design_context.hpp>\n")
@@ -137,15 +132,30 @@ def read_port_mappings(port_mapping_file):
         mappings[current_module].append((port_mode, port_width, components[2], components[3]))
   return (mappings, axis_roles)
 
-# Verify Inputs
-if len(sys.argv) == 1: raise ValueError("Generate Wrapper must be called with the path to the design folder.")
-if len(sys.argv) == 2: raise ValueError("Generate Wrapper must be called with at least one module.")
+parser = argparse.ArgumentParser(description='Generates RAD-Sim Module Wrapper files from a port mapping file.')
+parser.add_argument('path', metavar='path', type=Path,
+                    help='the base file path of the design')
+parser.add_argument('design_modules', metavar='module', nargs="+",
+                    help='the design module to generate wrapper for (ex. adder)')
+args = parser.parse_args()
+
+design_folder = args.path
+modules_folder = design_folder / "modules"
+rtl_folder = modules_folder / "rtl"
+port_map_file_path = rtl_folder / "port.map"
+
+if not design_folder.exists():
+    raise ValueError("The design folder does not exist.")
+if not design_folder.is_dir():
+    raise ValueError("The design path specified is not a directory.")
+if not port_map_file_path.exists():
+    raise ValueError("The port mapping file does not exist.")
 
 print("Reading Port Mappings...")
 mappings, axis_roles = read_port_mappings(port_map_file_path)
 print("Read Port Mappings Sucessfully!")
-for i in range(2, len(sys.argv)):
-  design_name = sys.argv[i]
+for i in range(len(args.design_modules)):
+  design_name = args.design_modules[i]
   dataw = input("Enter the AXI-S data width for module " + design_name + " (default: 1024): ")
   dataw = dataw if dataw else 1024
   generate_source_wrapper(design_name, modules_folder, dataw, mappings, axis_roles.get(design_name))

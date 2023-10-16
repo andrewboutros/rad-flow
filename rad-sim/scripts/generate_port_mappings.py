@@ -1,15 +1,8 @@
 # Port Mapping Automated Parser
-# TODO Add support for VHDL and SystemVerilog
-# Arguments: [1] => module_path
-import sys
+import argparse
 import re
-import os
 import verilog_parser as vlog
-
-design_folder = sys.argv[1]
-modules_folder = design_folder + "/modules"
-rtl_folder = modules_folder + "/rtl"
-port_map_file_path = rtl_folder + "/port.map"
+from pathlib import Path
 
 verilog_range_regex = "\[(\d*):(\d*)\]"
 verilog_axis_regex = "axis_{0}_interface_(.*)"
@@ -48,9 +41,7 @@ def isAxisRoleMaster(module):
 
 def getModulesFromVerilogFile(verilog_file_path):
     vlog_ex = vlog.VerilogExtractor()
-    with open(verilog_file_path, 'rt') as fh:
-        code = fh.read()
-    return vlog_ex.extract_objects_from_source(code)
+    return vlog_ex.extract_objects(verilog_file_path)
 
 def generatePortMappingsForModule(port_mapping_file, module):
     warnings = False
@@ -71,20 +62,43 @@ def generatePortMappingsForModule(port_mapping_file, module):
     print("Port Mappings for {0} has been added to the port map file.".format(module.name))
     return warnings
 
-# Verify Inputs
-if len(sys.argv) == 1: raise ValueError("Port Mappings must be called with the path to the design folder.")
-if len(sys.argv) == 2: raise ValueError("Port Mappings must be called with at least one RTL file.")
+parser = argparse.ArgumentParser(description='Generates a Port Mapping File for RTL => RAD-Sim Module generation.')
+parser.add_argument('path', metavar='path', type=Path,
+                    help='the base file path of the design')
+parser.add_argument('rtl_files', metavar='design', nargs="+",
+                    help='the rtl file name to generate a port mapping file for (ex. adder.v)')
+parser.add_argument('--overwrite', action='store_true',
+                    help='overwrites any pre-existing port map files if it already exists')
+args = parser.parse_args()
 
-if os.path.isfile(port_map_file_path):
-    overwrite = input("WARNING: Port Map File already exists. Do you want to overwrite this file? (Y/n)")
-    if overwrite.upper() == "N" and overwrite:
-        exit()
+design_folder = args.path
+modules_folder = design_folder / "modules"
+rtl_folder = modules_folder / "rtl"
+port_map_file_path = rtl_folder / "port.map"
+
+if not design_folder.exists():
+    raise ValueError("The design folder does not exist.")
+if not design_folder.is_dir():
+    raise ValueError("The design path specified is not a directory.")
+
+if port_map_file_path.exists():
+    if not args.overwrite:
+        overwrite = input("WARNING: Port Map File already exists. Do you want to overwrite this file? (Y/n)")
+        if overwrite.upper() == "N" and overwrite:
+            exit()
 
 with open(port_map_file_path, "w") as port_mapping_file:
     warnings = False
-    for i in range(2, len(sys.argv)):
-        rtl_file = sys.argv[i]
-        modules = getModulesFromVerilogFile(rtl_folder + "/" + rtl_file)
+    for i in range(len(args.rtl_files)):
+        rtl_file = args.rtl_files[i]
+        rtl_file_path = rtl_folder / rtl_file
+        if not rtl_file_path.exists():
+            raise ValueError("The RTL file at {0} does not exist.".format(rtl_file_path))
+        if vlog.is_verilog(rtl_file_path):
+            modules = getModulesFromVerilogFile(rtl_file_path)
+        else:
+            print("ERROR: File {0} is not supported. Only Verilog/SystemVerilog files are supported.".format(rtl_file))
+            exit()
         for m in modules:
             warnings = True if generatePortMappingsForModule(port_mapping_file, m) else warnings
     if warnings:
