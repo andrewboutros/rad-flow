@@ -29,7 +29,5 @@ set(hdrfiles
   rtl_add_system.hpp
 )
 
-add_compile_options(-Wall -Wextra -pedantic)
-
 add_library(design STATIC ${srcfiles} ${hdrfiles})
 target_link_libraries(design PUBLIC SystemC::systemc booksim noc rtl_designs)

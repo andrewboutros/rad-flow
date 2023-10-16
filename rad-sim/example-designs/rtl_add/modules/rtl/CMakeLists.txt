@@ -18,6 +18,6 @@ foreach(module IN LISTS rtlmodules)
   verilate(rtl_designs
     SOURCES ${module}
     SYSTEMC
-    VERILATOR_ARGS --pins-bv 2 -CFLAGS -std=c++11 -Wno-fatal -Wall
+    VERILATOR_ARGS --pins-bv 2 -Wno-fatal -Wall
   )
 endforeach()
