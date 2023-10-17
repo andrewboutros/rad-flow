@@ -14,25 +14,43 @@ jobs:
         shell: bash -el {0}
     steps:
     - uses: actions/checkout@v3
-    - name: setup systemc
+
+    - name: Set time
+      run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+
+    - name: Setup SystemC
       run: ./scripts/setup_system_c.sh
+
     - name: Setup Mambaforge (Conda)
       uses: conda-incubator/setup-miniconda@v2
       with:
         miniforge-variant: Mambaforge
         miniforge-version: latest
         activate-environment: radflow
-        environment-file: rad-flow-env.yml
         use-mamba: true
-    - name: build rad-sim
+
+    - name: Cache Conda ENV
+      id: cache-conda
+      uses: actions/cache@v3
+      with:
+        path: /usr/share/miniconda3/envs/radflow
+        key: ubuntu-64-conda-${{ hashFiles('rad-flow-env.yml') }}
+
+    - name: Update Conda ENV
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: mamba env update -n radflow -f rad-flow-env.yml
+
+    - name: Build RAD-Sim
       run: |
         cd rad-sim
         python config.py mlp
-    - name: generate test cases
+    
+    - name: Generate Test Cases
       run: |
         cd rad-sim/example-designs/mlp/compiler
         python gen_testcase.py 4 512 512 512 256 128 4 3 2 2
-    - name: run tests
+
+    - name: Run Tests
       run: |
         cd rad-sim/build
         make run
