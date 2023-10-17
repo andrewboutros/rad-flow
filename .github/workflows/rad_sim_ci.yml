@@ -16,12 +16,14 @@ jobs:
     - uses: actions/checkout@v3
     - name: setup systemc
       run: ./scripts/setup_system_c.sh
-    - name: setup anaconda env
+    - name: Setup Mambaforge (Conda)
       uses: conda-incubator/setup-miniconda@v2
       with:
+        miniforge-variant: Mambaforge
+        miniforge-version: latest
         activate-environment: radflow
         environment-file: rad-flow-env.yml
-        python-version: 3.8
+        use-mamba: true
     - name: build rad-sim
       run: |
         cd rad-sim
