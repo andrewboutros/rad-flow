@@ -1,5 +1,8 @@
 name: RAD-Sim CI
 
+env:
+  SYSTEMC_VERSION: "2.3.4"
+
 on:
   push:
     branches: [ "main" ]
@@ -18,8 +21,15 @@ jobs:
     - name: Set time
       run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
+    - name: Cache SystemC build files
+      id: cache-systemc
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/work/rad-flow/rad-flow/systemc-${{ env.SYSTEMC_VERSION }}/build
+        key: ubuntu-64-systemc-${{ env.SYSTEMC_VERSION }}
+
     - name: Setup SystemC
-      run: ./scripts/setup_system_c.sh
+      run: ./scripts/setup_system_c.sh -v ${{ env.SYSTEMC_VERSION }}
 
     - name: Setup Mambaforge (Conda)
       uses: conda-incubator/setup-miniconda@v2
