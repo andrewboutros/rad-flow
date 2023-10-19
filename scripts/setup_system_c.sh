@@ -33,5 +33,5 @@ rm -f systemc-$SYSTEMC_VERSION.tar.gz
 cd systemc-$SYSTEMC_VERSION
 mkdir build
 cd build
-cmake ../ -DCMAKE_CXX_STANDARD=11
+cmake ../ -DCMAKE_CXX_STANDARD=17
 cmake --build .
