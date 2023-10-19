@@ -1,0 +1,45 @@
+Performing C SOURCE FILE Test CMAKE_HAVE_LIBC_PTHREAD failed with the following output:
+Change Dir: /home/gtrieu/rad-flow/rad-sim/test/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_9e918/fast && /usr/bin/make  -f CMakeFiles/cmTC_9e918.dir/build.make CMakeFiles/cmTC_9e918.dir/build
+make[1]: Entering directory '/home/gtrieu/rad-flow/rad-sim/test/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_9e918.dir/src.c.o
+/usr/bin/cc -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_9e918.dir/src.c.o -c /home/gtrieu/rad-flow/rad-sim/test/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_9e918
+/opt/cmake-3.21.0-linux-x86_64/bin/cmake -E cmake_link_script CMakeFiles/cmTC_9e918.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_9e918.dir/src.c.o -o cmTC_9e918 
+CMakeFiles/cmTC_9e918.dir/src.c.o: In function `main':
+src.c:(.text+0x3e): undefined reference to `pthread_create'
+src.c:(.text+0x4a): undefined reference to `pthread_detach'
+src.c:(.text+0x56): undefined reference to `pthread_cancel'
+src.c:(.text+0x67): undefined reference to `pthread_join'
+src.c:(.text+0x7b): undefined reference to `pthread_atfork'
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_9e918.dir/build.make:98: recipe for target 'cmTC_9e918' failed
+make[1]: *** [cmTC_9e918] Error 1
+make[1]: Leaving directory '/home/gtrieu/rad-flow/rad-sim/test/CMakeFiles/CMakeTmp'
+Makefile:127: recipe for target 'cmTC_9e918/fast' failed
+make: *** [cmTC_9e918/fast] Error 2
+
+
+Source file was:
+#include <pthread.h>
+
+static void* test_func(void* data)
+{
+  return data;
+}
+
+int main(void)
+{
+  pthread_t thread;
+  pthread_create(&thread, NULL, test_func, NULL);
+  pthread_detach(thread);
+  pthread_cancel(thread);
+  pthread_join(thread, NULL);
+  pthread_atfork(NULL, NULL, NULL);
+  pthread_exit(NULL);
+
+  return 0;
+}
+

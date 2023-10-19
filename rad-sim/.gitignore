@@ -2,3 +2,5 @@
 .DS_store
 radsim_knobs
 __pycache__
+
+test/*.xml

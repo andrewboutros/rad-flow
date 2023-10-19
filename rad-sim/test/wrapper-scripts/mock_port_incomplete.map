@@ -1,0 +1,5 @@
+module mock_module
+input 1 i1 i1
+inout 64 io64 io64
+axis master axis_mock_module_interface_tdata axis_mock_module_interface.tdata
+output ? o32 o32

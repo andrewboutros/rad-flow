@@ -132,33 +132,37 @@ def read_port_mappings(port_mapping_file):
         mappings[current_module].append((port_mode, port_width, components[2], components[3]))
   return (mappings, axis_roles)
 
-parser = argparse.ArgumentParser(description='Generates RAD-Sim Module Wrapper files from a port mapping file.')
-parser.add_argument('path', metavar='path', type=Path,
-                    help='the base file path of the design')
-parser.add_argument('design_modules', metavar='module', nargs="+",
-                    help='the design module to generate wrapper for (ex. adder)')
-args = parser.parse_args()
+def generate(design_folder, design_modules):
+  modules_folder = design_folder / "modules"
+  rtl_folder = modules_folder / "rtl"
+  port_map_file_path = rtl_folder / "port.map"
 
-design_folder = args.path
-modules_folder = design_folder / "modules"
-rtl_folder = modules_folder / "rtl"
-port_map_file_path = rtl_folder / "port.map"
+  if not design_folder.exists():
+      raise ValueError("The design folder does not exist.")
+  if not design_folder.is_dir():
+      raise ValueError("The design path specified is not a directory.")
+  if not port_map_file_path.exists():
+      raise ValueError("The port mapping file does not exist.")
 
-if not design_folder.exists():
-    raise ValueError("The design folder does not exist.")
-if not design_folder.is_dir():
-    raise ValueError("The design path specified is not a directory.")
-if not port_map_file_path.exists():
-    raise ValueError("The port mapping file does not exist.")
+  print("Reading Port Mappings...")
+  mappings, axis_roles = read_port_mappings(port_map_file_path)
+  print("Read Port Mappings Sucessfully!")
+  for i in range(design_modules):
+    design_name = design_modules[i]
+    dataw = input("Enter the AXI-S data width for module " + design_name + " (default: 1024): ")
+    dataw = dataw if dataw else 1024
+    generate_source_wrapper(design_name, modules_folder, dataw, mappings, axis_roles.get(design_name))
+    print("Generated Source Wrapper for module", design_name)
+    generate_header_wrapper(design_name, modules_folder, mappings, axis_roles.get(design_name))
+    print("Generated Header Wrapper for module", design_name)
 
-print("Reading Port Mappings...")
-mappings, axis_roles = read_port_mappings(port_map_file_path)
-print("Read Port Mappings Sucessfully!")
-for i in range(len(args.design_modules)):
-  design_name = args.design_modules[i]
-  dataw = input("Enter the AXI-S data width for module " + design_name + " (default: 1024): ")
-  dataw = dataw if dataw else 1024
-  generate_source_wrapper(design_name, modules_folder, dataw, mappings, axis_roles.get(design_name))
-  print("Generated Source Wrapper for module", design_name)
-  generate_header_wrapper(design_name, modules_folder, mappings, axis_roles.get(design_name))
-  print("Generated Header Wrapper for module", design_name)
+if __name__ == "__main__":
+  parser = argparse.ArgumentParser(description='Generates RAD-Sim Module Wrapper files from a port mapping file.')
+  parser.add_argument('path', metavar='path', type=Path,
+                      help='the base file path of the design')
+  parser.add_argument('design_modules', metavar='module', nargs="+",
+                      help='the design module to generate wrapper for (ex. adder)')
+  args = parser.parse_args()
+
+  generate(args.path, args.design_modules)
+
