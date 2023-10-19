@@ -9,7 +9,35 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+  actions: read
+  checks: write
+
 jobs:
+  script-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    - name: Run Python Tests for RAD-Sim scripts
+      working-directory: rad-sim
+      run: |
+        pip install -r test/requirements.txt
+        python -m xmlrunner discover . --output-file test/test-report.xml
+
+    - name: Test Summary
+      uses: test-summary/action@v2
+      if: always()
+      with:
+        paths: "rad-sim/test/*report.xml"
+        show: "all"
+      
   build:
     runs-on: ubuntu-latest
     defaults:

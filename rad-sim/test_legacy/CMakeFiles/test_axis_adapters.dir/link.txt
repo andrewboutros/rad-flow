@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/test_axis_adapters.dir/axis_adapters_noc_test.cpp.o -o test_axis_adapters  -Wl,-rpath,/home/gtrieu/systemc-2.3.4/build/src -lradsim /home/gtrieu/systemc-2.3.4/build/src/libsystemc.so.2.3.4 -lbooksim -lnoc -pthread 

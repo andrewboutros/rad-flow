@@ -10,7 +10,7 @@
 #include <systemc.h>
 #include <vector>
 
-class adder : public radsim_module {
+class adder : public RADSimModule {
 private:
   sc_bv<DATAW> adder_rolling_sum; // Sum to store result
   sc_signal<bool> t_finished; // Signal flagging that the transaction has terminated

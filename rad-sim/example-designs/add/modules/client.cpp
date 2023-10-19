@@ -1,7 +1,7 @@
 #include <client.hpp>
 
 client::client(const sc_module_name &name, unsigned int fifo_depth)
-    : radsim_module(name) {
+    : RADSimModule(name) {
 
   client_fifo_depth = fifo_depth;
 

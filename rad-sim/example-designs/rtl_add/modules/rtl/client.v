@@ -3,6 +3,9 @@
 
 `include "static_params.vh"
 
+`define DEST_ADDR `AXIS_DESTW'b0
+`define SRC_ADDR `AXIS_USERW'b11
+
 module client (
 	input clk,
 	input rst,
