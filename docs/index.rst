@@ -47,6 +47,7 @@ The following paper may be used as a general citation for RAD-Sim:
    rad-sim-code-structure
    rad-sim-rtl-code
    rad-sim-adder-design
+   rad-sim-testing
 
 .. toctree::
    :caption: RAD-Gen Documentation
