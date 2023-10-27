@@ -36,7 +36,7 @@ You have to also install SystemC libraries on your system following these steps:
             $ cd build
             $ ccmake ..
 
-    - Press ``c`` to configure the CMake build, then press ``t`` to toggle into the advanced configuration mode. Make sure to change ``CMAKE_CXX_STANDARD`` to ``11`` and ``DISABLE_COPYRIGHT_MESSAGE`` to ``ON``. You can change this entry by pressing enter to type in the new value or toggle between ON/OFF. You can also change any of the other parameters as needed for your system.
+    - Press ``c`` to configure the CMake build, then press ``t`` to toggle into the advanced configuration mode. Make sure to change ``CMAKE_CXX_STANDARD`` to ``17`` and ``DISABLE_COPYRIGHT_MESSAGE`` to ``ON``. You can change this entry by pressing enter to type in the new value or toggle between ON/OFF. You can also change any of the other parameters as needed for your system.
     - After changing all needed configuration parameters, press ``c`` again to configure and then ``g`` to generate the configuration file.
     - Build and install the SystemC libraries by executing the following commands:
 
@@ -46,12 +46,6 @@ You have to also install SystemC libraries on your system following these steps:
             ....
             [100%] Linking CXX shared library libsystemc.so
             [100%] Built target systemc
-
-            $ make check
-            ....
-            100% tests passed, 0 tests failed out of 33
-            Total Test time (real) =   1.79 sec
-            [100%] Built target check
 
             $ sudo make install
 

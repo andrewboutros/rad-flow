@@ -1,14 +1,14 @@
 #pragma once
 
 // clang-format off
-#define RADSIM_ROOT_DIR "/media/andrew/DATA/research/rad-flow/rad-sim"
+#define RADSIM_ROOT_DIR "/home/andrew/rad-flow/rad-sim"
 
 // NoC-related Parameters
 #define NOC_LINKS_PAYLOAD_WIDTH   166
 #define NOC_LINKS_VCID_WIDTH      3
 #define NOC_LINKS_PACKETID_WIDTH  32
 #define NOC_LINKS_TYPEID_WIDTH    3
-#define NOC_LINKS_DEST_WIDTH      7
+#define NOC_LINKS_DEST_WIDTH      4
 #define NOC_LINKS_DEST_INTERFACE_WIDTH 5
 #define NOC_LINKS_WIDTH           (NOC_LINKS_PAYLOAD_WIDTH + NOC_LINKS_VCID_WIDTH         + NOC_LINKS_PACKETID_WIDTH + NOC_LINKS_DEST_WIDTH + NOC_LINKS_DEST_INTERFACE_WIDTH)
 
