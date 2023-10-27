@@ -247,7 +247,16 @@ The example config provided in :doc:`rad-sim-code-structure` is used.
 
 Running the Example
 -------------------
-Running the example with ``NUM_ADDENDS = 3``, the following output is produced.
+Running the example with ``NUM_ADDENDS = 3``, and the commands:
+
+.. code-block:: bash
+
+    $ cd <rad_flow_root_dir>/rad-sim
+    $ python config.py add
+    $ cd build
+    $ make run
+
+The following output is produced.
 
 .. code-block:: text
 
