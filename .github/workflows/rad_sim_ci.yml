@@ -39,22 +39,38 @@ jobs:
         paths: "rad-sim/test/*report.xml"
         show: "all"
       
-  build:
+  design-tests:
     runs-on: ubuntu-latest
     defaults:
       run:
-        shell: bash -el {0}
+        shell: bash -l {0}
+    strategy:
+      fail-fast: false
+      matrix:
+        test-script: [mlp_test.sh, dlrm_test.sh, npu_test.sh]
+        test: [""]
+        exclude:
+          - test-script: npu_test.sh # Don't run all the NPU tests in the same runner
+            test: ""
+        include:
+          - test-script: npu_test.sh
+            test: std_gemv
+          - test-script: npu_test.sh
+            test: std_rnn
+          - test-script: npu_test.sh
+            test: std_gru
+          - test-script: npu_test.sh
+            test: std_lstm
+          - test-script: npu_test.sh
+            test: std_mlp
     steps:
     - uses: actions/checkout@v3
-
-    - name: Set time
-      run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
     - name: Cache SystemC build files
       id: cache-systemc
       uses: actions/cache@v3
       with:
-        path: ${{ env.GITHUB_WORKSPACE }}/systemc-${{ env.SYSTEMC_VERSION }}/build
+        path: ${{ github.workspace }}/systemc-${{ env.SYSTEMC_VERSION }}/build
         key: ubuntu-64-systemc-${{ env.SYSTEMC_VERSION }}
 
     - name: Setup SystemC
@@ -79,17 +95,8 @@ jobs:
       if: steps.cache.outputs.cache-hit != 'true'
       run: mamba env update -n radflow -f rad-flow-env.yml
 
-    - name: Build RAD-Sim
-      run: |
-        cd rad-sim
-        python config.py mlp
-    
-    - name: Generate Test Cases
-      run: |
-        cd rad-sim/example-designs/mlp/compiler
-        python gen_testcase.py 4 512 512 512 256 128 4 3 2 2
-
-    - name: Run Tests
-      run: |
-        cd rad-sim/build
-        make run
+    - name: Run Test
+      env:
+        TEST_SCRIPT: ${{ matrix.test-script }}
+        TEST: ${{ matrix.test }}
+      run: ./.github/scripts/run_test.sh

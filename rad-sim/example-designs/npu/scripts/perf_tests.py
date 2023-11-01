@@ -20,6 +20,7 @@ num_lanes = 40
 vrf_depth = 512
 mrf_depth = 1024
 instances = 1
+tolerance = 50.00 # 50% tolerance in QoR
 
 # Parse command line arguments
 if('-t' in sys.argv):
@@ -129,6 +130,7 @@ print(colors.BOLD + '{:<35}    {:<4}    {:<5}    {:<7}    {:<8}    {:<11}    {:<
 chdir('../compiler')
 first_flag = True
 cycles = ''
+failed = False
 for workload in workloads:
 	subprocess.call(['cp', '../scripts/workloads/'+workload+'.py', './'], shell=False)
 	sys.stdout.write('{:<35}    '.format(workload))
@@ -150,19 +152,25 @@ for workload in workloads:
 		if (parse_perf_res and ('Running simulation ... ' in line)):
 			args = line.split()
 			if('PASSED' in args[3]):
-				print(colors.PASS + 'PASS' + colors.RESET, end='    ')
 				result = args[10]
 				cycles = args[4][1:]
 				if workload in baseline_results:
 					comparison_to_baseline = ((float(args[10]) * instances/baseline_results[workload])-1) * 100
+					if abs(comparison_to_baseline) < tolerance:
+						print(colors.PASS + 'PASS' + colors.RESET, end='    ')
+					else:
+						print(colors.FAIL + 'FAIL' + colors.RESET, end='    ')
+						failed = True
 					if comparison_to_baseline >= 0:
 						print ('{:<5}    +{:<5.2f}%    {:<8}    '.format(float(result) * instances, comparison_to_baseline, int(cycles)), end='')
 					else:
 						print ('{:<5}     {:<5.2f}%    {:<8}    '.format(float(result) * instances, comparison_to_baseline, int(cycles)), end='')
 				else:
+					print(colors.PASS + 'PASS' + colors.RESET, end='    ')
 					print ('{:<5}    {:<7}    {:<8}    '.format(float(result) * instances, 'N/A', int(cycles)), end='')
 			else:
 				print(colors.FAIL + 'FAIL' + colors.RESET)
+				failed = True
 		elif (parse_perf_res and ('Simulation took' in line)):
 			args = line.split()
 			args = args[2].split('m')
@@ -174,5 +182,7 @@ for workload in workloads:
 			parse_perf_res = True
 	if(not parse_perf_res):
 		print(colors.FAIL + 'FAIL' + colors.RESET)
+		failed = True
 	subprocess.call(['rm', workload+'.py'], shell=False)
 
+exit(failed)
