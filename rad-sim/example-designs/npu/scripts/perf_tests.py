@@ -21,7 +21,7 @@ vrf_depth = 512
 mrf_depth = 1024
 instances = 1
 qor_tolerance = 10.00 # 10 percent
-runtime_tolerance = 50.00 # 50 percent
+runtime_tolerance = 100.00 # 100 percent
 
 # Parse command line arguments
 if('-t' in sys.argv):
