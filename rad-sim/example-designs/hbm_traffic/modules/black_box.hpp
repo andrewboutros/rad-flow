@@ -47,7 +47,7 @@ void aximm_vector_to_bv(
 
 class black_box : public RADSimModule {
 private:
-    char _bb_tag; // Tag for black box
+    // char _bb_tag; // Tag for black box
 
     unsigned int _fifos_depth;                 // Depth of input/output FIFOs
     
@@ -63,6 +63,8 @@ private:
     // sc_signal<bool> _mem_req_inst_fifo_full;
     // sc_signal<bool> _mem_req_inst_fifo_empty;
 
+
+    
 
     // starting with 1 input and 1 output FIFO
     std::queue<data_vector<int16_t>> _input_fifo; // Input FIFO
@@ -110,7 +112,6 @@ public:
     
 
     black_box(  const sc_module_name &name,
-                unsigned char bb_tag,
                 unsigned int line_dataw,
                 unsigned int element_bitwidth,
                 // unsigned int num_mem_channels,

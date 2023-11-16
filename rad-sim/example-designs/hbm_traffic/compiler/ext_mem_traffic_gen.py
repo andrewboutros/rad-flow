@@ -40,12 +40,14 @@ def decode_mem_contents(channel: int, bitwidth: int, mem_path: str = None, addr_
         if len(line.split(" ")) == 2: 
             addr, data = line.split(" ")
             elements = [data[i:i + bitwidth] for i in range(0, len(data), bitwidth)]
-            if "0x" in addr:
-                formatted_addr = f"0x{addr.replace('0x', '').zfill(addr_width)}"
-                print(f"[ {formatted_addr} ]: {' '.join([str(BitArray(bin=e).int) for e in elements])}" )
+            # Assume addresses are in hex (no 0x prefix)
+            print(f"[ {addr_format(int(addr,16), addr_width)} ]: {' '.join([str(BitArray(bin=e).int) for e in elements])}" )
+            # if "0x" in addr:
+            #     formatted_addr = f"0x{addr.replace('0x', '').zfill(addr_width)}"
+            #     print(f"[ {formatted_addr} ]: {' '.join([str(BitArray(bin=e).int) for e in elements])}" )
             
-            else:
-                print(f"[ 0x{(int(addr, 16))} ]: {' '.join([str(BitArray(bin=e).int) for e in elements])}" )
+            # else:
+            #     print(f"[ 0x{(int(addr, 16))} ]: {' '.join([str(BitArray(bin=e).int) for e in elements])}" )
 
 def signed_int_2_bin(data: int, bitwidth: int) -> str:
     if data < 0:
@@ -75,10 +77,7 @@ def write_mem_contents(channel: int, mem_contents: Dict[str, int], bitwidth: int
         # get data elements to binary
         data_strs = [signed_int_2_bin(data, bitwidth) for data in data_eles]
         addr_data = "".join(data_strs).zfill(addr_line_sz)
-        # addr_str = format(int(addr), f"0{addr_width}x")
-        # print(f"{int(addr)} {addr_data}")
         with open (os.path.join(mem_init_dir, f"channel_{channel}.dat"), "a+") as f:
-            # print(f"{hex(int(addr))} {addr_data}", file=f)
             print(f"{addr_format(int(addr), addr_width)} {addr_data}", file=f)
 
 
@@ -96,10 +95,12 @@ class AXIPort:
             raise Exception(f"Error in AXIPort: {self.type} is not a supported type")
 
     def get_port_info_line(self) -> str:        
-        return f"{self.name} {self.noc_idx} {self.noc_loc} {self.type}" 
+        return f"{self.name} {self.noc_idx} {self.noc_loc} {self.type} {int(self.is_master)}" 
 
 @dataclass
 class MemReqInstruction:
+    inst_address: int # instructions at the same address will be sent on the same cycle
+    mem_req_module_id: int
     src_port: str
     dst_port: str
     target_channel: int 
@@ -152,8 +153,10 @@ def write_module_insts_config(module_insts: List[HWModule], outfile: str) -> Non
     
 def write_mem_req_instructions(mem_req_instructions: List[MemReqInstruction], addr_width: int, mem_data_width: int, outfile: str) -> None:
     with open(outfile, "w") as f:
+        # print the number of instruction addresses as header
+        print(len(set([inst.inst_address for inst in mem_req_instructions])), file=f)
         for inst in mem_req_instructions:
-            print(f"{inst.src_port} {inst.dst_port} {inst.target_channel} {addr_format(inst.target_address, addr_width)} {signed_int_2_bin(inst.write_data, mem_data_width)} {int(inst.write_en)}", file=f)
+            print(f"{addr_format(inst.inst_address, 4)} {inst.mem_req_module_id} {inst.src_port} {inst.dst_port} {inst.target_channel} {addr_format(inst.target_address, addr_width)} {signed_int_2_bin(inst.write_data, mem_data_width)} {int(inst.write_en)}", file=f)
 
 
 
@@ -212,12 +215,12 @@ def main():
     # For this test we will have a bunch of instructions which do X writes and then Y reads -> after this we do % writes and then % reads (for N transactions)
     mem_req_instructions = [
         # incrementing the write address by 16 each time, as I'm not sure what the address line size is
-        *[MemReqInstruction("black_box_0_inst.aximm_interface", "ddr_mem_ctrl_0.aximm_interface", 0, i << 4, i, True) for i in range(num_wr_rds)], # Writes
-        *[MemReqInstruction("black_box_0_inst.aximm_interface", "ddr_mem_ctrl_0.aximm_interface", 0, i << 4, i, False) for i in range(num_wr_rds)], # Reads
+        *[MemReqInstruction(0x0, 0, "black_box_0_inst.aximm_interface", "ddr_mem_ctrl_0.aximm_interface", 0, i << 4, i, True) for i in range(num_wr_rds)], # Writes
+        *[MemReqInstruction(0x0, 0, "black_box_0_inst.aximm_interface", "ddr_mem_ctrl_0.aximm_interface", 0, i << 4, i, False) for i in range(num_wr_rds)], # Reads
     ]
 
     # Create module instantiation file 
-    module_inst_outfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "traffic_gen", "module_insts.in")
+    module_inst_outfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "traffic_gen", "traffic_gen.cfg")
     write_module_insts_config(mem_req_modules + [module for ext_mem in ext_mems for module in ext_mem.mem_ctrl_modules ], module_inst_outfile)
 
     # Create instructions for all mem_req modules

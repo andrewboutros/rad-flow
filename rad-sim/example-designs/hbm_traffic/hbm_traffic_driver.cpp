@@ -99,45 +99,81 @@ bool ParseTrafficGenModules(
 bool ParseMemReqs(
     std::vector<data_vector<unsigned int>> &target_channels,
     std::vector<data_vector<uint64_t>> &target_addresses,
-    std::vector<data_vector<bool>> &write_ens,
+    std::vector<std::vector<bool>> &write_ens,
     std::vector<data_vector<size_t>> &write_datas, // however many bits are associated with a single memory write tranaction
     std::vector<data_vector<uint64_t>> &src_ports,
     std::vector<data_vector<uint64_t>> &dst_ports,
     unsigned int &num_mem_req_modules,
     std::string &io_filename) {
-  std::ifstream io_file(io_filename);
-  if (!io_file)
-    return false;
+    std::ifstream io_file(io_filename);
 
-  unsigned int target_channel;
-  uint64_t target_address;
-  std::string dst_port;
-  std::string src_port;
-  size_t write_data;
-  bool write_enable;
+    if (!io_file)
+        return false;
 
-  // get first line of the mem requests file
-  std::string line;
-  std::getline(io_file, line);
-  std::stringstream header_stream(line);
+    unsigned int target_channel;
+    uint64_t target_address;
+    std::string dst_port;
+    std::string src_port;
+    size_t write_data;
+    bool write_enable;
 
-  while (std::getline(io_file, line)) {
-    std::stringstream line_stream(line);
-    // parse single line of space seperated values
-    // int spaces = std::count_if(line.begin(), line.end(),
-    //     [](unsigned char c){ return std::isspace(c); });
-    // if (spaces > )
-    line_stream >> src_port >> dst_port >> target_channel >> target_address >> write_enable >> write_data >> write_enable;
+    unsigned int num_inst_addrs; // number of instruction addresses (or memory addresses issued across time)
 
 
-    target_channels.push_back(target_channel);
-    target_addresses.push_back(target_address);
-    write_ens.push_back(write_enable);
-    write_datas.push_back(write_data);
-    src_ports.push_back(radsim_design.GetPortBaseAddress(src_port));
-    dst_ports.push_back(radsim_design.GetPortBaseAddress(dst_port));
-  }
+    // get first line of the mem requests file
+    std::string line;
+    std::getline(io_file, line);
+    std::stringstream header_stream(line);
+    header_stream >> num_inst_addrs;
 
+    // Outer vectors are sized to be equal to the number of instruction addresses that exist in the instruction file
+    target_channels.resize(num_inst_addrs);
+    target_addresses.resize(num_inst_addrs);
+    write_ens.resize(num_inst_addrs);
+    write_datas.resize(num_inst_addrs);
+    src_ports.resize(num_inst_addrs);
+    dst_ports.resize(num_inst_addrs);
+
+
+    unsigned int prev_instruction_addr;
+    unsigned int cur_instruction_addr;
+
+    while (std::getline(io_file, line)) {
+        std::stringstream line_stream(line);
+        unsigned int mem_req_module_id;
+
+        data_vector<unsigned int> target_channel_dvec(num_mem_req_modules);
+        data_vector<uint64_t> target_addresses_dvec(num_mem_req_modules);
+        std::vector<bool> write_ens_dvec(num_mem_req_modules);
+        data_vector<size_t> write_datas_dvec(num_mem_req_modules);
+        data_vector<uint64_t> src_ports_dvec(num_mem_req_modules);
+        data_vector<uint64_t> dst_ports_dvec(num_mem_req_modules);
+
+        prev_instruction_addr = cur_instruction_addr;
+        line_stream >> cur_instruction_addr;
+        line_stream >> mem_req_module_id;
+
+        assert (num_mem_req_modules > mem_req_module_id); // we cant issue instruction to module that doesnt exist
+        line_stream >> src_port >> dst_port >> target_channel >> target_address >> write_enable >> write_data >> write_enable;
+        
+        target_channel_dvec[mem_req_module_id] = target_channel;
+        target_addresses_dvec[mem_req_module_id] = target_address;
+        write_ens_dvec[mem_req_module_id] = write_enable;
+        write_datas_dvec[mem_req_module_id] = write_data;
+        src_ports_dvec[mem_req_module_id] = radsim_design.GetPortBaseAddress(src_port);
+        dst_ports_dvec[mem_req_module_id] = radsim_design.GetPortBaseAddress(dst_port);
+
+        // instructions have to have batched inst_addresses 
+        // so if the cur != prev (or if this is the last line of the file) that means we can push back the values we created onto the vectors of data vectors
+        if ( cur_instruction_addr != prev_instruction_addr || io_file.peek() == EOF){
+            target_channels.push_back(target_channel_dvec);
+            target_addresses.push_back(target_addresses_dvec);
+            write_ens.push_back(write_ens_dvec);
+            write_datas.push_back(write_datas_dvec);
+            src_ports.push_back(src_ports_dvec);
+            dst_ports.push_back(dst_ports_dvec);
+        }
+    }
 }
 
 
@@ -147,45 +183,39 @@ hbm_traffic_driver::hbm_traffic_driver( const sc_module_name &name
 
     // _num_mem_req_insts = num_mem_req_insts;
     
+    // init vectors of ports
+    
+
     std::vector<std::string> module_insts;
-
-  // ParseMemReqs(
-
-  // uint64_t dst_addr = radsim_design.GetPortBaseAddress(dst_port_name) +
-  //                   table_base_addr + lookup_index;
 
     // Parse design configuration (number of layers & number of MVM per layer)
     std::string design_root_dir =
         radsim_config.GetStringKnob("radsim_user_design_root_dir");
 
-    std::string mod_insts_fname = design_root_dir + "/compiler/traffic_gen/module_insts.in";
+    std::string mod_insts_fname = design_root_dir + "/compiler/traffic_gen/traffic_gen.cfg";
     ParseTrafficGenModules(module_insts, mod_insts_fname);
     // now we can find the number of black box modules parsed from module isnts
     unsigned int num_mem_req_modules = count(module_insts.begin(), module_insts.end(), "black_box");
 
+    // init sc_vector based ports
+    mem_req_valids.init(num_mem_req_modules);
+    mem_req_readys.init(num_mem_req_modules);
+
 
     std::string mem_reqs_fname = design_root_dir + "/compiler/traffic_gen/isnts.in";
     
-    // Traffic Gen
-    // std::vector<data_vector<unsigned int>> target_channels;
-    // std::vector<data_vector<uint64_t>> target_addresses;
-    // std::vector<data_vector<bool>> write_ens;
-    // std::vector<data_vector<size_t>> write_datas; 
-    // std::vector<data_vector<uint64_t>> src_ports;
-    // std::vector<data_vector<uint64_t>> dst_ports;
+    // Traffic Gen    
+    ParseMemReqs(
+        _target_channels,
+        _target_addresses,
+        _wr_ens,
+        _wr_datas, // however many bits are associated with a single memory write tranaction
+        _src_ports,
+        _dst_ports,
+        num_mem_req_modules,
+        mem_reqs_fname
+    );
     
-    /*
-        ParseMemReqs(
-            _target_channels,
-            _target_addresses,
-            _wr_ens,
-            _wr_datas, // however many bits are associated with a single memory write tranaction
-            _src_ports,
-            _dst_ports,
-            num_mem_req_modules,
-            mem_reqs_fname
-        );
-    */
     
     std::cout << "Finished parsing traffic gen inputs!" << std::endl;
 
@@ -205,6 +235,10 @@ hbm_traffic_driver::hbm_traffic_driver( const sc_module_name &name
     ParseOutputs(_mlp_outputs, mlp_outputs_filename, _num_mlp_outputs);
     SC_METHOD(assign);
     sensitive << collector_fifo_rdy;
+    for (int i=0; i<mem_req_readys.size(); i++) {
+        sensitive << mem_req_readys[i];
+    }
+
     SC_CTHREAD(source, clk.pos());
     SC_CTHREAD(sink, clk.pos()); 
 }
@@ -220,7 +254,9 @@ void hbm_traffic_driver::source() {
     rst.write(true);
     lookup_indecies_valid.write(false);
     // Hbm traffic
-    // mem_req_valids.write(false); // TODO make sure this works with the data_vector of valid signals 
+    for (int i=0; i<mem_req_valids.size(); i++){
+        mem_req_valids[i].write(false); // TODO make sure this works with the data_vector of valid signals 
+    }
 
 
     wait();
@@ -231,24 +267,35 @@ void hbm_traffic_driver::source() {
     _start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
     // Traffic Gen
     // Assuming all traffic gen inputs are the same size
-    /*
     while (idx < _target_addresses.size()) { 
         target_channels.write(_target_channels[idx]);
         target_addresses.write(_target_addresses[idx]);
         wr_datas.write(_wr_datas[idx]);
-        wr_ens.write(_wr_ens[idx]);
         src_ports.write(_src_ports[idx]);
         dst_ports.write(_dst_ports[idx]);
-        mem_req_valids.write(true);
+        // Loop over bools as they are in sc_vectors
+        for (int i=0; i < _wr_ens[idx].size(); i++) {
+            // be careful that the valid/ready signals (or other sc_vectors) are initialized to the same number of elements as the data_vectors
+            wr_ens[i].write(_wr_ens[idx][i]);
+            mem_req_valids[i].write(true);  
+        }
 
         wait();
-
-        if (mem_req_valids.read() && mem_req_readys.read()) {
+        // check to make sure all of the ready valids are true if any are false then dont increment idx (keep writing the same transaction)
+        bool mem_requesters_ready = std::all_of(mem_req_readys.begin(), mem_req_readys.end(),
+            [](const sc_in<bool>& ready_in) {
+                return ready_in.read();
+            });
+        if (mem_requesters_ready){
             idx++;
         }
     }
-    */
-    
+    // all transactions have been sent, so we set all mem_req valids to false
+    for (auto &v : mem_req_valids) {
+        v.write(false);
+    }
+
+
     while (idx < _lookup_indecies.size()) {
         lookup_indecies_data.write(_lookup_indecies[idx]);
         lookup_indecies_target_channels.write(_target_channels[idx]);

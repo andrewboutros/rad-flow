@@ -17,16 +17,16 @@ private:
 
   // sc_signal<unsigned int> received_responses_sig;
   // using data_vector to create a vector of signals without creating ports
-  sc_signal<data_vector<bool>> mem_req_readys_sig;
-  sc_signal<data_vector<bool>> mem_req_valids_sig;
+  sc_vector<sc_signal<bool>> mem_req_readys_sig;
+  sc_vector<sc_signal<bool>> mem_req_valids_sig;
   
   // 
+  sc_vector<sc_signal<bool>> wr_ens_sig;
   sc_signal<data_vector<size_t>> wr_datas_sig; // TODO allow for variable bitwidth
   sc_signal<data_vector<unsigned int>> target_channels_sig;
   sc_signal<data_vector<uint64_t>> target_addresses_sig;
   sc_signal<data_vector<uint64_t>> src_ports_sig;
   sc_signal<data_vector<uint64_t>> dst_ports_sig;
-  sc_signal<data_vector<bool>> wr_ens_sig;
 
 
   sc_signal<bool> collector_fifo_rdy_sig;

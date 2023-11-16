@@ -27,7 +27,7 @@ private:
     std::vector<data_vector<unsigned int>> _target_channels;
     std::vector<data_vector<uint64_t>> _target_addresses;
     std::vector<data_vector<size_t>> _wr_datas; // however many bits are associated with a single memory write tranaction
-    std::vector<data_vector<bool>> _wr_ens;
+    std::vector<std::vector<bool>> _wr_ens;
     std::vector<data_vector<uint64_t>> _src_ports;
     std::vector<data_vector<uint64_t>> _dst_ports;
 
@@ -42,13 +42,13 @@ public:
 
 
     // Black Box mem request interface
-    sc_out<data_vector<bool>> mem_req_valids;
-    sc_in<data_vector<bool>> mem_req_readys;
+    sc_vector<sc_out<bool>> mem_req_valids;
+    sc_vector<sc_in<bool>> mem_req_readys;
     
+    sc_vector<sc_out<bool>> wr_ens;
     sc_out<data_vector<unsigned int>> target_channels;
     sc_out<data_vector<uint64_t>> target_addresses;
     sc_out<data_vector<size_t>> wr_datas; // however many bits are associated with a single memory write tranaction
-    sc_out<data_vector<bool>> wr_ens;
     sc_out<data_vector<uint64_t>> src_ports;
     sc_out<data_vector<uint64_t>> dst_ports;
 

@@ -27,6 +27,12 @@ template <class dtype> data_vector<dtype>::data_vector(std::vector<int> &vec) {
     v[i] = vec[i];
 }
 
+// template <class dtype> data_vector<dtype>::data_vector(std::vector<bool> &vec) {
+//   v.resize(vec.size());
+//   for (unsigned int i = 0; i < vec.size(); i++)
+//     v[i] = vec[i];
+// }
+
 template <class dtype>
 bool data_vector<dtype>::operator==(const data_vector<dtype> &rhs) {
   if (v.size() != rhs.v.size())

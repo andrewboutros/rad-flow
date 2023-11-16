@@ -10,6 +10,7 @@
 #include <radsim_config.hpp>
 #include <systemc.h>
 #include <vector>
+#include <algorithm>
 
 class hbm_traffic_top : public sc_module {
 private:
@@ -24,35 +25,32 @@ private:
   std::vector<sc_clock *> mem_clks;
 
 public:
-  sc_in<bool> rst;
+    sc_in<bool> rst;
 
-  sc_in<data_vector<uint64_t>> lookup_indecies_data;
-  sc_in<data_vector<unsigned int>> lookup_indecies_target_channels;
-  sc_in<data_vector<uint64_t>> lookup_indecies_base_addresses;
-  sc_in<bool> lookup_indecies_valid;
-  sc_out<bool> lookup_indecies_ready;
+    sc_in<data_vector<uint64_t>> lookup_indecies_data;
+    sc_in<data_vector<unsigned int>> lookup_indecies_target_channels;
+    sc_in<data_vector<uint64_t>> lookup_indecies_base_addresses;
+    sc_in<bool> lookup_indecies_valid;
+    sc_out<bool> lookup_indecies_ready;
 
     // Black Box mem request interface
-    sc_in<data_vector<bool>> mem_req_valids;
-    sc_out<data_vector<bool>> mem_req_readys;
+    sc_vector<sc_in<bool>> mem_req_valids;
+    sc_vector<sc_out<bool>> mem_req_readys;
     
-    sc_in<bool> write_en;
+    sc_vector<sc_in<bool>> wr_ens; 
     sc_in<data_vector<unsigned int>> target_channels;
     sc_in<data_vector<uint64_t>> target_addresses;
-    sc_in<data_vector<uint16_t>> wr_datas; //v
-    sc_in<data_vector<bool>> wr_ens; //v
+    sc_in<data_vector<size_t>> wr_datas;
     sc_in<data_vector<uint64_t>> src_ports;
     sc_in<data_vector<uint64_t>> dst_ports;
 
   
-  
+    // sc_out<unsigned int> received_responses;
 
-  // sc_out<unsigned int> received_responses;
+    sc_out<bool> collector_fifo_rdy;
+    sc_in<bool> collector_fifo_ren;
+    sc_out<data_vector<int16_t>> collector_fifo_rdata;
 
-  sc_out<bool> collector_fifo_rdy;
-  sc_in<bool> collector_fifo_ren;
-  sc_out<data_vector<int16_t>> collector_fifo_rdata;
-
-  hbm_traffic_top(const sc_module_name &name);
-  ~hbm_traffic_top();
+    hbm_traffic_top(const sc_module_name &name);
+    ~hbm_traffic_top();
 };

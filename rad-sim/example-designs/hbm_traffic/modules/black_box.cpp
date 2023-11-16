@@ -2,12 +2,11 @@
 
 
 black_box::black_box(const sc_module_name &name, 
-        unsigned char bb_tag,
         unsigned int line_dataw,
         unsigned int element_bitwidth,
         unsigned int fifos_depth) : RADSimModule(name) {
 
-    _bb_tag = bb_tag;
+    // _bb_tag = "A";
 
     _dataw = line_dataw;
     _bitwidth = element_bitwidth;
