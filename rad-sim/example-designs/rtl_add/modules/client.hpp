@@ -8,7 +8,11 @@
 #include <systemc.h>
 #include <vector>
 
+#include <Vclient.h>
 class client : public RADSimModule {
+private:
+	Vclient* vclient;
+
 public:
 	sc_in<bool> rst;
 	sc_in<sc_bv<128>> client_tdata;

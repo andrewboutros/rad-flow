@@ -40,10 +40,10 @@ void adder::Tick() {
       uint64_t current_sum = adder_rolling_sum.to_uint64();
       adder_rolling_sum = current_sum + axis_adder_interface.tdata.read().to_uint64();
       t_finished.write(axis_adder_interface.tlast.read());
-      std::cout << module_name << ": Got Transaction (user = "
-                << axis_adder_interface.tuser.read().to_uint64() << ") (addend = "
-                << axis_adder_interface.tdata.read().to_uint64() << ")!"
-                << std::endl;
+      //std::cout << module_name << ": Got Transaction (user = "
+      //          << axis_adder_interface.tuser.read().to_uint64() << ") (addend = "
+      //          << axis_adder_interface.tdata.read().to_uint64() << ")!"
+      //          << std::endl;
     }
 
     // Print Sum and Exit

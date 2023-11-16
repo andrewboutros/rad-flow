@@ -33,7 +33,7 @@ module adder (clk, rst, axis_adder_interface_tvalid, axis_adder_interface_tlast,
             response_valid = 1'b0;
         end else begin
             if (axis_adder_interface_tready && axis_adder_interface_tvalid) begin
-                $display("Adder: Received %d!", axis_adder_interface_tdata[63:0]);
+                //$display("Adder: Received %d!", axis_adder_interface_tdata[63:0]);
                 adder_rolling_sum = adder_rolling_sum + axis_adder_interface_tdata[`DATAW-1:0];
                 t_finished = axis_adder_interface_tlast;
             end

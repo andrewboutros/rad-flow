@@ -1,8 +1,11 @@
-#include <Vclient.h>
 #include <client.hpp>
 
 client::client(const sc_module_name &name) : RADSimModule(name) {
-	Vclient* vclient = new Vclient{"vclient"};
+	char vclient_name[25];
+	std::string vclient_name_str = std::string(name) + "_vmvm";
+	std::strcpy(vclient_name, vclient_name_str.c_str());
+
+	vclient = new Vclient{vclient_name};
 	vclient->clk(clk);
 	vclient->rst(rst);
 	vclient->client_tdata(client_tdata);
@@ -22,7 +25,9 @@ client::client(const sc_module_name &name) : RADSimModule(name) {
 	this->RegisterModuleInfo();
 }
 
-client::~client() {}
+client::~client() {
+	delete vclient;
+}
 
 void client::RegisterModuleInfo() {
 	std::string port_name;
@@ -30,6 +35,8 @@ void client::RegisterModuleInfo() {
 	_num_noc_axis_master_ports = 0;
 	_num_noc_aximm_slave_ports = 0;
 	_num_noc_aximm_master_ports = 0;
+
 	port_name = module_name + ".axis_client_interface";
-	RegisterAxisMasterPort(port_name, &axis_client_interface, 128, 0);
+	RegisterAxisMasterPort(port_name, &axis_client_interface, 512, 0);
+
 }

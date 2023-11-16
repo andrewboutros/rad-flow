@@ -1,5 +1,6 @@
 module mock_module
 input 1 i1 i1
 inout 64 io64 io64
-axis master axis_mock_module_interface_tdata axis_mock_module_interface.tdata
+axis master axis_mock_master_tdata axis_mock_master tdata
+axis slave axis_mock_slave_tdata axis_mock_slave tdata
 output 32 o32 o32

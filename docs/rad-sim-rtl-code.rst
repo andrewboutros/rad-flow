@@ -81,7 +81,7 @@ Automatic wrapper generation follows the workflow:
 
 #. Run ``generate_port_mappings.py`` with the design path and RTL design files as arguments.
    
-   * ex. ``python generate_port_mappings.py adder.v client.v``
+   * ex. ``python generate_port_mappings.py example-designs/rtl_add adder.v client.v``
 
 #. Check the console for inference warnings.
    
@@ -90,7 +90,7 @@ Automatic wrapper generation follows the workflow:
 
 #. Run ``generate_wrapper.py`` with the design path and module names as arguments.
 
-   * ex. ``python generate_wrapper.py adder client``
+   * ex. ``python generate_wrapper.py example-designs/rtl_add adder client``
    * Note: these are modules connected to the NoC.
 
 These scripts produce basic source and header wrapper files for the specified RTL modules.
@@ -98,7 +98,7 @@ Advanced users may edit these files to add additional functionality.
 
 AXI-S Formatting Requirement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Ports in RTL modules using AXI-S must be specified in the format ``axis_{name}_interface_{signal}`` to be recognized by the port mappings script.
+Ports in RTL modules using AXI-S must be specified in the format ``axis_{name}_{signal}`` to be recognized by the port mappings script.
 
 Port Map File Format
 ^^^^^^^^^^^^^^^^^^^^^
@@ -107,35 +107,36 @@ The port map file is a blank-space delimited file used to specify the connection
 * All inputs, outputs, and AXI-S ports must be under a ``module``.
 * Modules are defined by ``module {name}``.
 * Input and Output ports are defined by ``{input/output} {port_width} {rtl_port} {radsim_port}``.
-* AXI-S ports are defined by ``axis {master/slave} {rtl_port} {radsim_port}``.
+* AXI-S ports are defined by ``axis {master/slave} {rtl_port} {axis_interface} {axis_port}``.
 
 An example port map file from the ``rtl_add`` example is shown below:
 
 .. code-block::
 
-    module adder
-    input 1 clk clk
-    input 1 rst rst
-    axis slave axis_adder_interface_tvalid axis_adder_interface.tvalid
-    axis slave axis_adder_interface_tlast axis_adder_interface.tlast
-    axis slave axis_adder_interface_tdata axis_adder_interface.tdata
-    axis slave axis_adder_interface_tready axis_adder_interface.tready
-    output 128 response response
-    output 1 response_valid response_valid
+   module adder
+   input 1 clk clk
+   input 1 rst rst
+   axis slave axis_adder_interface_tvalid axis_adder_interface tvalid
+   axis slave axis_adder_interface_tlast axis_adder_interface tlast
+   axis slave axis_adder_interface_tdata axis_adder_interface tdata
+   axis slave axis_adder_interface_tready axis_adder_interface tready
+   output 128 response response
+   output 1 response_valid response_valid
 
-    module client
-    input 1 clk clk
-    input 1 rst rst
-    input 128 client_tdata client_tdata
-    input 1 client_tlast client_tlast
-    input 1 client_valid client_valid
-    axis master axis_client_interface_tready axis_client_interface.tready
-    output 1 client_ready client_ready
-    axis master axis_client_interface_tvalid axis_client_interface.tvalid
-    axis master axis_client_interface_tlast axis_client_interface.tlast
-    axis master axis_client_interface_tdest axis_client_interface.tdest
-    axis master axis_client_interface_tid axis_client_interface.tid
-    axis master axis_client_interface_tstrb axis_client_interface.tstrb
-    axis master axis_client_interface_tkeep axis_client_interface.tkeep
-    axis master axis_client_interface_tuser axis_client_interface.tuser
-    axis master axis_client_interface_tdata axis_client_interface.tdata
+   module client
+   input 1 clk clk
+   input 1 rst rst
+   input 128 client_tdata client_tdata
+   input 1 client_tlast client_tlast
+   input 1 client_valid client_valid
+   axis master axis_client_interface_tready axis_client_interface tready
+   output 1 client_ready client_ready
+   axis master axis_client_interface_tvalid axis_client_interface tvalid
+   axis master axis_client_interface_tlast axis_client_interface tlast
+   axis master axis_client_interface_tdest axis_client_interface tdest
+   axis master axis_client_interface_tid axis_client_interface tid
+   axis master axis_client_interface_tstrb axis_client_interface tstrb
+   axis master axis_client_interface_tkeep axis_client_interface tkeep
+   axis master axis_client_interface_tuser axis_client_interface tuser
+   axis master axis_client_interface_tdata axis_client_interface tdata
+

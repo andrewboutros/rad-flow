@@ -1,10 +1,10 @@
 module adder
 input 1 clk clk
 input 1 rst rst
-axis slave axis_adder_interface_tvalid axis_adder_interface.tvalid
-axis slave axis_adder_interface_tlast axis_adder_interface.tlast
-axis slave axis_adder_interface_tdata axis_adder_interface.tdata
-axis slave axis_adder_interface_tready axis_adder_interface.tready
+axis slave axis_adder_interface_tvalid axis_adder_interface tvalid
+axis slave axis_adder_interface_tlast axis_adder_interface tlast
+axis slave axis_adder_interface_tdata axis_adder_interface tdata
+axis slave axis_adder_interface_tready axis_adder_interface tready
 output 128 response response
 output 1 response_valid response_valid
 
@@ -14,14 +14,14 @@ input 1 rst rst
 input 128 client_tdata client_tdata
 input 1 client_tlast client_tlast
 input 1 client_valid client_valid
-axis master axis_client_interface_tready axis_client_interface.tready
+axis master axis_client_interface_tready axis_client_interface tready
 output 1 client_ready client_ready
-axis master axis_client_interface_tvalid axis_client_interface.tvalid
-axis master axis_client_interface_tlast axis_client_interface.tlast
-axis master axis_client_interface_tdest axis_client_interface.tdest
-axis master axis_client_interface_tid axis_client_interface.tid
-axis master axis_client_interface_tstrb axis_client_interface.tstrb
-axis master axis_client_interface_tkeep axis_client_interface.tkeep
-axis master axis_client_interface_tuser axis_client_interface.tuser
-axis master axis_client_interface_tdata axis_client_interface.tdata
+axis master axis_client_interface_tvalid axis_client_interface tvalid
+axis master axis_client_interface_tlast axis_client_interface tlast
+axis master axis_client_interface_tdest axis_client_interface tdest
+axis master axis_client_interface_tid axis_client_interface tid
+axis master axis_client_interface_tstrb axis_client_interface tstrb
+axis master axis_client_interface_tkeep axis_client_interface tkeep
+axis master axis_client_interface_tuser axis_client_interface tuser
+axis master axis_client_interface_tdata axis_client_interface tdata
 

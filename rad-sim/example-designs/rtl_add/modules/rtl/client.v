@@ -68,15 +68,15 @@ module client (
         end else begin
 				if (client_ready && client_valid && axis_client_interface_tvalid && axis_client_interface_tready) begin
 					// push data onto the FIFO
-					$display("Client: Added %d onto the FIFO!", client_tdata[63:0]);
-					$display("Client: Sent %d to Adder!", axis_client_interface_tdata[63:0]);
+					//$display("Client: Added %d onto the FIFO!", client_tdata[63:0]);
+					//$display("Client: Sent %d to Adder!", axis_client_interface_tdata[63:0]);
 				end else if (client_ready && client_valid) begin
 					// push data onto the FIFO
 					item_count <= item_count + 1;
-					$display("Client: Added %d onto the FIFO!", client_tdata[63:0]);
+					//$display("Client: Added %d onto the FIFO!", client_tdata[63:0]);
 				end else if (axis_client_interface_tvalid && axis_client_interface_tready) begin
 					item_count <= item_count - 1;
-					$display("Client: Sent %d to Adder!", axis_client_interface_tdata[63:0]);
+					//$display("Client: Sent %d to Adder!", axis_client_interface_tdata[63:0]);
 				end
 				
 				if (client_tlast) begin
