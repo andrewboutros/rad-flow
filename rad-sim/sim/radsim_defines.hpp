@@ -13,9 +13,9 @@
 #define NOC_LINKS_WIDTH           (NOC_LINKS_PAYLOAD_WIDTH + NOC_LINKS_VCID_WIDTH         + NOC_LINKS_PACKETID_WIDTH + NOC_LINKS_DEST_WIDTH + NOC_LINKS_DEST_INTERFACE_WIDTH)
 
 // AXI Parameters
-#define AXIS_MAX_DATAW 1024
+#define AXIS_MAX_DATAW 512
 #define AXI4_MAX_DATAW 512
-#define AXIS_USERW     66
+#define AXIS_USERW     75
 #define AXI4_USERW     64
 // (Almost always) Constant AXI Parameters
 #define AXIS_STRBW  8
