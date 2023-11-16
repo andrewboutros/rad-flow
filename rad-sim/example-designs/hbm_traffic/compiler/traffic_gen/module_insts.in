@@ -1,0 +1,58 @@
+module black_box
+black_box_0_inst.aximm_interface 0 21 aximm
+black_box_0_inst.axis_interface 0 81 axis
+endmodule
+module ddr_mem_ctrl
+ddr_mem_ctrl_0.aximm_interface 0 1 aximm
+endmodule
+module ddr_mem_ctrl
+ddr_mem_ctrl_0.aximm_interface 0 71 aximm
+endmodule
+module hbm_mem_ctrl
+hbm_mem_ctrl_0.aximm_interface 0 2 aximm
+endmodule
+module hbm_mem_ctrl
+hbm_mem_ctrl_1.aximm_interface 0 3 aximm
+endmodule
+module hbm_mem_ctrl
+hbm_mem_ctrl_2.aximm_interface 0 4 aximm
+endmodule
+module hbm_mem_ctrl
+hbm_mem_ctrl_3.aximm_interface 0 5 aximm
+endmodule
+module hbm_mem_ctrl
+hbm_mem_ctrl_4.aximm_interface 0 6 aximm
+endmodule
+module hbm_mem_ctrl
+hbm_mem_ctrl_5.aximm_interface 0 7 aximm
+endmodule
+module hbm_mem_ctrl
+hbm_mem_ctrl_6.aximm_interface 0 8 aximm
+endmodule
+module hbm_mem_ctrl
+hbm_mem_ctrl_7.aximm_interface 0 9 aximm
+endmodule
+module hbm_mem_ctrl
+hbm_mem_ctrl_0.aximm_interface 0 72 aximm
+endmodule
+module hbm_mem_ctrl
+hbm_mem_ctrl_1.aximm_interface 0 73 aximm
+endmodule
+module hbm_mem_ctrl
+hbm_mem_ctrl_2.aximm_interface 0 74 aximm
+endmodule
+module hbm_mem_ctrl
+hbm_mem_ctrl_3.aximm_interface 0 75 aximm
+endmodule
+module hbm_mem_ctrl
+hbm_mem_ctrl_4.aximm_interface 0 76 aximm
+endmodule
+module hbm_mem_ctrl
+hbm_mem_ctrl_5.aximm_interface 0 77 aximm
+endmodule
+module hbm_mem_ctrl
+hbm_mem_ctrl_6.aximm_interface 0 78 aximm
+endmodule
+module hbm_mem_ctrl
+hbm_mem_ctrl_7.aximm_interface 0 79 aximm
+endmodule
