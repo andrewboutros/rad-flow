@@ -39,6 +39,7 @@ public:
   virtual void ReadInputs() = 0;
   virtual void Evaluate() = 0;
   virtual void WriteOutputs() = 0;
+  virtual void Trace(ostream &, double) = 0;
 };
 
 #endif

@@ -65,12 +65,13 @@ public:
   virtual void ReadInputs();
   virtual void Evaluate() {}
   virtual void WriteOutputs();
+  virtual void Trace([[maybe_unused]] ostream & os, [[maybe_unused]]double sim_time) {}
 
 protected:
   int _delay;
   T * _input;
   T * _output;
-  queue<pair<int, T *> > _wait_queue;
+  deque<pair<int, T *> > _wait_queue;
 
 };
 
@@ -100,7 +101,7 @@ T * Channel<T>::Receive() {
 template<typename T>
 void Channel<T>::ReadInputs() {
   if(_input) {
-    _wait_queue.push(make_pair(GetSimTime() + _delay - 1, _input));
+    _wait_queue.push_back(make_pair(GetSimTime() + _delay - 1, _input));
     _input = 0;
   }
 }
@@ -119,7 +120,7 @@ void Channel<T>::WriteOutputs() {
   //assert(GetSimTime() == time);
   _output = item.second;
   assert(_output);
-  _wait_queue.pop();
+  _wait_queue.pop_front();
 }
 
 #endif

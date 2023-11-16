@@ -132,6 +132,7 @@ void mlp_driver::sink() {
   end_cycle = GetSimulationCycle(1.0);
   std::cout << "Simulation Cycles = " << end_cycle - start_cycle << std::endl;
   NoCTransactionTelemetry::DumpStatsToFile("stats.csv");
+  NoCFlitTelemetry::DumpNoCFlitTracesToFile("flit_traces.csv");
 
   std::vector<double> aggregate_bandwidths = NoCTransactionTelemetry::DumpTrafficFlows("traffic_flows", 
     end_cycle - start_cycle, radsim_design.GetNodeModuleNames());

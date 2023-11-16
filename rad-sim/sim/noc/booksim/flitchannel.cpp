@@ -89,3 +89,17 @@ void FlitChannel::WriteOutputs() {
 	       << "." << endl;
   }
 }
+
+void FlitChannel::Trace(ostream & os, double sim_time) {
+  auto src_router = this->_routerSource, sink_router = this->_routerSink;
+  int src_router_id = (src_router != nullptr) ? src_router->GetID() : -1;
+  int sink_router_id = (sink_router != nullptr) ? sink_router->GetID() : -1;
+  for (const auto & d : _wait_queue) {
+    os << sim_time << ", " << src_router_id << ", " << sink_router_id << ", "
+       << d.second->id << ", " << int(d.second->type) << ", " << 0 << endl;
+  }
+  if(_output) {
+    os << sim_time << ", " << src_router_id << ", " << sink_router_id << ", "
+       << _output->id << ", " << int(_output->type) << ", " << 1 << endl;
+  }
+}

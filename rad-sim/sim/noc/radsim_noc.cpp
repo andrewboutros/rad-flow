@@ -300,6 +300,7 @@ void radsim_noc::Tick() {
     _ejected_flits->clear();
     _booksim_noc->Evaluate();
     _booksim_noc->WriteOutputs();
+    _booksim_noc->Trace(NoCFlitTelemetry::ostream, double(GetSimTime()) / 1000);
     wait();
   }
 }
