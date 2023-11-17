@@ -14,8 +14,11 @@
 class mlp_driver : public sc_module {
  private:
   int start_cycle, end_cycle;
+  std::chrono::steady_clock::time_point start_time, end_time;
   unsigned int num_layers;
   std::vector<unsigned int> num_mvms;
+  std::vector<unsigned int> num_mvms_rtl;
+  std::vector<unsigned int> num_mvms_total;
 
   std::vector<std::vector<std::vector<int>>> test_inputs;
   std::vector<std::vector<int>> golden_outputs;

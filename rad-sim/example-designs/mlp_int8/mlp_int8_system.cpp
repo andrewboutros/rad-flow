@@ -7,26 +7,34 @@ mlp_int8_system::mlp_int8_system(const sc_module_name& name, sc_clock* driver_cl
   std::string design_root_dir = radsim_config.GetStringKnob("radsim_user_design_root_dir");
   std::string design_config_filename = design_root_dir + "/compiler/layer_mvm_config";
   std::ifstream design_config_file(design_config_filename);
-  if(!design_config_file) {
+  if (!design_config_file) {
     std::cerr << "Cannot read MLP design configuration file!" << std::endl;
     exit(1);
   }
   std::string line;
   std::getline(design_config_file, line);
   std::stringstream line_stream(line);
-  unsigned int num_layers, tmp;
-  std::vector<unsigned int> num_mvms;
+  unsigned int num_layers;
+  std::string num_mvms_layer, num_mvms_rtl_layer;
+  std::string layer_mvms;
   line_stream >> num_layers;
   num_mvms.resize(num_layers);
+  num_mvms_rtl.resize(num_layers);
+  num_mvms_total.resize(num_layers);
   for (unsigned int layer_id = 0; layer_id < num_layers; layer_id++) {
-    line_stream >> tmp;
-    num_mvms[layer_id] = tmp;
+    line_stream >> layer_mvms;
+    std::stringstream layer_mvms_stream(layer_mvms);
+    std::getline(layer_mvms_stream, num_mvms_layer, ',');
+    std::getline(layer_mvms_stream, num_mvms_rtl_layer, ',');
+    num_mvms[layer_id] = std::stoi(num_mvms_layer);
+    num_mvms_rtl[layer_id] = std::stoi(num_mvms_rtl_layer);
+    num_mvms_total[layer_id] = num_mvms[layer_id] + num_mvms_rtl[layer_id];
   }
 
   // Initialize signal vectors
-  init_vector<sc_signal<bool>>::init_sc_vector(dispatcher_fifo_rdy_signal, num_mvms[0]);
-  init_vector<sc_signal<bool>>::init_sc_vector(dispatcher_fifo_wen_signal, num_mvms[0]);
-  init_vector<sc_signal<data_vector<sc_int<IPRECISION>>>>::init_sc_vector(dispatcher_fifo_wdata_signal, num_mvms[0]);
+  init_vector<sc_signal<bool>>::init_sc_vector(dispatcher_fifo_rdy_signal, num_mvms_total[0]);
+  init_vector<sc_signal<bool>>::init_sc_vector(dispatcher_fifo_wen_signal, num_mvms_total[0]);
+  init_vector<sc_signal<data_vector<sc_int<IPRECISION>>>>::init_sc_vector(dispatcher_fifo_wdata_signal, num_mvms_total[0]);
 
   // Instantiate driver
   mlp_driver_inst = new mlp_driver("mlp_driver");

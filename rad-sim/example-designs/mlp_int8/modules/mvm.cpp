@@ -397,9 +397,9 @@ void mvm::RegisterModuleInfo() {
   _num_noc_axis_slave_ports = 0;
   _num_noc_axis_master_ports = 0;
 
-  port_name = module_name + ".tx_interface";
+  port_name = module_name + ".axis_tx";
   RegisterAxisMasterPort(port_name, &tx_interface, DATAW, 0);
 
-  port_name = module_name + ".rx_interface";
+  port_name = module_name + ".axis_rx";
   RegisterAxisSlavePort(port_name, &rx_interface, DATAW, 0);
 }

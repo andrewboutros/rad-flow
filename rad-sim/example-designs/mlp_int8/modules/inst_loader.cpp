@@ -88,7 +88,7 @@ void inst_loader::Assign() {
       tx_interface.tid.write(0);
       std::string dest_name =
           "layer" + std::to_string(layer_id_fifo_odata.read()) + 
-          "_mvm" + std::to_string(mvm_id_fifo_odata.read()) + ".rx_interface";
+          "_mvm" + std::to_string(mvm_id_fifo_odata.read()) + ".axis_rx";
       tx_interface.tdest.write(radsim_design.GetPortDestinationID(dest_name));
     }
     tx_interface.tvalid.write(!inst_fifo_empty.read());

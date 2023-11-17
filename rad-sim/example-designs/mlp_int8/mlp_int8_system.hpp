@@ -9,6 +9,10 @@
 
 class mlp_int8_system : public sc_module {
  private:
+  std::vector<unsigned int> num_mvms;
+  std::vector<unsigned int> num_mvms_rtl;
+  std::vector<unsigned int> num_mvms_total;
+
   sc_signal<bool> weight_loader_weight_fifo_rdy_signal;
   sc_signal<bool> weight_loader_weight_fifo_wen_signal;
   sc_signal<data_vector<sc_int<IPRECISION>>> weight_loader_weight_fifo_wdata_signal;
