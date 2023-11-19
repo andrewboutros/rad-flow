@@ -27,7 +27,7 @@ set(hdrfiles
   add_multi_system.hpp
 )
 
-add_compile_options(-Wall -Wextra -pedantic)
+add_compile_options(-Wall -Wextra -pedantic -g)
 
 add_library(design STATIC ${srcfiles} ${hdrfiles})
 target_link_libraries(design PUBLIC SystemC::systemc booksim noc)

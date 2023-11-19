@@ -15,6 +15,7 @@ add_driver::add_driver(const sc_module_name &name)
     unsigned int r_num = std::rand() % 10 + 1;
     std::cout << r_num << " ";
     numbers_to_send.push(r_num);
+    numbers_to_send.push(r_num); //ADDED, push twice (one for each adder inst)
     actual_sum += r_num;
   }
   std::cout << std::endl << "----------------------------------------" << std::endl;
@@ -25,6 +26,7 @@ add_driver::add_driver(const sc_module_name &name)
 
 add_driver::~add_driver() {}
 
+bool local_sel = 0; //ADDED
 void add_driver::source() {
   // Reset
   rst.write(true);
@@ -37,6 +39,18 @@ void add_driver::source() {
     client_tdata.write(numbers_to_send.front());
     client_tlast.write(numbers_to_send.size() <= 1);
     client_valid.write(true);
+
+
+    //ADDED
+    client_tsel_data.write(local_sel);
+    client_tsel_valid.write(true);
+    if (local_sel == 0) { //flip to adder 2 for next number
+      local_sel = 1;
+    }
+    else { //flip to adder 1 for next number
+      local_sel = 0;
+    }
+
 
     wait();
 
@@ -58,6 +72,16 @@ void add_driver::sink() {
 
   if (response.read() != actual_sum) std::cout << "FAILURE - Output is not matching!" << std::endl;
   else std::cout << "SUCCESS - Output is matching!" << std::endl;
+
+  //ADDED:
+  while (!response_valid2.read()) {
+    wait();
+  }
+  std::cout << "Received " << response2.read().to_uint64() << " sum from the adder2!" << std::endl;
+  std::cout << "The actual sum is " << actual_sum << std::endl;
+
+  if (response2.read() != actual_sum) std::cout << "FAILURE - Output2 is not matching!" << std::endl;
+  else std::cout << "SUCCESS - Output2 is matching!" << std::endl;
 
   sc_stop();
 }

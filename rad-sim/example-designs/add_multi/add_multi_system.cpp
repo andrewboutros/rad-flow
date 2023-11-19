@@ -13,6 +13,8 @@ add_multi_system::add_multi_system(const sc_module_name &name, sc_clock *driver_
   driver_inst->client_ready(client_ready_sig);
   driver_inst->response(response_sig);
   driver_inst->response_valid(response_valid_sig);
+  driver_inst->response2(response_sig2);
+  driver_inst->response_valid2(response_valid_sig2);
 
   // Instantiate design top-level
   dut_inst = new add_top("dut");
@@ -23,6 +25,9 @@ add_multi_system::add_multi_system(const sc_module_name &name, sc_clock *driver_
   dut_inst->client_ready(client_ready_sig);
   dut_inst->response(response_sig);
   dut_inst->response_valid(response_valid_sig);
+  //for adder_inst2
+  dut_inst->response2(response_sig2);
+  dut_inst->response_valid2(response_valid_sig2);
 }
 
 add_multi_system::~add_multi_system() {

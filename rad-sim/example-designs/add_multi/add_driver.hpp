@@ -22,6 +22,12 @@ public:
   sc_in<bool> client_ready;
   sc_in<sc_bv<DATAW>> response;
   sc_in<bool> response_valid;
+  //ADDED:
+  sc_in<sc_bv<DATAW>> response2;
+  sc_in<bool> response_valid2;
+  sc_out<bool> client_tsel_data;
+  sc_out<bool> client_tsel_valid;
+
 
   add_driver(const sc_module_name &name);
   ~add_driver();

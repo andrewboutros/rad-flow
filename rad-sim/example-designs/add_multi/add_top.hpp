@@ -22,6 +22,9 @@ public:
   sc_out<sc_bv<DATAW>> response;
   sc_out<bool> response_valid;
 
+  sc_out<sc_bv<DATAW>> response2; //for adder_inst2
+  sc_out<bool> response_valid2; //for adder_inst2
+
   add_top(const sc_module_name &name);
   ~add_top();
 };

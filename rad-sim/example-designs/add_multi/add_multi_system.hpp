@@ -13,6 +13,9 @@ private:
   sc_signal<bool> client_ready_sig;
   sc_signal<sc_bv<DATAW>> response_sig;
   sc_signal<bool> response_valid_sig;
+  //for adder_inst2
+  sc_signal<sc_bv<DATAW>> response_sig2;
+  sc_signal<bool> response_valid_sig2;
 
 public:
   sc_signal<bool> rst_sig;

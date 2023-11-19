@@ -18,6 +18,11 @@ private:
   sc_signal<bool> client_fifo_full;  // Signal flagging addend FIFO is full
   bool testbench_tlast;
 
+  //ADDED:
+  std::queue<bool> client_tsel_fifo; // FIFO to store which adder inst
+  unsigned int client_tsel_fifo_depth;    // MAXIMUM number of addends to store in FIFO
+  sc_signal<bool> client_tsel_fifo_full;  // Signal flagging addend FIFO is full
+
 public:
   sc_in<bool> rst;
   // Interface to driver logic
@@ -27,6 +32,10 @@ public:
   sc_out<bool> client_ready;
   // Interface to the NoC
   axis_master_port axis_client_interface;
+
+  //ADDED:
+  sc_in<bool> client_tsel_data;
+  sc_in<bool> client_tsel_valid;
 
   client(const sc_module_name &name, unsigned int fifo_depth);
   ~client();

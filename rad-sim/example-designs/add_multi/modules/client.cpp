@@ -4,6 +4,7 @@ client::client(const sc_module_name &name, unsigned int fifo_depth)
     : RADSimModule(name) {
 
   client_fifo_depth = fifo_depth;
+  client_tsel_fifo_depth = fifo_depth; //ADDED
 
   // Combinational logic and its sensitivity list
   SC_METHOD(Assign);
@@ -36,6 +37,12 @@ void client::Tick() {
     client_tdata_fifo.pop();
   }
   client_fifo_full.write(false);
+  //ADDED:
+  while (!client_tsel_fifo.empty()) {
+      client_tsel_fifo.pop();
+  }
+  client_tsel_fifo_full.write(false);
+
   wait();
 
   std::string src_port_name = module_name + ".axis_client_interface";
@@ -47,14 +54,26 @@ void client::Tick() {
       client_tdata_fifo.push(client_tdata);
       testbench_tlast = client_tlast.read();
       std::cout << module_name << ": Pushed request to FIFO" << std::endl;
+      client_tsel_fifo.push(client_tsel_data); //ADDED
     }
     client_fifo_full.write(client_tdata_fifo.size() >= client_fifo_depth);
+    client_tsel_fifo_full.write(client_tsel_fifo.size() >= client_tsel_fifo_depth); //ADDED
 
     // Sending transactions to AXI-S NoC
     if (!client_tdata_fifo.empty()) {
       sc_bv<DATAW> tdata = client_tdata_fifo.front();
+      bool tsel_data = client_tsel_fifo.front(); //ADDED
       std::string dst_port_name = "adder_inst.axis_adder_interface";
-      uint64_t dst_addr = radsim_design.GetPortDestinationID(dst_port_name);
+      //ADDED:
+      std::string dst_port_name2 = "adder_inst2.axis_adder_interface";
+      uint64_t dst_addr;
+      if (tsel_data == 0) {
+        dst_addr = radsim_design.GetPortDestinationID(dst_port_name);
+      }
+      else if (tsel_data == 1) {
+        dst_addr = radsim_design.GetPortDestinationID(dst_port_name2);
+      }
+      
       uint64_t src_addr = radsim_design.GetPortDestinationID(src_port_name);
 
       axis_client_interface.tdest.write(dst_addr);
@@ -73,6 +92,7 @@ void client::Tick() {
     if (axis_client_interface.tvalid.read() &&
         axis_client_interface.tready.read()) {
       client_tdata_fifo.pop();
+      client_tsel_fifo.pop(); //ADDED
       std::cout << module_name << ": Sent Transaction!" << std::endl;
     }
     wait();
