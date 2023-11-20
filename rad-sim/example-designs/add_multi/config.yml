@@ -28,7 +28,7 @@ noc_adapters:
   vc_mapping: ['direct']
 
 design:
-  name: 'add'
+  name: 'add_multi' # Must match the design directory name under rad-sim/example-designs/
   noc_placement: ['add.place']
   clk_periods: [5.0]
 

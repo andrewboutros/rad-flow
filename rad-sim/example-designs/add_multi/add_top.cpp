@@ -15,6 +15,8 @@ add_top::add_top(const sc_module_name &name)
   client_inst->client_tlast(client_tlast);
   client_inst->client_valid(client_valid);
   client_inst->client_ready(client_ready);
+  client_inst->client_tsel_data(client_tsel_data);
+  client_inst->client_tsel_valid(client_tsel_valid);
 
   module_name_str = "adder_inst";
   std::strcpy(module_name, module_name_str.c_str());

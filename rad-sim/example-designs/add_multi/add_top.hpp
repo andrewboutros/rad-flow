@@ -19,6 +19,8 @@ public:
   sc_in<bool> client_tlast;
   sc_in<bool> client_valid;
   sc_out<bool> client_ready;
+  sc_in<bool> client_tsel_data;
+  sc_in<bool> client_tsel_valid;
   sc_out<sc_bv<DATAW>> response;
   sc_out<bool> response_valid;
 

@@ -11,6 +11,8 @@ add_multi_system::add_multi_system(const sc_module_name &name, sc_clock *driver_
   driver_inst->client_tlast(client_tlast_sig);
   driver_inst->client_valid(client_valid_sig);
   driver_inst->client_ready(client_ready_sig);
+  driver_inst->client_tsel_data(client_tsel_data_sig);
+  driver_inst->client_tsel_valid(client_tsel_valid_sig);
   driver_inst->response(response_sig);
   driver_inst->response_valid(response_valid_sig);
   driver_inst->response2(response_sig2);
@@ -23,6 +25,8 @@ add_multi_system::add_multi_system(const sc_module_name &name, sc_clock *driver_
   dut_inst->client_tlast(client_tlast_sig);
   dut_inst->client_valid(client_valid_sig);
   dut_inst->client_ready(client_ready_sig);
+  dut_inst->client_tsel_data(client_tsel_data_sig);
+  dut_inst->client_tsel_valid(client_tsel_valid_sig);
   dut_inst->response(response_sig);
   dut_inst->response_valid(response_valid_sig);
   //for adder_inst2
