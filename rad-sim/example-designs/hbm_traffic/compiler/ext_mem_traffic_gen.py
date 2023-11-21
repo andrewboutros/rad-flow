@@ -81,6 +81,10 @@ def write_mem_contents(channel: int, mem_contents: Dict[str, int], bitwidth: int
             print(f"{addr_format(int(addr), addr_width)} {addr_data}", file=f)
 
 
+
+
+
+
 @dataclass 
 class AXIPort:
     name: str # name of port corresponding to the hbm_traffic.place file
@@ -88,6 +92,7 @@ class AXIPort:
     is_master: bool # True if master, False if slave
     noc_loc: int # index of the noc port corresponding to the hbm_traffic.place file
     noc_idx: int # index of the entire NoC which this port/router exists in (if only using a single noc just use 0)
+    id: int = None # The id related to number of total insts of this module (or inst multiple subtypes of single module)
 
     supported_types = ["aximm", "axis"]
     def __post_init__(self):
@@ -96,6 +101,9 @@ class AXIPort:
 
     def get_port_info_line(self) -> str:        
         return f"{self.name} {self.noc_idx} {self.noc_loc} {self.type} {int(self.is_master)}" 
+    
+    def get_port_placement_info_line(self) -> str:
+        return f"{self.name} {self.noc_idx} {self.noc_loc} {self.type}"
 
 @dataclass
 class MemReqInstruction:
@@ -112,14 +120,17 @@ class MemReqInstruction:
 @dataclass
 class HWModule:
     name: str
+    inst_name: str
     ports: List[AXIPort]
-
+    id: int = None # The id related to number of total insts of this module (or inst multiple subtypes of single module)
+    
 @dataclass
 class ExtMem:
     type: str # ddr, hbm, etc
     num_channels: int
     addr_width: int # using 32 for now not sure TODO figure out for DDR & HBM
     data_width: int # how much data fits into a single address, using 1024 for now not sure TODO figure out for DDR & HBM
+    id: int = None # id for number of external memories of this type
     # Mem controllers exist here
     
     # POST INIT FIELDS
@@ -128,35 +139,96 @@ class ExtMem:
     def init_mem_ctrl_modules(self, noc_locs: List[int]):
         self.mem_ctrl_modules = [
             HWModule(
-                name=f"{self.type}_mem_ctrl",
+                name=f"ext_mem_ctrl",
+                inst_name=f"{self.type}_mem_ctrl",
                 ports=[
-                    AXIPort(f"{self.type}_mem_ctrl_{ch}.aximm_interface", "aximm", False, noc_locs[ch], 0), # Todo 
+                    AXIPort(f"{self.type}_mem_ctrl_{ch}.aximm_interface", "aximm", False, noc_locs[ch], 0) 
+                    for ch in range(self.num_channels)
                 ]
-            ) for ch in range(self.num_channels)
+            ) 
         ]
 
 
-def write_module_insts_config(module_insts: List[HWModule], outfile: str) -> None:
-    """
-        Write the module instantiation file for the traffic gen
-    """
-    # Written out with information associated with a particular module bounded by "module" "endmodule"
+@dataclass
+class RADSimModules:
+    hw_modules: List[HWModule] # Design HW modules (including ext mem modules)
+    ext_mems: List[ExtMem]
+    # Count of instantiations of each type of HW module, this is used for port / module inst naming later
+    # module_cnts: Dict[str, int] 
 
-    with open(outfile, "w") as f:
-        for module in module_insts:
-            print(f"module {module.name}", file=f)
-            # print(f"{[port.get_port_info_line() for port in module.ports]}", file=f)
-            for port in module.ports:
-                print(port.get_port_info_line(), file=f)
-            print("endmodule", file=f)
+    def __post_init__(self):
+        # get counts for each module type (including ext mems)
+        module_cnts = { module.name: 0 for module in self.hw_modules}
+        for mod_1 in self.hw_modules:
+            for mod_2 in module_cnts.keys():
+                if mod_1.name == mod_2:
+                    mod_1.id = module_cnts[mod_2] # set module id to be the number of modules of this type
+                    module_cnts[mod_2] += 1
+                    break 
+
+        ext_mem_ctrl_cnts = { f"{ext_mem.type}_{mem_ctrl_mod.name}": 0 for ext_mem in self.ext_mems for mem_ctrl_mod in ext_mem.mem_ctrl_modules}
+        for ext_mem in self.ext_mems:
+        # for mem_type in set([ext_mem.type for ext_mem in self.ext_mems]):
+            for mem_key in ext_mem_ctrl_cnts.keys():
+                for i, mod_1 in enumerate(ext_mem.mem_ctrl_modules):
+                    if mem_key == f"{ext_mem.type}_{mod_1.name}":
+                        mod_1.id = ext_mem_ctrl_cnts[mem_key]
+                        ext_mem.id = ext_mem_ctrl_cnts[mem_key]
+                        ext_mem_ctrl_cnts[mem_key] += 1
+                        break
+        
+
+    def rename_modules(self):
+        """
+            Rename modules to be unique
+        """
+        # renaming hw_modules
+        for module in self.hw_modules:
+            module.inst_name = f"{module.name}_{module.id}_inst"
+            mod_mem_str = "" #"mem_channel" if "mem_ctrl" in module.name else "interface"
+            for id, port in enumerate(module.ports):
+                mas_slv_str = "master" if port.is_master else "slave"
+                port.name = f"{module.inst_name}.{port.type}_{mas_slv_str}_{mod_mem_str}_{id}"
+        # renaming ext mem modules
+        for ext_mem in self.ext_mems:
+            for module in ext_mem.mem_ctrl_modules:
+                module.inst_name = f"{ext_mem.type}_{module.name}_{module.id}_inst"
+                for id, port in enumerate(module.ports):
+                    mas_slv_str = "master" if port.is_master else "slave"
+                    port.name = f"{module.inst_name}.{port.type}_{mas_slv_str}_mem_channel_{id}"
+
+    def write_placement_file(self, outfile: str) -> None:
+        """
+            Write the placement file for the traffic gen
+        """
+        all_ports = [port for module in self.hw_modules for port in module.ports] + [port for ext_mem in self.ext_mems for module in ext_mem.mem_ctrl_modules for port in module.ports]
+        with open (outfile, "w") as file:
+            for port in all_ports:
+                print(port.get_port_placement_info_line(), file=file)
+
+
+    def write_module_insts_config(self, outfile: str) -> None:
+        """
+            Write the module instantiation file for the traffic gen
+        """
+        # Written out with information associated with a particular module bounded by "module" "endmodule"
+
+        with open(outfile, "w") as f:
+            for module in self.hw_modules + [module for ext_mem in self.ext_mems for module in ext_mem.mem_ctrl_modules]:
+                print(f"module {module.name} {module.inst_name}", file=f)
+                # print(f"{[port.get_port_info_line() for port in module.ports]}", file=f)
+                for port in module.ports:
+                    print(port.get_port_info_line(), file=f)
+                print("endmodule", file=f)
 
     
 def write_mem_req_instructions(mem_req_instructions: List[MemReqInstruction], addr_width: int, mem_data_width: int, outfile: str) -> None:
     with open(outfile, "w") as f:
         # print the number of instruction addresses as header
-        print(len(set([inst.inst_address for inst in mem_req_instructions])), file=f)
+        print(f"{len(set([inst.inst_address for inst in mem_req_instructions]))}", file=f)
         for inst in mem_req_instructions:
             print(f"{addr_format(inst.inst_address, 4)} {inst.mem_req_module_id} {inst.src_port} {inst.dst_port} {inst.target_channel} {addr_format(inst.target_address, addr_width)} {signed_int_2_bin(inst.write_data, mem_data_width)} {int(inst.write_en)}", file=f)
+
 
 
 
@@ -183,6 +255,9 @@ def main():
     addr_line_sz = 1024
     addr_width = 32
 
+    # Init Placement
+
+
     # Init Ext Mem
     ext_mems = [
         # TODO fix the placement to be less dumb
@@ -204,6 +279,7 @@ def main():
     mem_req_modules = [
         HWModule(
             name="black_box",
+            inst_name=f"black_box_0_inst",
             ports=[
                 AXIPort("black_box_0_inst.aximm_interface", "aximm", True, 21, 0),
                 AXIPort("black_box_0_inst.axis_interface", "axis", True, 81, 0),
@@ -211,17 +287,40 @@ def main():
         )
     ]
 
+
+
+    # Add collector module
+    collector = HWModule(
+        name="output_collector",
+        inst_name=f"output_collector_inst",
+        ports = [AXIPort("output_collector_inst.axis_interface", "axis", False, 31, 0)]
+    )
+
+    # Init RADSimModules Object for port / module naming, this is needed when we have multiple insts of same module
+    all_modules = mem_req_modules + [collector]
+
+    rad_sim_modules = RADSimModules(
+        hw_modules = all_modules,
+        ext_mems = ext_mems,
+    )
+    rad_sim_modules.rename_modules()
+
+    # Write placement file
+    placement_outfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "hbm_traffic.place")
+    rad_sim_modules.write_placement_file(placement_outfile)
+
     num_wr_rds = 100
     # For this test we will have a bunch of instructions which do X writes and then Y reads -> after this we do % writes and then % reads (for N transactions)
     mem_req_instructions = [
         # incrementing the write address by 16 each time, as I'm not sure what the address line size is
-        *[MemReqInstruction(0x0, 0, "black_box_0_inst.aximm_interface", "ddr_mem_ctrl_0.aximm_interface", 0, i << 4, i, True) for i in range(num_wr_rds)], # Writes
-        *[MemReqInstruction(0x0, 0, "black_box_0_inst.aximm_interface", "ddr_mem_ctrl_0.aximm_interface", 0, i << 4, i, False) for i in range(num_wr_rds)], # Reads
+        *[MemReqInstruction(0x0 + i, 0, "black_box_0_inst.aximm_master__0", "ddr_mem_ctrl_0_inst.aximm_slave__0", 0, i << 4, i, True) for i in range(num_wr_rds)], # Writes
+        *[MemReqInstruction(0x0 + i + num_wr_rds, 0, "black_box_0_inst.aximm_master__0", "ddr_mem_ctrl_0_inst.aximm_slave__0", 0, i << 4, i, False) for i in range(num_wr_rds)], # Reads
     ]
+    
 
     # Create module instantiation file 
     module_inst_outfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "traffic_gen", "traffic_gen.cfg")
-    write_module_insts_config(mem_req_modules + [module for ext_mem in ext_mems for module in ext_mem.mem_ctrl_modules ], module_inst_outfile)
+    rad_sim_modules.write_module_insts_config(module_inst_outfile)
 
     # Create instructions for all mem_req modules
     inst_outfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "traffic_gen", "insts.in")

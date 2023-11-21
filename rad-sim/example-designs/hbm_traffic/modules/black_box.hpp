@@ -12,8 +12,13 @@
 #include <string>
 #include <systemc.h>
 #include <vector>
+#include <traffic_gen.hpp>
 
+#define NUM_MEM_REQ_FIFOS 6
 
+#define NUM_SIG_REQ_IF_PARALLEL_PORTS 1
+
+/*
 template <typename T>
 void axis_bv_to_data_vector(
     sc_bv<AXIS_MAX_DATAW> &bitvector, 
@@ -41,7 +46,7 @@ void aximm_vector_to_bv(
     sc_bv<AXI4_MAX_DATAW> &bitvector, 
     unsigned int bitwidth, 
     unsigned int num_elements);
-
+*/
 
 
 
@@ -64,12 +69,29 @@ private:
     // sc_signal<bool> _mem_req_inst_fifo_empty;
 
 
+    sc_signal<unsigned int> _wr_req_id_count; // Counters for transaction IDs
+    sc_signal<unsigned int> _wr_data_id_count; // Counters for transaction IDs
+    sc_signal<unsigned int> _rd_req_id_count; // Counters for transaction IDs
     
+    sc_signal<unsigned int> _rd_data_id_count; // Counters for transaction IDs
+    sc_signal<unsigned int> _wr_resp_id_count; // Counters for transaction IDs
+
+
+
+    sc_vector<sc_signal<bool>> _mem_req_ififos_full; // Signals flagging FIFOs are full
+    sc_vector<sc_signal<bool>> _mem_req_ififos_empty; // Signals flagging FIFOs are full
+
+    std::queue<uint64_t> _target_addr_fifo;
+    std::queue<unsigned int> _target_channel_fifo;
+    std::queue<size_t> _wr_data_fifo;
+    std::queue<bool> _wr_en_fifo;
+    std::queue<uint64_t> _src_port_fifo;
+    std::queue<uint64_t> _dst_port_fifo;
 
     // starting with 1 input and 1 output FIFO
-    std::queue<data_vector<int16_t>> _input_fifo; // Input FIFO
-    sc_signal<bool> _ififo_full;               // Signals FIFO full
-    sc_signal<bool> _ififo_empty;              // Signals iFIFO empty
+    std::queue<data_vector<int16_t>> _rd_data_input_fifo; // Input FIFO
+    sc_signal<bool> _rd_data_ififo_full;               // Signals FIFO full
+    sc_signal<bool> _rd_data_ififo_empty;              // Signals iFIFO empty
 
     std::queue<data_vector<int16_t>> _output_fifo; // Output FIFO
     sc_signal<bool> _ofifo_full;               // Signals FIFO full
@@ -94,21 +116,28 @@ public:
     axis_master_port axis_interface;
 
     // interface from testbench to generate memory read requests
-    // sc_in<data_vector<unsigned int>> target_channel;
-    // sc_in<data_vector<uint64_t>> target_address;
-    // sc_in<bool> write_en; // 0 = read, 1 = write
-    // sc_in<bool> mem_req_valid;
-    // sc_out<bool> mem_req_ready;
+    sc_in<bool> wr_en; // 0 = read, 1 = write
+    sc_in<bool> mem_req_valid;
+    sc_out<bool> mem_req_ready;
+    
+    // None of these are vectors, we can only issues a single req at a time
+    sc_in<size_t> wr_data;
+    sc_in<unsigned int> target_channel;
+    sc_in<uint64_t> target_address;
+    sc_in<uint64_t> src_port;
+    sc_in<uint64_t> dst_port;
+
+
 
 
     
-    void data_vector_to_bv_axis(
-        data_vector<int16_t> &datavector, sc_bv<AXIS_MAX_DATAW> &bitvector,
-        unsigned int num_elements);
+    // void data_vector_to_bv_axis(
+    //     data_vector<int16_t> &datavector, sc_bv<AXIS_MAX_DATAW> &bitvector,
+    //     unsigned int num_elements);
 
-    void bv_aximm_to_data_vector(
-        sc_bv<AXI4_MAX_DATAW> &bitvector, data_vector<int16_t> &datavector,
-        unsigned int num_elements);
+    // void bv_aximm_to_data_vector(
+    //     sc_bv<AXI4_MAX_DATAW> &bitvector, data_vector<int16_t> &datavector,
+    //     unsigned int num_elements);
     
 
     black_box(  const sc_module_name &name,

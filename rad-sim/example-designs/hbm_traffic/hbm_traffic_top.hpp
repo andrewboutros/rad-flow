@@ -11,18 +11,26 @@
 #include <systemc.h>
 #include <vector>
 #include <algorithm>
+#include <traffic_gen.hpp>
+
 
 class hbm_traffic_top : public sc_module {
 private:
-  embedding_lookup *embedding_lookup_inst;
-  custom_feature_interaction *feature_interaction_inst;
-  std::vector<black_box *> black_boxes;
-  std::vector<std::vector<mvm *>> mvms;
-  collector *output_collector;
-  std::vector<mem_controller *> ext_mem;
+    embedding_lookup *embedding_lookup_inst;
+    custom_feature_interaction *feature_interaction_inst;
+    std::vector<black_box *> black_boxes;
+    std::vector<std::vector<mvm *>> mvms;
+    collector *output_collector;
+    std::vector<mem_controller *> ext_mem;
 
-  std::vector<axis_signal> axis_sig;
-  std::vector<sc_clock *> mem_clks;
+    std::vector<axis_signal> axis_sig;
+    std::vector<sc_clock *> mem_clks;
+
+    sc_vector<sc_signal<unsigned int>> _target_channels;
+    sc_vector<sc_signal<uint64_t>> _target_addresses;
+    sc_vector<sc_signal<size_t>> _wr_datas;
+    sc_vector<sc_signal<uint64_t>> _src_ports;
+    sc_vector<sc_signal<uint64_t>> _dst_ports;
 
 public:
     sc_in<bool> rst;
@@ -53,4 +61,9 @@ public:
 
     hbm_traffic_top(const sc_module_name &name);
     ~hbm_traffic_top();
+
+    
+    void Assign(); // Combinational logic process
+    SC_HAS_PROCESS(hbm_traffic_top);
+    
 };

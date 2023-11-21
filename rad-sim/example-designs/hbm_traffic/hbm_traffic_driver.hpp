@@ -8,6 +8,9 @@
 #include <systemc.h>
 #include <time.h>
 #include <vector>
+#include <algorithm>
+#include <traffic_gen.hpp>
+
 // #include <bits/stdc++.h>
 
 class hbm_traffic_driver : public sc_module {

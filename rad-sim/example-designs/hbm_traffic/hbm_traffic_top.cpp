@@ -2,38 +2,9 @@
 
 
 
-struct axi_port_info {
-    /*
-        Just the port information required to know where to send packets (used for src/dst ports)
-    */
-    std::string name; // same as in the <module>.place file
-    std::string type; // "aximm", "axis"
-    bool is_master; // master or slave interface
-};
-
-struct hw_module {
-    std::string inst_name;
-    std::string module_name;
-    std::vector<axi_port_info> ports;
-
-    hw_module::hw_module(
-        std::string inst_name,
-        std::string module_name,
-        std::vector<axi_port_info> ports);
-};
-
-hw_module::hw_module(
-        std::string inst_name,
-        std::string module_name,
-        std::vector<axi_port_info> ports) {
-    this->inst_name = inst_name;
-    this->module_name = module_name;
-    this->ports = ports;
-}
-
-
 // TODO update this function to support higher level instantiation of these black boxes from the python compiler
 // For now it will just grab the number of consumer_producer insts 
+/*
 bool ParseTrafficGenModules(
         std::vector<hw_module> &modules,
         std::string &io_filename) {
@@ -70,7 +41,7 @@ bool ParseTrafficGenModules(
         }
     }
 }
-
+*/
 
 hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
 
@@ -111,22 +82,56 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
     mem_req_readys.init(num_mem_req_modules);
 
     wr_ens.init(num_mem_req_modules);
-
     black_boxes.resize(num_mem_req_modules);
 
+    // Init sc_vectors required for converting data_vectors to sc_signals, TODO see if this is a hack
+    // Conversion of these signals is done in Assign()
+    _target_channels.init(num_mem_req_modules);
+    _target_addresses.init(num_mem_req_modules);
+    _wr_datas.init(num_mem_req_modules);
+    _src_ports.init(num_mem_req_modules);
+    _dst_ports.init(num_mem_req_modules);
+
+    
     // Instantiate mem req modules (black boxes)
-    for (int i=0; i < num_mem_req_modules; i++){
+    int i = 0;
+    int mem_ch_id = 0;
+    for (auto &module: modules){
         // Consumer producer modules
-        if (modules[i].module_name == "black_box") {
-            std::string module_name_str = "black_box_" + std::to_string(i) + "_inst";
-            std::strcpy(module_name, module_name_str.c_str());
+        if (module.module_name == "black_box") {
+            std::strcpy(module_name, module.inst_name.c_str());
             black_boxes[i] = new black_box(module_name, line_bitwidth, element_bitwidth, mem_req_fifos_depth);
             black_boxes[i]->rst(rst);
+            black_boxes[i]->wr_en(wr_ens[i]);
+            black_boxes[i]->mem_req_valid(mem_req_valids[i]);
+            black_boxes[i]->mem_req_ready(mem_req_readys[i]);
+            black_boxes[i]->target_channel(_target_channels[i]);
+            black_boxes[i]->target_address(_target_addresses[i]);
+            black_boxes[i]->src_port(_src_ports[i]);
+            black_boxes[i]->dst_port(_dst_ports[i]);
+            black_boxes[i]->wr_data(_wr_datas[i]);
+        } else if (module.module_name == "ext_mem") {
+            // Ext Mem Controllers TODO 
+            std::string mem_content_init_prefix = radsim_config.GetStringKnob("radsim_user_design_root_dir") + "/compiler/ext_mem_init/channel_";
+                    double mem_clk_period =
+            radsim_config.GetDoubleVectorKnob("dram_clk_periods", ctrl_id);
+            
         }
-        // Ext Mem Controllers TODO
+        i++;
+    }
+
+
+    // for (int i=0; i < num_mem_req_modules; i++){
+    //     if (modules[i].module_name == "black_box") {
+    //         std::string module_name_str = "black_box_" + std::to_string(i) + "_inst";
+    //         std::strcpy(module_name, module_name_str.c_str());
+    //         black_boxes[i] = new black_box(module_name, line_bitwidth, element_bitwidth, mem_req_fifos_depth);
+
+    //     }
+    //     // Ext Mem Controllers TODO
         
 
-    }
+    // }
 
 
 
@@ -301,10 +306,47 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
         ch_id += mem_channels[ctrl_id];
     }
 
+
+    // set clk and reset signal for the top level module
+    
+    SC_METHOD(Assign);
+    sensitive << rst << target_channels << target_addresses << wr_datas << src_ports << dst_ports;
+    
+
     radsim_design.BuildDesignContext("hbm_traffic.place", "hbm_traffic.clks");
     radsim_design.CreateSystemNoCs(rst);
     radsim_design.ConnectModulesToNoC();
 }
+
+
+void hbm_traffic_top::Assign(){
+    // All module instantiations will deal with other signals, this is just for the conversion between data_vectors to sc_vectors, again TODO see if this is a hack, I think it is....
+    if (rst) {
+        for (unsigned int i = 0; i < _target_channels.size(); i++) {
+            _target_channels[i].write(0);
+            _target_addresses[i].write(0);
+            _wr_datas[i].write(0);
+            _src_ports[i].write(0);
+            _dst_ports[i].write(0);
+        }
+    } else {
+        for (unsigned int i = 0; i < _target_channels.size(); i++) {
+            // convert the data_vectors to sc_vectors
+            data_vector<unsigned int> tmp_target_channels = target_channels.read();
+            data_vector<uint64_t> tmp_target_addresses = target_addresses.read();
+            data_vector<size_t> tmp_wr_datas = wr_datas.read();
+            data_vector<uint64_t> tmp_src_ports = src_ports.read();
+            data_vector<uint64_t> tmp_dst_ports = dst_ports.read();
+
+            _target_channels[i].write(tmp_target_channels[i]);
+            _target_addresses[i].write(tmp_target_addresses[i]);
+            _wr_datas[i].write(tmp_wr_datas[i]);
+            _src_ports[i].write(tmp_src_ports[i]);
+            _dst_ports[i].write(tmp_dst_ports[i]);
+        }
+    }
+}
+
 
 hbm_traffic_top::~hbm_traffic_top() {
   delete embedding_lookup_inst;

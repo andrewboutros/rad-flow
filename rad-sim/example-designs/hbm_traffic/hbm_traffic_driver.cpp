@@ -72,30 +72,6 @@ bool ParseOutputs(std::vector<std::vector<int16_t>> &fi_outputs,
 }
 
 
-// TODO update this function to support higher level instantiation of these black boxes from the python compiler
-// For now it will just grab the number of consumer_producer insts 
-bool ParseTrafficGenModules(
-        std::vector<std::string> &module_insts,
-        std::string &io_filename) {
-
-    std::ifstream io_file(io_filename);
-    if (!io_file)
-        return false;
-
-    std::string module_inst;
-    std::string line;
-    while (getline(io_file, line)) {
-        std::stringstream ss(line);
-        // looking for module & not endmodule
-        if (line.find("module") && !line.find("end")){
-            // ignore the first space delim value as its the "module" keyword
-            ss.ignore(); // looking for space delim and ignoring it up to max size of string stream
-            ss >> module_inst;
-        }
-        module_insts.push_back(module_inst);
-    }
-}
-
 bool ParseMemReqs(
     std::vector<data_vector<unsigned int>> &target_channels,
     std::vector<data_vector<uint64_t>> &target_addresses,
@@ -105,6 +81,7 @@ bool ParseMemReqs(
     std::vector<data_vector<uint64_t>> &dst_ports,
     unsigned int &num_mem_req_modules,
     std::string &io_filename) {
+
     std::ifstream io_file(io_filename);
 
     if (!io_file)
@@ -135,26 +112,47 @@ bool ParseMemReqs(
     dst_ports.resize(num_inst_addrs);
 
 
-    unsigned int prev_instruction_addr;
-    unsigned int cur_instruction_addr;
+    unsigned int prev_instruction_addr = 0xfffff;
+    unsigned int cur_instruction_addr = 0xfffff;
+    bool first_inst = true;
+
+
+    // We want each data vector to contain the data for a single batch of instructions (i.e. all of the instructions that are issued in the same cycle)
+    // The data vectors are sized to be equal to the number of memory request modules as this is size we need for a single batch
+
+    data_vector<unsigned int> target_channel_dvec(num_mem_req_modules);
+    data_vector<uint64_t> target_addresses_dvec(num_mem_req_modules);
+    std::vector<bool> write_ens_dvec(num_mem_req_modules);
+    data_vector<size_t> write_datas_dvec(num_mem_req_modules);
+    data_vector<uint64_t> src_ports_dvec(num_mem_req_modules);
+    data_vector<uint64_t> dst_ports_dvec(num_mem_req_modules);
+
+    // init to NOP
+    for (unsigned int i = 0; i < num_mem_req_modules; i++) {
+        target_channel_dvec[i] = 0xfffff;
+        target_addresses_dvec[i] = 0xffffff;
+        write_ens_dvec[i] = 1;
+        write_datas_dvec[i] = 0xfffff;
+        src_ports_dvec[i] = 0xffffff;
+        dst_ports_dvec[i] = 0xffffff;
+    }
 
     while (std::getline(io_file, line)) {
         std::stringstream line_stream(line);
+        /*
+            For this parsing we assume that there are at most N instructions per address, where N is the number of memory request modules
+            * Instruction addresses are grouped together in batches of N
+            * If there exists N memory modules and M instructions s.t M < N then unused indexes of the data vector will be set to NOP opcode
+            * NOP = ffff... for all bits in instruction
+        */
+        
         unsigned int mem_req_module_id;
-
-        data_vector<unsigned int> target_channel_dvec(num_mem_req_modules);
-        data_vector<uint64_t> target_addresses_dvec(num_mem_req_modules);
-        std::vector<bool> write_ens_dvec(num_mem_req_modules);
-        data_vector<size_t> write_datas_dvec(num_mem_req_modules);
-        data_vector<uint64_t> src_ports_dvec(num_mem_req_modules);
-        data_vector<uint64_t> dst_ports_dvec(num_mem_req_modules);
-
         prev_instruction_addr = cur_instruction_addr;
         line_stream >> cur_instruction_addr;
         line_stream >> mem_req_module_id;
 
         assert (num_mem_req_modules > mem_req_module_id); // we cant issue instruction to module that doesnt exist
-        line_stream >> src_port >> dst_port >> target_channel >> target_address >> write_enable >> write_data >> write_enable;
+        line_stream >> src_port >> dst_port >> target_channel >> target_address >> write_data >> write_enable;
         
         target_channel_dvec[mem_req_module_id] = target_channel;
         target_addresses_dvec[mem_req_module_id] = target_address;
@@ -165,15 +163,28 @@ bool ParseMemReqs(
 
         // instructions have to have batched inst_addresses 
         // so if the cur != prev (or if this is the last line of the file) that means we can push back the values we created onto the vectors of data vectors
-        if ( cur_instruction_addr != prev_instruction_addr || io_file.peek() == EOF){
-            target_channels.push_back(target_channel_dvec);
-            target_addresses.push_back(target_addresses_dvec);
-            write_ens.push_back(write_ens_dvec);
-            write_datas.push_back(write_datas_dvec);
-            src_ports.push_back(src_ports_dvec);
-            dst_ports.push_back(dst_ports_dvec);
+        // we stop the first instruction to be pushed because we don't know if its in the same batch as future instructions
+        // TODO account for edge case of first instruction of batch N > 1 (this should not be pushed back)
+        if ((cur_instruction_addr != prev_instruction_addr || io_file.peek() == EOF)){
+            target_channels[cur_instruction_addr] = target_channel_dvec;
+            target_addresses[cur_instruction_addr] = target_addresses_dvec;
+            write_ens[cur_instruction_addr] = write_ens_dvec;
+            write_datas[cur_instruction_addr] = write_datas_dvec;
+            src_ports[cur_instruction_addr] = src_ports_dvec;
+            dst_ports[cur_instruction_addr] = dst_ports_dvec;
+            
+            // reset data vectors to NOP
+            for (unsigned int i = 0; i < num_mem_req_modules; i++) {
+                target_channel_dvec[i] = 0xfffff;
+                target_addresses_dvec[i] = 0xffffff;
+                write_ens_dvec[i] = 1;
+                write_datas_dvec[i] = 0xfffff;
+                src_ports_dvec[i] = 0xffffff;
+                dst_ports_dvec[i] = 0xffffff;
+            }
         }
     }
+    return true;
 }
 
 
@@ -186,7 +197,8 @@ hbm_traffic_driver::hbm_traffic_driver( const sc_module_name &name
     // init vectors of ports
     
 
-    std::vector<std::string> module_insts;
+    // std::vector<std::string> module_insts;
+    std::vector<hw_module> module_insts;
 
     // Parse design configuration (number of layers & number of MVM per layer)
     std::string design_root_dir =
@@ -195,17 +207,23 @@ hbm_traffic_driver::hbm_traffic_driver( const sc_module_name &name
     std::string mod_insts_fname = design_root_dir + "/compiler/traffic_gen/traffic_gen.cfg";
     ParseTrafficGenModules(module_insts, mod_insts_fname);
     // now we can find the number of black box modules parsed from module isnts
-    unsigned int num_mem_req_modules = count(module_insts.begin(), module_insts.end(), "black_box");
+    // unsigned int num_mem_req_modules = count(module_insts.begin(), module_insts.end(), "black_box");
+    // unsigned int num_mem_req_modules = std::count_if(module_insts.begin(), module_insts.end(),
+    //                                         [](const hw_module& module) {
+    //                                             return module.module_name == "black_box";
+    //                                         });
+    unsigned int num_mem_req_modules = count_modules(module_insts, "black_box");
 
     // init sc_vector based ports
     mem_req_valids.init(num_mem_req_modules);
     mem_req_readys.init(num_mem_req_modules);
 
 
-    std::string mem_reqs_fname = design_root_dir + "/compiler/traffic_gen/isnts.in";
-    
+    std::string mem_reqs_fname = design_root_dir + "/compiler/traffic_gen/insts.in";
+
+
     // Traffic Gen    
-    ParseMemReqs(
+    bool ret = ParseMemReqs(
         _target_channels,
         _target_addresses,
         _wr_ens,
@@ -215,6 +233,10 @@ hbm_traffic_driver::hbm_traffic_driver( const sc_module_name &name
         num_mem_req_modules,
         mem_reqs_fname
     );
+
+    if (!ret){
+        std::cout << "Couldn't find the traffic generator instruction file!" << std::endl;
+    }
     
     
     std::cout << "Finished parsing traffic gen inputs!" << std::endl;
@@ -235,7 +257,7 @@ hbm_traffic_driver::hbm_traffic_driver( const sc_module_name &name
     ParseOutputs(_mlp_outputs, mlp_outputs_filename, _num_mlp_outputs);
     SC_METHOD(assign);
     sensitive << collector_fifo_rdy;
-    for (int i=0; i<mem_req_readys.size(); i++) {
+    for (unsigned int i=0; i<mem_req_readys.size(); i++) {
         sensitive << mem_req_readys[i];
     }
 
@@ -254,7 +276,7 @@ void hbm_traffic_driver::source() {
     rst.write(true);
     lookup_indecies_valid.write(false);
     // Hbm traffic
-    for (int i=0; i<mem_req_valids.size(); i++){
+    for (unsigned int i=0; i<mem_req_valids.size(); i++){
         mem_req_valids[i].write(false); // TODO make sure this works with the data_vector of valid signals 
     }
 
