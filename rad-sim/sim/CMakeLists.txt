@@ -22,7 +22,7 @@ include_directories(
   ../example-designs/${DESIGN}/modules
 )
 
-find_package(verilator CONFIG REQUIRED)
+find_package(verilator CONFIG)
 if (verilator_FOUND)
     include_directories(SYSTEM "${VERILATOR_ROOT}/include")
 endif()
