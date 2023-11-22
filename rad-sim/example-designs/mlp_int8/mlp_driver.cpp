@@ -313,7 +313,7 @@ void mlp_driver::sink() {
   end_cycle = GetSimulationCycle(1.0);
   end_time = std::chrono::steady_clock::now();
   std::cout << "Simulation Cycles = " << end_cycle - start_cycle << std::endl;
-  std::cout << "Simulation Time = " << std::chrono::duration_cast<std::chrono::microseconds> (end_time - start_time).count() << " us" << std::endl;
+  std::cout << "Simulation Time = " << std::chrono::duration_cast<std::chrono::milliseconds> (end_time - start_time).count() << " ms" << std::endl;
   NoCTransactionTelemetry::DumpStatsToFile("stats.csv");
 
   std::vector<double> aggregate_bandwidths = NoCTransactionTelemetry::DumpTrafficFlows("traffic_flows", 
