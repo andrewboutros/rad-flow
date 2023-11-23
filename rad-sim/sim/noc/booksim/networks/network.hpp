@@ -103,6 +103,7 @@ public:
     virtual void ReadInputs( );
     virtual void Evaluate( );
     virtual void WriteOutputs( );
+    virtual void Trace( ostream & os, double sim_time );
 
     // Print functions
     void Display( ostream & os = cout ) const;

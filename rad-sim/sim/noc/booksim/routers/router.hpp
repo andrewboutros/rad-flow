@@ -114,6 +114,7 @@ public:
   virtual void ReadInputs( ) = 0;
   virtual void Evaluate( );
   virtual void WriteOutputs( ) = 0;
+  virtual void Trace( [[maybe_unused]] ostream & os, [[maybe_unused]] double sim_time ) {}
 
   void OutChannelFault( int c, bool fault = true );
   bool IsFaultyOutput( int c ) const;

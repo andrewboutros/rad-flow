@@ -111,6 +111,18 @@ std::vector<double> NoCTransactionTelemetry::DumpTrafficFlows(const std::string&
   return aggregate_bandwidths;
 }
 
+std::stringstream NoCFlitTelemetry::ostream;
+
+NoCFlitTelemetry::NoCFlitTelemetry() {}
+NoCFlitTelemetry::~NoCFlitTelemetry() {}
+
+void NoCFlitTelemetry::DumpNoCFlitTracesToFile(const std::string& filename) {
+  std::ofstream ofile(filename, std::ofstream::out);
+  ofile << "t_trace, link_src_router, link_dest_router, flit_id, flit_type, is_channel_output" << endl;
+  ofile << NoCFlitTelemetry::ostream.rdbuf();
+  ofile.close();
+}
+
 SimLog::SimLog() {
   verbosity = 0;
 }

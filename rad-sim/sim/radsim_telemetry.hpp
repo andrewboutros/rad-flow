@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <unordered_map>
 #include <set>
 
@@ -58,6 +59,16 @@ class NoCTransactionTelemetry {
   static void DumpStatsToFile(const std::string& filename);
   static std::vector<double> DumpTrafficFlows(const std::string& filename, unsigned int cycle_count,
     std::vector<std::vector<std::set<std::string>>>& node_module_names);
+};
+
+// Class for recording and storing flit traces
+class NoCFlitTelemetry {
+ public:
+  static std::stringstream ostream;
+
+  NoCFlitTelemetry();
+  ~NoCFlitTelemetry();
+  static void DumpNoCFlitTracesToFile(const std::string& filename);
 };
 
 struct debug_t {};
