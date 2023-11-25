@@ -31,6 +31,7 @@ rtl_mvm::rtl_mvm(const sc_module_name &name) : RADSimModule(name) {
 }
 
 rtl_mvm::~rtl_mvm() {
+	vrtl_mvm->final();
 	delete vrtl_mvm;
 }
 
