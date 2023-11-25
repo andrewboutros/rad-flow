@@ -42,6 +42,7 @@ def generate_source_wrapper(design_name, modules_folder, dataw, mappings, axis_r
       wrapper_cpp_file.write("}\n\n")
 
       wrapper_cpp_file.write(design_name + "::~" + design_name + "() {\n")
+      wrapper_cpp_file.write("\t" + design_inst + "->final();\n")
       wrapper_cpp_file.write("\tdelete " + design_inst + ";\n")
       wrapper_cpp_file.write("}\n\n")
 
