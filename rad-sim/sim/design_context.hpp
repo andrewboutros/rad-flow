@@ -12,6 +12,8 @@
 
 class RADSimDesignContext {
 private:
+  int _design_result = 0;
+
   std::vector<sc_clock *> _noc_clks;
   std::vector<sc_clock *> _adapter_clks;
   std::vector<sc_clock *> _module_clks;
@@ -96,6 +98,9 @@ public:
   void DumpDesignContext();
   std::vector<std::vector<std::set<std::string>>> &GetNodeModuleNames();
   uint64_t GetPortBaseAddress(std::string &port_name);
+
+  int GetDesignResult();
+  void ReportDesignFailure();
 };
 
 extern RADSimDesignContext radsim_design;

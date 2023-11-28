@@ -58,8 +58,12 @@ void rtl_add_driver::sink() {
   //std::cout << "Received " << response.read().to_uint64() << " sum from the adder!" << std::endl;
   //std::cout << "The actual sum is " << actual_sum << std::endl;
 
-  if (response.read() != actual_sum) std::cout << "FAILURE - Output is not matching!" << std::endl;
-  else std::cout << "SUCCESS - Output is matching!" << std::endl;
+  if (response.read() != actual_sum) {
+    std::cout << "FAILURE - Output is not matching!" << std::endl;
+    radsim_design.ReportDesignFailure();
+  } else {
+    std::cout << "SUCCESS - Output is matching!" << std::endl;
+  }
 
   end_cycle = GetSimulationCycle(1.0);
   end_time = std::chrono::steady_clock::now();

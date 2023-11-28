@@ -194,8 +194,8 @@ void dlrm_driver::sink() {
   if (all_outputs_matching) {
     std::cout << "Simulation PASSED! All outputs matching!" << std::endl;
   } else {
-    std::cout << "Simulation FAILED! Some outputs are NOT matching!"
-              << std::endl;
+    std::cout << "Simulation FAILED! Some outputs are NOT matching!" << std::endl;
+    radsim_design.ReportDesignFailure();
   }
   _end_cycle =
       GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));

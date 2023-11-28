@@ -126,7 +126,10 @@ void mlp_driver::sink() {
     }
     wait();
   }
-  if (mistake) std::cout << "FAILURE - Some outputs NOT matching!" << std::endl;
+  if (mistake) {
+    std::cout << "FAILURE - Some outputs NOT matching!" << std::endl;
+    radsim_design.ReportDesignFailure();
+  }
   else std::cout << "SUCCESS - All outputs are matching!" << std::endl;
 
   end_cycle = GetSimulationCycle(1.0);
