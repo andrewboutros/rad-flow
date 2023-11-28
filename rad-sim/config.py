@@ -294,7 +294,7 @@ def generate_radsim_main(design_name):
     main_cpp_file.write("\tsim_trace_probe.dump_traces();\n")
     main_cpp_file.write("\t(void)argc;\n")
     main_cpp_file.write("\t(void)argv;\n")
-    main_cpp_file.write("\treturn 0;\n")
+    main_cpp_file.write("\treturn radsim_design.GetDesignResult();\n")
     main_cpp_file.write("}\n")
 
 def prepare_build_dir(design_name):
