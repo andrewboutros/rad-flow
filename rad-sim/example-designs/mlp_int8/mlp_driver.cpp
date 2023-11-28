@@ -290,7 +290,7 @@ void mlp_driver::source() {
 
 void mlp_driver::sink() {
   unsigned int read_outputs = 0;
-  bool mistake = true;
+  bool mistake = false;
 
   data_vector<sc_int<IPRECISION>> output_vec;
   while (read_outputs < golden_outputs.size()) {
