@@ -1,6 +1,6 @@
 #include <add_system.hpp>
 
-add_system::add_system(const sc_module_name &name, sc_clock *driver_clk_sig)
+add_system::add_system(const sc_module_name &name, sc_clock *driver_clk_sig, RADSimDesignContext* radsim_design) // AKB: added last arg
     : sc_module(name) {
 
   // Instantiate driver
@@ -15,7 +15,7 @@ add_system::add_system(const sc_module_name &name, sc_clock *driver_clk_sig)
   driver_inst->response_valid(response_valid_sig);
 
   // Instantiate design top-level
-  dut_inst = new add_top("dut");
+  dut_inst = new add_top("dut", radsim_design); //AKB added last arg
   dut_inst->rst(rst_sig);
   dut_inst->client_tdata(client_tdata_sig);
   dut_inst->client_tlast(client_tlast_sig);

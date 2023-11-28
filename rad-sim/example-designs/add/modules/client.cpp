@@ -1,7 +1,9 @@
 #include <client.hpp>
 
-client::client(const sc_module_name &name, unsigned int fifo_depth)
-    : RADSimModule(name) {
+client::client(const sc_module_name &name, unsigned int fifo_depth, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design) {
+
+  this->radsim_design = radsim_design; //AKB ADDED
 
   client_fifo_depth = fifo_depth;
 
@@ -54,8 +56,8 @@ void client::Tick() {
     if (!client_tdata_fifo.empty()) {
       sc_bv<DATAW> tdata = client_tdata_fifo.front();
       std::string dst_port_name = "adder_inst.axis_adder_interface";
-      uint64_t dst_addr = radsim_design.GetPortDestinationID(dst_port_name);
-      uint64_t src_addr = radsim_design.GetPortDestinationID(src_port_name);
+      uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
+      uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
 
       axis_client_interface.tdest.write(dst_addr);
       axis_client_interface.tid.write(0);

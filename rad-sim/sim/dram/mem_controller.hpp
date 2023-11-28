@@ -82,9 +82,11 @@ public:
   sc_in<bool> mem_clk;
   sc_in<bool> rst;
   sc_vector<aximm_slave_port> mem_channels;
+  RADSimDesignContext* radsim_design;
 
   mem_controller(const sc_module_name &name, unsigned int dram_id,
-                 std::string init_filename = "");
+                RADSimDesignContext* radsim_design,
+                 std::string init_filename = ""); //AKB: added radsim_design, note that argument(s) with defaults must be at end
   ~mem_controller();
 
   void MemReadCallback(uint64_t addr);

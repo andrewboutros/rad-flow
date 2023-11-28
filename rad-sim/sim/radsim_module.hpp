@@ -1,10 +1,14 @@
 #pragma once
 
+//#include <design_context.hpp> //AKB: added
+
 #include <aximm_interface.hpp>
 #include <axis_interface.hpp>
 #include <string>
 #include <systemc.h>
 #include <unordered_map>
+
+class RADSimDesignContext; //AKB ADDED
 
 class RADSimModule : public sc_module {
 public:
@@ -25,7 +29,7 @@ public:
 
   sc_in<bool> clk;
 
-  RADSimModule(const sc_module_name &name);
+  RADSimModule(const sc_module_name &name, RADSimDesignContext* radsim_design); //AKB: added last argument
   ~RADSimModule();
   virtual void RegisterModuleInfo() = 0;
   void RegisterAxisSlavePort(std::string &port_name, axis_slave_port *port_ptr,

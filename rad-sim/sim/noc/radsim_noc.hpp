@@ -15,6 +15,9 @@
 #include <routefunc.hpp>
 #include <sstream>
 
+//#include <design_context.hpp> //AKB ADDED
+class RADSimDesignContext; //AKB ADDED
+
 // NoC SystemC wrapper around all Booksim-related datastructures
 class radsim_noc : public sc_module {
 private:
@@ -50,7 +53,8 @@ public:
              std::vector<AdapterInfo> &axis_master_adapter_info,
              std::vector<AdapterInfo> &axis_slave_adapter_info,
              std::vector<AdapterInfo> &aximm_master_adapter_info,
-             std::vector<AdapterInfo> &aximm_slave_adapter_info);
+             std::vector<AdapterInfo> &aximm_slave_adapter_info, 
+             RADSimDesignContext* radsim_design); //AKB: added last argument
   ~radsim_noc();
 
   Network *GetNetwork();

@@ -98,4 +98,4 @@ public:
   uint64_t GetPortBaseAddress(std::string &port_name);
 };
 
-extern RADSimDesignContext radsim_design;
+//extern RADSimDesignContext radsim_design; //AKB: commented out

@@ -1,10 +1,10 @@
-#include <design_context.hpp>
+#include <design_context.hpp> //AKB: moved to header file
 #include <radsim_module.hpp>
 
-RADSimModule::RADSimModule(const sc_module_name &name) : sc_module(name) {
+RADSimModule::RADSimModule(const sc_module_name &name, RADSimDesignContext* radsim_design) : sc_module(name) { //AKB radsim_design
   module_name = name;
   std::string name_str(static_cast<const char *>(name));
-  radsim_design.RegisterModule(name_str, this);
+  radsim_design->RegisterModule(name_str, this); //AKB to ptr
   _num_noc_axis_slave_ports = 0;
   _num_noc_axis_master_ports = 0;
   _num_noc_aximm_slave_ports = 0;

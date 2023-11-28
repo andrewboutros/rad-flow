@@ -21,6 +21,6 @@ public:
   add_top *dut_inst;
 
   add_system(const sc_module_name &name,
-                           sc_clock *driver_clk_sig);
+                           sc_clock *driver_clk_sig, RADSimDesignContext* radsim_design); ////AKB added last arg
   ~add_system();
 };

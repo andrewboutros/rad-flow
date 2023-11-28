@@ -468,7 +468,8 @@ void RADSimDesignContext::CreateSystemNoCs(sc_in<bool> &rst) {
                        _noc_axis_master_adapter_info[noc_id],
                        _noc_axis_slave_adapter_info[noc_id],
                        _noc_aximm_master_adapter_info[noc_id],
-                       _noc_aximm_slave_adapter_info[noc_id]);
+                       _noc_aximm_slave_adapter_info[noc_id],
+                        this); //AKB ADDED to pass in an instance of this class
     noc_inst->noc_clk(*_noc_clks[noc_id]);
     noc_inst->rst(rst);
 

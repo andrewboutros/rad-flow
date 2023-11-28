@@ -22,7 +22,7 @@ public:
   // Interface to the NoC
   axis_slave_port axis_adder_interface;
 
-  adder(const sc_module_name &name);
+  adder(const sc_module_name &name, RADSimDesignContext* radsim_design); //AKB added last arg
   ~adder();
 
   void Assign(); // Combinational logic process

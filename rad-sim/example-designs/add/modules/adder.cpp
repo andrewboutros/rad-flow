@@ -1,7 +1,7 @@
 #include <adder.hpp>
 
-adder::adder(const sc_module_name &name)
-    : RADSimModule(name) {
+adder::adder(const sc_module_name &name, RADSimDesignContext* radsim_design) //AKB added last arg
+    : RADSimModule(name, radsim_design) {
 
   // Combinational logic and its sensitivity list
   SC_METHOD(Assign);

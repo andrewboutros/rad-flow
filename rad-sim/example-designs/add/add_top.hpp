@@ -21,6 +21,6 @@ public:
   sc_out<sc_bv<DATAW>> response;
   sc_out<bool> response_valid;
 
-  add_top(const sc_module_name &name);
+  add_top(const sc_module_name &name, RADSimDesignContext* radsim_design); //AKB ADDED last arg
   ~add_top();
 };
