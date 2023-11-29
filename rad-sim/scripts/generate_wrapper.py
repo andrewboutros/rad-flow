@@ -62,8 +62,6 @@ def generate_source_wrapper(design_name, modules_folder, dataw, mappings, axis_r
               wrapper_cpp_file.write("\tRegisterAxisSlavePort(port_name, &" + axis_interface + ", " + dataw + ", 0);\n\n")
         
         wrapper_cpp_file.write("}\n")
-      else:
-        print("WARNING: Module {0} is not connected to the NOC via AXI-S.".format(design_name))
 
 def generate_header_wrapper(design_name, modules_folder, mappings, axis_roles):
     verilated_design = "V" + design_name
@@ -112,8 +110,6 @@ def generate_header_wrapper(design_name, modules_folder, mappings, axis_roles):
       wrapper_hpp_file.write("\tSC_HAS_PROCESS(" + design_name + ");\n")
       if axis_roles != None:
         wrapper_hpp_file.write("\tvoid RegisterModuleInfo();\n")
-      else:
-        print("WARNING: Module {0} is not connected to the NOC via AXI-S.".format(design_name))
       wrapper_hpp_file.write("};\n")
 
 def read_port_mappings(port_mapping_file):
@@ -175,9 +171,11 @@ def generate(design_folder, design_modules):
   print("Read Port Mappings Sucessfully!")
   for i in range(len(design_modules)):
     design_name = design_modules[i]
-    #TODO: only ask for AXI-S data width if module contains AXI port.
-    dataw = input("Enter the AXI-S data width for module " + design_name + " (default: " + str(DEFAULT_PORT_WIDTH) + "): ")
-    dataw = dataw if dataw else str(DEFAULT_PORT_WIDTH)
+    if (axis_roles.get(design_name) != None):
+      dataw = input("Enter the AXI-S data width for module " + design_name + " (default: " + str(DEFAULT_PORT_WIDTH) + "): ")
+      dataw = dataw if dataw else str(DEFAULT_PORT_WIDTH)
+    else:
+      print("WARNING: Module {0} is not connected to the NOC via AXI-S.".format(design_name))
     generate_source_wrapper(design_name, modules_folder, dataw, mappings, axis_roles.get(design_name))
     print("Generated Source Wrapper for module", design_name)
     generate_header_wrapper(design_name, modules_folder, mappings, axis_roles.get(design_name))
