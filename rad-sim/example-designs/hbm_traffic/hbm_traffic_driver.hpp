@@ -15,15 +15,21 @@
 
 class hbm_traffic_driver : public sc_module {
 private:
-    std::vector<data_vector<uint64_t>> _lookup_indecies;
-    std::vector<std::vector<int16_t>> _feature_interaction_outputs;
+    /*
+        std::vector<data_vector<uint64_t>> _lookup_indecies;
+        std::vector<std::vector<int16_t>> _feature_interaction_outputs;
+    */
     std::vector<std::vector<int16_t>> _mlp_outputs;
     unsigned int _num_feature_interaction_outputs;
     unsigned int _num_mlp_outputs;
+    
     unsigned int _start_cycle, _end_cycle;
 
-    // std::vector<data_vector<unsigned int>> _target_channels;
-    std::vector<data_vector<uint64_t>> _base_addresses;
+    /* 
+        std::vector<data_vector<unsigned int>> _target_channels;
+        std::vector<data_vector<uint64_t>> _base_addresses;
+    */
+
     // unsigned int _num_mem_req_insts; // num of memory request traffic gen instances
 
     // Traffic Gen    
@@ -37,12 +43,14 @@ private:
 public:
     sc_in<bool> clk;
     sc_out<bool> rst;
-    sc_out<data_vector<uint64_t>> lookup_indecies_data;
-    sc_out<data_vector<unsigned int>> lookup_indecies_target_channels;
-    sc_out<data_vector<uint64_t>> lookup_indecies_base_addresses;
-    sc_out<bool> lookup_indecies_valid;
-    sc_in<bool> lookup_indecies_ready;
-
+    
+    /*
+        sc_out<data_vector<uint64_t>> lookup_indecies_data;
+        sc_out<data_vector<unsigned int>> lookup_indecies_target_channels;
+        sc_out<data_vector<uint64_t>> lookup_indecies_base_addresses;
+        sc_out<bool> lookup_indecies_valid;
+        sc_in<bool> lookup_indecies_ready;
+    */
 
     // Black Box mem request interface
     sc_vector<sc_out<bool>> mem_req_valids;

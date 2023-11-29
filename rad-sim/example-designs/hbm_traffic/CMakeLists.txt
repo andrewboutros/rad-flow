@@ -15,8 +15,9 @@ include_directories(
   ../../sim/dram/DRAMsim3/ext/headers
 )
 
+
+# modules/traffic_gen.cpp
 set(srcfiles
-    modules/traffic_gen.cpp
     modules/embedding_lookup.cpp
     modules/black_box.cpp
     modules/feature_interaction.cpp
@@ -33,8 +34,8 @@ set(srcfiles
     hbm_traffic_system.cpp
 )
 
+# modules/traffic_gen.hpp
 set(hdrfiles
-    modules/traffic_gen.hpp
     modules/embedding_lookup.hpp
     modules/feature_interaction.hpp
     modules/custom_feature_interaction.hpp

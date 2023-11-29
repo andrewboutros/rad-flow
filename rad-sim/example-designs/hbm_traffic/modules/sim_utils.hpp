@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <systemc.h>
+#include <radsim_defines.hpp>
 
 template <class dtype> class data_vector;
 template <class T>
@@ -111,3 +112,47 @@ template <> struct std::iterator_traits<sc_uint<5>> {
   typedef int &reference;
   typedef std::forward_iterator_tag iterator_category;
 };
+
+
+
+
+template <typename T>
+void axis_bv_to_data_vector(
+    sc_bv<AXIS_MAX_DATAW> &bitvector, 
+    data_vector<T> &datavector, 
+    unsigned int bitwidth, 
+    unsigned int num_elements);
+
+template <typename T>
+void data_vector_to_bv_axis(
+    data_vector<T> &datavector, 
+    sc_bv<AXIS_MAX_DATAW> &bitvector, 
+    unsigned int bitwidth, 
+    unsigned int num_elements);
+
+
+void data_vector_to_bv_axis(
+    data_vector<int16_t> &datavector, 
+    sc_bv<AXIS_MAX_DATAW> &bitvector, 
+    unsigned int bitwidth, 
+    unsigned int num_elements);
+
+template <typename T>
+void aximm_bv_to_data_vector(
+    sc_bv<AXI4_MAX_DATAW> &bitvector, 
+    data_vector<T> &datavector, 
+    unsigned int bitwidth, 
+    unsigned int num_elements);
+
+template <typename T>
+void aximm_vector_to_bv(
+    data_vector<T> &datavector, 
+    sc_bv<AXI4_MAX_DATAW> &bitvector, 
+    unsigned int bitwidth, 
+    unsigned int num_elements);
+
+void aximm_bv_to_data_vector(
+    sc_bv<AXI4_MAX_DATAW> &bitvector, 
+    data_vector<int16_t> &datavector, 
+    unsigned int bitwidth, 
+    unsigned int num_elements);

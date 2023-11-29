@@ -58,11 +58,11 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
         total_mem_channels += num_channels;
     }
 
-    unsigned int mem_req_fifos_depth = 16;
+    unsigned int mem_req_fifos_depth = 32;
 
 
     std::string module_name_str;
-    char module_name[25];
+    char module_name[50]; // 25
 
     // Parse the traffic gen configuration
     std::string design_root_dir = radsim_config.GetStringKnob("radsim_user_design_root_dir");
@@ -78,10 +78,11 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
                               });
 
     // Init sc_vectors for black box mem request interface
+    
     mem_req_valids.init(num_mem_req_modules);
     mem_req_readys.init(num_mem_req_modules);
-
     wr_ens.init(num_mem_req_modules);
+    
     black_boxes.resize(num_mem_req_modules);
 
     // Init sc_vectors required for converting data_vectors to sc_signals, TODO see if this is a hack
@@ -95,12 +96,15 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
     
     // Instantiate mem req modules (black boxes)
     int i = 0;
-    int mem_ch_id = 0;
+    unsigned int ctrl_id = 0;
+    unsigned int ch_id = 0;
+    ext_mem.resize(num_mem_controllers);
+    mem_clks.resize(num_mem_controllers);
     for (auto &module: modules){
         // Consumer producer modules
         if (module.module_name == "black_box") {
             std::strcpy(module_name, module.inst_name.c_str());
-            black_boxes[i] = new black_box(module_name, line_bitwidth, element_bitwidth, mem_req_fifos_depth);
+            black_boxes[i] = new black_box(module_name, module, line_bitwidth, element_bitwidth, mem_req_fifos_depth);
             black_boxes[i]->rst(rst);
             black_boxes[i]->wr_en(wr_ens[i]);
             black_boxes[i]->mem_req_valid(mem_req_valids[i]);
@@ -110,12 +114,22 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
             black_boxes[i]->src_port(_src_ports[i]);
             black_boxes[i]->dst_port(_dst_ports[i]);
             black_boxes[i]->wr_data(_wr_datas[i]);
-        } else if (module.module_name == "ext_mem") {
+        } else if (module.module_name == "ext_mem_ctrl") {
             // Ext Mem Controllers TODO 
             std::string mem_content_init_prefix = radsim_config.GetStringKnob("radsim_user_design_root_dir") + "/compiler/ext_mem_init/channel_";
-                    double mem_clk_period =
-            radsim_config.GetDoubleVectorKnob("dram_clk_periods", ctrl_id);
-            
+            double mem_clk_period = radsim_config.GetDoubleVectorKnob("dram_clk_periods", ctrl_id);
+            module_name_str = module.inst_name + "_clk"; //"ext_mem_" + std::to_string(ctrl_id) + "_isnt_" + "_clk";
+            std::strcpy(module_name, module_name_str.c_str());
+            mem_clks[ctrl_id] = new sc_clock(module_name, mem_clk_period, SC_NS);
+            module_name_str = module.inst_name; // "ext_mem_" + std::to_string(ctrl_id) + "_isnt";
+            std::strcpy(module_name, module_name_str.c_str());
+            // if ext mem has 8 channels and the mem content init channel is set to 0 then instantiating it will use channels 0-7
+            std::string mem_content_init = mem_content_init_prefix + std::to_string(ch_id);
+            ch_id += mem_channels[ctrl_id]; // increment channel count by the num channels used by cur ctrler
+            ext_mem[ctrl_id] = new mem_controller(module_name, module, ctrl_id, mem_content_init);
+            ext_mem[ctrl_id]->mem_clk(*mem_clks[ctrl_id]);
+            ext_mem[ctrl_id]->rst(rst);
+            ctrl_id++;
         }
         i++;
     }
@@ -275,7 +289,7 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
     */
 
     // Instantiate Output Collector
-    module_name_str = "output_collector";
+    module_name_str = "output_collector_0_inst";
     std::strcpy(module_name, module_name_str.c_str());
     output_collector = new collector(module_name);
     output_collector->rst(rst);
@@ -284,33 +298,37 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
     output_collector->data_fifo_rdata(collector_fifo_rdata);
 
     // Init external memory controllers
-    ext_mem.resize(num_mem_controllers);
-    mem_clks.resize(num_mem_controllers);
-    unsigned int ch_id = 0;
-    std::string mem_content_init_prefix =
-        radsim_config.GetStringKnob("radsim_user_design_root_dir") +
-        "/compiler/embedding_tables/channel_";
-    for (unsigned int ctrl_id = 0; ctrl_id < num_mem_controllers; ctrl_id++) {
-        double mem_clk_period =
-            radsim_config.GetDoubleVectorKnob("dram_clk_periods", ctrl_id);
-        module_name_str = "ext_mem_" + to_string(ctrl_id) + "_clk";
-        std::strcpy(module_name, module_name_str.c_str());
-        mem_clks[ctrl_id] = new sc_clock(module_name, mem_clk_period, SC_NS);
-        module_name_str = "ext_mem_" + to_string(ctrl_id);
-        std::strcpy(module_name, module_name_str.c_str());
-        std::string mem_content_init = mem_content_init_prefix + to_string(ch_id);
-        ext_mem[ctrl_id] =
-            new mem_controller(module_name, ctrl_id, mem_content_init);
-        ext_mem[ctrl_id]->mem_clk(*mem_clks[ctrl_id]);
-        ext_mem[ctrl_id]->rst(rst);
-        ch_id += mem_channels[ctrl_id];
-    }
-
+    /*
+        ext_mem.resize(num_mem_controllers);
+        mem_clks.resize(num_mem_controllers);
+        unsigned int ch_id = 0;
+        std::string mem_content_init_prefix =
+            radsim_config.GetStringKnob("radsim_user_design_root_dir") +
+            "/compiler/embedding_tables/channel_";
+        for (unsigned int ctrl_id = 0; ctrl_id < num_mem_controllers; ctrl_id++) {
+            double mem_clk_period =
+                radsim_config.GetDoubleVectorKnob("dram_clk_periods", ctrl_id);
+            module_name_str = "ext_mem_" + to_string(ctrl_id) + "_clk";
+            std::strcpy(module_name, module_name_str.c_str());
+            mem_clks[ctrl_id] = new sc_clock(module_name, mem_clk_period, SC_NS);
+            module_name_str = "ext_mem_" + to_string(ctrl_id);
+            std::strcpy(module_name, module_name_str.c_str());
+            std::string mem_content_init = mem_content_init_prefix + to_string(ch_id);
+            ext_mem[ctrl_id] =
+                new mem_controller(module_name, ctrl_id, mem_content_init);
+            ext_mem[ctrl_id]->mem_clk(*mem_clks[ctrl_id]);
+            ext_mem[ctrl_id]->rst(rst);
+            ch_id += mem_channels[ctrl_id];
+        }
+    */
 
     // set clk and reset signal for the top level module
     
     SC_METHOD(Assign);
     sensitive << rst << target_channels << target_addresses << wr_datas << src_ports << dst_ports;
+    for (unsigned int i = 0; i < mem_req_valids.size(); i++) {
+        sensitive << mem_req_readys[i] << mem_req_valids[i];
+    }
     
 
     radsim_design.BuildDesignContext("hbm_traffic.place", "hbm_traffic.clks");
@@ -322,7 +340,7 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
 void hbm_traffic_top::Assign(){
     // All module instantiations will deal with other signals, this is just for the conversion between data_vectors to sc_vectors, again TODO see if this is a hack, I think it is....
     if (rst) {
-        for (unsigned int i = 0; i < _target_channels.size(); i++) {
+        for (unsigned int i = 0; i < mem_req_valids.size(); i++) {
             _target_channels[i].write(0);
             _target_addresses[i].write(0);
             _wr_datas[i].write(0);
@@ -330,19 +348,21 @@ void hbm_traffic_top::Assign(){
             _dst_ports[i].write(0);
         }
     } else {
-        for (unsigned int i = 0; i < _target_channels.size(); i++) {
-            // convert the data_vectors to sc_vectors
-            data_vector<unsigned int> tmp_target_channels = target_channels.read();
-            data_vector<uint64_t> tmp_target_addresses = target_addresses.read();
-            data_vector<size_t> tmp_wr_datas = wr_datas.read();
-            data_vector<uint64_t> tmp_src_ports = src_ports.read();
-            data_vector<uint64_t> tmp_dst_ports = dst_ports.read();
+        for (unsigned int i = 0; i < mem_req_valids.size(); i++) {
+            if (mem_req_readys[i].read() && mem_req_valids[i].read()) {
+                // convert the data_vectors to sc_vectors
+                data_vector<unsigned int> tmp_target_channels = target_channels.read();
+                data_vector<uint64_t> tmp_target_addresses = target_addresses.read();
+                data_vector<size_t> tmp_wr_datas = wr_datas.read();
+                data_vector<uint64_t> tmp_src_ports = src_ports.read();
+                data_vector<uint64_t> tmp_dst_ports = dst_ports.read();
 
-            _target_channels[i].write(tmp_target_channels[i]);
-            _target_addresses[i].write(tmp_target_addresses[i]);
-            _wr_datas[i].write(tmp_wr_datas[i]);
-            _src_ports[i].write(tmp_src_ports[i]);
-            _dst_ports[i].write(tmp_dst_ports[i]);
+                _target_channels[i].write(tmp_target_channels[i]);
+                _target_addresses[i].write(tmp_target_addresses[i]);
+                _wr_datas[i].write(tmp_wr_datas[i]);
+                _src_ports[i].write(tmp_src_ports[i]);
+                _dst_ports[i].write(tmp_dst_ports[i]);
+            }
         }
     }
 }

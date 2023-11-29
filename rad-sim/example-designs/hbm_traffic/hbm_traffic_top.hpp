@@ -34,12 +34,13 @@ private:
 
 public:
     sc_in<bool> rst;
-
-    sc_in<data_vector<uint64_t>> lookup_indecies_data;
-    sc_in<data_vector<unsigned int>> lookup_indecies_target_channels;
-    sc_in<data_vector<uint64_t>> lookup_indecies_base_addresses;
-    sc_in<bool> lookup_indecies_valid;
-    sc_out<bool> lookup_indecies_ready;
+    /*
+        sc_in<data_vector<uint64_t>> lookup_indecies_data;
+        sc_in<data_vector<unsigned int>> lookup_indecies_target_channels;
+        sc_in<data_vector<uint64_t>> lookup_indecies_base_addresses;
+        sc_in<bool> lookup_indecies_valid;
+        sc_out<bool> lookup_indecies_ready;
+    */
 
     // Black Box mem request interface
     sc_vector<sc_in<bool>> mem_req_valids;

@@ -105,6 +105,9 @@ class AXIPort:
     def get_port_placement_info_line(self) -> str:
         return f"{self.name} {self.noc_idx} {self.noc_loc} {self.type}"
 
+    # def get_port_id_str(self) -> str:
+    #     return f"{self.name}"
+
 @dataclass
 class MemReqInstruction:
     inst_address: int # instructions at the same address will be sent on the same cycle
@@ -313,8 +316,8 @@ def main():
     # For this test we will have a bunch of instructions which do X writes and then Y reads -> after this we do % writes and then % reads (for N transactions)
     mem_req_instructions = [
         # incrementing the write address by 16 each time, as I'm not sure what the address line size is
-        *[MemReqInstruction(0x0 + i, 0, "black_box_0_inst.aximm_master__0", "ddr_mem_ctrl_0_inst.aximm_slave__0", 0, i << 4, i, True) for i in range(num_wr_rds)], # Writes
-        *[MemReqInstruction(0x0 + i + num_wr_rds, 0, "black_box_0_inst.aximm_master__0", "ddr_mem_ctrl_0_inst.aximm_slave__0", 0, i << 4, i, False) for i in range(num_wr_rds)], # Reads
+        *[MemReqInstruction(0x0 + i, 0, "black_box_0_inst.aximm_master__0" , "ddr_ext_mem_ctrl_0_inst.aximm_slave_mem_channel_0", 0, i << 4, i, True) for i in range(num_wr_rds)], # Writes
+        *[MemReqInstruction(0x0 + i + num_wr_rds, 0, "black_box_0_inst.aximm_master__0", "ddr_ext_mem_ctrl_0_inst.aximm_slave_mem_channel_0", 0, i << 4, i, False) for i in range(num_wr_rds)], # Reads
     ]
     
 
@@ -327,10 +330,9 @@ def main():
     write_mem_req_instructions(mem_req_instructions, ext_mems[0].addr_width, ext_mems[0].data_width, inst_outfile)
     ### DOING MEMORY INIT + DECODING ###
     for ch in range(num_mem_channels):
-        decode_mem_contents(ch, bitwidth)    
+        # decode_mem_contents(ch, bitwidth)    
         write_mem_contents(ch, mem_contents, bitwidth, addr_line_sz)
         decode_mem_contents(ch, bitwidth, mem_path=os.path.join(mem_init_dir, f"channel_{ch}.dat"))
-        break
 
 
 

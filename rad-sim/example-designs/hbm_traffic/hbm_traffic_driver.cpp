@@ -148,11 +148,13 @@ bool ParseMemReqs(
         
         unsigned int mem_req_module_id;
         prev_instruction_addr = cur_instruction_addr;
-        line_stream >> cur_instruction_addr;
+        line_stream >> std::hex >> cur_instruction_addr;
         line_stream >> mem_req_module_id;
 
         assert (num_mem_req_modules > mem_req_module_id); // we cant issue instruction to module that doesnt exist
-        line_stream >> src_port >> dst_port >> target_channel >> target_address >> write_data >> write_enable;
+        line_stream >> src_port >> dst_port >> target_channel;
+        line_stream >> std::hex >> target_address;
+        line_stream >> write_data >> write_enable;
         
         target_channel_dvec[mem_req_module_id] = target_channel;
         target_addresses_dvec[mem_req_module_id] = target_address;
@@ -217,6 +219,7 @@ hbm_traffic_driver::hbm_traffic_driver( const sc_module_name &name
     // init sc_vector based ports
     mem_req_valids.init(num_mem_req_modules);
     mem_req_readys.init(num_mem_req_modules);
+    wr_ens.init(num_mem_req_modules);
 
 
     std::string mem_reqs_fname = design_root_dir + "/compiler/traffic_gen/insts.in";
@@ -241,20 +244,23 @@ hbm_traffic_driver::hbm_traffic_driver( const sc_module_name &name
     
     std::cout << "Finished parsing traffic gen inputs!" << std::endl;
 
-    std::string inputs_filename =
-        design_root_dir + "/compiler/embedding_indecies.in";
-    ParseInputs(_lookup_indecies, _target_channels, _base_addresses,
-                inputs_filename);
-    std::cout << "Finished parsing inputs!" << std::endl;
+    /*
+        std::string inputs_filename =
+            design_root_dir + "/compiler/embedding_indecies.in";
+        ParseInputs(_lookup_indecies, _target_channels, _base_addresses,
+                    inputs_filename);
+        std::cout << "Finished parsing inputs!" << std::endl;
 
-    std::string feature_interaction_outputs_filename =
-        design_root_dir + "/compiler/feature_interaction.out";
-    ParseOutputs(_feature_interaction_outputs,
-                feature_interaction_outputs_filename,
-                _num_feature_interaction_outputs);
-
+        std::string feature_interaction_outputs_filename =
+            design_root_dir + "/compiler/feature_interaction.out";
+        ParseOutputs(_feature_interaction_outputs,
+                    feature_interaction_outputs_filename,
+                    _num_feature_interaction_outputs);
+    
+    */
     std::string mlp_outputs_filename = design_root_dir + "/compiler/mlp.out";
     ParseOutputs(_mlp_outputs, mlp_outputs_filename, _num_mlp_outputs);
+    
     SC_METHOD(assign);
     sensitive << collector_fifo_rdy;
     for (unsigned int i=0; i<mem_req_readys.size(); i++) {
@@ -274,7 +280,8 @@ void hbm_traffic_driver::assign() {
 void hbm_traffic_driver::source() {
     // Reset
     rst.write(true);
-    lookup_indecies_valid.write(false);
+    // lookup_indecies_valid.write(false);
+    
     // Hbm traffic
     for (unsigned int i=0; i<mem_req_valids.size(); i++){
         mem_req_valids[i].write(false); // TODO make sure this works with the data_vector of valid signals 
@@ -296,7 +303,7 @@ void hbm_traffic_driver::source() {
         src_ports.write(_src_ports[idx]);
         dst_ports.write(_dst_ports[idx]);
         // Loop over bools as they are in sc_vectors
-        for (int i=0; i < _wr_ens[idx].size(); i++) {
+        for (unsigned int i=0; i < _wr_ens[idx].size(); i++) {
             // be careful that the valid/ready signals (or other sc_vectors) are initialized to the same number of elements as the data_vectors
             wr_ens[i].write(_wr_ens[idx][i]);
             mem_req_valids[i].write(true);  
@@ -317,31 +324,25 @@ void hbm_traffic_driver::source() {
         v.write(false);
     }
 
+    /*
+        while (idx < _lookup_indecies.size()) {
+            lookup_indecies_data.write(_lookup_indecies[idx]);
+            lookup_indecies_target_channels.write(_target_channels[idx]);
+            lookup_indecies_base_addresses.write(_base_addresses[idx]);
+            lookup_indecies_valid.write(true);
 
-    while (idx < _lookup_indecies.size()) {
-        lookup_indecies_data.write(_lookup_indecies[idx]);
-        lookup_indecies_target_channels.write(_target_channels[idx]);
-        lookup_indecies_base_addresses.write(_base_addresses[idx]);
-        lookup_indecies_valid.write(true);
+            wait();
 
-        wait();
-
-        if (lookup_indecies_valid.read() && lookup_indecies_ready.read()) {
-        idx++;
+            if (lookup_indecies_valid.read() && lookup_indecies_ready.read()) {
+            idx++;
+            }
         }
-    }
-    
-    lookup_indecies_valid.write(false);
-    
+        
+        lookup_indecies_valid.write(false);
+    */
     std::cout << this->name()
                 << ": Finished sending all inputs to traffic gen modules!"
                 << std::endl;
-
-    /*
-        std::cout << this->name()
-                    << ": Finished sending all inputs to embedding lookup module!"
-                    << std::endl;
-    */
     wait();
 }
 

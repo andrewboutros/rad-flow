@@ -275,3 +275,91 @@ template class init_vector<sc_signal<bool>>;
 template class init_vector<sc_in<data_vector<sc_int<32>>>>;
 template class init_vector<sc_out<data_vector<sc_int<32>>>>;
 template class init_vector<sc_signal<data_vector<sc_int<32>>>>;
+
+
+
+
+template <typename T>
+void axis_bv_to_data_vector(
+    sc_bv<AXIS_MAX_DATAW> &bitvector, 
+    data_vector<T> &datavector, 
+    unsigned int bitwidth, 
+    unsigned int num_elements) {
+
+  unsigned int start_idx, end_idx;
+  for (unsigned int e = 0; e < num_elements; e++) {
+    start_idx = e * bitwidth;
+    end_idx = (e + 1) * bitwidth;
+    datavector[e] = bitvector.range(end_idx - 1, start_idx).to_int();
+  }
+}
+
+template <typename T>
+void aximm_bv_to_data_vector(
+    sc_bv<AXI4_MAX_DATAW> &bitvector, 
+    data_vector<T> &datavector, 
+    unsigned int bitwidth, 
+    unsigned int num_elements) {
+
+  unsigned int start_idx, end_idx;
+  for (unsigned int e = 0; e < num_elements; e++) {
+    start_idx = e * bitwidth;
+    end_idx = (e + 1) * bitwidth;
+    datavector[e] = bitvector.range(end_idx - 1, start_idx).to_int();
+  }
+}
+
+void aximm_bv_to_data_vector(
+    sc_bv<AXI4_MAX_DATAW> &bitvector, 
+    data_vector<int16_t> &datavector, 
+    unsigned int bitwidth, 
+    unsigned int num_elements) {
+
+  unsigned int start_idx, end_idx;
+  for (unsigned int e = 0; e < num_elements; e++) {
+    start_idx = e * bitwidth;
+    end_idx = (e + 1) * bitwidth;
+    datavector[e] = bitvector.range(end_idx - 1, start_idx).to_int();
+  }
+}
+
+template <typename T>
+void data_vector_to_bv_axis( 
+    data_vector<T> &datavector, 
+    sc_bv<AXIS_MAX_DATAW> &bitvector, 
+    unsigned int bitwidth, 
+    unsigned int num_elements) {
+    unsigned int start_idx, end_idx;
+    for (unsigned int e = 0; e < num_elements; e++) {
+        start_idx = e * bitwidth;
+        end_idx = (e + 1) * bitwidth;
+        bitvector.range(end_idx - 1, start_idx) = datavector[e];
+    }
+}
+
+template <typename T>
+void data_vector_to_bv_aximm( 
+    data_vector<T> &datavector, 
+    sc_bv<AXI4_MAX_DATAW> &bitvector, 
+    unsigned int bitwidth, 
+    unsigned int num_elements) {
+    unsigned int start_idx, end_idx;
+    for (unsigned int e = 0; e < num_elements; e++) {
+        start_idx = e * bitwidth;
+        end_idx = (e + 1) * bitwidth;
+        bitvector.range(end_idx - 1, start_idx) = datavector[e];
+    }
+}
+
+void data_vector_to_bv_axis( 
+    data_vector<int16_t> &datavector, 
+    sc_bv<AXIS_MAX_DATAW> &bitvector, 
+    unsigned int bitwidth, 
+    unsigned int num_elements) {
+    unsigned int start_idx, end_idx;
+    for (unsigned int e = 0; e < num_elements; e++) {
+        start_idx = e * bitwidth;
+        end_idx = (e + 1) * bitwidth;
+        bitvector.range(end_idx - 1, start_idx) = datavector[e];
+    }
+}

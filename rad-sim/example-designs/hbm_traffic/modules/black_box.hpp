@@ -104,6 +104,14 @@ private:
     // info for debug to verify functionality
     unsigned int _num_received_responses; // Mem req resp recieved
     unsigned int _num_expected_responses; // Mem req resp expected
+
+    sc_signal<bool> _aximm_wr_ctrl_sent;
+    sc_signal<unsigned int> _aximm_wr_num_sent_flits;
+    sc_signal<bool> _aximm_wr_tx_done;
+    sc_signal<bool> _aximm_rd_tx_done;
+
+
+
     ofstream *_debug_black_box_out;
 
 public:
@@ -112,8 +120,23 @@ public:
     sc_in<bool> rst;
 
     // Interface to the NoC
+    // vectors of all possible AXI interfaces which will be instantiated and connected via module_conf
+    // TODO figure out how to make the below work, there's some weirdness to do with vectors of structs containing systemc ports
+    /*
+        std::vector<aximm_master_port> aximm_master_ifs;
+        std::vector<aximm_slave_port> aximm_slave_ifs;
+        std::vector<axis_master_port> axis_master_ifs;
+        std::vector<axis_slave_port> axis_slave_ifs;
+    */
+
+    
+    // Manually defined axi interfaces
+    
+    
     aximm_master_port aximm_interface;
     axis_master_port axis_interface;
+    
+    
 
     // interface from testbench to generate memory read requests
     sc_in<bool> wr_en; // 0 = read, 1 = write
@@ -128,7 +151,7 @@ public:
     sc_in<uint64_t> dst_port;
 
 
-
+    // Module
 
     
     // void data_vector_to_bv_axis(
@@ -141,6 +164,7 @@ public:
     
 
     black_box(  const sc_module_name &name,
+                hw_module &module_conf,
                 unsigned int line_dataw,
                 unsigned int element_bitwidth,
                 // unsigned int num_mem_channels,
@@ -151,7 +175,9 @@ public:
     void Tick();   // Sequential logic process
     
     SC_HAS_PROCESS(black_box);
-    void RegisterModuleInfo();
+    void RegisterModuleInfo(hw_module &module_conf);
+    void RegisterModuleInfo(); // To deal with virtual function bs
+
 
 };
 
