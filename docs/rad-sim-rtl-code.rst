@@ -55,11 +55,21 @@ RAD-Sim has a pre-defined file structure for supporting RTL code. All RTL code m
     ├── CMakeLists.txt
     └── config.yml
 
+An example design that utilizes RTL modules can be found in the ``rad-sim/example-designs/rtl_add`` folder.
+
+RTL CMakeLists
+---------------
 The RTL source folder additionally contains a CMakeLists script, and an optional port mapping file used for :ref:`automatic wrapper generation <auto_wrapper_gen>`.
 The CMakeLists script imports the required libraries and verilates the RTL designs to SystemC modules.
 These objects are linked in the design CMakeLists script.
 
-An example design that utilizes RTL modules can be found in the ``rad-sim/example-designs/rtl_add`` folder.
+Under ``rtl_top_modules``, a list of all top-level RTL modules should be placed. Each top-level module will be verilated to become a C++ SystemC module.
+All modules instantiated by a top-level module are merged into the SystemC module of the top-level design automatically.
+
+Verilator does not recognize modules with a file name other than the module name with a .v/.sv extension automatically.
+It is therefore recommended that a list of non top-level modules be added under ``rtl_libraries``.
+
+A sample CMakeLists file can be found in the ``rad-sim/example-designs/rtl_add/modules/rtl`` folder.
 
 Wrapper Files
 -------------
