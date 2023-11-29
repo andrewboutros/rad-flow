@@ -18,7 +18,7 @@ public:
 	sc_out<sc_bv<128>> response;
 	sc_out<bool> response_valid;
 
-	axis_slave_port axis_adder_interface;
+	axis_slave_port axis_adder;
 
 	adder(const sc_module_name &name);
 	~adder();

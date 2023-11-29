@@ -20,7 +20,7 @@ public:
 	sc_in<bool> client_valid;
 	sc_out<bool> client_ready;
 
-	axis_master_port axis_client_interface;
+	axis_master_port axis_client;
 
 	client(const sc_module_name &name);
 	~client();
