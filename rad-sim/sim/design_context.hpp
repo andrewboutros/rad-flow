@@ -12,7 +12,7 @@
 
 class RADSimDesignContext {
 private:
-  int _design_result = 0;
+  int _sim_exit_code = 0;
 
   std::vector<sc_clock *> _noc_clks;
   std::vector<sc_clock *> _adapter_clks;
@@ -99,7 +99,7 @@ public:
   std::vector<std::vector<std::set<std::string>>> &GetNodeModuleNames();
   uint64_t GetPortBaseAddress(std::string &port_name);
 
-  int GetDesignResult();
+  int GetDesignExitCode();
   void ReportDesignFailure();
 };
 

@@ -38,5 +38,5 @@ int sc_main(int argc, char *argv[]) {
 	sim_trace_probe.dump_traces();
 	(void)argc;
 	(void)argv;
-	return radsim_design.GetDesignResult();
+	return radsim_design.GetDesignExitCode();
 }
