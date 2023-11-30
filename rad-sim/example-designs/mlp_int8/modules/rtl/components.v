@@ -1,3 +1,18 @@
+/**
+Pipeline Module
+Convenient module to specify register delays
+
+Parameters:
+DELAY: Number of Registers to delay data_in by
+WIDTH: Width of data
+
+Inputs:
+data_in: The data to be delayed
+
+Outputs:
+data_out: The data after the pipelined delay
+**/
+
 module pipeline # (
 	parameter DELAY = 1,
 	parameter WIDTH = 32
@@ -28,6 +43,24 @@ assign data_out = r_pipeline[DELAY-1];
 
 endmodule
 
+/**
+Memory Block Module
+A dual port memory with 1 Write and 1 Read. Can read and write simultaneously if not on the same address.
+
+Parameters:
+DATAW: Width of data word
+DEPTH: Depth of the memory
+ADDRW: Width of memory address
+
+Inputs:
+waddr: Write Address
+wen: Write Enable
+wdata: Write Data
+raddr: Read Address
+
+Outputs:
+rdata: Read Data
+**/
 module memory_block # (
 	parameter DATAW = 8,
 	parameter DEPTH = 512,
@@ -77,6 +110,27 @@ assign rdata = r_rdata;
 
 endmodule
 
+/**
+FIFO Module
+A peek FIFO implementation
+
+Parameters:
+DATAW: Width of data word
+DEPTH: Depth of the FIFO
+ADDRW: Width of FIFO address for pointer use
+ALMOST_FULL_DEPTH: Depth of the FIFO at which the almost_full signal is asserted
+
+Inputs:
+push: Signal to push data to the FIFO
+idata: Input Data
+pop: Siginal to pop data from the FIFO
+
+Outputs:
+odata: Output Data
+empty: Signal asserted when FIFO is empty
+full: Signal asserted when FIFO is full
+almost_full: Signal asserted when FIFO is almost full defined by ALMOST_FULL_DEPTH
+**/
 module fifo # (
 	parameter DATAW = 64,
 	parameter DEPTH = 128,

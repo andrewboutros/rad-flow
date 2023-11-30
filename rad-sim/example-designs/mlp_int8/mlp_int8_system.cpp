@@ -15,20 +15,20 @@ mlp_int8_system::mlp_int8_system(const sc_module_name& name, sc_clock* driver_cl
   std::getline(design_config_file, line);
   std::stringstream line_stream(line);
   unsigned int num_layers;
-  std::string num_mvms_layer, num_mvms_rtl_layer;
+  std::string num_mvms_sysc_layer, num_mvms_rtl_layer;
   std::string layer_mvms;
   line_stream >> num_layers;
-  num_mvms.resize(num_layers);
+  num_mvms_sysc.resize(num_layers);
   num_mvms_rtl.resize(num_layers);
   num_mvms_total.resize(num_layers);
   for (unsigned int layer_id = 0; layer_id < num_layers; layer_id++) {
     line_stream >> layer_mvms;
     std::stringstream layer_mvms_stream(layer_mvms);
-    std::getline(layer_mvms_stream, num_mvms_layer, ',');
+    std::getline(layer_mvms_stream, num_mvms_sysc_layer, ',');
     std::getline(layer_mvms_stream, num_mvms_rtl_layer, ',');
-    num_mvms[layer_id] = std::stoi(num_mvms_layer);
+    num_mvms_sysc[layer_id] = std::stoi(num_mvms_sysc_layer);
     num_mvms_rtl[layer_id] = std::stoi(num_mvms_rtl_layer);
-    num_mvms_total[layer_id] = num_mvms[layer_id] + num_mvms_rtl[layer_id];
+    num_mvms_total[layer_id] = num_mvms_sysc[layer_id] + num_mvms_rtl[layer_id];
   }
 
   // Initialize signal vectors

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <chrono>
-#include <mvm.hpp>
 #include <mlp_driver.hpp>
 #include <mlp_top.hpp>
 #include <sim_utils.hpp>
@@ -9,7 +8,7 @@
 
 class mlp_int8_system : public sc_module {
  private:
-  std::vector<unsigned int> num_mvms;
+  std::vector<unsigned int> num_mvms_sysc;
   std::vector<unsigned int> num_mvms_rtl;
   std::vector<unsigned int> num_mvms_total;
 

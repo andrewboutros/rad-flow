@@ -1,4 +1,10 @@
-# Port Mapping Automated Parser
+# Port Mapping Parser Script
+# Parses inputs and outputs from top-level Verilog designs and maps it to the port.map format used by Wrapper Generation
+# Support for AXI-S interfaces parsing
+# TODO: add support for AXI-MM
+# Arguments:
+#   [1] => Path to the design folder
+#   [2...] => Verilog files for top-level designs
 import argparse
 import re
 import verilog_parser as vlog
@@ -9,6 +15,7 @@ verilog_axis_regex = "axis_(.*)_(.*)"
 
 axis_slave_input_ports = ["tvalid", "tdata", "tstrb", "tkeep", "tlast", "tid", "tdest", "tuser"]
 
+# Determines the width of the port. Outputs the width if successful, "?" if failure
 def determine_port_width(port):
     if not port.data_type:
         return 1
@@ -28,15 +35,18 @@ def determine_port_width(port):
     
     return "?"
 
+# RegEx pattern matching for AXI-S ports. Returns capture groups with information on the AXI-S interface name, and the AXI-S port.
 def match_axis_regex(port):
     signal = re.match(verilog_axis_regex, port.name)
     return signal.groups()
 
+# Determines if a port is an AXI-S port
 def is_axis_port(port):
     if re.match(verilog_axis_regex, port.name):
         return True
     return False
 
+# Determines if the role for an AXI-S port has already been saved
 def is_axis_role_found(axis_roles, port):
     (axis_interface, axis_port) = match_axis_regex(port)
     if axis_interface in axis_roles:
@@ -53,10 +63,12 @@ def determine_axis_roles(module):
                 axis_roles[axis_interface] = "slave" if p.mode == "input" else "master"
     return axis_roles
 
+# Parses modules from a Verilog File
 def get_modules_from_verilog_file(verilog_file_path):
     vlog_ex = vlog.VerilogExtractor()
     return vlog_ex.extract_objects(verilog_file_path)
 
+# Main function for a single module
 def generate_port_mappings_for_module(port_mapping_file, module, axis_roles):
     warnings = False
     port_mapping_file.write("module {0}\n".format(module.name))
@@ -75,6 +87,7 @@ def generate_port_mappings_for_module(port_mapping_file, module, axis_roles):
     print("Port Mappings for {0} has been added to the port map file.".format(module.name))
     return warnings
 
+# Determines the modules in each file, and calls generate_port_mappings_for_module
 def generate(design_folder, rtl_files, cmd_overwrite):
     modules_folder = design_folder / "modules"
     rtl_folder = modules_folder / "rtl"
@@ -103,7 +116,9 @@ def generate(design_folder, rtl_files, cmd_overwrite):
             else:
                 print("ERROR: File {0} is not supported. Only Verilog/SystemVerilog files are supported.".format(rtl_file))
                 exit()
+            
             for m in modules:
+                # Finds all the AXI-S roles (master/slave) for each AXI-S interface
                 axis_roles = determine_axis_roles(m)
                 warnings = True if generate_port_mappings_for_module(port_mapping_file, m, axis_roles) else warnings
         if warnings:

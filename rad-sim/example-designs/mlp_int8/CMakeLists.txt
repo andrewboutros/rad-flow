@@ -24,7 +24,7 @@ set(srcfiles
   modules/collector.cpp
   modules/datapath.cpp
   modules/pipeline.cpp
-  modules/mvm.cpp
+  modules/sysc_mvm.cpp
   modules/rtl_mvm.cpp
   modules/weight_loader.cpp
   modules/inst_loader.cpp
@@ -42,7 +42,7 @@ set(hdrfiles
   modules/collector.hpp
   modules/datapath.hpp
   modules/pipeline.hpp
-  modules/mvm.hpp
+  modules/sysc_mvm.hpp
   modules/rtl_mvm.hpp
   modules/weight_loader.hpp
   modules/inst_loader.hpp

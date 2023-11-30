@@ -1,3 +1,29 @@
+/**
+Datapath Module
+Facilitates the workflow of data for a singular DPE of the MVM module
+
+Parameters:
+LANES: The number of elements each DPE can handle at once (Max number of elements in a subset of the input vector)
+DATAW: Bit width of data
+IPREC: Precision of elements in reduction vector
+OPREC: Precision of elements in output vector
+MEM_DEPTH: Depth of the accumulation memory
+ADDRW: Width of the memory address used for accumulation
+
+Inputs:
+i_valid: Valid signal for all data
+i_dataa: Vector data
+i_datab: Weight data
+i_datac: Reduce data
+i_accum_addr: Accumulation memory address
+i_accum: Enable signal for accumulation
+i_last: The last subset in the input vector. (Release)
+i_reduce: Enable signal for reduction
+
+Outputs:
+o_valid: Valid signal for output result
+o_result: Result
+**/
 module datapath # (
 	parameter LANES = 64,
 	parameter DATAW = 512,

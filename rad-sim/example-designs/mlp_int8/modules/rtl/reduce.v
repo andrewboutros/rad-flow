@@ -1,3 +1,21 @@
+/**
+Reduction Module
+Reduce vectors from one MVM to another
+
+Parameters:
+IPREC: Precision of elements in reduction vector
+OPREC: Precision of elements in output vector
+
+Inputs:
+i_valid: Valid signal for all data
+i_dataa: Vector data from host MVM
+i_datab: Reduction vector from other MVM on same layer
+i_reduce: Enable signal for reduction
+
+Outputs:
+o_valid: Valid signal for output result
+o_result: Result
+**/
 module reduce # (
 	parameter IPREC = 8,
 	parameter OPREC = 32

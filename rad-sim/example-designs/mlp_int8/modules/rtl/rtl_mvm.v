@@ -8,6 +8,10 @@
 //`define inst_release_dest(inst)   ``inst``[30:22]
 //`define inst_release_op(inst)    	``inst``[31]
 
+/**
+RTL MVM Module
+Scalable Matrix Vector Multiplication implementation
+**/
 module rtl_mvm # (
 	parameter DATAW = 512,         // Bitwidth of axi-s tdata
 	parameter BYTEW = 8,   		   // Bitwidth of axi-s tkeep, tstrb

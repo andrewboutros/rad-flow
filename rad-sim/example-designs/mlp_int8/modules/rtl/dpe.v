@@ -1,9 +1,29 @@
+/**
+Dot Product Engine Module
+Performs a dot product calculation for two vectors
+
+Parameters:
+LANES: The number of elements the DPE can handle at once (Max number of elements in a subset of the input vector)
+DATAW: Bit width of data
+IPREC: Precision of elements in inputs to DPE
+MPREC: Precision after multiplication
+OPREC: Precision of elements in outputs from DPE
+ADDER_STAGES: Number of stages required for hierarchical adding
+
+Inputs:
+i_valid: Valid signal for all data
+i_dataa: Vector data
+i_datab: Vector data
+
+Outputs:
+o_valid: Valid signal for output result
+o_result: Result
+**/
 module dpe # (
 	parameter LANES = 64,
 	parameter DATAW = 512,
 	parameter IPREC = 8,
 	parameter MPREC = 2 * IPREC,
-	parameter NUM_MULT = DATAW / IPREC,
 	parameter OPREC = 32,
 	parameter ADDER_STAGES = $clog2(LANES)
 )(
@@ -17,14 +37,14 @@ module dpe # (
 );
 
 // Input registers
-wire signed [IPREC-1:0] dataa [0:NUM_MULT-1];
-wire signed [IPREC-1:0] datab [0:NUM_MULT-1];
-reg signed [IPREC-1:0] r_dataa [0:NUM_MULT-1];
-reg signed [IPREC-1:0] r_datab [0:NUM_MULT-1];
+wire signed [IPREC-1:0] dataa [0:LANES-1];
+wire signed [IPREC-1:0] datab [0:LANES-1];
+reg signed [IPREC-1:0] r_dataa [0:LANES-1];
+reg signed [IPREC-1:0] r_datab [0:LANES-1];
 reg r_ivalid;
 
 // Multiplication registers
-reg signed [MPREC-1:0] r_mrslt [0:NUM_MULT-1];
+reg signed [MPREC-1:0] r_mrslt [0:LANES-1];
 reg r_mvalid;
 
 // Adder tree registers
@@ -38,7 +58,7 @@ reg r_avalid [0:ADDER_STAGES-1];
 
 genvar j;
 generate
-for (j = 0; j < NUM_MULT; j = j + 1) begin: split_input
+for (j = 0; j < LANES; j = j + 1) begin: split_input
 	assign dataa[j] = i_dataa[(j+1)*IPREC-1:j*IPREC];
 	assign datab[j] = i_datab[(j+1)*IPREC-1:j*IPREC];
 end
@@ -47,7 +67,7 @@ endgenerate
 integer i;
 always @ (posedge clk) begin
 	if (rst) begin
-		for (i = 0; i < NUM_MULT; i = i + 1) begin
+		for (i = 0; i < LANES; i = i + 1) begin
 			r_mrslt[i] <= 'd0;
 			r_dataa[i] <= 'd0;
 			r_datab[i] <= 'd0;
@@ -65,14 +85,14 @@ always @ (posedge clk) begin
 		end
 	end else begin
 		// Register inputs
-		for (i = 0; i < NUM_MULT; i = i + 1) begin
+		for (i = 0; i < LANES; i = i + 1) begin
 			r_dataa[i] <= dataa[i];
 			r_datab[i] <= datab[i];
 		end
 		r_ivalid <= i_valid;
 		
 		// Perform multiplication
-		for (i = 0; i < NUM_MULT; i = i + 1) begin
+		for (i = 0; i < LANES; i = i + 1) begin
 			r_mrslt[i] <= r_dataa[i] * r_datab[i];
 		end
 		r_mvalid <= r_ivalid;

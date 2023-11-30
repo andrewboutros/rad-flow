@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+# Verilog Parser
+# RegEx and push down automata to parse symbols from Verilog and SystemVerilog files
 # Copyright © 2017 Kevin Thibedeau
 # Distributed under the terms of the MIT license
 from __future__ import print_function

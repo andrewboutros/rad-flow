@@ -16,20 +16,20 @@ mlp_top::mlp_top(const sc_module_name &name) : sc_module(name) {
   std::getline(design_config_file, line);
   std::stringstream line_stream(line);
   unsigned int num_layers;
-  std::string num_mvms_layer, num_mvms_rtl_layer;
+  std::string num_mvms_sysc_layer, num_mvms_rtl_layer;
   std::string layer_mvms;
   line_stream >> num_layers;
-  num_mvms.resize(num_layers);
+  num_mvms_sysc.resize(num_layers);
   num_mvms_rtl.resize(num_layers);
   num_mvms_total.resize(num_layers);
   for (unsigned int layer_id = 0; layer_id < num_layers; layer_id++) {
     line_stream >> layer_mvms;
     std::stringstream layer_mvms_stream(layer_mvms);
-    std::getline(layer_mvms_stream, num_mvms_layer, ',');
+    std::getline(layer_mvms_stream, num_mvms_sysc_layer, ',');
     std::getline(layer_mvms_stream, num_mvms_rtl_layer, ',');
-    num_mvms[layer_id] = std::stoi(num_mvms_layer);
+    num_mvms_sysc[layer_id] = std::stoi(num_mvms_sysc_layer);
     num_mvms_rtl[layer_id] = std::stoi(num_mvms_rtl_layer);
-    num_mvms_total[layer_id] = num_mvms[layer_id] + num_mvms_rtl[layer_id];
+    num_mvms_total[layer_id] = num_mvms_sysc[layer_id] + num_mvms_rtl[layer_id];
   }
 
   init_vector<sc_out<bool>>::init_sc_vector(dispatcher_fifo_rdy, num_mvms_total[0]);
@@ -37,25 +37,25 @@ mlp_top::mlp_top(const sc_module_name &name) : sc_module(name) {
   init_vector<sc_in<data_vector<sc_int<IPRECISION>>>>::init_sc_vector(
       dispatcher_fifo_wdata, num_mvms_total[0]);
 
-  matrix_vector_engines.resize(num_layers);
+  sysc_matrix_vector_engines.resize(num_layers);
   rtl_matrix_vector_engines.resize(num_layers);
   input_dispatchers.resize(num_mvms_total[0]);
   char module_name[25];
   std::string module_name_str;
   for (unsigned int layer_id = 0; layer_id < num_layers; layer_id++) {
-    matrix_vector_engines[layer_id].resize(num_mvms[layer_id]);
+    sysc_matrix_vector_engines[layer_id].resize(num_mvms_sysc[layer_id]);
     rtl_matrix_vector_engines[layer_id].resize(num_mvms_rtl[layer_id]);
-    for (unsigned int mvm_id = 0; mvm_id < num_mvms[layer_id]; mvm_id++) {
+    for (unsigned int mvm_id = 0; mvm_id < num_mvms_sysc[layer_id]; mvm_id++) {
       module_name_str =
           "layer" + std::to_string(layer_id) + "_mvm" + std::to_string(mvm_id);
       std::strcpy(module_name, module_name_str.c_str());
-      matrix_vector_engines[layer_id][mvm_id] =
-          new mvm(module_name, mvm_id, layer_id);
-      matrix_vector_engines[layer_id][mvm_id]->rst(rst);
+      sysc_matrix_vector_engines[layer_id][mvm_id] =
+          new sysc_mvm(module_name, mvm_id, layer_id);
+      sysc_matrix_vector_engines[layer_id][mvm_id]->rst(rst);
     }
     for (unsigned int mvm_id = 0; mvm_id < num_mvms_rtl[layer_id]; mvm_id++) {
       module_name_str =
-          "layer" + std::to_string(layer_id) + "_mvm" + std::to_string(mvm_id + num_mvms[layer_id]);
+          "layer" + std::to_string(layer_id) + "_mvm" + std::to_string(mvm_id + num_mvms_sysc[layer_id]);
       std::strcpy(module_name, module_name_str.c_str());
       rtl_matrix_vector_engines[layer_id][mvm_id] =
           new rtl_mvm(module_name);
@@ -122,11 +122,11 @@ mlp_top::mlp_top(const sc_module_name &name) : sc_module(name) {
 }
 
 mlp_top::~mlp_top() {
-  for (unsigned int layer_id = 0; layer_id < matrix_vector_engines.size();
+  for (unsigned int layer_id = 0; layer_id < num_mvms_total.size();
        layer_id++) {
     for (unsigned int mvm_id = 0;
-         mvm_id < matrix_vector_engines[layer_id].size(); mvm_id++) {
-      delete matrix_vector_engines[layer_id][mvm_id];
+         mvm_id < sysc_matrix_vector_engines[layer_id].size(); mvm_id++) {
+      delete sysc_matrix_vector_engines[layer_id][mvm_id];
     }
     for (unsigned int mvm_id = 0;
          mvm_id < rtl_matrix_vector_engines[layer_id].size(); mvm_id++) {

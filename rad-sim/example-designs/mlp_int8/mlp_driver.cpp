@@ -121,20 +121,20 @@ mlp_driver::mlp_driver(const sc_module_name& name) : sc_module(name) {
   std::string line;
   std::getline(design_config_file, line);
   std::stringstream line_stream(line);
-  std::string num_mvms_layer, num_mvms_rtl_layer;
+  std::string num_mvms_sysc_layer, num_mvms_rtl_layer;
   std::string layer_mvms;
   line_stream >> num_layers;
-  num_mvms.resize(num_layers);
+  num_mvms_sysc.resize(num_layers);
   num_mvms_rtl.resize(num_layers);
   num_mvms_total.resize(num_layers);
   for (unsigned int layer_id = 0; layer_id < num_layers; layer_id++) {
     line_stream >> layer_mvms;
     std::stringstream layer_mvms_stream(layer_mvms);
-    std::getline(layer_mvms_stream, num_mvms_layer, ',');
+    std::getline(layer_mvms_stream, num_mvms_sysc_layer, ',');
     std::getline(layer_mvms_stream, num_mvms_rtl_layer, ',');
-    num_mvms[layer_id] = std::stoi(num_mvms_layer);
+    num_mvms_sysc[layer_id] = std::stoi(num_mvms_sysc_layer);
     num_mvms_rtl[layer_id] = std::stoi(num_mvms_rtl_layer);
-    num_mvms_total[layer_id] = num_mvms[layer_id] + num_mvms_rtl[layer_id];
+    num_mvms_total[layer_id] = num_mvms_sysc[layer_id] + num_mvms_rtl[layer_id];
   }
 
   // Intialize input/output interface vectors
@@ -258,7 +258,7 @@ void mlp_driver::source() {
     wait();
   }
 
-  start_cycle = GetSimulationCycle(1.0);
+  start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
   start_time = std::chrono::steady_clock::now();
   wait();
 
@@ -310,7 +310,7 @@ void mlp_driver::sink() {
   if (mistake) std::cout << "FAILURE - Some outputs NOT matching!" << std::endl;
   else std::cout << "SUCCESS - All outputs are matching!" << std::endl;
 
-  end_cycle = GetSimulationCycle(1.0);
+  end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
   end_time = std::chrono::steady_clock::now();
   std::cout << "Simulation Cycles = " << end_cycle - start_cycle << std::endl;
   std::cout << "Simulation Time = " << std::chrono::duration_cast<std::chrono::milliseconds> (end_time - start_time).count() << " ms" << std::endl;

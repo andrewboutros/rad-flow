@@ -82,7 +82,7 @@ void mlp_driver::source() {
     dispatcher_fifo_wen[dispatcher_id].write(false);
   wait();
   rst.write(false);
-  start_cycle = GetSimulationCycle(1.0);
+  start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
   wait();
 
   std::vector<unsigned int> written_inputs(num_mvms[0], 0);
@@ -129,7 +129,7 @@ void mlp_driver::sink() {
   if (mistake) std::cout << "FAILURE - Some outputs NOT matching!" << std::endl;
   else std::cout << "SUCCESS - All outputs are matching!" << std::endl;
 
-  end_cycle = GetSimulationCycle(1.0);
+  end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
   std::cout << "Simulation Cycles = " << end_cycle - start_cycle << std::endl;
   NoCTransactionTelemetry::DumpStatsToFile("stats.csv");
   NoCFlitTelemetry::DumpNoCFlitTracesToFile("flit_traces.csv");

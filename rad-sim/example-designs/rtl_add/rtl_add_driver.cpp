@@ -31,7 +31,7 @@ void rtl_add_driver::source() {
   client_valid.write(false);
   wait();
   rst.write(false);
-  start_cycle = GetSimulationCycle(1.0);
+  start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
   start_time = std::chrono::steady_clock::now();
   wait();
 
@@ -61,7 +61,7 @@ void rtl_add_driver::sink() {
   if (response.read() != actual_sum) std::cout << "FAILURE - Output is not matching!" << std::endl;
   else std::cout << "SUCCESS - Output is matching!" << std::endl;
 
-  end_cycle = GetSimulationCycle(1.0);
+  end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
   end_time = std::chrono::steady_clock::now();
   std::cout << "Simulation Cycles = " << end_cycle - start_cycle << std::endl;
   std::cout << "Simulation Time = " << std::chrono::duration_cast<std::chrono::microseconds> (end_time - start_time).count() << " us" << std::endl;

@@ -7,7 +7,6 @@
 #include "radsim_defines.hpp"
 #include "axis_interface.hpp"
 #include "fifo.hpp"
-#include "mvm.hpp"
 #include "radsim_module.hpp"
 
 class collector : public RADSimModule {

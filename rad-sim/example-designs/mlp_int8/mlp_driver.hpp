@@ -6,17 +6,18 @@
 #include <time.h>
 #include <vector>
 
-#include "mvm.hpp"
 #include "sim_utils.hpp"
 #include "instructions.hpp"
 #include "radsim_config.hpp"
+
+#include <design_context.hpp>
 
 class mlp_driver : public sc_module {
  private:
   int start_cycle, end_cycle;
   std::chrono::steady_clock::time_point start_time, end_time;
   unsigned int num_layers;
-  std::vector<unsigned int> num_mvms;
+  std::vector<unsigned int> num_mvms_sysc;
   std::vector<unsigned int> num_mvms_rtl;
   std::vector<unsigned int> num_mvms_total;
 

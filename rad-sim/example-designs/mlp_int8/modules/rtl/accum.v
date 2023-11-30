@@ -1,3 +1,18 @@
+/**
+Accumulator Module
+Responsible for accumulating sums from previous subset vectors the MVM processed as part of one input vector. Independent of each DPE.
+
+Inputs:
+i_valid: The data in is valid
+i_data: The data
+i_addr: The address in the accum_mem to write/read to
+i_last: The last subset in the input vector. Required for o_valid to be propagated as true.
+
+Outputs:
+o_valid: The result out is valid
+o_result: The result
+**/
+
 module accum # (
 	parameter DATAW = 32,
 	parameter DEPTH = 512,
