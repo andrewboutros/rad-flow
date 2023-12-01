@@ -12,6 +12,8 @@ class add_driver : public sc_module {
 private:
   std::queue<int> numbers_to_send;
   int actual_sum;
+  int start_cycle, end_cycle;
+  std::chrono::steady_clock::time_point start_time, end_time;
   
 public:
   sc_in<bool> clk;

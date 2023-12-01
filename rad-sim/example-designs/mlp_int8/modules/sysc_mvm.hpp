@@ -15,7 +15,7 @@
 
 #include <design_context.hpp>
 
-class mvm : public RADSimModule {
+class sysc_mvm : public RADSimModule {
  private:
   std::string module_name;
   unsigned int mvm_id;
@@ -78,11 +78,11 @@ class mvm : public RADSimModule {
   axis_slave_port rx_interface;
   axis_master_port tx_interface;
 
-  mvm(const sc_module_name& name, unsigned int id_mvm, unsigned int id_layer);
-  ~mvm();
+  sysc_mvm(const sc_module_name& name, unsigned int id_mvm, unsigned int id_layer);
+  ~sysc_mvm();
 
   void Assign();
   void Tick();
-  SC_HAS_PROCESS(mvm);
+  SC_HAS_PROCESS(sysc_mvm);
   void RegisterModuleInfo();
 };

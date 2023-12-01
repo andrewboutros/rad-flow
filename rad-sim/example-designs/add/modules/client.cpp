@@ -21,7 +21,7 @@ client::~client() {}
 
 void client::Assign() {
   if (rst) {
-    client_ready.write(true); // ready to accept requests from driver testbench
+    client_ready.write(false);
   } else {
     // Ready to accept new addend from driver testbench as long as the addend
     // FIFO is not full
@@ -45,8 +45,8 @@ void client::Tick() {
     // Interface with testbench driver
     if (client_ready.read() && client_valid.read()) {
       client_tdata_fifo.push(client_tdata);
-      testbench_tlast = client_tlast.read();
-      std::cout << module_name << ": Pushed request to FIFO" << std::endl;
+      r_client_tlast = client_tlast.read();
+      //std::cout << module_name << ": Pushed request to FIFO" << std::endl;
     }
     client_fifo_full.write(client_tdata_fifo.size() >= client_fifo_depth);
 
@@ -62,7 +62,7 @@ void client::Tick() {
       axis_client_interface.tstrb.write(0);
       axis_client_interface.tkeep.write(0);
       axis_client_interface.tuser.write(src_addr);
-      axis_client_interface.tlast.write(testbench_tlast && (client_tdata_fifo.size() == 1));
+      axis_client_interface.tlast.write(r_client_tlast && (client_tdata_fifo.size() == 1));
       axis_client_interface.tdata.write(tdata);
 
       axis_client_interface.tvalid.write(true);
@@ -73,7 +73,7 @@ void client::Tick() {
     if (axis_client_interface.tvalid.read() &&
         axis_client_interface.tready.read()) {
       client_tdata_fifo.pop();
-      std::cout << module_name << ": Sent Transaction!" << std::endl;
+      //std::cout << module_name << ": Sent Transaction!" << std::endl;
     }
     wait();
   }

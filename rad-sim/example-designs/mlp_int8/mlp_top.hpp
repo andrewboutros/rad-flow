@@ -2,7 +2,8 @@
 
 #include <systemc.h>
 #include <vector>
-#include <mvm.hpp>
+#include <sysc_mvm.hpp>
+#include <rtl_mvm.hpp>
 #include <dispatcher.hpp>
 #include <collector.hpp>
 #include <weight_loader.hpp>
@@ -14,7 +15,11 @@
 
 class mlp_top : public sc_module {
  private:
-  std::vector<std::vector<mvm*>> matrix_vector_engines;
+  std::vector<std::vector<rtl_mvm*>> rtl_matrix_vector_engines;
+  std::vector<std::vector<sysc_mvm*>> sysc_matrix_vector_engines;
+  std::vector<unsigned int> num_mvms_sysc;
+  std::vector<unsigned int> num_mvms_rtl;
+  std::vector<unsigned int> num_mvms_total;
   std::vector<dispatcher*> input_dispatchers;
   collector* output_collector;
   weight_loader* wloader;

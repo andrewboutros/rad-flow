@@ -16,7 +16,7 @@ private:
   std::queue<sc_bv<DATAW>> client_tdata_fifo; // FIFO to store numbers
   unsigned int client_fifo_depth;    // MAXIMUM number of addends to store in FIFO
   sc_signal<bool> client_fifo_full;  // Signal flagging addend FIFO is full
-  bool testbench_tlast;
+  bool r_client_tlast;
 
 public:
   sc_in<bool> rst;

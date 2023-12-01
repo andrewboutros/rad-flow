@@ -8,21 +8,20 @@
 #include <systemc.h>
 #include <vector>
 
-#include <Vadder.h>
-class adder : public RADSimModule {
+#include <Vrtl_mvm.h>
+class rtl_mvm : public RADSimModule {
 private:
-	Vadder* vadder;
+	Vrtl_mvm* vrtl_mvm;
 
 public:
 	sc_in<bool> rst;
-	sc_out<sc_bv<128>> response;
-	sc_out<bool> response_valid;
 
-	axis_slave_port axis_adder;
+	axis_slave_port axis_rx;
+	axis_master_port axis_tx;
 
-	adder(const sc_module_name &name);
-	~adder();
+	rtl_mvm(const sc_module_name &name);
+	~rtl_mvm();
 
-	SC_HAS_PROCESS(adder);
+	SC_HAS_PROCESS(rtl_mvm);
 	void RegisterModuleInfo();
 };

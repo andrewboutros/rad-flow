@@ -1,29 +1,38 @@
 # Generate Wrapper Code for RTL Support
+# Creates RAD-Sim modules that instantiates SystemC modules under the hood.
 # Current version only supports AXI-S
+# TODO: add support for AXI-MM
 # Arguments:
 #   [1] => Path to the design folder
 #   [2...] => Modules to generate wrapper code for
 import argparse
 from pathlib import Path
 
+DEFAULT_PORT_WIDTH = 1024 # AXI-S data width
+
+# Verilog-style -> SystemC port type translations
 port_type_translation = {
   "input": "sc_in",
   "output": "sc_out",
   "inout": "sc_inout"
 }
 
-def generate_source_wrapper(design_name, modules_folder, dataw, mappings, axis_role):
+# Generates the C++ wrapper file
+def generate_source_wrapper(design_name, modules_folder, dataw, mappings, axis_roles):
     verilated_design = "V" + design_name
     design_inst = "v" + design_name
 
     with open(modules_folder / (design_name + ".cpp"), "w") as wrapper_cpp_file:
-      wrapper_cpp_file.write("#include <" + verilated_design + ".h>\n")
       wrapper_cpp_file.write("#include <" + design_name + ".hpp>\n\n")
 
       wrapper_cpp_file.write(design_name + "::" + design_name + "(const sc_module_name &name) : RADSimModule(name) {\n")
-      wrapper_cpp_file.write("\t" + verilated_design + "* " + design_inst + " = new " + verilated_design + "{\"" + design_inst + "\"};\n")
 
-      #inputs and outputs connections
+      wrapper_cpp_file.write("\t" + "char " + design_inst + "_name[25];\n")
+      wrapper_cpp_file.write("\tstd::string " + design_inst + "_name_str = std::string(name) + \"_vmvm\";\n")
+      wrapper_cpp_file.write("\tstd::strcpy(" + design_inst + "_name, " + design_inst + "_name_str.c_str());\n\n")
+      wrapper_cpp_file.write("\t" + design_inst + " = new " + verilated_design + "{" + design_inst + "_name};\n")
+
+      # inputs and outputs connections
       if not design_name in mappings:
         print("WARNING: No mappings declared for the module", design_name)
       elif len(mappings[design_name]) == 0:
@@ -32,28 +41,34 @@ def generate_source_wrapper(design_name, modules_folder, dataw, mappings, axis_r
         for port in mappings[design_name]:
           wrapper_cpp_file.write("\t" + design_inst + "->" + port[2] + "(" + port[3] + ");\n")
 
-      wrapper_cpp_file.write("\n\tthis->RegisterModuleInfo();\n")
+      if axis_roles != None:
+        wrapper_cpp_file.write("\n\tthis->RegisterModuleInfo();\n")
       wrapper_cpp_file.write("}\n\n")
 
-      wrapper_cpp_file.write(design_name + "::~" + design_name + "() {}\n\n")
+      wrapper_cpp_file.write(design_name + "::~" + design_name + "() {\n")
+      wrapper_cpp_file.write("\t" + design_inst + "->final();\n")
+      wrapper_cpp_file.write("\tdelete " + design_inst + ";\n")
+      wrapper_cpp_file.write("}\n\n")
 
-      if axis_role != None:
+      if axis_roles != None:
         wrapper_cpp_file.write("void " + design_name + "::RegisterModuleInfo() {\n")
         wrapper_cpp_file.write("\tstd::string port_name;\n")
         wrapper_cpp_file.write("\t_num_noc_axis_slave_ports = 0;\n")
         wrapper_cpp_file.write("\t_num_noc_axis_master_ports = 0;\n")
         wrapper_cpp_file.write("\t_num_noc_aximm_slave_ports = 0;\n")
-        wrapper_cpp_file.write("\t_num_noc_aximm_master_ports = 0;\n")
-        wrapper_cpp_file.write("\tport_name = module_name + \".axis_" + design_name + "_interface\";\n")
-        if axis_role == "master":
-            wrapper_cpp_file.write("\tRegisterAxisMasterPort(port_name, &axis_" + design_name + "_interface, " + dataw + ", 0);\n")
-        else:
-            wrapper_cpp_file.write("\tRegisterAxisSlavePort(port_name, &axis_" + design_name + "_interface, " + dataw + ", 0);\n")
-        wrapper_cpp_file.write("}\n")
-      else:
-        print("WARNING: Module {0} is not connected to the NOC via AXI-S.", design_name)
+        wrapper_cpp_file.write("\t_num_noc_aximm_master_ports = 0;\n\n")
 
-def generate_header_wrapper(design_name, modules_folder, mappings, axis_role):
+        for axis_interface, axis_role in axis_roles.items():
+          wrapper_cpp_file.write("\tport_name = module_name + \"." + axis_interface + "\";\n")
+          if axis_role == "master":
+              wrapper_cpp_file.write("\tRegisterAxisMasterPort(port_name, &" + axis_interface + ", " + dataw + ", 0);\n\n")
+          else:
+              wrapper_cpp_file.write("\tRegisterAxisSlavePort(port_name, &" + axis_interface + ", " + dataw + ", 0);\n\n")
+        
+        wrapper_cpp_file.write("}\n")
+
+# Generates the accompanying C++ header wrapper file
+def generate_header_wrapper(design_name, modules_folder, mappings, axis_roles):
     verilated_design = "V" + design_name
     design_inst = "v" + design_name
 
@@ -66,11 +81,14 @@ def generate_header_wrapper(design_name, modules_folder, mappings, axis_role):
       wrapper_hpp_file.write("#include <string>\n")
       wrapper_hpp_file.write("#include <systemc.h>\n")
       wrapper_hpp_file.write("#include <vector>\n\n")
+      wrapper_hpp_file.write("#include <" + verilated_design + ".h>\n")
 
       wrapper_hpp_file.write("class " + design_name + " : " + "public RADSimModule {\n")
+      wrapper_hpp_file.write("private:\n")
+      wrapper_hpp_file.write("\t" + verilated_design + "* " + design_inst + ";\n\n")
       wrapper_hpp_file.write("public:\n")
 
-      #inputs and outputs
+      # inputs and outputs
       if not design_name in mappings:
         print("WARNING: No mappings declared for the module", design_name)
       elif len(mappings[design_name]) == 0:
@@ -82,22 +100,24 @@ def generate_header_wrapper(design_name, modules_folder, mappings, axis_role):
           port_size_type = "bool" if port[1] == "1" else "sc_bv<" + port[1] + ">"
           wrapper_hpp_file.write("\t" + port[0] + "<" + port_size_type + "> " + port[3] + ";\n")
 
-      #NoC connection, TODO: add support for AXI-MM
-      if axis_role == "master":
-          wrapper_hpp_file.write("\n\taxis_master_port axis_" + design_name + "_interface;\n\n")
-      else:
-          wrapper_hpp_file.write("\n\taxis_slave_port axis_" + design_name + "_interface;\n\n")
+      # NoC connection
+      if axis_roles != None:
+        wrapper_hpp_file.write("\n")
+        for axis_interface, axis_role in axis_roles.items():
+          if axis_role == "master":
+              wrapper_hpp_file.write("\taxis_master_port " + axis_interface + ";\n")
+          else:
+              wrapper_hpp_file.write("\taxis_slave_port " + axis_interface + ";\n")
 
-      wrapper_hpp_file.write("\t" + design_name + "(const sc_module_name &name);\n")
+      wrapper_hpp_file.write("\n\t" + design_name + "(const sc_module_name &name);\n")
       wrapper_hpp_file.write("\t~" + design_name + "();\n\n")
 
       wrapper_hpp_file.write("\tSC_HAS_PROCESS(" + design_name + ");\n")
-      if axis_role != None:
+      if axis_roles != None:
         wrapper_hpp_file.write("\tvoid RegisterModuleInfo();\n")
-      else:
-        print("WARNING: Module {0} is not connected to the NOC via AXI-S.", design_name)
       wrapper_hpp_file.write("};\n")
 
+# Parses the port mappings file
 def read_port_mappings(port_mapping_file):
   current_module = ""
   mappings = {}
@@ -108,20 +128,35 @@ def read_port_mappings(port_mapping_file):
 
       if not components: continue
 
-      if components[0] == "module":
+      if components[0] == "module": # The port mapping line specifies a module
+        # Validity Checks
         if len(components) != 2: raise ValueError("A line specifying a module can only contain 2 parameters separated by a whitespace.")
+
         current_module = components[1]
         mappings[current_module] = [] # insert new dictionary entry
         print("Found port mappings for module", current_module)
-      elif components[0] == "axis":
+      elif components[0] == "axis": # The port mapping line specifies an AXI-S port
+        # Validity Checks
         if not current_module: raise ValueError("A module must be specified before mappings for the module.")
-        if len(components) != 4: raise ValueError("Each line specifying an AXI-S port can only contain 4 parameters separated by a whitespace.")
+        if len(components) != 5: raise ValueError("Each line specifying an AXI-S port must contain 5 parameters separated by a whitespace.")
 
-        mappings[current_module].append((components[0], components[1], components[2], components[3]))
-        axis_roles[current_module] = components[1]
-      else:
+        # Add the parsed data to data structures to be used during wrapper generation
+        (keyword, axis_role, rtl_port, axis_interface, axis_port) = components
+        radsim_port = axis_interface + "." + axis_port
+        mappings[current_module].append((keyword, axis_role, rtl_port, radsim_port))
+        if current_module not in axis_roles:
+          axis_roles[current_module] = {}
+        if axis_interface not in axis_roles[current_module]:
+          axis_roles[current_module][axis_interface] = axis_role
+        else:
+          # verify there is no inconsistencies
+          if axis_roles[current_module][axis_interface] != axis_role:
+            raise ValueError("Inconsistent AXI-S role for interface " + axis_interface + ". Each interface can either be master or slave.")
+      else: # The port mapping line specifies any other port
         port_mode = components[0]
         port_width = components[1]
+
+        # Validity Checks
         if not current_module: raise ValueError("A module must be specified before mappings for the module.")
         if len(components) != 4: raise ValueError("Each line specifying a port can only contain 4 parameters separated by a whitespace.")
         if port_mode != "input" and port_mode != "output" and port_mode != "inout": raise ValueError("The first argument of each port must be either axis/input/output/inout.")
@@ -132,6 +167,7 @@ def read_port_mappings(port_mapping_file):
         mappings[current_module].append((port_mode, port_width, components[2], components[3]))
   return (mappings, axis_roles)
 
+# Main function to generate wrapper files
 def generate(design_folder, design_modules):
   modules_folder = design_folder / "modules"
   rtl_folder = modules_folder / "rtl"
@@ -147,10 +183,13 @@ def generate(design_folder, design_modules):
   print("Reading Port Mappings...")
   mappings, axis_roles = read_port_mappings(port_map_file_path)
   print("Read Port Mappings Sucessfully!")
-  for i in range(design_modules):
+  for i in range(len(design_modules)):
     design_name = design_modules[i]
-    dataw = input("Enter the AXI-S data width for module " + design_name + " (default: 1024): ")
-    dataw = dataw if dataw else 1024
+    if (axis_roles.get(design_name) != None):
+      dataw = input("Enter the AXI-S data width for module " + design_name + " (default: " + str(DEFAULT_PORT_WIDTH) + "): ")
+      dataw = dataw if dataw else str(DEFAULT_PORT_WIDTH)
+    else:
+      print("WARNING: Module {0} is not connected to the NOC via AXI-S.".format(design_name))
     generate_source_wrapper(design_name, modules_folder, dataw, mappings, axis_roles.get(design_name))
     print("Generated Source Wrapper for module", design_name)
     generate_header_wrapper(design_name, modules_folder, mappings, axis_roles.get(design_name))

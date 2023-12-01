@@ -49,7 +49,7 @@ void dispatcher::Assign() {
       tx_interface.tdata.write(tx_tdata_bv);
       tx_interface.tuser.write(2 << 9);
       tx_interface.tid.write(0);
-      std::string dest_name = "layer0_mvm" + std::to_string(dispatcher_id) + ".rx_interface";
+      std::string dest_name = "layer0_mvm" + std::to_string(dispatcher_id) + ".axis_rx";
       tx_interface.tdest.write(radsim_design.GetPortDestinationID(dest_name));
     } else {
       tx_interface.tvalid.write(false);

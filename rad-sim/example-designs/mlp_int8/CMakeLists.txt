@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 find_package(SystemCLanguage CONFIG REQUIRED)
 
+add_subdirectory(modules/rtl)
+
 include_directories(
   ./
   modules
@@ -11,6 +13,8 @@ include_directories(
   ../../sim/noc/booksim/routers
 )
 
+include_directories(SYSTEM "${VERILATOR_ROOT}/include")
+
 set(srcfiles
   modules/fifo.cpp
   modules/register_file.cpp
@@ -20,7 +24,8 @@ set(srcfiles
   modules/collector.cpp
   modules/datapath.cpp
   modules/pipeline.cpp
-  modules/mvm.cpp
+  modules/sysc_mvm.cpp
+  modules/rtl_mvm.cpp
   modules/weight_loader.cpp
   modules/inst_loader.cpp
   mlp_top.cpp
@@ -37,7 +42,8 @@ set(hdrfiles
   modules/collector.hpp
   modules/datapath.hpp
   modules/pipeline.hpp
-  modules/mvm.hpp
+  modules/sysc_mvm.hpp
+  modules/rtl_mvm.hpp
   modules/weight_loader.hpp
   modules/inst_loader.hpp
   modules/config.hpp
@@ -49,4 +55,4 @@ set(hdrfiles
 add_compile_options(-Wall -Wextra -pedantic)
 
 add_library(design STATIC ${srcfiles} ${hdrfiles})
-target_link_libraries(design PUBLIC SystemC::systemc booksim noc)
+target_link_libraries(design PUBLIC SystemC::systemc booksim noc rtl_designs)
