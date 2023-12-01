@@ -99,7 +99,7 @@ public:
   std::vector<std::vector<std::set<std::string>>> &GetNodeModuleNames();
   uint64_t GetPortBaseAddress(std::string &port_name);
 
-  int GetDesignExitCode();
+  int GetSimExitCode();
   void ReportDesignFailure();
 };
 

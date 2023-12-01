@@ -690,7 +690,7 @@ uint64_t RADSimDesignContext::GetPortBaseAddress(std::string &port_name) {
   return _aximm_port_base_addresses[port_name];
 }
 
-int RADSimDesignContext::GetDesignExitCode() {
+int RADSimDesignContext::GetSimExitCode() {
   return _sim_exit_code;
 }
 
