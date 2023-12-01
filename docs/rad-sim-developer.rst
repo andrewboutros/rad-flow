@@ -15,14 +15,22 @@ If you would like a test report XML to be generated, run the following steps:
 #. ``pip install -r test/requirements.txt``
 #. ``python -m xmlrunner discover . --output-file test/python-test-report.xml``
 
-MLP Tests
+MLP Test
 ^^^^^^^^^^
 To run the MLP test, ensure the current working directory is in the ``rad-sim`` folder and run the following steps:
 
 #. ``conda activate radflow``
 #. ``test/mlp_test.sh``
 
-DLRM Tests
+MLP Co-Simulation Test
+^^^^^^^^^^^^^^^^^^^^^^^
+To run the MLP co-simulation test, first follow the instllation instructions found :doc:`here </rad-sim-rtl-code>` for RAD-Sim RTL support.
+Ensure the current working directory is in the ``rad-sim`` folder and run the following steps:
+
+#. ``conda activate radflow``
+#. ``test/mlp_int8_test.sh``
+
+DLRM Test
 ^^^^^^^^^^
 To run the DLRM test, ensure the current working directory is in the ``rad-sim`` folder and run the following steps:
 
@@ -31,7 +39,7 @@ To run the DLRM test, ensure the current working directory is in the ``rad-sim``
 
 NPU Tests
 ^^^^^^^^^^
-To run the NPU test, ensure the current working directory is in the ``rad-sim`` folder and run the following steps:
+To run the NPU tests, ensure the current working directory is in the ``rad-sim`` folder and run the following steps:
 
 #. ``conda activate radflow``
 #. ``test/npu_test.sh``

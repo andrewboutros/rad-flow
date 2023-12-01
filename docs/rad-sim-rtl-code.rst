@@ -85,7 +85,7 @@ Automatic Wrapper Files Generation
 RAD-Sim includes scripts to generate basic wrapper files in the ``rad-sim/scripts`` directory.
 Automatic wrapper generation follows the workflow:
 
-.. image:: _static/wrapper_generation_flowchart.png
+.. image:: _static/rtl-code_wrapper_generation_flowchart.png
   :width: 1000
   :alt: Wrapper Generation Flowchart
 
