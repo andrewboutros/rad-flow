@@ -25,6 +25,7 @@ public:
   data_vector();
   data_vector(unsigned int size);
   data_vector(sc_vector<sc_in<dtype>> &iport);
+  data_vector(sc_vector<sc_signal<dtype>> &iport);
   data_vector(std::vector<dtype> &vec);
   data_vector(std::vector<int> &vec);
 //   data_vector(std::vector<bool> &vec);
@@ -154,5 +155,11 @@ void aximm_vector_to_bv(
 void aximm_bv_to_data_vector(
     sc_bv<AXI4_MAX_DATAW> &bitvector, 
     data_vector<int16_t> &datavector, 
+    unsigned int bitwidth, 
+    unsigned int num_elements);
+
+void aximm_512_bv_to_64_data_vector(
+    sc_bv<AXI4_MAX_DATAW> &bitvector, 
+    data_vector<uint64_t> &datavector, 
     unsigned int bitwidth, 
     unsigned int num_elements);

@@ -10,6 +10,7 @@
 #include <vector>
 #include <algorithm>
 #include <traffic_gen.hpp>
+#include <bitset>
 
 // #include <bits/stdc++.h>
 
@@ -40,10 +41,14 @@ private:
     std::vector<data_vector<uint64_t>> _src_ports;
     std::vector<data_vector<uint64_t>> _dst_ports;
 
+    // Verification
+    unsigned int _num_mem_req_outputs;
+    std::vector <uint64_t> _rd_req_outputs;
+
 public:
     sc_in<bool> clk;
     sc_out<bool> rst;
-    
+
     /*
         sc_out<data_vector<uint64_t>> lookup_indecies_data;
         sc_out<data_vector<unsigned int>> lookup_indecies_target_channels;
@@ -62,6 +67,12 @@ public:
     sc_out<data_vector<size_t>> wr_datas; // however many bits are associated with a single memory write tranaction
     sc_out<data_vector<uint64_t>> src_ports;
     sc_out<data_vector<uint64_t>> dst_ports;
+
+    // signals used by testbench to verify functionality
+    sc_in<data_vector<uint64_t>> wr_req_data;
+    sc_in<data_vector<uint64_t>> rd_req_data;
+    sc_in<bool> rd_req_data_rdy;
+
 
     // sc_in<unsigned int> received_responses;
     // HBM traffic, sc_vector of size (num_mem_req_insts)

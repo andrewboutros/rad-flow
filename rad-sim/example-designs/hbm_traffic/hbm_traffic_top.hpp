@@ -32,6 +32,8 @@ private:
     sc_vector<sc_signal<uint64_t>> _src_ports;
     sc_vector<sc_signal<uint64_t>> _dst_ports;
 
+    sc_vector<sc_signal<uint64_t>> _rd_req_data;
+    sc_vector<sc_signal<uint64_t>> _wr_req_data;
 public:
     sc_in<bool> rst;
     /*
@@ -53,7 +55,10 @@ public:
     sc_in<data_vector<uint64_t>> src_ports;
     sc_in<data_vector<uint64_t>> dst_ports;
 
-  
+    // Verif
+    sc_out<data_vector<uint64_t>> rd_req_data;
+    sc_out<data_vector<uint64_t>> wr_req_data;
+    sc_out<bool> rd_req_data_rdy;
     // sc_out<unsigned int> received_responses;
 
     sc_out<bool> collector_fifo_rdy;

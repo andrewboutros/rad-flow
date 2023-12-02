@@ -206,10 +206,20 @@ void black_box::Tick() {
 
     axis_interface.tvalid.write(false);
 
+    // State of AXI-MM transactions
     _aximm_wr_ctrl_sent.write(false);
     _aximm_wr_num_sent_flits.write(0);
     _aximm_wr_tx_done.write(true);
     _aximm_rd_tx_done.write(true);
+    _aximm_wr_state.write(AXIMM_WR_IDLE);
+
+
+
+    // Verif
+    rd_req_data.write(0);
+    rd_req_data_rdy.write(false);
+
+
     /*
       // MIMO
       for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
@@ -228,6 +238,7 @@ void black_box::Tick() {
 
     // Always @ positive edge of the clock
     while (true) {
+
         // Interface with testbench driver
         /*
             if (mem_req_valid.read() && mem_req_ready.read()) {
@@ -270,18 +281,13 @@ void black_box::Tick() {
             _src_port_fifo.push(src_port.read());
             _dst_port_fifo.push(dst_port.read());
 
-            // std::string src_port_name = radsim_design.GetPortNameFromBaseAddress(src_port.read());
-            // std::string dst_port_name = radsim_design.GetPortNameFromBaseAddress(dst_port.read());
-
-            if (_wr_en_fifo.front()) {
+            if (_wr_en_fifo.back()) {
                 std::cout << module_name << ": Received memory write request" << " @ Cycle " <<  GetSimulationCycle(5.0) << "!" << std::endl;
-                     /*<< " src: " << src_port_name << " dst: " << dst_port_name*/
             }
             else {
                 std::cout << module_name << ": Received memory read request" << " @ Cycle " <<  GetSimulationCycle(5.0) << "!" << std::endl;
             }
 
-            // std::cout << module_name << ": Received memory request" << std::endl;
         }
         
 
@@ -289,19 +295,67 @@ void black_box::Tick() {
 
         // make sure input fifos are not empty
         bool no_mem_req_ififos_empty = std::find_if(_mem_req_ififos_empty.begin(), _mem_req_ififos_empty.end(), [](bool b) {return b == true;}) == _mem_req_ififos_empty.end();
-        if (no_mem_req_ififos_empty && _aximm_wr_tx_done.read() && _aximm_rd_tx_done.read()){
+        if (no_mem_req_ififos_empty && _aximm_wr_tx_done.read()){
             // Send AXI-MM read/write requests to the NoC        
             uint64_t mem_req_src_port = _src_port_fifo.front();
             uint64_t mem_req_dst_addr = _dst_port_fifo.front() + _target_addr_fifo.front();
             size_t mem_req_wr_data = _wr_data_fifo.front();
             bool mem_req_write_en = _wr_en_fifo.front();
             // unsigned int mem_req_target_channel = _target_channel_fifo.front(); // not using channel at the moment TODO when having single mem ctrl router for multiple channels
+            // burst_len = _burst_len_fifo.front();
+            // burst_len = _burst_len_fifo.front();
+
+
+
             if (mem_req_write_en) {
                 // AXI-MM Write
-                
-                // Address + Control 
+                /*
+                switch (_aximm_wr_state.read()){
+                    case AXIMM_WR_IDLE:
+                        // Address + Control 
+                        _aximm_wr_state.write(AXIMM_WR_ADDR);
+                        std::cout << "Sent WR Trans id " << _wr_req_id_count.read() << " ADDR + CTRL " << " @ Cycle " <<  GetSimulationCycle(5.0) << "!" << std::endl;
+
+                        aximm_interface.awvalid.write(true);
+                        aximm_interface.awid.write(_wr_req_id_count.read());
+                        aximm_interface.awaddr.write(mem_req_dst_addr);
+                        aximm_interface.awlen.write(0); // burst len of 1
+                        aximm_interface.awsize.write(0); // burst len of 1
+                        aximm_interface.awburst.write(0); // burst len of 1
+                        aximm_interface.awuser.write(mem_req_src_port); // assuming the aw user field specifies port where the request came from?
+                        // set unused transaction signals to invalid
+                        aximm_interface.wvalid.write(false);
+                        // aximm_interface.arvalid.write(false);
+
+                        _aximm_wr_ctrl_sent.write(true); // assert signal saying we sent the write control transaction 
+                        break;
+                    case AXIMM_WR_ADDR:
+                        // Data
+                        _aximm_wr_state.write(AXIMM_WR_DATA_IPR);
+                        std::cout << "Sent WR Trans id " << _wr_req_id_count.read() << " DATA " << " @ Cycle " <<  GetSimulationCycle(5.0) << "!" << std::endl;
+                    
+                        aximm_interface.wdata.write(mem_req_wr_data);
+                        aximm_interface.wvalid.write(true);
+                        aximm_interface.wid.write(_wr_data_id_count.read());
+                        aximm_interface.wlast.write(true);
+                        aximm_interface.wuser.write(mem_req_src_port); // TODO figure out what the user ports
+                        // aximm_interface.bready.write(true); // tell AXI that we're ready for mem resp?
+                        // set unused transaction signals to invalid
+                        aximm_interface.awvalid.write(false);
+                        // aximm_interface.arvalid.write(false);
+                        _aximm_wr_num_sent_flits.write(_aximm_wr_num_sent_flits.read() + 1);
+
+                        _aximm_wr_ctrl_sent.write(false);
+                        _aximm_wr_tx_done.write(false);
+                        break;
+                    case AXIMM_WR_DATA_IPR:
+                        // 
+                }
+                */
                 // Start write burst by sending address + control transaction -> AW ready should be asserted if transaction accepted
                 if (!_aximm_wr_ctrl_sent.read()){
+                    
+                    std::cout << "Sent WR Trans id " << _wr_req_id_count.read() << " ADDR + CTRL " << " @ Cycle " <<  GetSimulationCycle(5.0) << "!" << std::endl;
 
                     aximm_interface.awvalid.write(true);
                     aximm_interface.awid.write(_wr_req_id_count.read());
@@ -312,7 +366,7 @@ void black_box::Tick() {
                     aximm_interface.awuser.write(mem_req_src_port); // assuming the aw user field specifies port where the request came from?
                     // set unused transaction signals to invalid
                     aximm_interface.wvalid.write(false);
-                    aximm_interface.arvalid.write(false);
+                    // aximm_interface.arvalid.write(false);
 
                     _aximm_wr_ctrl_sent.write(true); // assert signal saying we sent the write control transaction 
                 }
@@ -322,6 +376,8 @@ void black_box::Tick() {
 
                 // Data Channel
                 if ( _aximm_wr_ctrl_sent.read() == true){
+                    std::cout << "Sent WR Trans id " << _wr_req_id_count.read() << " DATA " << " @ Cycle " <<  GetSimulationCycle(5.0) << "!" << std::endl;
+                    
                     aximm_interface.wdata.write(mem_req_wr_data);
                     aximm_interface.wvalid.write(true);
                     aximm_interface.wid.write(_wr_data_id_count.read());
@@ -330,11 +386,12 @@ void black_box::Tick() {
                     // aximm_interface.bready.write(true); // tell AXI that we're ready for mem resp?
                     // set unused transaction signals to invalid
                     aximm_interface.awvalid.write(false);
-                    aximm_interface.arvalid.write(false);
+                    // aximm_interface.arvalid.write(false);
                     _aximm_wr_num_sent_flits.write(_aximm_wr_num_sent_flits.read() + 1);
 
                     _aximm_wr_ctrl_sent.write(false);
                     _aximm_wr_tx_done.write(false);
+
                 }
                 // If the Data Transaction was recieved
                 // else if (aximm_interface.wready.read()) {
@@ -343,6 +400,8 @@ void black_box::Tick() {
                 
 
             } else {
+                std::cout << "Sent RD Trans id " << _rd_req_id_count.read() << " ADDR + CTRL" << " @ Cycle " <<  GetSimulationCycle(5.0) << "!" << std::endl;
+
                 // AXI-MM Read
                 // Address + Control Channel Ready
                 aximm_interface.arvalid.write(true);
@@ -352,10 +411,19 @@ void black_box::Tick() {
                 aximm_interface.arsize.write(0); // burst len of 1
                 aximm_interface.arburst.write(0); // burst len of 1
                 aximm_interface.aruser.write(mem_req_src_port); // assuming the aw user field specifies port where the request came from?
-                // aximm_interface.rready.write(true);
-                _aximm_rd_tx_done.write(false);
+                
+                // aximm_interface.wvalid.write(false);
+                // aximm_interface.awvalid.write(false);
+                // _aximm_rd_tx_done.write(false);
             }
 
+        } else {
+            // set unused transaction signals to invalid
+            /*
+                aximm_interface.awvalid.write(false);
+                aximm_interface.arvalid.write(false);
+                aximm_interface.wvalid.write(false);
+            */
         }
 
         
@@ -376,7 +444,7 @@ void black_box::Tick() {
         }
 
         // Write Response Channel , if transaction accepted
-        if (aximm_interface.wready.read() && aximm_interface.wvalid.read()) {
+        if (aximm_interface.wready.read() && aximm_interface.wvalid.read() && no_mem_req_ififos_empty) {
             std::cout << module_name << ": Received WRITE flit response "
                 << "@ Cycle " <<  GetSimulationCycle(5.0) << "!"
                 << std::endl;
@@ -393,7 +461,7 @@ void black_box::Tick() {
         }
 
         // If the Address + Control Transaction was recieved
-        if (aximm_interface.arvalid.read() && aximm_interface.arready.read()){
+        if (aximm_interface.arvalid.read() && aximm_interface.arready.read() && no_mem_req_ififos_empty){
                 // pop all fifos (read and write) regardless of if they were valid
                 std::cout << "Sent AR transaction @ id: " << _rd_req_id_count.read() << std::endl;
                 _target_addr_fifo.pop();
@@ -403,16 +471,21 @@ void black_box::Tick() {
                 _src_port_fifo.pop();
                 _dst_port_fifo.pop();
                 _rd_req_id_count.write(_rd_req_id_count.read() + 1);
-                _aximm_rd_tx_done.write(true);
+                // _aximm_rd_tx_done.write(true);
         }   
 
         // If transaction accepted and data channel ready
         if (aximm_interface.rvalid.read() && aximm_interface.rready.read()) {
             std::cout << module_name << ": Received READ response "
-                        << "@ Cycle " <<  GetSimulationCycle(5.0) << "!"
-                        << _num_received_responses << " ("
-                        << aximm_interface.rdata.read() << ")!"
+                        << "@ Cycle " <<  GetSimulationCycle(5.0) << "!" <<  ": "
+                        << aximm_interface.rdata.read()
                         << std::endl;
+            // verif signal
+            sc_bv<AXI4_MAX_DATAW> rdata_bv_rd_req = aximm_interface.rdata.read();
+            data_vector<uint64_t> rdata_rd_req(8); // 512 / 64
+            aximm_512_bv_to_64_data_vector(rdata_bv_rd_req, rdata_rd_req, 64, 8);
+            rd_req_data.write(rdata_rd_req[0]);
+            rd_req_data_rdy.write(true);
         
             // put the returned value from rd transaction into input fifo
             if (_rd_data_input_fifo.size() < _fifos_depth){
@@ -421,6 +494,8 @@ void black_box::Tick() {
                 aximm_bv_to_data_vector(rdata_bv, rdata, _bitwidth, _num_input_elements);
                 _rd_data_input_fifo.push(rdata);
             }
+        } else {
+            rd_req_data_rdy.write(false);
         }
 
         // Pop from input FIFOs and push to output FIFOs
@@ -447,7 +522,7 @@ void black_box::Tick() {
             axis_interface.tuser.write(3 << 13); // Todo make own tuser spec
             axis_interface.tid.write(0); 
             // Whats the destination of this transaction (AXI-S Slave)
-            std::string dest_name = "output_collector.data_collect";
+            std::string dest_name = "output_collector_0_inst.axis_slave__0";
             axis_interface.tdest.write(radsim_design.GetPortDestinationID(dest_name));
         }
         else {
@@ -469,104 +544,7 @@ void black_box::Tick() {
         // received_responses.write(_num_received_responses);
         wait();
 
-        /*
-        // // Pop from input FIFOs
-        // uint pop_ififo_id;
-        // bool ififos_ready = are_ififos_ready(_ififo_empty, pop_ififo_id);
-        if (ififos_ready && !_ofifo_full[_dest_ofifo.read()]) {
-            data_vector<int16_t> ofifo_data_vector(_num_output_elements);
-
-            // custom_feature_interaction_inst instruction = _instructions[_pc.read()];
-            // unsigned int num_steps = instruction.xbar_schedule.size();
-            unsigned int element_id = 0;
-            unsigned int fifo_id, start_idx, end_idx;
-            
-            ofifo_data_vector = _input_fifos[pop_ififo_id].front();
-            _input_fifos[pop_ififo_id].pop();
-            _output_fifos[_dest_ofifo.read()].push(ofifo_data_vector);
-
-            // data_vector<int16_t> tmp(_num_input_elements);
-            // tmp = _input_fifos[pop_ififo_id].front();
-            // _input_fifos[pop_ififo_id].pop();
-            
-
-            // for (unsigned int step = 0; step < num_steps; step++) {
-            //     // fifo_id = instruction.xbar_schedule[step];
-            //     // start_idx = instruction.start_element[step];
-            //     // end_idx = instruction.end_element[step];
-
-
-            //     // if (pop_ififo_id != 0) {
-            //     //     tmp = _input_fifos[pop_ififo_id - 1].front();
-            //     //     if (instruction.pop_fifo[step]) {
-            //     //         _input_fifos[fifo_id - 1].pop();
-            //     //     }
-            //     // }
-            //     for (unsigned int element = start_idx; element <= end_idx; element++) {
-            //         assert(element_id < ofifo_data_vector.size());
-            //         ofifo_data_vector[element_id] = tmp[element];
-            //         element_id++;
-            //     }
-            // }
-            // if (fifo_id != 0) {
-            //     *_debug_feature_interaction_out << ofifo_data_vector << "\n";
-            //     _debug_feature_interaction_out->flush();
-            // }
-            // _output_fifos[_dest_ofifo.read()].push(ofifo_data_vector);
-
-            // Advance destination FIFO pointer
-            // if (_dest_ofifo.read() == _num_output_channels - 1) {
-            //     _dest_ofifo.write(0);
-            // } else {
-            //     _dest_ofifo.write(_dest_ofifo.read() + 1);
-            // }
-
-            // Advance Instructions Pointer
-            // if (_pc.read() == _instructions.size() - 1) {
-            //     _pc.write(0);
-            // } else {
-            //     _pc.write(_pc.read() + 1);
-            // }
-
-                // Interface with AXI-S NoC
-                for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
-                    if (axis_interface[ch_id].tready.read() &&
-                        axis_interface[ch_id].tvalid.read()) {
-                        _output_fifos[ch_id].pop();
-                    }
-
-                    if (!_output_fifos[ch_id].empty()) {
-                        data_vector<int16_t> tx_tdata = _output_fifos[ch_id].front();
-                        sc_bv<AXIS_MAX_DATAW> tx_tdata_bv;
-                        data_vector_to_bv(tx_tdata, tx_tdata_bv, _num_output_elements);
-                        axis_interface[ch_id].tvalid.write(true);
-                        axis_interface[ch_id].tdata.write(tx_tdata_bv);
-                        axis_interface[ch_id].tuser.write(3 << 13);
-                        axis_interface[ch_id].tid.write(0);
-                        // change destination to output collector
-                        std::string dest_name =
-                            "output_collector.data_collect";
-                            // "layer0_mvm" + std::to_string(ch_id) + ".rx_interface";
-                        axis_interface[ch_id].tdest.write(
-                            radsim_design.GetPortDestinationID(dest_name));
-                    } else {
-                        axis_interface[ch_id].tvalid.write(false);
-                    }
-                }
-
-            // Set FIFO signals
-            for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
-            _ififo_empty[ch_id].write(_input_fifos[ch_id].empty());
-            _ififo_full[ch_id].write(_input_fifos[ch_id].size() >= _fifos_depth - 4);
-            }
-            for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
-            _ofifo_empty[ch_id].write(_output_fifos[ch_id].empty());
-            _ofifo_full[ch_id].write(_output_fifos[ch_id].size() >= _fifos_depth - 2);
-            }
-            received_responses.write(_num_received_responses);
-            wait();
-        }
-        */
+        // Pop from data mem_req input fifos and push 
 
     }
 }

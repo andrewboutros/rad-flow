@@ -4,8 +4,10 @@ from typing import List, Dict, Any
 from dataclasses import dataclass
 from collections import OrderedDict
 
-import argparse
+import operator
 
+import argparse
+from collections import defaultdict
 
 
 embeddings_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "embedding_tables")
@@ -23,32 +25,13 @@ def compile_traffic_gen(input_insts: List[Dict[str, Any]]) -> None:
 
 
 
+
+
 def addr_format(addr: int, addr_width: int) -> str:
     return format(addr, f"0{addr_width}x")
 
 
-def decode_mem_contents(channel: int, bitwidth: int, mem_path: str = None, addr_width: int = 32):
-    print(f" CHANNEL {channel} ")
-    if mem_path is None:
-        with open (os.path.join(embeddings_dir, f"channel_{channel}.dat"), "r") as f:
-            text = f.read()
-    else:
-        with open(mem_path, "r") as f:
-            text = f.read()
-
-    for line in text.split("\n"):
-        if len(line.split(" ")) == 2: 
-            addr, data = line.split(" ")
-            elements = [data[i:i + bitwidth] for i in range(0, len(data), bitwidth)]
-            # Assume addresses are in hex (no 0x prefix)
-            print(f"[ {addr_format(int(addr,16), addr_width)} ]: {' '.join([str(BitArray(bin=e).int) for e in elements])}" )
-            # if "0x" in addr:
-            #     formatted_addr = f"0x{addr.replace('0x', '').zfill(addr_width)}"
-            #     print(f"[ {formatted_addr} ]: {' '.join([str(BitArray(bin=e).int) for e in elements])}" )
-            
-            # else:
-            #     print(f"[ 0x{(int(addr, 16))} ]: {' '.join([str(BitArray(bin=e).int) for e in elements])}" )
-
+# Conversions
 def signed_int_2_bin(data: int, bitwidth: int) -> str:
     if data < 0:
         signed_bin = bin(data & (2**bitwidth)-1)[2:].zfill(bitwidth)
@@ -60,6 +43,40 @@ def signed_int_2_bin(data: int, bitwidth: int) -> str:
 def bin_2_signed_int(data: str) -> int:
     return BitArray(bin=data).int
 
+def data_int_to_mem_str(data: int, addr_line_sz: int) -> str:
+    """
+        Convert a single int to a string of bits which can be written to a single address line
+    """
+    return bin(data)[2:].zfill(addr_line_sz)
+
+def data_str_to_ints(data_str: str, bitwidth: int) -> List[int]:
+    return [BitArray(bin=data_str[i:i + bitwidth]).int for i in range(0, len(data_str), bitwidth)]
+
+def data_eles_to_str(data_eles: List[int], bitwidth: int) -> str:
+    return "".join([signed_int_2_bin(data, bitwidth) for data in data_eles])
+
+def decode_mem_contents(channel: int, bitwidth: int, mem_path: str = None, addr_width: int = 32) -> Dict[str, List[int]]:
+    print(f" CHANNEL {channel} ")
+    if mem_path is None:
+        with open (os.path.join(embeddings_dir, f"channel_{channel}.dat"), "r") as f:
+            text = f.read()
+    else:
+        with open(mem_path, "r") as f:
+            text = f.read()
+    ch_out = {}
+    for line in text.split("\n"):
+        if len(line.split(" ")) == 2: 
+            addr, data = line.split(" ")
+            elements = [data[i:i + bitwidth] for i in range(0, len(data), bitwidth)]
+            # Assume addresses are in hex (no 0x prefix)
+            print(f"[ {addr_format(int(addr,16), addr_width)} ]: {' '.join([str(BitArray(bin=e).int) for e in elements])}" )
+            ch_out[addr_format(int(addr,16), addr_width)] = [BitArray(bin=e).int for e in elements]
+            # ch_out.append({addr: [BitArray(bin=e).int for e in elements]})
+    return ch_out
+        
+
+
+
 
 # def bin_2_signed_int(data: str) -> int:
 #     if data[0] == "1":
@@ -68,7 +85,7 @@ def bin_2_signed_int(data: str) -> int:
 #         return int(data, 2)
 
 def write_mem_contents(channel: int, mem_contents: Dict[str, int], bitwidth: int, addr_line_sz: int, addr_width: int = 32):
-    print(f" CHANNEL {channel} ")
+    # print(f" CHANNEL {channel} ")
     # clear pre existing file
     open(os.path.join(mem_init_dir, f"channel_{channel}.dat"), "w").close()    
     for addr, data_eles in mem_contents.items():
@@ -79,9 +96,6 @@ def write_mem_contents(channel: int, mem_contents: Dict[str, int], bitwidth: int
         addr_data = "".join(data_strs).zfill(addr_line_sz)
         with open (os.path.join(mem_init_dir, f"channel_{channel}.dat"), "a+") as f:
             print(f"{addr_format(int(addr), addr_width)} {addr_data}", file=f)
-
-
-
 
 
 
@@ -113,7 +127,7 @@ class MemReqInstruction:
     inst_address: int # instructions at the same address will be sent on the same cycle
     mem_req_module_id: int
     src_port: str
-    dst_port: str
+    dst_port: str 
     target_channel: int 
     target_address: int 
     write_data: int
@@ -133,11 +147,19 @@ class ExtMem:
     num_channels: int
     addr_width: int # using 32 for now not sure TODO figure out for DDR & HBM
     data_width: int # how much data fits into a single address, using 1024 for now not sure TODO figure out for DDR & HBM
+    ch_id_range: List[int] = None # range of channel ids for this external memory
     id: int = None # id for number of external memories of this type
-    # Mem controllers exist here
-    
+    # For verification
+    mem_contents: List[Dict[str, List[int]]] = None # [ {addr: [e for ele in data]} for ch in range(num_channels)] 
+    inst_mem_req_contents: Dict[str, Any] = None # { inst_address: {addr: [e for ele in data]} for ch in range(num_channels) }
+
     # POST INIT FIELDS
+    # Mem controllers exist here
     mem_ctrl_modules: List[HWModule] = None # (starts uninitialized) one for each channel (for now)
+
+    def __post_init__(self):
+        self.mem_contents = [{} for _ in range(self.num_channels)]
+        self.inst_mem_req_contents = {}
 
     def init_mem_ctrl_modules(self, noc_locs: List[int]):
         self.mem_ctrl_modules = [
@@ -150,6 +172,17 @@ class ExtMem:
                 ]
             ) 
         ]
+
+    def get_mem_content_lines(self) -> List[str]:
+        """
+            Dump the contents of the memory to a file
+        """
+        ret_lines = []
+        for ch in range(self.num_channels):
+            for addr, data in self.mem_contents[ch].items():
+                ret_lines.append(f"[{ch}] [{addr}] {' '.join([str(e) for e in data])}")
+        return ret_lines
+
 
 
 @dataclass
@@ -234,6 +267,75 @@ def write_mem_req_instructions(mem_req_instructions: List[MemReqInstruction], ad
 
 
 
+# @dataclass 
+# class MemContents:
+#     """
+#         Models the contents of a single external memory
+#     """
+#     addr_width: int
+#     data_width: int
+#     contents: Dict[str, List[int]]
+
+
+@dataclass
+class MemModel:
+    """
+        Models execution of read / writes to / from single external memory
+    """
+    rad_sim_modules: RADSimModules
+    insts: List[MemReqInstruction]
+    ch_mapping: Dict[int, int]
+
+    ele_bitwidth: int = 16
+
+    def __post_init__(self):
+        # Sort instructions by their inst address (order of execution)
+        self.insts = sorted(self.insts, key=operator.attrgetter('inst_address'))
+
+    def sim_execution(self, sim_outdir: str):
+        """
+            Simulate the execution of the instructions, writes a golden reference of what content should be in which memory addresses
+        """
+        # Storing all read mem instructions
+        for inst_addr in set([inst.inst_address for inst in self.insts if not inst.write_en]):
+            for mem in self.rad_sim_modules.ext_mems:
+                mem.inst_mem_req_contents[addr_format(inst_addr,4)] = [{} for _ in range(mem.num_channels)]
+
+        # Assuming non contention for same memory addresses (TODO figure this out later)
+        for inst in self.insts:
+            # Find memory target for this instruction
+            for mem in self.rad_sim_modules.ext_mems:
+                # Determine which memory this instruction is relevant to
+                if inst.target_channel in mem.ch_id_range:
+                    # Write data to memory
+                    if inst.write_en:
+                        mem.mem_contents[self.ch_mapping[inst.target_channel]][addr_format(inst.target_address, mem.addr_width)] = data_str_to_ints(data_int_to_mem_str(inst.write_data, mem.data_width), self.ele_bitwidth)
+                    # Read data from memory
+                    else:
+                        mem.inst_mem_req_contents[addr_format(inst.inst_address, 4)][inst.target_channel] = {addr_format(inst.target_address, mem.addr_width): mem.mem_contents[inst.target_channel][addr_format(inst.target_address, mem.addr_width)]}
+                    break
+        # After all reads and writes dump the inst_mem_req_contents to a golden reference file
+        for mem in self.rad_sim_modules.ext_mems:
+            with open(os.path.join(sim_outdir, f"{mem.mem_ctrl_modules[0].inst_name}_golden.out"), "w") as f:
+                print()
+                print(f"Writing golden reference for {mem.mem_ctrl_modules[0].inst_name}")
+                if all( [len(contents) == 0 for key, inst_addr_contents in mem.inst_mem_req_contents.items() for contents in inst_addr_contents]):
+                    print("0", file=f)
+                    print("No reads to this memory")
+                else:
+                    # print number of outputs
+                    print(len(mem.inst_mem_req_contents), file=f) 
+                    for inst_addr, mem_req_contents in mem.inst_mem_req_contents.items():
+                        for ch_id, ch_contents in enumerate(mem_req_contents):
+                            for mem_addr, mem_data in ch_contents.items():
+                                # ' '.join([str(e) for e in mem_data])
+                                print( f"[{inst_addr}] [{ch_id}] [{mem_addr}] {' '.join([str(e) for e in mem_data])}")
+                                mem_line = f"{inst_addr} {ch_id} {mem_addr} {data_eles_to_str(mem_data, self.ele_bitwidth)}"
+                                print(mem_line, file=f)
+                            # print(mem_line)
+        
+
+
 
 def main():
 
@@ -264,8 +366,8 @@ def main():
     # Init Ext Mem
     ext_mems = [
         # TODO fix the placement to be less dumb
-        *[ ExtMem("ddr", ddr_channels, addr_width, addr_line_sz) for i in range(num_ddrs)],
-        *[ ExtMem("hbm", hbm_channels, addr_width, addr_line_sz) for i in range(num_hbms)],
+        *[ ExtMem("ddr", ddr_channels, addr_width, addr_line_sz, ch_id_range=[i]) for i in range(num_ddrs)],
+        *[ ExtMem("hbm", hbm_channels, addr_width, addr_line_sz, ch_id_range=[j + i * hbm_channels + num_ddrs for j in range(hbm_channels)]) for i in range(num_hbms)],
     ]
     ddr_noc_locs = [[1], [71]]
     hbm_noc_locs = [
@@ -312,7 +414,7 @@ def main():
     placement_outfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "hbm_traffic.place")
     rad_sim_modules.write_placement_file(placement_outfile)
 
-    num_wr_rds = 100
+    num_wr_rds = 2
     # For this test we will have a bunch of instructions which do X writes and then Y reads -> after this we do % writes and then % reads (for N transactions)
     mem_req_instructions = [
         # incrementing the write address by 16 each time, as I'm not sure what the address line size is
@@ -321,6 +423,7 @@ def main():
     ]
     
 
+    traffic_gen_outdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "traffic_gen")
     # Create module instantiation file 
     module_inst_outfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "traffic_gen", "traffic_gen.cfg")
     rad_sim_modules.write_module_insts_config(module_inst_outfile)
@@ -328,11 +431,45 @@ def main():
     # Create instructions for all mem_req modules
     inst_outfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "traffic_gen", "insts.in")
     write_mem_req_instructions(mem_req_instructions, ext_mems[0].addr_width, ext_mems[0].data_width, inst_outfile)
+
+    # Create output golden reference
+    golden_outfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "traffic_gen", "golden.out")
+    # Ex golden output 
+    # Wr: 1 if the write was sucessful, 0 if not (detailed mem info will be verified by dump)
+
+
+    # Mapping for total channel index to channel indx for each memory
+    ch_mapping = {
+        # DDRs
+        0: 0,
+        1: 0,
+        # HBMs
+        **{ i + num_ddrs * ddr_channels: i for i in range(hbm_channels) },
+        **{ i + num_ddrs * ddr_channels + hbm_channels: i for i in range(hbm_channels)},
+    }
+
+    cur_mem_contents = [{} for _ in range(num_mem_channels)]
     ### DOING MEMORY INIT + DECODING ###
     for ch in range(num_mem_channels):
         # decode_mem_contents(ch, bitwidth)    
         write_mem_contents(ch, mem_contents, bitwidth, addr_line_sz)
-        decode_mem_contents(ch, bitwidth, mem_path=os.path.join(mem_init_dir, f"channel_{ch}.dat"))
+        # Initialize the mem contents from intialized memory values
+        cur_mem_contents[ch] = decode_mem_contents(ch, bitwidth, mem_path=os.path.join(mem_init_dir, f"channel_{ch}.dat"))
+        for mem in rad_sim_modules.ext_mems:
+            if ch in mem.ch_id_range:
+                mem.mem_contents[ch_mapping[ch]] = cur_mem_contents[ch]
+                break
+    for mem in rad_sim_modules.ext_mems:
+        mem_contents_lines = mem.get_mem_content_lines()
+        print()
+        print(mem.mem_ctrl_modules[0].inst_name)    
+        for line in mem_contents_lines:
+            print(line)
+
+    ### SIMULATE MEMORY REQUESTS ###
+    mem_sim = MemModel(rad_sim_modules, mem_req_instructions, ch_mapping)
+    mem_sim.sim_execution(traffic_gen_outdir)
+    
 
 
 

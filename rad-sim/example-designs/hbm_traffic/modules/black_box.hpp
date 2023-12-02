@@ -18,6 +18,21 @@
 
 #define NUM_SIG_REQ_IF_PARALLEL_PORTS 1
 
+
+enum aximm_wr_state_t {
+    AXIMM_WR_IDLE, // Waiting for a write request
+    AXIMM_WR_ADDR, // Sending ADDR + CTRL INFO
+    AXIMM_WR_DATA_IPR, // Sending Data flits 1 -> N-1
+    AXIMM_WR_DATA_LAST, // Sending Data flit N
+    AXIMM_WR_COMMIT, // Waiting for response from memory
+};
+
+enum aximm_rd_state_t {
+    AXIMM_RD_IDLE, // Waiting for a write request
+    AXIMM_RD_ADDR, // Sending ADDR + CTRL INFO
+    AXIMM_RD_COMMIT, // Read Request Accepted, can pop inst fifo
+};
+
 /*
 template <typename T>
 void axis_bv_to_data_vector(
@@ -107,6 +122,7 @@ private:
 
     sc_signal<bool> _aximm_wr_ctrl_sent;
     sc_signal<unsigned int> _aximm_wr_num_sent_flits;
+    sc_signal<aximm_wr_state_t> _aximm_wr_state; 
     sc_signal<bool> _aximm_wr_tx_done;
     sc_signal<bool> _aximm_rd_tx_done;
 
@@ -150,6 +166,11 @@ public:
     sc_in<uint64_t> src_port;
     sc_in<uint64_t> dst_port;
 
+    // Verif Ports
+    sc_out<uint64_t> rd_req_data;
+    sc_out<uint64_t> wr_req_data;
+    sc_out<bool> rd_req_data_rdy;
+    
 
     // Module
 

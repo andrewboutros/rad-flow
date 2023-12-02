@@ -48,7 +48,7 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
     unsigned int line_bitwidth = 512;
     unsigned int element_bitwidth = 16;
     std::vector<unsigned int> mem_channels = {1, 1, 8, 8};
-    unsigned int embedding_lookup_fifos_depth = 16;
+    unsigned int embedding_lookup_fifos_depth = 64;
     unsigned int feature_interaction_fifos_depth = 64;
     unsigned int num_mem_controllers =
         radsim_config.GetIntKnob("dram_num_controllers");
@@ -58,7 +58,7 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
         total_mem_channels += num_channels;
     }
 
-    unsigned int mem_req_fifos_depth = 32;
+    unsigned int mem_req_fifos_depth = 64;
 
 
     std::string module_name_str;
@@ -93,6 +93,11 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
     _src_ports.init(num_mem_req_modules);
     _dst_ports.init(num_mem_req_modules);
 
+    // Verif Ports
+    _rd_req_data.init(num_mem_req_modules);
+    _wr_req_data.init(num_mem_req_modules);
+
+
     
     // Instantiate mem req modules (black boxes)
     int i = 0;
@@ -114,6 +119,10 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
             black_boxes[i]->src_port(_src_ports[i]);
             black_boxes[i]->dst_port(_dst_ports[i]);
             black_boxes[i]->wr_data(_wr_datas[i]);
+            black_boxes[i]->rd_req_data(_rd_req_data[i]);
+            black_boxes[i]->wr_req_data(_wr_req_data[i]);
+            black_boxes[i]->rd_req_data_rdy(rd_req_data_rdy);
+
         } else if (module.module_name == "ext_mem_ctrl") {
             // Ext Mem Controllers TODO 
             std::string mem_content_init_prefix = radsim_config.GetStringKnob("radsim_user_design_root_dir") + "/compiler/ext_mem_init/channel_";
@@ -326,8 +335,11 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
     
     SC_METHOD(Assign);
     sensitive << rst << target_channels << target_addresses << wr_datas << src_ports << dst_ports;
+    // Verif ports
+    // sensitive << rd_req_data << wr_req_data;
     for (unsigned int i = 0; i < mem_req_valids.size(); i++) {
         sensitive << mem_req_readys[i] << mem_req_valids[i];
+        sensitive << _rd_req_data[i] << _wr_req_data[i];
     }
     
 
@@ -346,6 +358,11 @@ void hbm_traffic_top::Assign(){
             _wr_datas[i].write(0);
             _src_ports[i].write(0);
             _dst_ports[i].write(0);
+            // Verif
+            // _rd_req_data[i].write(0);
+            // _wr_req_data[i].write(0);
+            rd_req_data.write(0);
+            wr_req_data.write(0);
         }
     } else {
         for (unsigned int i = 0; i < mem_req_valids.size(); i++) {
@@ -357,12 +374,19 @@ void hbm_traffic_top::Assign(){
                 data_vector<uint64_t> tmp_src_ports = src_ports.read();
                 data_vector<uint64_t> tmp_dst_ports = dst_ports.read();
 
+
                 _target_channels[i].write(tmp_target_channels[i]);
                 _target_addresses[i].write(tmp_target_addresses[i]);
                 _wr_datas[i].write(tmp_wr_datas[i]);
                 _src_ports[i].write(tmp_src_ports[i]);
                 _dst_ports[i].write(tmp_dst_ports[i]);
             }
+            // Verif Ports
+            data_vector<uint64_t> tmp_rd_req_data(_rd_req_data);
+            data_vector<uint64_t> tmp_wr_req_data(_wr_req_data);
+            // Verif Ports
+            rd_req_data.write(tmp_rd_req_data);
+            wr_req_data.write(tmp_wr_req_data);
         }
     }
 }

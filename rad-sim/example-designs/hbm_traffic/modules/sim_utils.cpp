@@ -15,6 +15,13 @@ data_vector<dtype>::data_vector(sc_vector<sc_in<dtype>> &iport) {
 }
 
 template <class dtype>
+data_vector<dtype>::data_vector(sc_vector<sc_signal<dtype>> &sig_vec) {
+  v.resize(sig_vec.size());
+  for (unsigned int i = 0; i < sig_vec.size(); i++)
+    v[i] = sig_vec[i].read();
+}
+
+template <class dtype>
 data_vector<dtype>::data_vector(std::vector<dtype> &vec) {
   v.resize(vec.size());
   for (unsigned int i = 0; i < vec.size(); i++)
@@ -322,6 +329,21 @@ void aximm_bv_to_data_vector(
     datavector[e] = bitvector.range(end_idx - 1, start_idx).to_int();
   }
 }
+
+void aximm_512_bv_to_64_data_vector(
+    sc_bv<AXI4_MAX_DATAW> &bitvector, 
+    data_vector<uint64_t> &datavector, 
+    unsigned int bitwidth, 
+    unsigned int num_elements) {
+
+  unsigned int start_idx, end_idx;
+  for (unsigned int e = 0; e < num_elements; e++) {
+    start_idx = e * bitwidth;
+    end_idx = (e + 1) * bitwidth;
+    datavector[e] = bitvector.range(end_idx - 1, start_idx).to_uint64();
+  }
+}
+
 
 template <typename T>
 void data_vector_to_bv_axis( 

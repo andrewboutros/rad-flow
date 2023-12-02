@@ -46,31 +46,62 @@ bool ParseInputs(std::vector<data_vector<uint64_t>> &lookup_indecies,
   return true;
 }
 
-bool ParseOutputs(std::vector<std::vector<int16_t>> &fi_outputs,
-                  std::string &io_filename, unsigned int &num_outputs) {
-  std::ifstream io_file(io_filename);
-  if (!io_file)
-    return false;
 
-  int16_t element;
-  std::string line;
+// Todo update verifcation s.t. instruction addresses are accounted for 
+bool ParseOutputs(std::vector<uint64_t> &mem_req_outputs,
+                    std::string &io_filename, unsigned int &num_outputs){
+    std::ifstream io_file(io_filename);
+    if (!io_file)
+        return false;
+    uint64_t inst_addr;
+    uint64_t ch_idx;
+    uint64_t data_addr;
+    uint64_t rd_data;
 
-  std::getline(io_file, line);
-  std::stringstream line_stream(line);
-  line_stream >> num_outputs;
+    std::string line;
+    std::getline(io_file, line);
+    std::stringstream header_stream(line);
+    header_stream >> num_outputs;
 
-  while (std::getline(io_file, line)) {
-    std::stringstream line_stream(line);
-    std::vector<int16_t> tmp;
-    while (line_stream.rdbuf()->in_avail() != 0) {
-      line_stream >> element;
-      tmp.push_back(element);
+    while (std::getline(io_file, line)) {
+        std::bitset <1024> bin_rd_data;
+        std::stringstream line_stream(line);
+        line_stream >> std::hex >> inst_addr;
+        line_stream >> std::hex >> ch_idx; 
+        line_stream >> std::hex >> data_addr;
+        line_stream >> bin_rd_data;
+        rd_data = static_cast<uint64_t>(bin_rd_data.to_ullong());
+        mem_req_outputs.push_back(rd_data);
     }
-    fi_outputs.push_back(tmp);
-  }
-  return true;
+    return true;
 }
 
+/*
+    bool ParseOutputs(std::vector<std::vector<int16_t>> &fi_outputs,
+                    std::string &io_filename, unsigned int &num_outputs) {
+    std::ifstream io_file(io_filename);
+    if (!io_file)
+        return false;
+
+    int16_t element;
+    std::string line;
+
+    std::getline(io_file, line);
+    std::stringstream line_stream(line);
+    line_stream >> num_outputs;
+
+    while (std::getline(io_file, line)) {
+        std::stringstream line_stream(line);
+        std::vector<int16_t> tmp;
+        while (line_stream.rdbuf()->in_avail() != 0) {
+        line_stream >> element;
+        tmp.push_back(element);
+        }
+        fi_outputs.push_back(tmp);
+    }
+    return true;
+    }
+*/
 
 bool ParseMemReqs(
     std::vector<data_vector<unsigned int>> &target_channels,
@@ -149,7 +180,7 @@ bool ParseMemReqs(
         unsigned int mem_req_module_id;
         prev_instruction_addr = cur_instruction_addr;
         line_stream >> std::hex >> cur_instruction_addr;
-        line_stream >> mem_req_module_id;
+        line_stream >> std::dec >> mem_req_module_id;
 
         assert (num_mem_req_modules > mem_req_module_id); // we cant issue instruction to module that doesnt exist
         line_stream >> src_port >> dst_port >> target_channel;
@@ -257,10 +288,13 @@ hbm_traffic_driver::hbm_traffic_driver( const sc_module_name &name
                     feature_interaction_outputs_filename,
                     _num_feature_interaction_outputs);
     
+        std::string mlp_outputs_filename = design_root_dir + "/compiler/mlp.out";
+        ParseOutputs(_mlp_outputs, mlp_outputs_filename, _num_mlp_outputs);
     */
-    std::string mlp_outputs_filename = design_root_dir + "/compiler/mlp.out";
-    ParseOutputs(_mlp_outputs, mlp_outputs_filename, _num_mlp_outputs);
-    
+    std::string mem_req_outputs_filename = design_root_dir + "/compiler/traffic_gen/ddr_ext_mem_ctrl_0_inst_golden.out";
+    ParseOutputs(_rd_req_outputs, mem_req_outputs_filename, _num_mem_req_outputs);
+
+
     SC_METHOD(assign);
     sensitive << collector_fifo_rdy;
     for (unsigned int i=0; i<mem_req_readys.size(); i++) {
@@ -367,6 +401,72 @@ void print_progress_bar(unsigned int outputs_count, unsigned int total) {
   std::cout.flush();
 }
 
+void hbm_traffic_driver::sink(){
+    std::ofstream mismatching_outputs_file("mismatching.log");
+    unsigned int outputs_count = 0;
+    data_vector<uint64_t> dut_output;
+    bool all_outputs_matching = true;
+    while (outputs_count < _num_mem_req_outputs){
+        dut_output = rd_req_data.read();
+        if (rd_req_data_rdy.read() && dut_output.size() > 0){
+            bool matching = true;
+            for (unsigned int e = 0; e < dut_output.size(); e++){
+                // TODO make _rd_req_outputs into a vec of vecs to get multiple modules working
+                matching = (dut_output[e] == _rd_req_outputs[outputs_count]);
+            }
+            std::string msg_str;
+            if (!matching)
+                msg_str = " Does Not Match!\n";
+            else
+                msg_str = " Matches!\n";
+            std::cout << "Output " << outputs_count << msg_str;
+            std::cout << "TRUE: [ ";
+            std::cout << _rd_req_outputs[outputs_count] << " ";
+            /*
+                for (unsigned int e = 0; e < _rd_req_outputs[outputs_count].size(); e++){
+                    std::cout << _rd_req_outputs[outputs_count][e] << " ";
+                }
+            */
+            std::cout << "]\n";
+            std::cout << "DUT : [ ";
+            for (unsigned int e = 0; e < dut_output.size(); e++){
+                std::cout << dut_output[e] << " ";
+            }
+            std::cout << "]\n";
+            std::cout << "-------------------------------\n";
+            outputs_count++;
+            all_outputs_matching &= matching;
+
+            print_progress_bar(outputs_count, _num_mem_req_outputs);
+        }
+        wait();
+    }
+    std::cout << "Got " << outputs_count << " output(s)!\n";
+    mismatching_outputs_file.flush();
+    mismatching_outputs_file.close();
+
+    if (all_outputs_matching) {
+        std::cout << "Simulation PASSED! All outputs matching!" << std::endl;
+    } else {
+        std::cout << "Simulation FAILED! Some outputs are NOT matching!"
+                << std::endl;
+    }
+    _end_cycle =
+        GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+    std::cout << "Simulated " << (_end_cycle - _start_cycle) << " cycle(s)"
+                << std::endl;
+    std::vector<double> aggregate_bandwidths = NoCTransactionTelemetry::DumpTrafficFlows("/home/hw_sw_flows/third_party/rad-flow/rad-sim/example-designs/hbm_traffic/traffic_flows", _end_cycle - _start_cycle, radsim_design.GetNodeModuleNames());
+    std::cout << "Aggregate NoC BW = " << aggregate_bandwidths[0] / 1000000000 << " Gbps" << std::endl;
+
+
+    for (unsigned int i = 0; i < 10; i++) {
+        wait();
+    }
+    sc_stop();
+    NoCTransactionTelemetry::DumpStatsToFile("/home/hw_sw_flows/third_party/rad-flow/rad-sim/example-designs/hbm_traffic/hbm_traffic.csv");
+
+}
+/*
 void hbm_traffic_driver::sink() {
   std::ofstream mismatching_outputs_file("mismatching.log");
 
@@ -421,3 +521,4 @@ void hbm_traffic_driver::sink() {
   }
   sc_stop();
 }
+*/

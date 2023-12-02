@@ -28,6 +28,10 @@ private:
   sc_signal<data_vector<uint64_t>> src_ports_sig;
   sc_signal<data_vector<uint64_t>> dst_ports_sig;
 
+    // signals passed back into tb for verification
+    sc_signal<data_vector<uint64_t>> wr_req_data_sig;
+    sc_signal<data_vector<uint64_t>> rd_req_data_sig;
+    sc_signal<bool> rd_req_data_rdy_sig;
 
   sc_signal<bool> collector_fifo_rdy_sig;
   sc_signal<bool> collector_fifo_ren_sig;
