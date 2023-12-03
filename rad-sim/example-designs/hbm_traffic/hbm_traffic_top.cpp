@@ -58,7 +58,7 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
         total_mem_channels += num_channels;
     }
 
-    unsigned int mem_req_fifos_depth = 64;
+    unsigned int mem_req_fifos_depth = 8;
 
 
     std::string module_name_str;

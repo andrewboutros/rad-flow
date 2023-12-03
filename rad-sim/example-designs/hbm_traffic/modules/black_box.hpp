@@ -123,6 +123,8 @@ private:
     sc_signal<bool> _aximm_wr_ctrl_sent;
     sc_signal<unsigned int> _aximm_wr_num_sent_flits;
     sc_signal<aximm_wr_state_t> _aximm_wr_state; 
+    sc_signal<aximm_rd_state_t> _aximm_rd_state; 
+
     sc_signal<bool> _aximm_wr_tx_done;
     sc_signal<bool> _aximm_rd_tx_done;
 
