@@ -76,6 +76,8 @@ bool ParseOutputs(std::vector<uint64_t> &mem_req_outputs,
     return true;
 }
 
+// bool ParseWrReqOutputs(std::vector<uint64_t> &)
+
 /*
     bool ParseOutputs(std::vector<std::vector<int16_t>> &fi_outputs,
                     std::string &io_filename, unsigned int &num_outputs) {
@@ -110,6 +112,8 @@ bool ParseMemReqs(
     std::vector<data_vector<size_t>> &write_datas, // however many bits are associated with a single memory write tranaction
     std::vector<data_vector<uint64_t>> &src_ports,
     std::vector<data_vector<uint64_t>> &dst_ports,
+    // TODO remove above and just use the mem_inst struct
+    // std::vector<data_vector<mem_req_inst>> &mem_req_insts,
     unsigned int &num_mem_req_modules,
     std::string &io_filename) {
 
@@ -221,16 +225,8 @@ bool ParseMemReqs(
 }
 
 
-hbm_traffic_driver::hbm_traffic_driver( const sc_module_name &name
-                                        // unsigned int num_mem_req_insts
-                                        ) : sc_module(name) {
+hbm_traffic_driver::hbm_traffic_driver( const sc_module_name &name) : sc_module(name) {
 
-    // _num_mem_req_insts = num_mem_req_insts;
-    
-    // init vectors of ports
-    
-
-    // std::vector<std::string> module_insts;
     std::vector<hw_module> module_insts;
 
     // Parse design configuration (number of layers & number of MVM per layer)
@@ -240,11 +236,6 @@ hbm_traffic_driver::hbm_traffic_driver( const sc_module_name &name
     std::string mod_insts_fname = design_root_dir + "/compiler/traffic_gen/traffic_gen.cfg";
     ParseTrafficGenModules(module_insts, mod_insts_fname);
     // now we can find the number of black box modules parsed from module isnts
-    // unsigned int num_mem_req_modules = count(module_insts.begin(), module_insts.end(), "black_box");
-    // unsigned int num_mem_req_modules = std::count_if(module_insts.begin(), module_insts.end(),
-    //                                         [](const hw_module& module) {
-    //                                             return module.module_name == "black_box";
-    //                                         });
     unsigned int num_mem_req_modules = count_modules(module_insts, "black_box");
 
     // init sc_vector based ports
@@ -264,6 +255,7 @@ hbm_traffic_driver::hbm_traffic_driver( const sc_module_name &name
         _wr_datas, // however many bits are associated with a single memory write tranaction
         _src_ports,
         _dst_ports,
+        // _mem_req_insts,
         num_mem_req_modules,
         mem_reqs_fname
     );
@@ -272,27 +264,34 @@ hbm_traffic_driver::hbm_traffic_driver( const sc_module_name &name
         std::cout << "Couldn't find the traffic generator instruction file!" << std::endl;
     }
     
+    // get total number of read and write instructions for each instruction address
+    for (unsigned int i = 0; i < _wr_ens.size(); i++){
+        unsigned int num_rd_insts, num_wr_insts;
+        num_rd_insts = std::count(_wr_ens[i].begin(), _wr_ens[i].end(), false);
+        num_wr_insts = std::count(_wr_ens[i].begin(), _wr_ens[i].end(), true);
+        _num_rd_insts.push_back(num_rd_insts);
+        _num_wr_insts.push_back(num_wr_insts);
+    }
+    // TODO fix this when dealing with multiple modules and/or multiple instruction addresses
+    _total_rd_insts = std::accumulate(_num_rd_insts.begin(), _num_rd_insts.end(), 0,
+        [](unsigned int sum, const unsigned int& n){ return sum + n; });
+    _total_wr_insts = std::accumulate(_num_wr_insts.begin(), _num_wr_insts.end(), 0,
+        [](unsigned int sum, const unsigned int& n){ return sum + n; });
+    
+
     
     std::cout << "Finished parsing traffic gen inputs!" << std::endl;
 
-    /*
-        std::string inputs_filename =
-            design_root_dir + "/compiler/embedding_indecies.in";
-        ParseInputs(_lookup_indecies, _target_channels, _base_addresses,
-                    inputs_filename);
-        std::cout << "Finished parsing inputs!" << std::endl;
+    std::string mem_req_outputs_basename = design_root_dir + "/compiler/traffic_gen/ddr_ext_mem_ctrl_0_inst_golden";
+    std::string rd_req_outputs_fname = mem_req_outputs_basename + "_mem.out";
+    std::string wr_req_outputs_fname = mem_req_outputs_basename + "_wr.out";
 
-        std::string feature_interaction_outputs_filename =
-            design_root_dir + "/compiler/feature_interaction.out";
-        ParseOutputs(_feature_interaction_outputs,
-                    feature_interaction_outputs_filename,
-                    _num_feature_interaction_outputs);
-    
-        std::string mlp_outputs_filename = design_root_dir + "/compiler/mlp.out";
-        ParseOutputs(_mlp_outputs, mlp_outputs_filename, _num_mlp_outputs);
-    */
-    std::string mem_req_outputs_filename = design_root_dir + "/compiler/traffic_gen/ddr_ext_mem_ctrl_0_inst_golden.out";
-    ParseOutputs(_rd_req_outputs, mem_req_outputs_filename, _num_mem_req_outputs);
+    unsigned int num_rd_mem_req_outputs, num_wr_mem_req_outputs;
+    ParseOutputs(_rd_req_outputs, rd_req_outputs_fname, num_rd_mem_req_outputs);
+    ParseOutputs(_wr_req_outputs, wr_req_outputs_fname, num_wr_mem_req_outputs);
+
+    // comment below if you want to screw with instructions 
+    // assert( num_rd_mem_req_outputs == _total_rd_insts && num_wr_mem_req_outputs == _total_wr_insts);
 
 
     SC_METHOD(assign);
@@ -314,7 +313,6 @@ void hbm_traffic_driver::assign() {
 void hbm_traffic_driver::source() {
     // Reset
     rst.write(true);
-    // lookup_indecies_valid.write(false);
     
     // Hbm traffic
     for (unsigned int i=0; i<mem_req_valids.size(); i++){
@@ -358,22 +356,6 @@ void hbm_traffic_driver::source() {
         v.write(false);
     }
 
-    /*
-        while (idx < _lookup_indecies.size()) {
-            lookup_indecies_data.write(_lookup_indecies[idx]);
-            lookup_indecies_target_channels.write(_target_channels[idx]);
-            lookup_indecies_base_addresses.write(_base_addresses[idx]);
-            lookup_indecies_valid.write(true);
-
-            wait();
-
-            if (lookup_indecies_valid.read() && lookup_indecies_ready.read()) {
-            idx++;
-            }
-        }
-        
-        lookup_indecies_valid.write(false);
-    */
     std::cout << this->name()
                 << ": Finished sending all inputs to traffic gen modules!"
                 << std::endl;
@@ -401,47 +383,75 @@ void print_progress_bar(unsigned int outputs_count, unsigned int total) {
   std::cout.flush();
 }
 
+
+void hbm_traffic_driver::mem_req_sink_iter(
+        RD_WR_FLAG rd_wr_flag,
+        unsigned int &outputs_cnt,
+        bool &all_outputs_matching
+    ){
+    // RD = 0, WR = 1
+    data_vector<uint64_t> dut_output; // data vector from dut
+    std::vector<uint64_t> mem_req_outputs; // vector of outputs generated from compiler
+    bool ready;
+
+    if (rd_wr_flag) {
+        dut_output = wr_req_data.read();
+        ready = wr_req_data_rdy.read();
+        mem_req_outputs = _wr_req_outputs;
+    } else {
+        dut_output = rd_req_data.read();
+        ready = rd_req_data_rdy.read();
+        mem_req_outputs = _rd_req_outputs;
+    }
+    if (ready && dut_output.size() > 0) {
+        bool matching = true;
+        for (unsigned int e = 0; e < dut_output.size(); e++) {
+            matching = (dut_output[e] == mem_req_outputs[outputs_cnt]);
+        }
+        std::string msg_str;
+        if (!matching)
+            msg_str = " Does Not Match!\n";
+        else
+            msg_str = " Matches!\n";
+        std::cout << "Output " << outputs_cnt << msg_str;
+        std::cout << "TRUE: [ ";
+        std::cout << mem_req_outputs[outputs_cnt] << " ";
+        /*
+            for (unsigned int e = 0; e < _mem_req_outputs[outputs_cnt].size(); e++){
+                std::cout << _mem_req_outputs[outputs_cnt][e] << " ";
+            }
+        */
+        std::cout << "]\n";
+        std::cout << "DUT : [ ";
+        for (unsigned int e = 0; e < dut_output.size(); e++) {
+            std::cout << dut_output[e] << " ";
+        }
+        std::cout << "]\n";
+        std::cout << "-------------------------------\n";
+        outputs_cnt++;
+        all_outputs_matching &= matching;
+
+        print_progress_bar(outputs_cnt, _total_rd_insts + _total_wr_insts);
+    }
+}
+
 void hbm_traffic_driver::sink(){
     std::ofstream mismatching_outputs_file("mismatching.log");
-    unsigned int outputs_count = 0;
-    data_vector<uint64_t> dut_output;
-    bool all_outputs_matching = true;
-    while (outputs_count < _num_mem_req_outputs){
-        dut_output = rd_req_data.read();
-        if (rd_req_data_rdy.read() && dut_output.size() > 0){
-            bool matching = true;
-            for (unsigned int e = 0; e < dut_output.size(); e++){
-                // TODO make _rd_req_outputs into a vec of vecs to get multiple modules working
-                matching = (dut_output[e] == _rd_req_outputs[outputs_count]);
-            }
-            std::string msg_str;
-            if (!matching)
-                msg_str = " Does Not Match!\n";
-            else
-                msg_str = " Matches!\n";
-            std::cout << "Output " << outputs_count << msg_str;
-            std::cout << "TRUE: [ ";
-            std::cout << _rd_req_outputs[outputs_count] << " ";
-            /*
-                for (unsigned int e = 0; e < _rd_req_outputs[outputs_count].size(); e++){
-                    std::cout << _rd_req_outputs[outputs_count][e] << " ";
-                }
-            */
-            std::cout << "]\n";
-            std::cout << "DUT : [ ";
-            for (unsigned int e = 0; e < dut_output.size(); e++){
-                std::cout << dut_output[e] << " ";
-            }
-            std::cout << "]\n";
-            std::cout << "-------------------------------\n";
-            outputs_count++;
-            all_outputs_matching &= matching;
+    // unsigned int rd_outputs_cnt = 0;
+    // unsigned int wr_outputs_cnt = 0;
+    
+    // data_vector<uint64_t> rd_dut_output;
+    // data_vector<uint64_t> wr_dut_output;
 
-            print_progress_bar(outputs_count, _num_mem_req_outputs);
-        }
+    bool all_outputs_matching = true;
+    unsigned int outputs_cnt = 0;
+    while (outputs_cnt < _total_rd_insts + _total_wr_insts){
+        mem_req_sink_iter(READ, outputs_cnt, all_outputs_matching);
+        mem_req_sink_iter(WRITE, outputs_cnt, all_outputs_matching);
         wait();
     }
-    std::cout << "Got " << outputs_count << " output(s)!\n";
+
+    std::cout << "Got " << outputs_cnt << " output(s)!\n";
     mismatching_outputs_file.flush();
     mismatching_outputs_file.close();
 

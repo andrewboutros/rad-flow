@@ -28,6 +28,7 @@ public:
   data_vector(sc_vector<sc_signal<dtype>> &iport);
   data_vector(std::vector<dtype> &vec);
   data_vector(std::vector<int> &vec);
+//   data_vector(std::vector<mem_req_inst> &vec);
 //   data_vector(std::vector<bool> &vec);
   bool operator==(const data_vector<dtype> &rhs);
   bool operator==(const std::vector<dtype> &rhs);
@@ -59,7 +60,7 @@ void sc_trace(sc_trace_file *f, const data_vector<sc_uint<5>> &dvector,
               const std::string &s);
 void sc_trace(sc_trace_file *f, const data_vector<size_t> &dvector,
               const std::string &s);
-// void sc_trace(sc_trace_file *f, const data_vector<bool> &dvector,
+// void sc_trace(sc_trace_file *f, const data_vector<mem_req_inst> &dvector,
 //               const std::string &s);
 
 template <typename dtype> struct init_vector {

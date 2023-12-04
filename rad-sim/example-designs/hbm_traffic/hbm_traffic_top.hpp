@@ -59,6 +59,8 @@ public:
     sc_out<data_vector<uint64_t>> rd_req_data;
     sc_out<data_vector<uint64_t>> wr_req_data;
     sc_out<bool> rd_req_data_rdy;
+    sc_out<bool> wr_req_data_rdy;
+
     // sc_out<unsigned int> received_responses;
 
     sc_out<bool> collector_fifo_rdy;

@@ -11,8 +11,15 @@
 #include <algorithm>
 #include <traffic_gen.hpp>
 #include <bitset>
-
+#include <numeric>
 // #include <bits/stdc++.h>
+
+
+enum RD_WR_FLAG {
+    READ,
+    WRITE
+};
+
 
 class hbm_traffic_driver : public sc_module {
 private:
@@ -41,9 +48,18 @@ private:
     std::vector<data_vector<uint64_t>> _src_ports;
     std::vector<data_vector<uint64_t>> _dst_ports;
 
+    // std::vector<data_vector<mem_req_inst>> _mem_req_insts;
+
     // Verification
+    std::vector<unsigned int> _num_rd_insts;
+    std::vector<unsigned int> _num_wr_insts;
+
     unsigned int _num_mem_req_outputs;
+    unsigned int _total_rd_insts; // total number of read requests
+    unsigned int _total_wr_insts; // total number of write requests
     std::vector <uint64_t> _rd_req_outputs;
+    std::vector <uint64_t> _wr_req_outputs;
+
 
 public:
     sc_in<bool> clk;
@@ -70,6 +86,8 @@ public:
 
     // signals used by testbench to verify functionality
     sc_in<data_vector<uint64_t>> wr_req_data;
+    sc_in<bool> wr_req_data_rdy;
+
     sc_in<data_vector<uint64_t>> rd_req_data;
     sc_in<bool> rd_req_data_rdy;
 
@@ -94,6 +112,10 @@ public:
 
   void assign();
   void source();
+  void mem_req_sink_iter(
+        RD_WR_FLAG rd_wr_flag,
+        unsigned int &outputs_cnt,
+        bool &all_outputs_matching);
   void sink();
 
   SC_HAS_PROCESS(hbm_traffic_driver);

@@ -34,6 +34,12 @@ template <class dtype> data_vector<dtype>::data_vector(std::vector<int> &vec) {
     v[i] = vec[i];
 }
 
+// template <class dtype> data_vector<dtype>::data_vector(std::vector<mem_req_inst> &vec) {
+//   v.resize(vec.size());
+//   for (unsigned int i = 0; i < vec.size(); i++)
+//     v[i] = vec[i];
+// }
+
 // template <class dtype> data_vector<dtype>::data_vector(std::vector<bool> &vec) {
 //   v.resize(vec.size());
 //   for (unsigned int i = 0; i < vec.size(); i++)
@@ -91,6 +97,11 @@ template ostream &operator<< <sc_int<5>>(ostream &o,
 template ostream &
 operator<< <sc_uint<5>>(ostream &o, const data_vector<sc_uint<5>> &dvector);
 
+// template ostream &
+// operator<< <mem_req_inst>(ostream &o, const data_vector<mem_req_inst> &dvector);
+
+
+
 template <class dtype>
 data_vector<dtype> operator+(const data_vector<dtype> &v1,
                              const data_vector<dtype> &v2) {
@@ -106,6 +117,7 @@ data_vector<dtype> operator+(const data_vector<dtype> &v1,
     res.v[i] = v1.v[i] + v2.v[i];
   return res;
 }
+
 template data_vector<unsigned int> operator+
     <unsigned int>(const data_vector<unsigned int> &v1,
                    const data_vector<unsigned int> &v2);
@@ -249,6 +261,11 @@ void sc_trace(sc_trace_file *f, const data_vector<sc_uint<5>> &dvector,
   for (unsigned int i = 0; i < dvector.v.size(); i++)
     sc_trace(f, dvector.v[i], s + "_v" + std::to_string(i));
 }
+// void sc_trace(sc_trace_file *f, const data_vector<mem_req_inst> &dvector,
+//               const std::string &s) {
+//   for (unsigned int i = 0; i < dvector.v.size(); i++)
+//     sc_trace(f, dvector.v[i], s + "_v" + std::to_string(i));
+// }
 
 template <typename dtype>
 void init_vector<dtype>::init_sc_vector(sc_vector<dtype> &vector,

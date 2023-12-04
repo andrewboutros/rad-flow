@@ -14,8 +14,10 @@
 #include <vector>
 #include <traffic_gen.hpp>
 
-#define NUM_MEM_REQ_FIFOS 6
+#include <memory>
+#include <ostream>
 
+#define NUM_MEM_REQ_FIFOS 6
 #define NUM_SIG_REQ_IF_PARALLEL_PORTS 1
 
 
@@ -63,6 +65,54 @@ void aximm_vector_to_bv(
     unsigned int num_elements);
 */
 
+// port definition for sc_values which are fed into the input fifo
+/*
+struct sc_mem_req_inst {
+    sc_signal<uint64_t> inst_addr;
+    sc_signal<uint64_t> src_port;
+    sc_signal<uint64_t> dst_port;
+    
+    sc_signal<unsigned int> module_id;
+    sc_signal<unsigned int> target_channel;
+    sc_signal<uint64_t> target_address;
+    sc_signal<uint64_t> wr_data;
+    sc_signal<bool> wr_en;
+    
+    // Constructor
+    sc_mem_req_inst() 
+        : inst_addr(), src_port(), dst_port(), module_id(), target_channel(), target_address(), wr_data(), wr_en() {}
+};
+*/
+
+// mem_req_inst data type collaterals
+// std::ostream& operator<<(std::ostream &os, const mem_req_inst &inst){
+//     os << "inst_addr: " << inst.inst_addr << " src_port: " << inst.src_port << " dst_port: " << inst.dst_port << " module_id: " << inst.module_id << " target_channel: " << inst.target_channel << " target_address: " << inst.target_address << " wr_data: " << inst.wr_data << " wr_en: " << inst.wr_en;
+//     return os;
+// }
+// inline void sc_trace(sc_trace_file*& f, const mem_req_inst& val, std::string name){
+//     sc_trace(f, val.inst_addr, name + ".inst_addr");
+//     sc_trace(f, val.src_port, name + ".src_port");
+//     sc_trace(f, val.dst_port, name + ".dst_port");
+//     sc_trace(f, val.module_id, name + ".module_id");
+//     sc_trace(f, val.target_channel, name + ".target_channel");
+//     sc_trace(f, val.target_address, name + ".target_address");
+//     sc_trace(f, val.wr_data, name + ".wr_data");
+//     sc_trace(f, val.wr_en, name + ".wr_en");
+// }
+struct mem_req_fifo {
+    // std::queue<mem_req_inst*> fifo;
+    std::queue<mem_req_inst> fifo;
+    sc_signal<bool> full;
+    sc_signal<bool> empty;
+    unsigned int depth;
+    
+    // // Constructor
+    // mem_req_fifo(unsigned int depth)
+    //     : fifo("mem_req_fifo", depth),
+    //       full("full"),
+    //       empty("empty"),
+    //       depth(depth) {}
+};
 
 
 class black_box : public RADSimModule {
@@ -93,8 +143,8 @@ private:
 
 
 
-    sc_vector<sc_signal<bool>> _mem_req_ififos_full; // Signals flagging FIFOs are full
-    sc_vector<sc_signal<bool>> _mem_req_ififos_empty; // Signals flagging FIFOs are full
+    // sc_vector<sc_signal<bool>> _mem_req_ififos_full; // Signals flagging FIFOs are full
+    // sc_vector<sc_signal<bool>> _mem_req_ififos_empty; // Signals flagging FIFOs are full
 
     std::queue<uint64_t> _target_addr_fifo;
     std::queue<unsigned int> _target_channel_fifo;
@@ -102,6 +152,21 @@ private:
     std::queue<bool> _wr_en_fifo;
     std::queue<uint64_t> _src_port_fifo;
     std::queue<uint64_t> _dst_port_fifo;
+
+
+    // sc_vector<sc_signal<bool>> _mem_rd_req_ififos_full; // Signals flagging FIFOs are full
+    // sc_vector<sc_signal<bool>> _mem_rd_req_ififos_empty; // Signals flagging FIFOs are full
+    // std::queue<mem_req_inst> _mem_rd_req_inst_fifo;
+    // sc_vector<sc_signal<bool>> _mem_wr_req_ififos_full; // Signals flagging FIFOs are full
+    // sc_vector<sc_signal<bool>> _mem_wr_req_ififos_empty; // Signals flagging FIFOs are full
+    // std::queue<mem_req_inst> _mem_wr_req_inst_fifo;
+
+    mem_req_fifo _mem_req_rd_ififo;
+    mem_req_fifo _mem_req_wr_ififo;
+
+
+
+
 
     // starting with 1 input and 1 output FIFO
     std::queue<data_vector<int16_t>> _rd_data_input_fifo; // Input FIFO
@@ -119,8 +184,10 @@ private:
     // info for debug to verify functionality
     unsigned int _num_received_responses; // Mem req resp recieved
     unsigned int _num_expected_responses; // Mem req resp expected
+    mem_req_inst _last_mem_wr_req; // Last wr mem req inst sent 
 
-    sc_signal<bool> _aximm_wr_ctrl_sent;
+
+    // sc_signal<bool> _aximm_wr_ctrl_sent;
     sc_signal<unsigned int> _aximm_wr_num_sent_flits;
     sc_signal<aximm_wr_state_t> _aximm_wr_state; 
     sc_signal<aximm_rd_state_t> _aximm_rd_state; 
@@ -160,6 +227,10 @@ public:
     sc_in<bool> wr_en; // 0 = read, 1 = write
     sc_in<bool> mem_req_valid;
     sc_out<bool> mem_req_ready;
+    // sc_in<bool> mem_rd_req_valid;
+    // sc_out<bool> mem_rd_req_ready;
+    // sc_in<bool> mem_wr_req_valid;
+    // sc_out<bool> mem_wr_req_ready;
     
     // None of these are vectors, we can only issues a single req at a time
     sc_in<size_t> wr_data;
@@ -172,6 +243,8 @@ public:
     sc_out<uint64_t> rd_req_data;
     sc_out<uint64_t> wr_req_data;
     sc_out<bool> rd_req_data_rdy;
+    sc_out<bool> wr_req_data_rdy;
+
     
 
     // Module
@@ -201,7 +274,9 @@ public:
     void RegisterModuleInfo(hw_module &module_conf);
     void RegisterModuleInfo(); // To deal with virtual function bs
 
-
+    void mem_req_rx(    
+        sc_in<bool> &mem_req_valid,
+        sc_out<bool> &mem_req_ready);
 };
 
 

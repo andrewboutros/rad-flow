@@ -58,7 +58,7 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
         total_mem_channels += num_channels;
     }
 
-    unsigned int mem_req_fifos_depth = 8;
+    unsigned int mem_req_fifos_depth = 64;
 
 
     std::string module_name_str;
@@ -122,7 +122,7 @@ hbm_traffic_top::hbm_traffic_top(const sc_module_name &name) : sc_module(name) {
             black_boxes[i]->rd_req_data(_rd_req_data[i]);
             black_boxes[i]->wr_req_data(_wr_req_data[i]);
             black_boxes[i]->rd_req_data_rdy(rd_req_data_rdy);
-
+            black_boxes[i]->wr_req_data_rdy(wr_req_data_rdy);
         } else if (module.module_name == "ext_mem_ctrl") {
             // Ext Mem Controllers TODO 
             std::string mem_content_init_prefix = radsim_config.GetStringKnob("radsim_user_design_root_dir") + "/compiler/ext_mem_init/channel_";

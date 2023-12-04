@@ -152,6 +152,7 @@ class ExtMem:
     # For verification
     mem_contents: List[Dict[str, List[int]]] = None # [ {addr: [e for ele in data]} for ch in range(num_channels)] 
     inst_mem_req_contents: Dict[str, Any] = None # { inst_address: {addr: [e for ele in data]} for ch in range(num_channels) }
+    inst_mem_writes: Dict[str, Any] = None # { inst_address: {addr: [e for ele in data]} for ch in range(num_channels) }
 
     # POST INIT FIELDS
     # Mem controllers exist here
@@ -160,6 +161,7 @@ class ExtMem:
     def __post_init__(self):
         self.mem_contents = [{} for _ in range(self.num_channels)]
         self.inst_mem_req_contents = {}
+        self.inst_mem_writes = {}
 
     def init_mem_ctrl_modules(self, noc_locs: List[int]):
         self.mem_ctrl_modules = [
@@ -300,6 +302,9 @@ class MemModel:
         for inst_addr in set([inst.inst_address for inst in self.insts if not inst.write_en]):
             for mem in self.rad_sim_modules.ext_mems:
                 mem.inst_mem_req_contents[addr_format(inst_addr,4)] = [{} for _ in range(mem.num_channels)]
+        for inst_addr in set([inst.inst_address for inst in self.insts if inst.write_en]):
+            for mem in self.rad_sim_modules.ext_mems:
+                mem.inst_mem_writes[addr_format(inst_addr,4)] = [{} for _ in range(mem.num_channels)]
 
         # Assuming non contention for same memory addresses (TODO figure this out later)
         for inst in self.insts:
@@ -310,13 +315,14 @@ class MemModel:
                     # Write data to memory
                     if inst.write_en:
                         mem.mem_contents[self.ch_mapping[inst.target_channel]][addr_format(inst.target_address, mem.addr_width)] = data_str_to_ints(data_int_to_mem_str(inst.write_data, mem.data_width), self.ele_bitwidth)
+                        mem.inst_mem_writes[addr_format(inst.inst_address, 4)][inst.target_channel] = {addr_format(inst.target_address, mem.addr_width): mem.mem_contents[inst.target_channel][addr_format(inst.target_address, mem.addr_width)]}
                     # Read data from memory
                     else:
                         mem.inst_mem_req_contents[addr_format(inst.inst_address, 4)][inst.target_channel] = {addr_format(inst.target_address, mem.addr_width): mem.mem_contents[inst.target_channel][addr_format(inst.target_address, mem.addr_width)]}
                     break
         # After all reads and writes dump the inst_mem_req_contents to a golden reference file
         for mem in self.rad_sim_modules.ext_mems:
-            with open(os.path.join(sim_outdir, f"{mem.mem_ctrl_modules[0].inst_name}_golden.out"), "w") as f:
+            with open(os.path.join(sim_outdir, f"{mem.mem_ctrl_modules[0].inst_name}_golden_mem.out"), "w") as f:
                 print()
                 print(f"Writing golden reference for {mem.mem_ctrl_modules[0].inst_name}")
                 if all( [len(contents) == 0 for key, inst_addr_contents in mem.inst_mem_req_contents.items() for contents in inst_addr_contents]):
@@ -326,6 +332,22 @@ class MemModel:
                     # print number of outputs
                     print(len(mem.inst_mem_req_contents), file=f) 
                     for inst_addr, mem_req_contents in mem.inst_mem_req_contents.items():
+                        for ch_id, ch_contents in enumerate(mem_req_contents):
+                            for mem_addr, mem_data in ch_contents.items():
+                                # ' '.join([str(e) for e in mem_data])
+                                print( f"[{inst_addr}] [{ch_id}] [{mem_addr}] {' '.join([str(e) for e in mem_data])}")
+                                mem_line = f"{inst_addr} {ch_id} {mem_addr} {data_eles_to_str(mem_data, self.ele_bitwidth)}"
+                                print(mem_line, file=f)
+            with open(os.path.join(sim_outdir, f"{mem.mem_ctrl_modules[0].inst_name}_golden_wr.out"), "w") as f:
+                print()
+                print(f"Writing golden reference for write transactions for {mem.mem_ctrl_modules[0].inst_name}")
+                if all( [len(contents) == 0 for key, inst_addr_contents in mem.inst_mem_req_contents.items() for contents in inst_addr_contents]):
+                    print("0", file=f)
+                    print("No Writes to this memory")
+                else:
+                    # print number of outputs
+                    print(len(mem.inst_mem_writes), file=f) 
+                    for inst_addr, mem_req_contents in mem.inst_mem_writes.items():
                         for ch_id, ch_contents in enumerate(mem_req_contents):
                             for mem_addr, mem_data in ch_contents.items():
                                 # ' '.join([str(e) for e in mem_data])
@@ -414,12 +436,12 @@ def main():
     placement_outfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "hbm_traffic.place")
     rad_sim_modules.write_placement_file(placement_outfile)
 
-    num_wr_rds = 2
+    num_wr_rds = 4
     # For this test we will have a bunch of instructions which do X writes and then Y reads -> after this we do % writes and then % reads (for N transactions)
     mem_req_instructions = [
         # incrementing the write address by 16 each time, as I'm not sure what the address line size is
-        *[MemReqInstruction(0x0 + i, 0, "black_box_0_inst.aximm_master__0" , "ddr_ext_mem_ctrl_0_inst.aximm_slave_mem_channel_0", 0, i << 4, i, True) for i in range(num_wr_rds)], # Writes
-        *[MemReqInstruction(0x0 + i + num_wr_rds, 0, "black_box_0_inst.aximm_master__0", "ddr_ext_mem_ctrl_0_inst.aximm_slave_mem_channel_0", 0, i << 4, i, False) for i in range(num_wr_rds)], # Reads
+        *[MemReqInstruction(0x0 + i, 0, "black_box_0_inst.aximm_master__0" , "ddr_ext_mem_ctrl_0_inst.aximm_slave_mem_channel_0", 0, i << 6, i, True) for i in range(num_wr_rds)], # Writes
+        *[MemReqInstruction(0x0 + i + num_wr_rds, 0, "black_box_0_inst.aximm_master__0", "ddr_ext_mem_ctrl_0_inst.aximm_slave_mem_channel_0", 0, i << 6, i, False) for i in range(num_wr_rds)], # Reads
     ]
     
 

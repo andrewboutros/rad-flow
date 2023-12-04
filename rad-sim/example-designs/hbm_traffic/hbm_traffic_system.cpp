@@ -28,6 +28,7 @@ hbm_traffic_system::hbm_traffic_system(const sc_module_name &name, sc_clock *dri
     dut_inst->dst_ports(dst_ports_sig);
     // Verification signals
     dut_inst->wr_req_data(wr_req_data_sig);
+    dut_inst->wr_req_data_rdy(wr_req_data_rdy_sig);
     dut_inst->rd_req_data(rd_req_data_sig);
     dut_inst->rd_req_data_rdy(rd_req_data_rdy_sig);
 
@@ -72,6 +73,7 @@ hbm_traffic_system::hbm_traffic_system(const sc_module_name &name, sc_clock *dri
     driver_inst->dst_ports(dst_ports_sig);
     // Verif Signals
     driver_inst->wr_req_data(wr_req_data_sig);
+    driver_inst->wr_req_data_rdy(wr_req_data_rdy_sig);
     driver_inst->rd_req_data(rd_req_data_sig);
     driver_inst->rd_req_data_rdy(rd_req_data_rdy_sig);
 }
