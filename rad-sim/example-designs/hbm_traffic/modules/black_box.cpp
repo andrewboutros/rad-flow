@@ -170,6 +170,7 @@ void black_box::Tick() {
     aximm_interface.arvalid.write(false);
     aximm_interface.awvalid.write(false);
     aximm_interface.wvalid.write(false);
+    aximm_interface.wlast.write(false);
 
     // received_responses.write(0);
     // Reset signals
@@ -217,7 +218,7 @@ void black_box::Tick() {
             case AXIMM_RD_IDLE:
                 if (!_mem_req_rd_ififo.empty) {
                     _aximm_rd_state.write(AXIMM_RD_ADDR);
-                    std::cout << "Sent RD Trans id " << _rd_req_id_count.read() << " ADDR + CTRL" << " @ Cycle " <<  GetSimulationCycle(5.0) << "!" << std::endl;
+                    // std::cout << "Sent RD Trans id " << _rd_req_id_count.read() << " ADDR + CTRL" << " @ Cycle " <<  GetSimulationCycle(5.0) << "!" << std::endl;
                     
                     mem_req_inst cur_mem_req = _mem_req_rd_ififo.fifo.front();
                     uint64_t dst_addr = cur_mem_req.dst_port + cur_mem_req.target_address;
@@ -246,7 +247,7 @@ void black_box::Tick() {
                     aximm_interface.arvalid.write(false); // deassert address read valid
                     // Move back to idle state and deassert address read valid
                     _aximm_rd_state.write(AXIMM_RD_IDLE);
-                    std::cout << "Sent AR transaction @ id: " << _rd_req_id_count.read() << std::endl;
+                    std::cout << "Sent AR transaction id: " << _rd_req_id_count.read() << " @ Cycle " <<  GetSimulationCycle(5.0) << "!" << std::endl;
                     _mem_req_rd_ififo.fifo.pop();
                     _rd_req_id_count.write(_rd_req_id_count.read() + 1);
                     // _aximm_rd_tx_done.write(true);
@@ -268,83 +269,108 @@ void black_box::Tick() {
                 // reset the write Verif signals
                 wr_req_data_rdy.write(false);
 
-                if (!_mem_req_wr_ififo.empty.read() && !aximm_interface.bvalid.read()){
+                if (!_mem_req_wr_ififo.empty.read() /*&& !aximm_interface.bvalid.read()*/){
                     // Address + Control 
                     _aximm_wr_state.write(AXIMM_WR_ADDR);
-                    std::cout << "Sent WR Trans id " << _wr_req_id_count.read() << " ADDR + CTRL " << " @ Cycle " <<  GetSimulationCycle(5.0) << "!" << std::endl;
+                    // std::cout << "Sent WR Trans id " << _wr_req_id_count.read() << " ADDR + CTRL " << " @ Cycle " <<  GetSimulationCycle(5.0) << "!" << std::endl;
 
                     cur_wr_mem_req = _mem_req_wr_ififo.fifo.front();
                     dst_addr = cur_wr_mem_req.dst_port + cur_wr_mem_req.target_address;
 
-                    aximm_interface.awvalid.write(true);
                     aximm_interface.awid.write(_wr_req_id_count.read());
                     aximm_interface.awaddr.write(dst_addr);
                     aximm_interface.awlen.write(0); // burst len of 1
                     aximm_interface.awsize.write(0); // burst len of 1
                     aximm_interface.awburst.write(0); // burst len of 1
                     aximm_interface.awuser.write(cur_wr_mem_req.src_port); // assuming the aw user field specifies port where the request came from?
-                    // set unused transaction signals to invalid
+                    // set all axi interfaces
+                    aximm_interface.awvalid.write(true);
                     aximm_interface.wvalid.write(false);
                     // aximm_interface.bready.write(false);
 
                     // aximm_interface.arvalid.write(false);
+                    aximm_interface.wlast.write(false);
+
                 } else {
-                    _aximm_wr_state.write(AXIMM_WR_IDLE);
+                    // set all axi interfaces
+                    // aximm_interface.wvalid.write(false);
+                    // aximm_interface.bready.write(false);
                     // aximm_interface.awvalid.write(false); // deassert addr valid if not sending a transaction , stay in AXIMM_RD_IDLE
+                    _aximm_wr_state.write(AXIMM_WR_IDLE);
                 }
                 break;
             }
             case AXIMM_WR_ADDR:
             {
-                // Data
-                _aximm_wr_state.write(AXIMM_WR_DATA_IPR);
-                std::cout << "Sent WR Trans id " << _wr_req_id_count.read() << " DATA " << " @ Cycle " <<  GetSimulationCycle(5.0) << "!" << std::endl;
-            
-                cur_wr_mem_req = _mem_req_wr_ififo.fifo.front();
-                _last_mem_wr_req = cur_wr_mem_req;
+                if (aximm_interface.awready.read() && aximm_interface.awvalid.read()){
 
-                aximm_interface.wdata.write(cur_wr_mem_req.wr_data);
-                aximm_interface.wvalid.write(true);
-                aximm_interface.wid.write(_wr_data_id_count.read());
-                aximm_interface.wlast.write(true);
-                aximm_interface.wuser.write(cur_wr_mem_req.src_port); // TODO figure out what the user ports
-                // aximm_interface.bready.write(true); // tell AXI that we're ready for mem resp?
-                // set unused transaction signals to invalid
-                aximm_interface.awvalid.write(false);
-                // aximm_interface.arvalid.write(false);
-                _aximm_wr_num_sent_flits.write(_aximm_wr_num_sent_flits.read() + 1);
+                    // Data
+                    _aximm_wr_state.write(AXIMM_WR_DATA_IPR);
+                    std::cout << "Sent AW Trans id " << _wr_req_id_count.read() << " @ Cycle " <<  GetSimulationCycle(5.0) << "!" << std::endl;
+                
+                    cur_wr_mem_req = _mem_req_wr_ififo.fifo.front();
+                    _last_mem_wr_req = cur_wr_mem_req;
 
-                _aximm_wr_tx_done.write(false);
+                    aximm_interface.wdata.write(cur_wr_mem_req.wr_data);
+                    aximm_interface.wid.write(_wr_req_id_count.read());
+                    aximm_interface.wlast.write(true);
+                    aximm_interface.wuser.write(cur_wr_mem_req.src_port); // This is correct 
+                    // set unused transaction signals to invalid
+                    // set all axi interfaces
+                    // aximm_interface.bready.write(true); // tell AXI that we're ready for mem resp?
+                    aximm_interface.wvalid.write(true);
+                    aximm_interface.awvalid.write(false);
+                    // aximm_interface.arvalid.write(false);
+                    _aximm_wr_num_sent_flits.write(_aximm_wr_num_sent_flits.read() + 1);
+
+                    _aximm_wr_tx_done.write(false);
+                } else {
+                    _aximm_wr_state.write(AXIMM_WR_ADDR);
+                }
                 break;
+
             }
             case AXIMM_WR_DATA_IPR:
             {
                 // Write Response Channel, if flit transaction accepted
                 if (aximm_interface.wready.read() && aximm_interface.wvalid.read()) {
+                    _aximm_wr_state.write(AXIMM_WR_COMMIT);
                     assert (!_mem_req_wr_ififo.empty); // make sure input fifo is not empty
-                    aximm_interface.wvalid.write(false); // deassert data valid signal
                     // TODO add some logic to see if this is the last flit of the burst, if it is then move state to commit
-                    _aximm_wr_state.write(AXIMM_WR_COMMIT); // Move state to commit
-                    std::cout << module_name << ": Received WRITE flit response "
+                    // _aximm_wr_state.write(AXIMM_WR_COMMIT); // Move state to commit
+                    std::cout << module_name << ": Sent W Transaction id: " << _wr_req_id_count.read()
                         << "@ Cycle " <<  GetSimulationCycle(5.0) << "!"
                         << std::endl;
                     // Instructions are capable of single flit transmission(?) If so then we can pop fifos here and drop instruction info
-                    _mem_req_wr_ififo.fifo.pop();
+                    // set all axi interfaces
+                    // aximm_interface.bready.write(true); // tell AXI that we're ready for mem resp?
+                    aximm_interface.wvalid.write(false); // deassert data valid signal
+                    aximm_interface.awvalid.write(false);
                     
+                    _mem_req_wr_ififo.fifo.pop();
+
                     // increment transaction ids
-                    _wr_data_id_count.write(_wr_data_id_count.read() + 1);
-                    _wr_req_id_count.write(_wr_req_id_count.read() + 1);
+                    // _wr_data_id_count.write(_wr_data_id_count.read() + 1);
+
                 } else {
                     // If not ready stay in AXIMM_WR_DATA_IPR
                     _aximm_wr_state.write(AXIMM_WR_DATA_IPR);
                 }
+                // else {
+                //     // set axi interfaces
+                //     // aximm_interface.bready.write(true); // tell AXI that we're ready for mem resp?
+                //     aximm_interface.awvalid.write(false);
+
+                //     // If not ready stay in AXIMM_WR_DATA_IPR
+                //     _aximm_wr_state.write(AXIMM_WR_DATA_IPR);
+                // }
                 break;
             }
             case AXIMM_WR_COMMIT:
             {
                 // Write response channel if entire burst has been accepted
                 if (aximm_interface.bvalid.read() && aximm_interface.bready.read()) {
-                    std::cout << module_name << ": Received WRITE burst response "
+                    std::cout << module_name << ": Recieved B Transaction id: " << aximm_interface.bid.read()
                         << "@ Cycle " <<  GetSimulationCycle(5.0) << "!"
                         << std::endl;
                     // If the WR Transaction BRESP value is not OKAY (00)
@@ -355,10 +381,14 @@ void black_box::Tick() {
                             << std::endl;
                         wr_req_data_rdy.write(false);
                     } else {
+                        // Testbench verif
                         wr_req_data_rdy.write(true);
                         wr_req_data.write(_last_mem_wr_req.wr_data);
                         // If WR Transaction was performed successfully
                         _aximm_wr_state.write(AXIMM_WR_IDLE); // Go back to idle state
+                        // increment transaction ids
+                        _wr_req_id_count.write(_wr_req_id_count.read() + 1);
+
                     }
                 } else {
                     wr_req_data_rdy.write(false);
@@ -369,7 +399,7 @@ void black_box::Tick() {
             default:
                 break;       
         }
-        std::cout << "bvalid @ " << GetSimulationCycle(5.0) << ": " << aximm_interface.bvalid.read() << std::endl;
+        // std::cout << "bvalid @ " << GetSimulationCycle(5.0) << ": " << aximm_interface.bvalid.read() << std::endl;
 
         // make sure input fifos are not empty
         /*
@@ -525,7 +555,7 @@ void black_box::Tick() {
         */
 
 
-        
+        /*
         if (aximm_interface.bvalid.read() && aximm_interface.bready.read()) {
             std::cout << module_name << ": NON STATE MACHINE: Received WRITE burst response "
                 << "@ Cycle " <<  GetSimulationCycle(5.0) << "!"
@@ -541,6 +571,8 @@ void black_box::Tick() {
                 // _aximm_wr_state.write(AXIMM_WR_IDLE); // Go back to idle state
             }
         }
+        */
+
         /*
             // Write Response Channel , if transaction accepted
             if (aximm_interface.wready.read() && aximm_interface.wvalid.read() && no_mem_req_ififos_empty) {
@@ -563,7 +595,7 @@ void black_box::Tick() {
 
         // If transaction accepted and data channel ready
         if (aximm_interface.rvalid.read() && aximm_interface.rready.read()) {
-            std::cout << module_name << ": Received READ response "
+            std::cout << module_name << ": Received R Transaction"
                         << "@ Cycle " <<  GetSimulationCycle(5.0) << "!" <<  ": "
                         << aximm_interface.rdata.read()
                         << std::endl;
@@ -592,6 +624,7 @@ void black_box::Tick() {
             _rd_data_input_fifo.pop();
             _output_fifo.push(ofifo_data_vector);
         }
+        
 
         // Interface with AXI-S NoC
         // if output axi-s tx interface is ready and axi-s tx interface is valid
