@@ -21,7 +21,8 @@ void mem_controller::InitializeMemoryContents(std::string &init_filename) {
       std::stringstream line_stream(line);
       line_stream >> addr;
       line_stream >> data;
-      // std::cout << addr << std::endl;
+      // std::cout << "[MEM CTRL] addr: " << addr << std::endl;
+      // std::cout << "[MEM CTRL] data: " << data.to_uint() << std::endl;
       addr = AddressMapping(addr, ch_id);
       _mem_contents[ch_id][addr] = data;
     }
@@ -363,6 +364,8 @@ void mem_controller::Tick() {
     _write_address_queue_occupancy[ch_id].write(0);
     _write_data_queue_occupancy[ch_id].write(0);
     _read_address_queue_occupancy[ch_id].write(0);
+    mem_channels[ch_id].bvalid.write(false);
+    mem_channels[ch_id].rvalid.write(false);
   }
   wait();
 
@@ -441,6 +444,8 @@ void mem_controller::Tick() {
       // Sending write responses
       if (mem_channels[ch_id].bvalid.read() &&
           mem_channels[ch_id].bready.read()) {
+        // std::cout << "[MEM CTRL] Sending back B Response! @ Cycle" << GetSimulationCycle(3.32) << "!" << std::endl;
+        // std::cout << "[MEM CTRL] _output_write_queue_occupancy: " << _output_write_queue_occupancy[0].read() << std::endl;
         _output_write_responses[ch_id].pop();
       }
       // Sending read responses
@@ -451,6 +456,8 @@ void mem_controller::Tick() {
         //           << std::endl;
       }
 
+      mem_channels[ch_id].bvalid.write(_output_write_responses[ch_id].size() >
+                                       0);
       mem_channels[ch_id].rvalid.write(_output_read_responses[ch_id].size() >
                                        0);
       if (_output_read_responses[ch_id].size() > 0) {
@@ -580,9 +587,7 @@ void mem_controller::Assign() {
     for (unsigned int ch_id = 0; ch_id < _num_channels; ch_id++) {
       mem_channels[ch_id].awready.write(false);
       mem_channels[ch_id].wready.write(false);
-      mem_channels[ch_id].bvalid.write(false);
       mem_channels[ch_id].arready.write(false);
-      // mem_channels[ch_id].rvalid.write(false);
     }
   } else {
     for (unsigned int ch_id = 0; ch_id < _num_channels; ch_id++) {
@@ -604,8 +609,6 @@ void mem_controller::Assign() {
       mem_channels[ch_id].arready.write(read_input_queue_ok &&
                                         read_output_queue_ok);
 
-      mem_channels[ch_id].bvalid.write(_output_write_queue_occupancy[ch_id] >
-                                       0);
       if (_output_write_responses[ch_id].size() > 0) {
         mem_channels[ch_id].buser.write(_output_write_responses[ch_id].front());
       }
