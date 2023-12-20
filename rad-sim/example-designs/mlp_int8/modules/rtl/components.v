@@ -100,7 +100,13 @@ always @ (posedge clk) begin
 		r_wen <= wen;
 		r_waddr <= waddr;
 		r_wdata <= wdata;
-		r_rdata <= mem[r_raddr];
+		
+		// Data Forwarding
+		if (r_wen && r_raddr == r_waddr) begin
+			r_rdata <= r_wdata;
+		end else begin
+			r_rdata <= mem[r_raddr];
+		end
 		
 		if (r_wen) mem[r_waddr] <= r_wdata;
 	end

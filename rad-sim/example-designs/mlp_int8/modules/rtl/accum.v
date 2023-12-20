@@ -46,10 +46,29 @@ memory_block # (
 	.rst(rst),
 	.waddr(accum_mem_waddr),
 	.wen(accum_mem_wen),
-	.wdata(r_result),
+	.wdata(accum_mem_wdata),
 	.raddr(i_addr),
 	.rdata(accum_mem_rdata)
 );
+
+always @ (*) begin
+	if (rst) begin
+		accum_mem_wen = 1'b0;
+		accum_mem_wdata = 0;
+		accum_mem_waddr = 0;
+	end else begin
+		if (rr_valid && rr_accum) begin
+			accum_mem_wen = 1'b1;
+			accum_mem_wdata = rr_data + accum_mem_rdata;
+		end else if (rr_valid) begin
+			accum_mem_wen = 1'b1;
+			accum_mem_wdata = rr_data;
+		end else begin
+			accum_mem_wen = 1'b0;
+		end
+		accum_mem_waddr = rr_addr;
+	end
+end
 
 always @ (posedge clk) begin
 	if (rst) begin
@@ -58,8 +77,6 @@ always @ (posedge clk) begin
 		r_addr <= 'd0; rr_addr <= 'd0;
 		r_data <= 'd0; rr_data <= 'd0;
 		r_last <= 1'b0; rr_last <= 1'b0;
-		accum_mem_wen <= 1'b0;
-		accum_mem_waddr <= 'd0;
 	end else begin
 		// Pipeline inputs to align with memory output
 		r_accum  <= i_accum;
@@ -76,14 +93,9 @@ always @ (posedge clk) begin
 		// Perform accumulation
 		if (rr_valid && rr_accum) begin
 			r_result <= rr_data + accum_mem_rdata;
-			accum_mem_wen <= 1'b1;
 		end else if (rr_valid) begin
 			r_result <= rr_data;
-			accum_mem_wen <= 1'b1;
-		end else begin
-			accum_mem_wen <= 1'b0;
 		end
-		accum_mem_waddr <= rr_addr;
 		rrr_valid <= rr_last && rr_valid;
 	end
 end
