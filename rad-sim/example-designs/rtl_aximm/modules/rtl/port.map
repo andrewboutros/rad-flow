@@ -1,0 +1,81 @@
+module client
+input 1 clk clk
+input 1 rst rst
+input 1 start_sig start_sig
+output 1 start_rdy start_rdy
+output 1 output_valid output_valid
+output 1 output_result output_result
+input 1 output_rdy output_rdy
+aximm master aximm_client_awvalid aximm_client awvalid
+aximm master aximm_client_awready aximm_client awready
+aximm master aximm_client_awid aximm_client awid
+aximm master aximm_client_awaddr aximm_client awaddr
+aximm master aximm_client_awlen aximm_client awlen
+aximm master aximm_client_awsize aximm_client awsize
+aximm master aximm_client_awburst aximm_client awburst
+aximm master aximm_client_awuser aximm_client awuser
+aximm master aximm_client_wvalid aximm_client wvalid
+aximm master aximm_client_wready aximm_client wready
+aximm master aximm_client_wid aximm_client wid
+aximm master aximm_client_wdata aximm_client wdata
+aximm master aximm_client_wlast aximm_client wlast
+aximm master aximm_client_wuser aximm_client wuser
+aximm master aximm_client_bvalid aximm_client bvalid
+aximm master aximm_client_bready aximm_client bready
+aximm master aximm_client_bid aximm_client bid
+aximm master aximm_client_bresp aximm_client bresp
+aximm master aximm_client_buser aximm_client buser
+aximm master aximm_client_arvalid aximm_client arvalid
+aximm master aximm_client_arready aximm_client arready
+aximm master aximm_client_arid aximm_client arid
+aximm master aximm_client_araddr aximm_client araddr
+aximm master aximm_client_arlen aximm_client arlen
+aximm master aximm_client_arsize aximm_client arsize
+aximm master aximm_client_arburst aximm_client arburst
+aximm master aximm_client_aruser aximm_client aruser
+aximm master aximm_client_rvalid aximm_client rvalid
+aximm master aximm_client_rready aximm_client rready
+aximm master aximm_client_rid aximm_client rid
+aximm master aximm_client_rdata aximm_client rdata
+aximm master aximm_client_rresp aximm_client rresp
+aximm master aximm_client_rlast aximm_client rlast
+aximm master aximm_client_ruser aximm_client ruser
+
+module server
+input 1 clk clk
+input 1 rst rst
+aximm slave aximm_server_awvalid aximm_server awvalid
+aximm slave aximm_server_awready aximm_server awready
+aximm slave aximm_server_awid aximm_server awid
+aximm slave aximm_server_awaddr aximm_server awaddr
+aximm slave aximm_server_awlen aximm_server awlen
+aximm slave aximm_server_awsize aximm_server awsize
+aximm slave aximm_server_awburst aximm_server awburst
+aximm slave aximm_server_awuser aximm_server awuser
+aximm slave aximm_server_wvalid aximm_server wvalid
+aximm slave aximm_server_wready aximm_server wready
+aximm slave aximm_server_wid aximm_server wid
+aximm slave aximm_server_wdata aximm_server wdata
+aximm slave aximm_server_wlast aximm_server wlast
+aximm slave aximm_server_wuser aximm_server wuser
+aximm slave aximm_server_bvalid aximm_server bvalid
+aximm slave aximm_server_bready aximm_server bready
+aximm slave aximm_server_bid aximm_server bid
+aximm slave aximm_server_bresp aximm_server bresp
+aximm slave aximm_server_buser aximm_server buser
+aximm slave aximm_server_arvalid aximm_server arvalid
+aximm slave aximm_server_arready aximm_server arready
+aximm slave aximm_server_arid aximm_server arid
+aximm slave aximm_server_araddr aximm_server araddr
+aximm slave aximm_server_arlen aximm_server arlen
+aximm slave aximm_server_arsize aximm_server arsize
+aximm slave aximm_server_arburst aximm_server arburst
+aximm slave aximm_server_aruser aximm_server aruser
+aximm slave aximm_server_rvalid aximm_server rvalid
+aximm slave aximm_server_rready aximm_server rready
+aximm slave aximm_server_rid aximm_server rid
+aximm slave aximm_server_rdata aximm_server rdata
+aximm slave aximm_server_rresp aximm_server rresp
+aximm slave aximm_server_rlast aximm_server rlast
+aximm slave aximm_server_ruser aximm_server ruser
+

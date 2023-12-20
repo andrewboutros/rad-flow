@@ -1,0 +1,37 @@
+noc:
+  type: ['2d']
+  num_nocs: 1
+  clk_period: [1.0]
+  payload_width: [166]
+  topology: ['mesh']
+  dim_x: [4]
+  dim_y: [4] 
+  routing_func: ['dim_order']
+  vcs: [5]
+  vc_buffer_size: [8]
+  output_buffer_size: [8]
+  num_packet_types: [5]
+  router_uarch: ['iq']
+  vc_allocator: ['islip']
+  sw_allocator:  ['islip']
+  credit_delay: [1]
+  routing_delay: [1]
+  vc_alloc_delay: [1]
+  sw_alloc_delay: [1]
+
+noc_adapters:
+  clk_period: [1.25]
+  fifo_size: [16]
+  obuff_size: [2]
+  in_arbiter: ['fixed_rr']
+  out_arbiter: ['priority_rr']
+  vc_mapping: ['direct']
+
+design:
+  name: 'rtl_aximm'
+  noc_placement: ['rtl_aximm.place']
+  clk_periods: [5.0]
+
+telemetry:
+  log_verbosity: 2
+  traces: []

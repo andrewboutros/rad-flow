@@ -1,7 +1,6 @@
 # Port Mapping Parser Script
 # Parses inputs and outputs from top-level Verilog designs and maps it to the port.map format used by Wrapper Generation
-# Support for AXI-S interfaces parsing
-# TODO: add support for AXI-MM
+# Support for AXI-S, AXI-MM interfaces parsing
 # Arguments:
 #   [1] => Path to the design folder
 #   [2...] => Verilog files for top-level designs
@@ -12,8 +11,14 @@ from pathlib import Path
 
 verilog_range_regex = "\[(\d*):(\d*)\]"
 verilog_axis_regex = "axis_(.*)_(.*)"
+verilog_aximm_regex = "aximm_(.*)_(.*)"
 
 axis_slave_input_ports = ["tvalid", "tdata", "tstrb", "tkeep", "tlast", "tid", "tdest", "tuser"]
+aximm_slave_input_ports = ["awvalid", "awid", "awaddr", "awlen", "awsize", "awburst", "awuser",
+                           "wvalid", "wid", "wdata", "wlast", "wuser",
+                           "bready",
+                           "arvalid", "arid", "araddr", "arlen", "arsize", "arburst", "aruser",
+                           "rready"]
 
 # Determines the width of the port. Outputs the width if successful, "?" if failure
 def determine_port_width(port):
@@ -40,9 +45,20 @@ def match_axis_regex(port):
     signal = re.match(verilog_axis_regex, port.name)
     return signal.groups()
 
+# RegEx pattern matching for AXI-MM ports. Returns capture groups with information on the AXI-MM interface name, and the AXI-MM port.
+def match_aximm_regex(port):
+    signal = re.match(verilog_aximm_regex, port.name)
+    return signal.groups()
+
 # Determines if a port is an AXI-S port
 def is_axis_port(port):
     if re.match(verilog_axis_regex, port.name):
+        return True
+    return False
+
+# Determines if a port is an AXI-MM port
+def is_aximm_port(port):
+    if re.match(verilog_aximm_regex, port.name):
         return True
     return False
 
@@ -50,6 +66,13 @@ def is_axis_port(port):
 def is_axis_role_found(axis_roles, port):
     (axis_interface, axis_port) = match_axis_regex(port)
     if axis_interface in axis_roles:
+        return True
+    return False
+
+# Determines if the role for an AXI-MM port has already been saved
+def is_aximm_role_found(aximm_roles, port):
+    (aximm_interface, aximm_port) = match_aximm_regex(port)
+    if aximm_interface in aximm_roles:
         return True
     return False
 
@@ -63,13 +86,23 @@ def determine_axis_roles(module):
                 axis_roles[axis_interface] = "slave" if p.mode == "input" else "master"
     return axis_roles
 
+# Determines the AXI-MM roles for a given module.
+def determine_aximm_roles(module):
+    aximm_roles = {}
+    for p in module.ports:
+        if is_aximm_port(p) and not is_aximm_role_found(aximm_roles, p):
+            (aximm_interface, aximm_port) = match_aximm_regex(p)
+            if aximm_port in aximm_slave_input_ports:
+                aximm_roles[aximm_interface] = "slave" if p.mode == "input" else "master"
+    return aximm_roles
+
 # Parses modules from a Verilog File
 def get_modules_from_verilog_file(verilog_file_path):
     vlog_ex = vlog.VerilogExtractor()
     return vlog_ex.extract_objects(verilog_file_path)
 
 # Main function for a single module
-def generate_port_mappings_for_module(port_mapping_file, module, axis_roles):
+def generate_port_mappings_for_module(port_mapping_file, module, axis_roles, aximm_roles):
     warnings = False
     port_mapping_file.write("module {0}\n".format(module.name))
     for p in module.ports:
@@ -77,6 +110,10 @@ def generate_port_mappings_for_module(port_mapping_file, module, axis_roles):
             (axis_interface, axis_port) = match_axis_regex(p)
             axis_role = axis_roles[axis_interface]
             port_mapping_file.write("axis {0} {1} axis_{2} {3}\n".format(axis_role, p.name, axis_interface, axis_port))
+        elif is_aximm_port(p) and is_aximm_role_found(aximm_roles, p):
+            (aximm_interface, aximm_port) = match_aximm_regex(p)
+            aximm_role = aximm_roles[aximm_interface]
+            port_mapping_file.write("aximm {0} {1} aximm_{2} {3}\n".format(aximm_role, p.name, aximm_interface, aximm_port))
         else:
             port_size = determine_port_width(p)
             if port_size == "?":
@@ -120,7 +157,8 @@ def generate(design_folder, rtl_files, cmd_overwrite):
             for m in modules:
                 # Finds all the AXI-S roles (master/slave) for each AXI-S interface
                 axis_roles = determine_axis_roles(m)
-                warnings = True if generate_port_mappings_for_module(port_mapping_file, m, axis_roles) else warnings
+                aximm_roles = determine_aximm_roles(m)
+                warnings = True if generate_port_mappings_for_module(port_mapping_file, m, axis_roles, aximm_roles) else warnings
         if warnings:
             print("WARNING: Successfully generated port mapping file with manual input required.")
             print("Please manually replace '?' with the correct values before running the wrapper generation script.")

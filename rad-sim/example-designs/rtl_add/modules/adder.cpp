@@ -2,7 +2,7 @@
 
 adder::adder(const sc_module_name &name) : RADSimModule(name) {
 	char vadder_name[25];
-	std::string vadder_name_str = std::string(name) + "_vmvm";
+	std::string vadder_name_str = std::string(name);
 	std::strcpy(vadder_name, vadder_name_str.c_str());
 
 	vadder = new Vadder{vadder_name};
