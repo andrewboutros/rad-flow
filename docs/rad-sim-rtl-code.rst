@@ -3,6 +3,7 @@ Compiling a RAD-Sim Module with RTL
 RAD-Sim has the capability to support RTL code (Verilog/SystemVerilog only) through Verilator.
 Verilator compiles RTL code into a faster optimized model, wrapped inside a C++/SystemC module.
 More information about Verilator can be found at `Veripool <https://veripool.org/guide/latest/index.html>`_.
+A performance test repo can be found at `GitHub https://github.com/geotrieu/mvm_perf_test`.
 
 Installation
 -------------
