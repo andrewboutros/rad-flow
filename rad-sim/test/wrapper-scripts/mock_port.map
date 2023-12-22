@@ -3,4 +3,6 @@ input 1 i1 i1
 inout 64 io64 io64
 axis master axis_mock_master_tdata axis_mock_master tdata
 axis slave axis_mock_slave_tdata axis_mock_slave tdata
+aximm master aximm_mock_master_wdata aximm_mock_master wdata
+aximm slave aximm_mock_slave_wdata aximm_mock_slave wdata
 output 32 o32 o32

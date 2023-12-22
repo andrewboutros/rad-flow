@@ -3,6 +3,7 @@ Compiling a RAD-Sim Module with RTL
 RAD-Sim has the capability to support RTL code (Verilog/SystemVerilog only) through Verilator.
 Verilator compiles RTL code into a faster optimized model, wrapped inside a C++/SystemC module.
 More information about Verilator can be found at `Veripool <https://veripool.org/guide/latest/index.html>`_.
+A performance test repo can be found at `GitHub https://github.com/geotrieu/mvm_perf_test`.
 
 Installation
 -------------
@@ -106,9 +107,9 @@ Automatic wrapper generation follows the workflow:
 These scripts produce basic source and header wrapper files for the specified RTL modules.
 Advanced users may edit these files to add additional functionality.
 
-AXI-S Formatting Requirement
+AXI-S/AXI-MM Formatting Requirement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Ports in RTL modules using AXI-S must be specified in the format ``axis_{name}_{signal}`` to be recognized by the port mappings script.
+Ports in RTL modules using AXI-S/AXI-MM must be specified in the format ``axis_{name}_{signal}`` or ``aximm_{name}_{signal}`` to be recognized by the port mappings script.
 
 Port Map File Format
 ^^^^^^^^^^^^^^^^^^^^^
@@ -118,6 +119,7 @@ The port map file is a blank-space delimited file used to specify the connection
 * Modules are defined by ``module {name}``.
 * Input and Output ports are defined by ``{input/output} {port_width} {rtl_port} {radsim_port}``.
 * AXI-S ports are defined by ``axis {master/slave} {rtl_port} {axis_interface} {axis_port}``.
+* AXI-MM ports are defined by ``aximm {master/slave} {rtl_port} {aximm_interface} {aximm_port}``.
 
 An example port map file from the ``rtl_add`` example is shown below:
 

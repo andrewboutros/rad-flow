@@ -2,7 +2,7 @@
 
 client::client(const sc_module_name &name) : RADSimModule(name) {
 	char vclient_name[25];
-	std::string vclient_name_str = std::string(name) + "_vmvm";
+	std::string vclient_name_str = std::string(name);
 	std::strcpy(vclient_name, vclient_name_str.c_str());
 
 	vclient = new Vclient{vclient_name};

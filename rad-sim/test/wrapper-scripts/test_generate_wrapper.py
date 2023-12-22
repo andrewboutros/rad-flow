@@ -15,16 +15,18 @@ class GenerateWrapperTest(unittest.TestCase):
         """
 
         mock_port_map_file = PROJECT_PATH + "/test/wrapper-scripts/mock_port.map"
-        (mappings, axis_roles) = gw.read_port_mappings(mock_port_map_file)
+        (mappings, axis_roles, aximm_roles) = gw.read_port_mappings(mock_port_map_file)
         self.assertEqual(len(mappings), 1, "There should only be one module in the port map file")
 
         moduleMappings = mappings["mock_module"]
-        self.assertEqual(len(moduleMappings), 5)
+        self.assertEqual(len(moduleMappings), 7)
         self.assertIn(("sc_in", "1", "i1", "i1"), moduleMappings)
         self.assertIn(("sc_inout", "64", "io64", "io64"), moduleMappings)
         self.assertIn(("sc_out", "32", "o32", "o32"), moduleMappings)
         self.assertIn(("axis", "master", "axis_mock_master_tdata", "axis_mock_master.tdata"), moduleMappings)
         self.assertIn(("axis", "slave", "axis_mock_slave_tdata", "axis_mock_slave.tdata"), moduleMappings)
+        self.assertIn(("aximm", "master", "aximm_mock_master_wdata", "aximm_mock_master.wdata"), moduleMappings)
+        self.assertIn(("aximm", "slave", "aximm_mock_slave_wdata", "aximm_mock_slave.wdata"), moduleMappings)
 
         moduleAxisRoles = axis_roles["mock_module"]
         self.assertEqual(len(moduleAxisRoles), 2)
@@ -32,6 +34,13 @@ class GenerateWrapperTest(unittest.TestCase):
         self.assertEqual(moduleAxisRoles["axis_mock_master"], "master")
         self.assertIn("axis_mock_slave", moduleAxisRoles)
         self.assertEqual(moduleAxisRoles["axis_mock_slave"], "slave")
+
+        moduleAximmRoles = aximm_roles["mock_module"]
+        self.assertEqual(len(moduleAximmRoles), 2)
+        self.assertIn("aximm_mock_master", moduleAximmRoles)
+        self.assertEqual(moduleAximmRoles["aximm_mock_master"], "master")
+        self.assertIn("aximm_mock_slave", moduleAximmRoles)
+        self.assertEqual(moduleAximmRoles["aximm_mock_slave"], "slave")
 
     def test_read_port_mappings_incomplete(self):
         """
