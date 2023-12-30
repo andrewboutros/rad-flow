@@ -12,6 +12,7 @@ class add_driver : public sc_module {
 private:
   std::queue<int> numbers_to_send;
   int actual_sum;
+  RADSimDesignContext* radsim_design_; //AKB ADDED: store ptr passed into constructor for use in source() and sink()
   
 public:
   sc_in<bool> clk;
@@ -23,7 +24,7 @@ public:
   sc_in<sc_bv<DATAW>> response;
   sc_in<bool> response_valid;
 
-  add_driver(const sc_module_name &name);
+  add_driver(const sc_module_name &name, RADSimDesignContext* radsim_design); //AKB ADDED last arg
   ~add_driver();
 
   void source();

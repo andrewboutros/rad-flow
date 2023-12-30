@@ -4,7 +4,7 @@ add_system::add_system(const sc_module_name &name, sc_clock *driver_clk_sig, RAD
     : sc_module(name) {
 
   // Instantiate driver
-  driver_inst = new add_driver("driver");
+  driver_inst = new add_driver("driver", radsim_design);
   driver_inst->clk(*driver_clk_sig);
   driver_inst->rst(rst_sig);
   driver_inst->client_tdata(client_tdata_sig);

@@ -33,7 +33,13 @@ int sc_main(int argc, char *argv[]) {
 
 	add_system *system2 = new add_system("add_system", driver_clk_sig2, radsim_design2); //AKB ADDED
 
-	sc_start();
+	//sc_start(); //AKB commented out
+
+	//AKB ADDED this code blk: checking for flag to be set for both RADs before calling sc_stop();
+	while (!radsim_design1->is_rad_done() && !radsim_design2->is_rad_done()) {
+		sc_start(1, SC_NS);
+	}
+	sc_stop();
 
 	delete system;
 	delete system2; //AKB ADDED

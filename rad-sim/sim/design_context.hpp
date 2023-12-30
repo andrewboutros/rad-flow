@@ -52,6 +52,9 @@ private:
       _noc_aximm_master_ports;
   std::vector<aximm_signal> _aximm_signals;
 
+  //AKB ADDED: flag to indicate if this device done
+  bool rad_done;
+
 public:
   RADSimDesignContext();
   ~RADSimDesignContext();
@@ -96,6 +99,9 @@ public:
   void DumpDesignContext();
   std::vector<std::vector<std::set<std::string>>> &GetNodeModuleNames();
   uint64_t GetPortBaseAddress(std::string &port_name);
+  //AKB ADDED:
+  bool is_rad_done();
+  void set_rad_done();
 };
 
 //extern RADSimDesignContext radsim_design; //AKB: commented out

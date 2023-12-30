@@ -2,8 +2,10 @@
 
 #define NUM_ADDENDS 3
 
-add_driver::add_driver(const sc_module_name &name)
+add_driver::add_driver(const sc_module_name &name, RADSimDesignContext* radsim_design)
     : sc_module(name) {
+  
+  this->radsim_design_ = radsim_design; //AKB ADDED: update member for later use
 
   // Random Seed
   srand (time(NULL));
@@ -59,5 +61,8 @@ void add_driver::sink() {
   if (response.read() != actual_sum) std::cout << "FAILURE - Output is not matching!" << std::endl;
   else std::cout << "SUCCESS - Output is matching!" << std::endl;
 
-  sc_stop();
+  //sc_stop(); //AKB: replaced with setting flag
+  this->radsim_design_->set_rad_done(); //AKB ADDED: flag to replace sc_stop calls
+  return; //AKB ADDED
+
 }

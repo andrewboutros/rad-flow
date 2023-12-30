@@ -42,6 +42,8 @@ RADSimDesignContext::RADSimDesignContext() {
     int num_nodes = radsim_config.GetIntVectorKnob("noc_num_nodes", noc_id);
     _node_module_names[noc_id].resize(num_nodes);
   }
+  //AKB ADDED:
+  rad_done = false; //initially this RAD is not done its simulation design
 }
 
 RADSimDesignContext::~RADSimDesignContext() {}
@@ -680,4 +682,15 @@ uint64_t RADSimDesignContext::GetPortBaseAddress(std::string &port_name) {
   assert(_aximm_port_base_addresses.find(port_name) !=
          _aximm_port_base_addresses.end());
   return _aximm_port_base_addresses[port_name];
+}
+
+//AKB ADDED: returns info (because private member) of if the RAD is done simulation
+bool
+RADSimDesignContext::is_rad_done() {
+  return this->rad_done;
+}
+
+void
+RADSimDesignContext::set_rad_done() {
+  this->rad_done = true;
 }
