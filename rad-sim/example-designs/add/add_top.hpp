@@ -3,6 +3,7 @@
 #include <radsim_config.hpp>
 #include <adder.hpp>
 #include <client.hpp>
+#include <portal.hpp> //AKB ADDED
 #include <systemc.h>
 #include <vector>
 
@@ -10,6 +11,7 @@ class add_top : public sc_module {
 private:
   adder *adder_inst;
   client *client_inst;
+  portal *portal_inst; //AKB added
 
 public:
   sc_in<bool> rst;
@@ -20,6 +22,9 @@ public:
   sc_out<bool> client_ready;
   sc_out<sc_bv<DATAW>> response;
   sc_out<bool> response_valid;
+  //AKB ADDED for portal module:
+  sc_in<bool> portal_in;
+  sc_out<bool> portal_out;
 
   add_top(const sc_module_name &name, RADSimDesignContext* radsim_design); //AKB ADDED last arg
   ~add_top();

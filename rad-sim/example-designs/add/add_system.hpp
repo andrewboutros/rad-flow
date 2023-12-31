@@ -19,8 +19,13 @@ public:
   sc_clock *sysclk;
   add_driver *driver_inst;
   add_top *dut_inst;
+  //AKB added:
+  //sc_signal<bool> portal_in_sig;
+  //sc_signal<bool> portal_out_sig;
+  //sc_in<bool> portal_in;
+  //sc_out<bool> portal_out;
 
   add_system(const sc_module_name &name,
-                           sc_clock *driver_clk_sig, RADSimDesignContext* radsim_design); ////AKB added last arg
+                           sc_clock *driver_clk_sig, RADSimDesignContext* radsim_design); //AKB added last arg
   ~add_system();
 };

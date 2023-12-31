@@ -23,6 +23,13 @@ add_top::add_top(const sc_module_name &name, RADSimDesignContext* radsim_design)
   adder_inst->response(response);
   adder_inst->response_valid(response_valid);
 
+  //AKB: added code block for portal module
+  module_name_str = "portal_inst";
+  std::strcpy(module_name, module_name_str.c_str());
+  portal_inst = new portal(module_name, radsim_design);
+  portal_inst->portal_in(portal_in);
+  portal_inst->portal_out(portal_out);
+
   radsim_design->BuildDesignContext("add.place",
                                    "add.clks"); //AKB changed to ptr deref
   radsim_design->CreateSystemNoCs(rst); //AKB changed to ptr deref

@@ -23,6 +23,7 @@ int sc_main(int argc, char *argv[]) {
 	int num_traces = radsim_config.GetIntKnob("telemetry_num_traces");
 	sim_trace_probe.SetTraceRecordingSettings("sim.trace", num_traces);
 
+
 	sc_clock *driver_clk_sig = new sc_clock(
 		"node_clk0", radsim_config.GetDoubleKnob("sim_driver_period"), SC_NS);
 
@@ -33,12 +34,31 @@ int sc_main(int argc, char *argv[]) {
 
 	add_system *system2 = new add_system("add_system", driver_clk_sig2, radsim_design2); //AKB ADDED
 
+	//AKB ADDED signals
+	sc_signal<bool> in_1_out_2;
+	sc_signal<bool> in_2_out_1;
+	system->dut_inst->portal_in(in_1_out_2);
+	system->dut_inst->portal_out(in_2_out_1);
+	system2->dut_inst->portal_in(in_2_out_1);
+	system2->dut_inst->portal_out(in_1_out_2);
+
 	//sc_start(); //AKB commented out
 
 	//AKB ADDED this code blk: checking for flag to be set for both RADs before calling sc_stop();
+	//bool signal1 = 0;
+	//bool signal2 = 1;
 	while (!radsim_design1->is_rad_done() && !radsim_design2->is_rad_done()) {
 		sc_start(1, SC_NS);
+		/*in_1_out_2.write(signal1);
+		in_2_out_1.write(signal2);
+		signal1 = !(signal1 & signal1);
+		signal2 = !(signal2 & signal2);
+		std::cout << signal1 << std::endl;
+		std::cout << signal2 << std::endl;*/
+		std::cout << "read system portal_in: " << system->dut_inst->portal_in.read() << std::endl;
+		std::cout << "read system2 portal_in: " << system2->dut_inst->portal_in.read() << std::endl;
 	}
+	//std::cout << "stopping" << std::endl;
 	sc_stop();
 
 	delete system;
