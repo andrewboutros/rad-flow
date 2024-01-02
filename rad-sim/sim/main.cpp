@@ -4,6 +4,7 @@
 #include <radsim_config.hpp>
 #include <sstream>
 #include <systemc.h>
+#include <radsim_cluster.hpp> //AKB ADDED
 
 #include <add_system.hpp>
 
@@ -14,8 +15,12 @@ SimLog sim_log;
 SimTraceRecording sim_trace_probe;
 
 int sc_main(int argc, char *argv[]) {
-	RADSimDesignContext* radsim_design1 = new RADSimDesignContext(); //AKB: added
-	RADSimDesignContext* radsim_design2 = new RADSimDesignContext(); //AKB: added
+	//RADSimDesignContext* radsim_design1 = new RADSimDesignContext(); //AKB: added
+	//RADSimDesignContext* radsim_design2 = new RADSimDesignContext(); //AKB: added
+	
+	//AKB: using RADSimCluster class instead of creating new above
+	RADSimCluster* cluster = new RADSimCluster(2);
+
 	gWatchOut = &cout;
 	int log_verbosity = radsim_config.GetIntKnob("telemetry_log_verbosity");
 	sim_log.SetLogSettings(log_verbosity, "sim.log");
@@ -27,12 +32,12 @@ int sc_main(int argc, char *argv[]) {
 	sc_clock *driver_clk_sig = new sc_clock(
 		"node_clk0", radsim_config.GetDoubleKnob("sim_driver_period"), SC_NS);
 
-	add_system *system = new add_system("add_system", driver_clk_sig, radsim_design1); //AKB ADDED
+	add_system *system = new add_system("add_system", driver_clk_sig, cluster->all_rads[0]); //AKB ADDED
 
 	sc_clock *driver_clk_sig2 = new sc_clock(
 		"node_clk0", radsim_config.GetDoubleKnob("sim_driver_period"), SC_NS); //AKB ADDED
 
-	add_system *system2 = new add_system("add_system", driver_clk_sig2, radsim_design2); //AKB ADDED
+	add_system *system2 = new add_system("add_system", driver_clk_sig2, cluster->all_rads[1]); //AKB ADDED
 
 	//AKB ADDED signals
 	sc_signal<bool> in_1_out_2;
@@ -47,7 +52,7 @@ int sc_main(int argc, char *argv[]) {
 	//AKB ADDED this code blk: checking for flag to be set for both RADs before calling sc_stop();
 	//bool signal1 = 0;
 	//bool signal2 = 1;
-	while (!radsim_design1->is_rad_done() && !radsim_design2->is_rad_done()) {
+	while (cluster->AllRADsNotDone()) {
 		sc_start(1, SC_NS);
 		/*in_1_out_2.write(signal1);
 		in_2_out_1.write(signal2);
@@ -65,8 +70,8 @@ int sc_main(int argc, char *argv[]) {
 	delete system2; //AKB ADDED
 	delete driver_clk_sig;
 	delete driver_clk_sig2; //AKB ADDED
-	delete radsim_design1; //AKB ADDED
-	delete radsim_design2; //AKB ADDED
+	//delete radsim_design1; //AKB ADDED -- later removed bc have cluster destructor now
+	//delete radsim_design2; //AKB ADDED -- later removed bc have cluster destructor now
 	sc_flit scf;
 	scf.FreeAllFlits();
 	Flit *f = Flit::New();
