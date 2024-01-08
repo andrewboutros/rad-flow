@@ -88,10 +88,11 @@ uint64_t DeterminedBaseAddress(int noc_id, int node_id) {
   return base_addr;
 }
 
-void RADSimDesignContext::ParseNoCPlacement(
+void RADSimDesignContext::ParseNoCPlacement(const std::string &design_path, //AKB ADDED first arg
     const std::string &placement_filename) {
   std::string placement_filepath =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir") + "/" +
+      //radsim_config.GetStringKnob("radsim_user_design_root_dir") + "/" +
+      design_path + "/" +
       placement_filename;
   std::ifstream placement_file(placement_filepath);
 
@@ -293,9 +294,11 @@ void RADSimDesignContext::ParseNoCPlacement(
   }
 }
 
-void RADSimDesignContext::ParseClockSettings(const std::string &clks_filename) {
+void RADSimDesignContext::ParseClockSettings(const std::string &design_path, //AKB ADDED first arg
+  const std::string &clks_filename) {
   std::string clks_filepath =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir") + "/" +
+      //radsim_config.GetStringKnob("radsim_user_design_root_dir") + "/" +
+      design_path + "/" +
       clks_filename;
   std::ifstream clks_file(clks_filepath);
 
@@ -324,7 +327,7 @@ void RADSimDesignContext::RegisterModule(std::string module_name,
   _design_modules[module_name] = module_ptr;
 }
 
-void RADSimDesignContext::BuildDesignContext(
+void RADSimDesignContext::BuildDesignContext(const std::string &design_path, //AKB ADDED first arg
     const std::string &placement_filename, const std::string &clks_filename) {
   unsigned int num_nocs = radsim_config.GetIntKnob("noc_num_nocs");
   _node_id_is_aximm.resize(num_nocs);
@@ -342,8 +345,8 @@ void RADSimDesignContext::BuildDesignContext(
   _num_noc_aximm_slave_ports.resize(num_nocs);
   _num_noc_aximm_master_ports.resize(num_nocs);
 
-  ParseNoCPlacement(placement_filename);
-  ParseClockSettings(clks_filename);
+  ParseNoCPlacement(design_path, placement_filename); //AKB ADDED first arg
+  ParseClockSettings(design_path, clks_filename);
 
   for (unsigned int noc_id = 0; noc_id < num_nocs; noc_id++) {
     for (auto node_it = _node_id_ports_list[noc_id].begin();

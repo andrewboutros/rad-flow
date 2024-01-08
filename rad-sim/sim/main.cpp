@@ -7,6 +7,7 @@
 #include <radsim_cluster.hpp> //AKB ADDED
 
 #include <add_system.hpp>
+#include <mult_system.hpp> //AKB ADDED to test multi-design
 
 RADSimConfig radsim_config;
 //RADSimDesignContext radsim_design; //AKB: commented out
@@ -33,12 +34,14 @@ int sc_main(int argc, char *argv[]) {
 		"node_clk0", radsim_config.GetDoubleKnob("sim_driver_period"), SC_NS);
 
 	add_system *system = new add_system("add_system", driver_clk_sig, cluster->all_rads[0]); //AKB ADDED
+	//mult_system *system = new mult_system("mult_system", driver_clk_sig, cluster->all_rads[0]); //AKB ADDED
 
 	sc_clock *driver_clk_sig2 = new sc_clock(
 		"node_clk0", radsim_config.GetDoubleKnob("sim_driver_period"), SC_NS); //AKB ADDED
 
-	add_system *system2 = new add_system("add_system", driver_clk_sig2, cluster->all_rads[1]); //AKB ADDED
-
+	//add_system *system2 = new add_system("add_system", driver_clk_sig2, cluster->all_rads[1]); //AKB ADDED
+	mult_system *system2 = new mult_system("mult_system", driver_clk_sig2, cluster->all_rads[1]); //AKB ADDED
+	//npu_system *system3 = new npu_system("npu_system", driver_clk_sig2); //AKB ADDED to test design paths
 	//AKB ADDED signals
 	sc_signal<bool> in_1_out_2;
 	sc_signal<bool> in_2_out_1;

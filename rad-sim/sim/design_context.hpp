@@ -58,11 +58,11 @@ private:
 public:
   RADSimDesignContext();
   ~RADSimDesignContext();
-  void ParseNoCPlacement(const std::string &placement_filename);
-  void ParseClockSettings(const std::string &clks_filename);
+  void ParseNoCPlacement(const std::string &design_path, const std::string &placement_filename); //AKB added first arg
+  void ParseClockSettings(const std::string &design_path, const std::string &clks_filename); //AKB added first arg
   void RegisterModule(std::string module_name, RADSimModule *module_ptr);
-  void BuildDesignContext(const std::string &placement_filename,
-                          const std::string &clks_filename);
+  void BuildDesignContext(const std::string &design_path, const std::string &placement_filename,
+                          const std::string &clks_filename); //AKB added first arg
   void CreateSystemNoCs(sc_in<bool> &rst);
   void ConnectModulesToNoC();
 

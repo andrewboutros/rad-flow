@@ -18,8 +18,10 @@ include_directories(
   dram
   dram/DRAMsim3
   dram/DRAMsim3/src
-  ../example-designs/${DESIGN}
-  ../example-designs/${DESIGN}/modules
+  ../example-designs/add
+  ../example-designs/add/modules
+  ../example-designs/mult
+  ../example-designs/mult/modules
 )
 
 set(srcfiles
@@ -46,10 +48,10 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 add_library(radsim STATIC ${srcfiles} ${hdrfiles})
-target_link_libraries(radsim PUBLIC SystemC::systemc booksim noc dram design)
+target_link_libraries(radsim PUBLIC SystemC::systemc booksim noc dram design_add design_mult)
 
 add_executable(system main.cpp ${srcfiles} ${hdrfiles})
-target_link_libraries(system PUBLIC radsim SystemC::systemc booksim noc dram design)
+target_link_libraries(system PUBLIC radsim SystemC::systemc booksim noc dram design_add design_mult)
 add_custom_target(run
   COMMAND system
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

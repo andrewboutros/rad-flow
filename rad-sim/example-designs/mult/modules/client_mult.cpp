@@ -1,6 +1,6 @@
-#include <client.hpp>
+#include <client_mult.hpp>
 
-client::client(const sc_module_name &name, unsigned int fifo_depth, RADSimDesignContext* radsim_design)
+client_mult::client_mult(const sc_module_name &name, unsigned int fifo_depth, RADSimDesignContext* radsim_design)
     : RADSimModule(name, radsim_design) {
 
   this->radsim_design = radsim_design; //AKB ADDED
@@ -19,19 +19,19 @@ client::client(const sc_module_name &name, unsigned int fifo_depth, RADSimDesign
   this->RegisterModuleInfo();
 }
 
-client::~client() {}
+client_mult::~client_mult() {}
 
-void client::Assign() {
+void client_mult::Assign() {
   if (rst) {
     client_ready.write(true); // ready to accept requests from driver testbench
   } else {
-    // Ready to accept new addend from driver testbench as long as the addend
+    // Ready to accept new factor from driver testbench as long as the factor
     // FIFO is not full
     client_ready.write(!client_fifo_full.read());
   }
 }
 
-void client::Tick() {
+void client_mult::Tick() {
   // Reset logic
   axis_client_interface.tvalid.write(false);
   while (!client_tdata_fifo.empty()) {
@@ -55,8 +55,7 @@ void client::Tick() {
     // Sending transactions to AXI-S NoC
     if (!client_tdata_fifo.empty()) {
       sc_bv<DATAW> tdata = client_tdata_fifo.front();
-      std::string dst_port_name = "adder_inst.axis_adder_interface";
-      cout << dst_port_name << endl;
+      std::string dst_port_name = "mult_inst.axis_mult_interface";
       uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
       uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
 
@@ -82,7 +81,7 @@ void client::Tick() {
   }
 }
 
-void client::RegisterModuleInfo() {
+void client_mult::RegisterModuleInfo() {
   std::string port_name;
   _num_noc_axis_slave_ports = 0;
   _num_noc_axis_master_ports = 0;

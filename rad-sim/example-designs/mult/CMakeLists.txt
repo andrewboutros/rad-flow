@@ -12,24 +12,24 @@ include_directories(
 )
 
 set(srcfiles
-  modules/adder.cpp
-  modules/client.cpp
+  modules/mult.cpp
+  modules/client_mult.cpp
   modules/portal.cpp
-  add_top.cpp
-  add_driver.cpp
-  add_system.cpp
+  mult_top.cpp
+  mult_driver.cpp
+  mult_system.cpp
 )
 
 set(hdrfiles
-  modules/adder.hpp
-  modules/client.hpp
+  modules/mult.hpp
+  modules/client_mult.hpp
   modules/portal.hpp
-  add_top.hpp
-  add_driver.hpp
-  add_system.hpp
+  mult_top.hpp
+  mult_driver.hpp
+  mult_system.hpp
 )
 
 add_compile_options(-Wall -Wextra -pedantic)
 
-add_library(design_add STATIC ${srcfiles} ${hdrfiles})
-target_link_libraries(design_add PUBLIC SystemC::systemc booksim noc)
+add_library(design_mult STATIC ${srcfiles} ${hdrfiles})
+target_link_libraries(design_mult PUBLIC SystemC::systemc booksim noc)
