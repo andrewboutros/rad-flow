@@ -5,6 +5,7 @@
 #include <sstream>
 #include <systemc.h>
 #include <radsim_cluster.hpp> //AKB ADDED
+#include <radsim_inter_rad.hpp> //AKB ADDED
 
 #include <add_system.hpp>
 #include <mult_system.hpp> //AKB ADDED to test multi-design
@@ -41,14 +42,23 @@ int sc_main(int argc, char *argv[]) {
 
 	//add_system *system2 = new add_system("add_system", driver_clk_sig2, cluster->all_rads[1]); //AKB ADDED
 	mult_system *system2 = new mult_system("mult_system", driver_clk_sig2, cluster->all_rads[1]); //AKB ADDED
+	cluster->StoreSystemIn(system->dut_inst->portal_out); //AKB ADDED
+	cluster->StoreSystemOut(system->dut_inst->portal_in); //AKB ADDED
+	cluster->StoreSystemIn(system2->dut_inst->portal_out); //AKB ADDED
+	cluster->StoreSystemOut(system2->dut_inst->portal_in); //AKB ADDED
 	//npu_system *system3 = new npu_system("npu_system", driver_clk_sig2); //AKB ADDED to test design paths
+
+	//AKB ADDED:
+	RADSimInterRad* blackbox = new RADSimInterRad(cluster);
+	//blackbox->ConnectRadPair(0, 1);
+	
 	//AKB ADDED signals
-	sc_signal<bool> in_1_out_2;
+	/*sc_signal<bool> in_1_out_2;
 	sc_signal<bool> in_2_out_1;
 	system->dut_inst->portal_in(in_1_out_2);
 	system->dut_inst->portal_out(in_2_out_1);
 	system2->dut_inst->portal_in(in_2_out_1);
-	system2->dut_inst->portal_out(in_1_out_2);
+	system2->dut_inst->portal_out(in_1_out_2);*/
 
 	//sc_start(); //AKB commented out
 

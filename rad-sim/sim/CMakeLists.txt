@@ -31,6 +31,7 @@ set(srcfiles
   radsim_telemetry.cpp
   radsim_utils.cpp
   radsim_cluster.cpp
+  radsim_inter_rad.cpp
 )
 
 set(hdrfiles
@@ -41,6 +42,7 @@ set(hdrfiles
   radsim_telemetry.hpp
   radsim_utils.hpp
   radsim_cluster.hpp
+  radsim_inter_rad.hpp
 )
 
 add_compile_options(-Wall -Wextra -pedantic)
