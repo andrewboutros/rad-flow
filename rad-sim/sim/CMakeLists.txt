@@ -43,6 +43,7 @@ set(hdrfiles
   radsim_utils.hpp
   radsim_cluster.hpp
   radsim_inter_rad.hpp
+  design_top.hpp
 )
 
 add_compile_options(-Wall -Wextra -pedantic)

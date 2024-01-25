@@ -44,7 +44,7 @@ RADSimCluster::AllRADsNotDone() {
     return false;
 }
 
-void
+/*void
 RADSimCluster::StoreSystemIn(sc_in<bool> system_in) {
     all_systems_in.push_back(system_in);
 }
@@ -52,4 +52,4 @@ RADSimCluster::StoreSystemIn(sc_in<bool> system_in) {
 void
 RADSimCluster::StoreSystemOut(sc_out<bool> system_out) {
     all_systems_out.push_back(system_out);
-}
+}*/
