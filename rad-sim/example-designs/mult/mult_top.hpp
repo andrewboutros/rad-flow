@@ -6,8 +6,9 @@
 #include <portal.hpp> //AKB ADDED
 #include <systemc.h>
 #include <vector>
+#include <design_top.hpp> //AKB ADDED
 
-class mult_top : public sc_module {
+class mult_top : public design_top {
 private:
   mult *mult_inst;
   client_mult *client_inst;
@@ -23,8 +24,8 @@ public:
   sc_out<sc_bv<DATAW>> response;
   sc_out<bool> response_valid;
   //AKB ADDED for portal module:
-  sc_in<bool> portal_in;
-  sc_out<bool> portal_out;
+  //sc_in<bool> portal_in;
+  //sc_out<bool> portal_out;
 
   mult_top(const sc_module_name &name, RADSimDesignContext* radsim_design); //AKB ADDED last arg
   ~mult_top();

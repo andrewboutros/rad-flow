@@ -24,6 +24,7 @@ mult_system::mult_system(const sc_module_name &name, sc_clock *driver_clk_sig, R
   dut_inst->response(response_sig);
   dut_inst->response_valid(response_valid_sig);
   //AKB added:
+  this->design_dut_inst = dut_inst;
   //dut_inst->portal_in(portal_in_sig);
   //dut_inst->portal_out(portal_out_sig);
 }

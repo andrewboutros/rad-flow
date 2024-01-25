@@ -49,16 +49,27 @@ int sc_main(int argc, char *argv[]) {
 	//npu_system *system3 = new npu_system("npu_system", driver_clk_sig2); //AKB ADDED to test design paths
 
 	//AKB ADDED:
+	cluster->StoreSystem(system);
+	cluster->StoreSystem(system2);
 	RADSimInterRad* blackbox = new RADSimInterRad(cluster);
-	//blackbox->ConnectRadPair(0, 1);
+	blackbox->ConnectRadPair(0, 1);
 	
-	//AKB ADDED signals
-	sc_signal<bool> in_1_out_2;
+	//AKB ADDED signals -- this works
+	/*sc_signal<bool> in_1_out_2;
 	sc_signal<bool> in_2_out_1;
 	system->dut_inst->portal_in(in_1_out_2);
 	system->dut_inst->portal_out(in_2_out_1);
 	system2->dut_inst->portal_in(in_2_out_1);
-	system2->dut_inst->portal_out(in_1_out_2);
+	system2->dut_inst->portal_out(in_1_out_2);*/
+
+	//AKB experimenting with new classes
+	//design_system* design_system_inst = system;
+	/*sc_signal<bool> in_1_out_2;
+	sc_signal<bool> in_2_out_1;
+	cluster->all_systems[0]->design_dut_inst->portal_in(in_1_out_2);
+	cluster->all_systems[0]->design_dut_inst->portal_out(in_2_out_1);
+	cluster->all_systems[1]->design_dut_inst->portal_in(in_2_out_1);
+	cluster->all_systems[1]->design_dut_inst->portal_out(in_1_out_2);*/
 
 	//sc_start(); //AKB commented out
 

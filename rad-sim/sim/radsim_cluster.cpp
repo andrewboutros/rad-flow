@@ -44,12 +44,12 @@ RADSimCluster::AllRADsNotDone() {
     return false;
 }
 
-/*void
-RADSimCluster::StoreSystemIn(sc_in<bool> system_in) {
-    all_systems_in.push_back(system_in);
+void
+RADSimCluster::StoreSystem(design_system* system) {
+    all_systems.push_back(system);
 }
 
-void
+/*void
 RADSimCluster::StoreSystemOut(sc_out<bool> system_out) {
     all_systems_out.push_back(system_out);
 }*/

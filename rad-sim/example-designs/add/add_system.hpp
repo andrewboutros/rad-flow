@@ -4,8 +4,9 @@
 #include <add_top.hpp>
 #include <chrono>
 #include <vector>
+#include <design_system.hpp>
 
-class add_system : public sc_module {
+class add_system : public design_system {
 private:
   sc_signal<sc_bv<DATAW>> client_tdata_sig;
   sc_signal<bool> client_tlast_sig;
