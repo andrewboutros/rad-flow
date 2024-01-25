@@ -7,26 +7,51 @@ import shutil
 def parse_config_file(config_filename, booksim_params, radsim_header_params, radsim_knobs):
     with open(config_filename, 'r') as yaml_config:
         config = yaml.safe_load(yaml_config)
+    
+    for config_section in config:
+        #print(config_section + ':')
+        for param_category, param in config[config_section].items():
+            if (isinstance(param, dict)):
+                #print('     ' + param_category + ':')
+                for param, param_value in param.items():
+                    #print('         ' + param, param_value)
+                    param_name = param_category + '_' + param
+                    invalid_param = True
+                    if param_name in booksim_params:
+                        booksim_params[param_name] = param_value
+                        invalid_param = False
+                    if param_name in radsim_header_params:
+                        radsim_header_params[param_name] = param_value
+                        invalid_param = False
+                    if param_name in radsim_knobs:
+                        radsim_knobs[param_name] = param_value
+                        invalid_param = False
 
-    for param_category in config:
-        for param, param_value in config[param_category].items():
-            param_name = param_category + '_' + param
-            invalid_param = True
-            if param_name in booksim_params:
-                booksim_params[param_name] = param_value
-                invalid_param = False
-            if param_name in radsim_header_params:
-                radsim_header_params[param_name] = param_value
-                invalid_param = False
-            if param_name in radsim_knobs:
-                radsim_knobs[param_name] = param_value
-                invalid_param = False
+                    if invalid_param:
+                        print("Config Error: Parameter " + param_name + " is invalid!")
+                        exit(1)
+            elif config_section == "cluster":
+                param_value = param #bc no subsection, so correction
+                param = param_category #bc no subsection, so correction
+                #print('     ' + param, param_value)
+                param_name = 'cluster_' + param
+                #print(param_name)
+                invalid_param = True
+                if param_name in booksim_params:
+                    booksim_params[param_name] = param_value
+                    invalid_param = False
+                if param_name in radsim_header_params:
+                    radsim_header_params[param_name] = param_value
+                    invalid_param = False
+                if param_name in radsim_knobs:
+                    radsim_knobs[param_name] = param_value
+                    invalid_param = False
 
-            if invalid_param:
-                print("Config Error: Parameter " + param_name + " is invalid!")
-                exit(1)
+                if invalid_param:
+                    print("Config Error: Parameter " + param_name + " is invalid!")
+                    exit(1)
 
-    noc_num_nodes = []
+    '''noc_num_nodes = []
     for n in range(radsim_knobs["noc_num_nocs"]):
         noc_num_nodes.append(0)
     radsim_knobs["noc_num_nodes"] = noc_num_nodes
@@ -38,7 +63,7 @@ def parse_config_file(config_filename, booksim_params, radsim_header_params, rad
     for p in radsim_knobs["design_clk_periods"]:
         if p > longest_clk_period:
             longest_clk_period = p
-    radsim_knobs["sim_driver_period"] = longest_clk_period
+    radsim_knobs["sim_driver_period"] = longest_clk_period'''
     
 
 def print_config(booksim_params, radsim_header_params, radsim_knobs):
@@ -55,7 +80,7 @@ def print_config(booksim_params, radsim_header_params, radsim_knobs):
 
 def generate_booksim_config_files(booksim_params, radsim_header_params, radsim_knobs):
     for i in range(booksim_params["noc_num_nocs"]):
-        booksim_config_file = open(booksim_params["radsim_root_dir"] + "/sim/noc/noc" + str(i) + "_config", "w")
+        booksim_config_file = open(booksim_params["radsim_root_dir"] + "/sim/noc/noc" + str(i) + "_config_akb_test", "w") #AKB created temp file to test
 
         # Booksim topology configuration
         booksim_config_file.write("// Topology\n")
@@ -148,7 +173,7 @@ def generate_booksim_config_files(booksim_params, radsim_header_params, radsim_k
 
 
 def generate_radsim_params_header(radsim_header_params):
-    radsim_params_header_file = open(radsim_header_params["radsim_root_dir"] + "/sim/radsim_defines.hpp", "w")
+    radsim_params_header_file = open(radsim_header_params["radsim_root_dir"] + "/sim/radsim_defines_akb_test.hpp", "w") #AKB created temp file to test
     radsim_params_header_file.write("#pragma once\n\n")
     radsim_params_header_file.write("// clang-format off\n")
     radsim_params_header_file.write('#define RADSIM_ROOT_DIR "' + radsim_header_params["radsim_root_dir"] + '"\n\n')
@@ -248,7 +273,7 @@ def generate_radsim_params_header(radsim_header_params):
 
 
 def generate_radsim_config_file(radsim_knobs):
-    radsim_config_file = open(radsim_header_params["radsim_root_dir"] + "/sim/radsim_knobs", "w")
+    radsim_config_file = open(radsim_header_params["radsim_root_dir"] + "/sim/radsim_knobs_akb_test", "w") #AKB created temp file to test
     for param in radsim_knobs:
         radsim_config_file.write(param + " ")
         if isinstance(radsim_knobs[param], list):
@@ -260,7 +285,7 @@ def generate_radsim_config_file(radsim_knobs):
     radsim_config_file.close()
 
 def generate_radsim_main(design_name):
-    main_cpp_file = open(radsim_header_params["radsim_root_dir"] + "/sim/main.cpp", "w")
+    main_cpp_file = open(radsim_header_params["radsim_root_dir"] + "/sim/main_akb_test.cpp", "w") #AKB created temp file to test
     main_cpp_file.write("#include <design_context.hpp>\n")
     main_cpp_file.write("#include <fstream>\n")
     main_cpp_file.write("#include <iostream>\n")
@@ -297,25 +322,40 @@ def generate_radsim_main(design_name):
     main_cpp_file.write("\treturn 0;\n")
     main_cpp_file.write("}\n")
 
-def prepare_build_dir(design_name):
-    if os.path.isdir("build"):
-        shutil.rmtree("build", ignore_errors=True)
-    os.makedirs("build")
-    os.system("cd build; cmake -DDESIGN:STRING=" + design_name + " ..; cd ..;")
+def prepare_build_dir(design_names):
+    if os.path.isdir("build_akb_test"):
+        shutil.rmtree("build_akb_test", ignore_errors=True)
+    os.makedirs("build_akb_test")
+    #os.system("cd build_akb_test; cmake -DDESIGN:STRING=" + design_name + " ..; cd ..;")
+    os.system("cd build_akb_test;")
+    semicol_sep_design_names = ''
+    flag_first_design = True
+    for design_name in design_names:
+        semicol_sep_design_names += design_name
+        if not flag_first_design:
+            semicol_sep_design_names += ';' 
+        flag_first_design = False
+    os.system("cmake -DDESIGN_NAMES=" + semicol_sep_design_names + " ..;")
+    os.system("cd ..;")
 
 # Get design name from command line argument
 if len(sys.argv) < 2:
     print("Invalid arguments: python config.py <design_name>")
     exit(1)
-design_name = sys.argv[1]
+design_names = set() #No duplicating design include statements and cmake commands
+for i in range(1, len(sys.argv)): #skip 0th argument (that is current program name)
+    design_names.add(sys.argv[i])
+    print(sys.argv[i])
 
 # Check if design directory exists
-if not(os.path.isdir(os.getcwd() + "/example-designs/" + design_name)):
-    print("Cannot find design directory under rad-sim/example-designs/")
-    exit(1)
+for design_name in design_names:
+    if not(os.path.isdir(os.getcwd() + "/example-designs/" + design_name)):
+        print("Cannot find design directory under rad-sim/example-designs/")
+        exit(1)
 
 # Point to YAML configuration file
-config_filename = "example-designs/" + design_name + "/config.yml"
+#config_filename = "example-designs/" + design_name + "/config.yml"
+config_filename = "uni_config.yml"
 
 # List default parameter values
 booksim_params = {
@@ -355,7 +395,7 @@ radsim_header_params = {
     "interfaces_axi_user_width": 64,
     "interfaces_max_axi_data_width": 512,
 }
-radsim_knobs = {
+radsim_knobs = { #includes cluster config
     "radsim_root_dir": os.getcwd(),
     "design_name": design_name,
     "noc_num_nocs": 1,
@@ -378,17 +418,22 @@ radsim_knobs = {
     "dram_clk_periods": [2.0],
     "dram_queue_sizes": [64],
     "dram_config_files": ["HBM2_8Gb_x128"],
+    "cluster_num_rads":[1],
+    "cluster_configs":["config_0"],
+    "cluster_topology":["all-to-all"],
+    "cluster_connection_model":["wire"]
+
 }
 
 # Parse configuration file
 parse_config_file(config_filename, booksim_params, radsim_header_params, radsim_knobs)
-#print_config(booksim_params, radsim_header_params, radsim_knobs)
+print_config(booksim_params, radsim_header_params, radsim_knobs)
 
 # Generate RAD-Sim input files
-generate_booksim_config_files(booksim_params, radsim_header_params, radsim_knobs)
+'''generate_booksim_config_files(booksim_params, radsim_header_params, radsim_knobs)
 generate_radsim_params_header(radsim_header_params)
 generate_radsim_config_file(radsim_knobs)
 generate_radsim_main(design_name)
-prepare_build_dir(design_name)
+prepare_build_dir(design_names)
 
-print("RAD-Sim was configured successfully!")
+print("RAD-Sim was configured successfully!")'''
