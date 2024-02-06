@@ -3,7 +3,7 @@
 #include <radsim_config.hpp>
 #include <mult.hpp>
 #include <client_mult.hpp>
-#include <portal.hpp> //AKB ADDED
+#include <portal_mult.hpp> //AKB ADDED
 #include <systemc.h>
 #include <vector>
 #include <design_top.hpp> //AKB ADDED
@@ -12,7 +12,7 @@ class mult_top : public design_top {
 private:
   mult *mult_inst;
   client_mult *client_inst;
-  portal *portal_inst; //AKB added
+  portal_mult *portal_inst; //AKB added
 
 public:
   sc_in<bool> rst;

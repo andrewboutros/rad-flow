@@ -10,17 +10,17 @@
 #include <systemc.h>
 #include <vector>
 
-class portal : public RADSimModule {
+class portal_mult : public RADSimModule {
     private:
     public:
     sc_in<bool> portal_in;
     sc_out<bool> portal_out;
 
-    portal(const sc_module_name &name, RADSimDesignContext* radsim_design); //AKB added last arg
-    ~portal();
+    portal_mult(const sc_module_name &name, RADSimDesignContext* radsim_design); //AKB added last arg
+    ~portal_mult();
 
     //void Assign(); // Combinational logic process
     void Tick();   // Sequential logic process
-    SC_HAS_PROCESS(portal);
+    SC_HAS_PROCESS(portal_mult);
     void RegisterModuleInfo(); //even tho did not add AXI Interface, need because is virtual fn in derived class
 };

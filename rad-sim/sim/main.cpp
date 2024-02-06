@@ -17,9 +17,6 @@ SimLog sim_log;
 SimTraceRecording sim_trace_probe;
 
 int sc_main(int argc, char *argv[]) {
-	//RADSimDesignContext* radsim_design1 = new RADSimDesignContext(); //AKB: added
-	//RADSimDesignContext* radsim_design2 = new RADSimDesignContext(); //AKB: added
-	
 	//AKB: using RADSimCluster class instead of creating new above
 	RADSimCluster* cluster = new RADSimCluster(2);
 
@@ -42,48 +39,16 @@ int sc_main(int argc, char *argv[]) {
 
 	//add_system *system2 = new add_system("add_system", driver_clk_sig2, cluster->all_rads[1]); //AKB ADDED
 	mult_system *system2 = new mult_system("mult_system", driver_clk_sig2, cluster->all_rads[1]); //AKB ADDED
-	/*cluster->StoreSystemIn(system->dut_inst->portal_out); //AKB ADDED
-	cluster->StoreSystemOut(system->dut_inst->portal_in); //AKB ADDED
-	cluster->StoreSystemIn(system2->dut_inst->portal_out); //AKB ADDED
-	cluster->StoreSystemOut(system2->dut_inst->portal_in);*/ //AKB ADDED
-	//npu_system *system3 = new npu_system("npu_system", driver_clk_sig2); //AKB ADDED to test design paths
-
+	
 	//AKB ADDED:
 	cluster->StoreSystem(system);
 	cluster->StoreSystem(system2);
 	RADSimInterRad* blackbox = new RADSimInterRad(cluster);
 	blackbox->ConnectRadPair(0, 1);
 	
-	//AKB ADDED signals -- this works
-	/*sc_signal<bool> in_1_out_2;
-	sc_signal<bool> in_2_out_1;
-	system->dut_inst->portal_in(in_1_out_2);
-	system->dut_inst->portal_out(in_2_out_1);
-	system2->dut_inst->portal_in(in_2_out_1);
-	system2->dut_inst->portal_out(in_1_out_2);*/
-
-	//AKB experimenting with new classes
-	//design_system* design_system_inst = system;
-	/*sc_signal<bool> in_1_out_2;
-	sc_signal<bool> in_2_out_1;
-	cluster->all_systems[0]->design_dut_inst->portal_in(in_1_out_2);
-	cluster->all_systems[0]->design_dut_inst->portal_out(in_2_out_1);
-	cluster->all_systems[1]->design_dut_inst->portal_in(in_2_out_1);
-	cluster->all_systems[1]->design_dut_inst->portal_out(in_1_out_2);*/
-
-	//sc_start(); //AKB commented out
-
-	//AKB ADDED this code blk: checking for flag to be set for both RADs before calling sc_stop();
-	//bool signal1 = 0;
-	//bool signal2 = 1;
+	
 	while (cluster->AllRADsNotDone()) {
 		sc_start(1, SC_NS);
-		/*in_1_out_2.write(signal1);
-		in_2_out_1.write(signal2);
-		signal1 = !(signal1 & signal1);
-		signal2 = !(signal2 & signal2);
-		std::cout << signal1 << std::endl;
-		std::cout << signal2 << std::endl;*/
 		std::cout << "read system portal_in: " << system->dut_inst->portal_in.read() << std::endl;
 		std::cout << "read system2 portal_in: " << system2->dut_inst->portal_in.read() << std::endl;
 	}
@@ -94,8 +59,6 @@ int sc_main(int argc, char *argv[]) {
 	delete system2; //AKB ADDED
 	delete driver_clk_sig;
 	delete driver_clk_sig2; //AKB ADDED
-	//delete radsim_design1; //AKB ADDED -- later removed bc have cluster destructor now
-	//delete radsim_design2; //AKB ADDED -- later removed bc have cluster destructor now
 	sc_flit scf;
 	scf.FreeAllFlits();
 	Flit *f = Flit::New();

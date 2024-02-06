@@ -128,6 +128,9 @@ struct axis_signal {
   // Helper function for connecting the AXI-stream master and slave ports of two
   // modules
   void Connect(axis_master_port &m, axis_slave_port &s) {
+    //AKB ADDED few lines below TO TEST
+    //std::cout << "Here in Connect in axis_interface.hpp" << endl;
+    //std::cout << "master " << &m << " and slave " << &s << endl;
     // Connect signal to master port
     m.tvalid(tvalid);
     m.tready(tready);

@@ -15,6 +15,9 @@ class portal : public RADSimModule {
     public:
     sc_in<bool> portal_in;
     sc_out<bool> portal_out;
+    //Interfaces to the NoC
+    axis_slave_port axis_add_portal_slave_interface;
+    //axis_master_port axis_add_portal_master_interface;
 
     portal(const sc_module_name &name, RADSimDesignContext* radsim_design); //AKB added last arg
     ~portal();

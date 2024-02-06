@@ -1,6 +1,6 @@
-#include <portal.hpp>
+#include <portal_mult.hpp>
 
-portal::portal(const sc_module_name &name, RADSimDesignContext* radsim_design) //AKB added last arg
+portal_mult::portal_mult(const sc_module_name &name, RADSimDesignContext* radsim_design) //AKB added last arg
     : RADSimModule(name, radsim_design) {
 
     //maybe add combinational logic if applicable later
@@ -9,32 +9,32 @@ portal::portal(const sc_module_name &name, RADSimDesignContext* radsim_design) /
 }
 
 
-portal::~portal() {}
+portal_mult::~portal_mult() {}
 
 /*void portal::Assign() { //combinational logic
     //maybe add reset signal later
 }*/
 
-bool counter = 0;
-void portal::Tick() { //sequential logic
-    portal_out.write(counter);
+bool counter_mult = 0;
+void portal_mult::Tick() { //sequential logic
+    portal_out.write(counter_mult);
     wait();
     //Always @ positive edge of clock
     while (true) {
-        if (counter == 0) {
-            counter = 1;
+        if (counter_mult == 0) {
+            counter_mult = 1;
         }
         else {
-            counter = 0;
+            counter_mult = 0;
         }
-        portal_out.write(counter);
+        portal_out.write(counter_mult);
         //std::cout << module_name << ": Wire in is showing " << portal_in.read() << std::endl;
         //std::cout << counter << std::endl;
         wait();
     }
 }
 
-void portal::RegisterModuleInfo() {
+void portal_mult::RegisterModuleInfo() {
     //I don't think this is needed unless I add AXI Interface -- nvm, need bc is virtual fn in derived class
     
 }

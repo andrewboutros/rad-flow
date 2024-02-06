@@ -14,7 +14,7 @@ include_directories(
 set(srcfiles
   modules/mult.cpp
   modules/client_mult.cpp
-  modules/portal.cpp
+  modules/portal_mult.cpp
   mult_top.cpp
   mult_driver.cpp
   mult_system.cpp
@@ -23,7 +23,7 @@ set(srcfiles
 set(hdrfiles
   modules/mult.hpp
   modules/client_mult.hpp
-  modules/portal.hpp
+  modules/portal_mult.hpp
   mult_top.hpp
   mult_driver.hpp
   mult_system.hpp

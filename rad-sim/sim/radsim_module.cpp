@@ -17,12 +17,14 @@ void RADSimModule::RegisterAxisSlavePort(std::string &port_name,
                                           axis_slave_port *port_ptr,
                                           unsigned int port_dataw,
                                           unsigned int port_type) {
+  //std::cout << "Adding AxisSlavePort named: " << port_name << endl; //AKB ADDED TO TEST, remove after
   _ordered_axis_slave_ports.push_back(port_name);
   _axis_slave_ports[port_name] = port_ptr;
   _ports_dataw[port_name] = port_dataw;
   _ports_types[port_name] = port_type;
   _ports_is_aximm[port_name] = false;
   _num_noc_axis_slave_ports++;
+  //std::cout << "Added AxisSlavePort named: " << _axis_slave_ports[port_name] << endl; //AKB ADDED TO TEST, remove after
 }
 
 void RADSimModule::RegisterAxisMasterPort(std::string &port_name,
