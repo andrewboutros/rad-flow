@@ -36,5 +36,13 @@ void portal_mult::Tick() { //sequential logic
 
 void portal_mult::RegisterModuleInfo() {
     //I don't think this is needed unless I add AXI Interface -- nvm, need bc is virtual fn in derived class
-    
+    /*std::string port_name;
+    _num_noc_axis_slave_ports = 0;
+    _num_noc_axis_master_ports = 0;
+    _num_noc_aximm_slave_ports = 0;
+    _num_noc_aximm_master_ports = 0;
+
+    port_name = module_name + ".axis_mult_portal_slave_interface";
+    //std::cout << port_name << std::endl;
+    RegisterAxisSlavePort(port_name, &axis_mult_portal_slave_interface, DATAW, 0);*/
 }
