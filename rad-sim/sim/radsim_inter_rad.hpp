@@ -7,11 +7,13 @@
 #include <string>
 #include <radsim_cluster.hpp>
 
+#define DATAW 128
+
 class RADSimInterRad { //: public sc_module {
     private:
         RADSimCluster* cluster;
         //std::vector<sc_signal<bool>> all_signals;
-        sc_vector<sc_signal<bool>> all_signals{"all_signals"};
+        sc_vector<sc_signal<sc_bv<DATAW>>> all_signals{"all_signals"};
     public:
         RADSimInterRad(RADSimCluster* cluster);
         ~RADSimInterRad();

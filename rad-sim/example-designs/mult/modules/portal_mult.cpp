@@ -15,7 +15,7 @@ portal_mult::~portal_mult() {}
     //maybe add reset signal later
 }*/
 
-bool counter_mult = 0;
+int counter_mult = 0;
 void portal_mult::Tick() { //sequential logic
     portal_out.write(counter_mult);
     wait();

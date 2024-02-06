@@ -17,7 +17,7 @@ portal::~portal() {}
     //maybe add reset signal later
 //}
 
-bool counter = 0;
+int counter = 0;
 void portal::Tick() { //sequential logic
     portal_out.write(counter);
     wait();

@@ -13,8 +13,8 @@
 class portal : public RADSimModule {
     private:
     public:
-    sc_in<bool> portal_in;
-    sc_out<bool> portal_out;
+    sc_in<sc_bv<DATAW>> portal_in;
+    sc_out<sc_bv<DATAW>> portal_out;
     //Interfaces to the NoC
     axis_slave_port axis_add_portal_slave_interface;
     axis_master_port axis_add_portal_master_interface;
