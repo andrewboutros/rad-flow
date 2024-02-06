@@ -16,7 +16,7 @@ class portal_mult : public RADSimModule {
     sc_in<sc_bv<DATAW>> portal_in;
     sc_out<sc_bv<DATAW>> portal_out;
     //Interfaces to the NoC
-    //axis_slave_port axis_mult_portal_slave_interface;
+    axis_slave_port axis_mult_portal_slave_interface;
 
     portal_mult(const sc_module_name &name, RADSimDesignContext* radsim_design); //AKB added last arg
     ~portal_mult();

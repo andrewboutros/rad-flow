@@ -7,6 +7,7 @@
 #include <systemc.h>
 #include <vector>
 #include <design_top.hpp> //AKB ADDED
+#include <radsim_module.hpp>
 
 class mult_top : public design_top {
 private:

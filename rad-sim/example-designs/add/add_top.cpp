@@ -29,6 +29,7 @@ add_top::add_top(const sc_module_name &name, RADSimDesignContext* radsim_design)
   portal_inst = new portal(module_name, radsim_design);
   portal_inst->portal_in(this->portal_in); //connecting portal's portal_in to the parent class system_top's portal_in
   portal_inst->portal_out(this->portal_out);
+  this->top_axis_portal_interface = &(portal_inst->axis_add_portal_slave_interface);
 
   radsim_design->BuildDesignContext("/home/bassiabn/rad-sim/rad-flow/rad-sim/example-designs/add", "add.place",
                                    "add.clks"); //AKB changed to ptr deref and added first arg
