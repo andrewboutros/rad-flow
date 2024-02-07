@@ -7,6 +7,10 @@ mult_driver::mult_driver(const sc_module_name &name, RADSimDesignContext* radsim
   
   this->radsim_design_ = radsim_design; //AKB ADDED: update member for later use
 
+  //for simulation cycle count
+  start_cycle = 0;
+  end_cycle = 0;
+
   // Random Seed
   srand (time(NULL));
   actual_product = 1;
@@ -33,6 +37,7 @@ void mult_driver::source() {
   client_valid.write(false);
   wait();
   rst.write(false);
+  start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
   wait();
 
   while (!numbers_to_send.empty()) {
@@ -60,6 +65,10 @@ void mult_driver::sink() {
 
   if (response.read() != actual_product) std::cout << "FAILURE - Output is not matching!" << std::endl;
   else std::cout << "SUCCESS - Output is matching!" << std::endl;
+
+  end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+  std::cout << "Simulation Cycles for Just Mult Portion = " << end_cycle - start_cycle << std::endl;
+
 
   //sc_stop(); //AKB: replaced with setting flag
   this->radsim_design_->set_rad_done(); //AKB ADDED: flag to replace sc_stop calls

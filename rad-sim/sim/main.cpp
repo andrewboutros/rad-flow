@@ -46,14 +46,17 @@ int sc_main(int argc, char *argv[]) {
 	RADSimInterRad* blackbox = new RADSimInterRad(cluster);
 	blackbox->ConnectRadPair(0, 1);
 	
-	
+	int start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
 	while (cluster->AllRADsNotDone()) {
 		sc_start(1, SC_NS);
 		//std::cout << "read system portal_in: " << system->dut_inst->portal_in.read() << std::endl;
 		//std::cout << "read system2 portal_in: " << system2->dut_inst->portal_in.read() << std::endl;
 	}
 	//std::cout << "stopping" << std::endl;
+	int end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
 	sc_stop();
+	//int end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+	std::cout << "Simulation Cycles from main.cpp = " << end_cycle - start_cycle << std::endl;
 
 	delete system;
 	delete system2; //AKB ADDED
