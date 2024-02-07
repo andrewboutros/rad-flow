@@ -49,8 +49,8 @@ int sc_main(int argc, char *argv[]) {
 	
 	while (cluster->AllRADsNotDone()) {
 		sc_start(1, SC_NS);
-		std::cout << "read system portal_in: " << system->dut_inst->portal_in.read() << std::endl;
-		std::cout << "read system2 portal_in: " << system2->dut_inst->portal_in.read() << std::endl;
+		//std::cout << "read system portal_in: " << system->dut_inst->portal_in.read() << std::endl;
+		//std::cout << "read system2 portal_in: " << system2->dut_inst->portal_in.read() << std::endl;
 	}
 	//std::cout << "stopping" << std::endl;
 	sc_stop();

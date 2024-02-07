@@ -10,6 +10,7 @@
 
 class add_driver : public sc_module {
 private:
+  int start_cycle, end_cycle;
   std::queue<int> numbers_to_send;
   int actual_sum;
   RADSimDesignContext* radsim_design_; //AKB ADDED: store ptr passed into constructor for use in source() and sink()
