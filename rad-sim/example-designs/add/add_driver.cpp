@@ -57,7 +57,7 @@ void add_driver::source() {
 }
 
 void add_driver::sink() {
-  while (!response_valid.read()) {
+  while (!(response_valid.read() && portal_recvd.read())) {
     wait();
   }
   std::cout << "Received " << response.read().to_uint64() << " sum from the adder!" << std::endl;

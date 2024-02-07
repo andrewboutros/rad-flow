@@ -47,10 +47,17 @@ int sc_main(int argc, char *argv[]) {
 	blackbox->ConnectRadPair(0, 1);
 	
 	int start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+	sc_bv<128> new_val;
+	sc_bv<128> old_val = system2->dut_inst->portal_in.read();
 	while (cluster->AllRADsNotDone()) {
 		sc_start(1, SC_NS);
 		//std::cout << "read system portal_in: " << system->dut_inst->portal_in.read() << std::endl;
-		//std::cout << "read system2 portal_in: " << system2->dut_inst->portal_in.read() << std::endl;
+		new_val = system2->dut_inst->portal_in.read();
+		//if (val != 0) {
+		if (new_val != old_val) { //to ensure only displayed once
+			std::cout << "read system2 portal_in: " << new_val << std::endl;
+			old_val = new_val;
+		}
 	}
 	//std::cout << "stopping" << std::endl;
 	int end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));

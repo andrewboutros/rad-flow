@@ -3,6 +3,8 @@
 adder::adder(const sc_module_name &name, RADSimDesignContext* radsim_design) //AKB added last arg
     : RADSimModule(name, radsim_design) {
 
+  this->radsim_design = radsim_design;
+
   // Combinational logic and its sensitivity list
   SC_METHOD(Assign);
   sensitive << rst;
@@ -32,6 +34,7 @@ void adder::Tick() {
   response.write(0);
   wait();
 
+  bool sent_first_addend = false;
   // Always @ positive edge of the clock
   while (true) {
     // Receiving transaction from AXI-S interface
@@ -44,6 +47,27 @@ void adder::Tick() {
                 << axis_adder_interface.tuser.read().to_uint64() << ") (addend = "
                 << axis_adder_interface.tdata.read().to_uint64() << ")!"
                 << std::endl;
+      if (!sent_first_addend) {
+        std::cout << "Got here" << std::endl;
+        sent_first_addend = true;
+        std::string src_port_name = module_name + ".axis_adder_master_interface";
+        std::string dst_port_name = "portal_inst.axis_add_portal_slave_interface";
+        cout << axis_adder_interface.tdata.read().to_uint64() << endl;
+        uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
+        uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
+
+        axis_adder_master_interface.tdest.write(dst_addr);
+        axis_adder_master_interface.tid.write(0);
+        axis_adder_master_interface.tstrb.write(0);
+        axis_adder_master_interface.tkeep.write(0);
+        axis_adder_master_interface.tuser.write(src_addr);
+        axis_adder_master_interface.tlast.write(true); //true bc only writing first addend
+        axis_adder_master_interface.tdata.write(axis_adder_interface.tdata.read().to_uint64());
+
+        axis_adder_master_interface.tvalid.write(true);
+      } else {
+        axis_adder_master_interface.tvalid.write(false);
+      }
     }
 
     // Print Sum and Exit
@@ -64,4 +88,12 @@ void adder::RegisterModuleInfo() {
 
   port_name = module_name + ".axis_adder_interface";
   RegisterAxisSlavePort(port_name, &axis_adder_interface, DATAW, 0);
+
+  _num_noc_axis_slave_ports = 0;
+    _num_noc_axis_master_ports = 0;
+    _num_noc_aximm_slave_ports = 0;
+    _num_noc_aximm_master_ports = 0;
+
+    port_name = module_name + ".axis_adder_master_interface";
+    RegisterAxisMasterPort(port_name, &axis_adder_master_interface, DATAW, 0);
 }
