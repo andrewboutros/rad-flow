@@ -129,6 +129,7 @@ for line in baseline:
 print(colors.BOLD + '{:<35}    {:<4}    {:<4}    {:<5}    {:<7}    {:<8}    {:<11}    {:<20}'.format('WORKLOAD', 'TEST', 'PERF', 'TOPS', 'QoR', 'Cycles', 'Runtime(s)', 'Speed(s/cyc)') + colors.RESET)
 
 chdir('../compiler')
+subprocess.call(['chmod', '777', 'perf_sim.sh'], shell=False)
 first_flag = True
 cycles = ''
 global_failed = False
