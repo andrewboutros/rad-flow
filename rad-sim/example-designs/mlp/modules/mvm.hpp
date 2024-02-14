@@ -13,7 +13,7 @@
 #include <design_context.hpp>
 
 #define LANES 16
-#define FIFO_SIZE 512
+#define FIFO_SIZE 1024
 #define COMPUTE_LATENCY 23
 #define DOT_PRODUCTS 16
 #define MEM_DEPTH 1025

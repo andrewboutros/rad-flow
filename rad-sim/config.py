@@ -165,7 +165,10 @@ def generate_radsim_params_header(radsim_header_params):
     for v in radsim_header_params["noc_vcs"]:
         if v > max_noc_vcs:
             max_noc_vcs = v
-    max_vc_id_bitwidth = int(math.ceil(math.log(max_noc_vcs, 2)))
+    if max_noc_vcs == 1:
+        max_vc_id_bitwidth = 1
+    else:
+        max_vc_id_bitwidth = int(math.ceil(math.log(max_noc_vcs, 2)))
     radsim_params_header_file.write("#define NOC_LINKS_VCID_WIDTH      " + str(max_vc_id_bitwidth) + "\n")
     # Setting definition for packet ID bitwidth as directly specified by the user
     packet_id_bitwidth = radsim_header_params["noc_packet_id_width"]
@@ -176,7 +179,10 @@ def generate_radsim_params_header(radsim_header_params):
     for t in radsim_header_params["noc_num_packet_types"]:
         if t > max_num_types:
             max_num_types = t
-    max_type_id_bitwidth = int(math.ceil(math.log(max_num_types, 2)))
+    if (max_num_types == 1):
+        max_type_id_bitwidth = 1
+    else:
+        max_type_id_bitwidth = int(math.ceil(math.log(max_num_types, 2)))
     radsim_params_header_file.write("#define NOC_LINKS_TYPEID_WIDTH    " + str(max_type_id_bitwidth) + "\n")
     # Finding maximum NoC node count and setting definition for destination bitwidth
     max_num_nodes = 0
