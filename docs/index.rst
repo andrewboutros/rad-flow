@@ -53,4 +53,9 @@ The following paper may be used as a general citation for RAD-Sim:
    :caption: RAD-Gen Documentation
    :maxdepth: 3
 
+   rad-gen-about
    rad-gen-quick-start
+   rad-gen-quickstart/index
+   rad-gen-asic-dse/index
+   rad-gen-coffe/index
+   rad-gen-ic3d/index
