@@ -3,7 +3,7 @@ design_name mlp
 noc_num_nocs 1
 noc_clk_period 1.0 
 noc_vcs 1 
-noc_payload_width 166 
+noc_payload_width 145 
 noc_num_nodes 16 
 design_noc_placement mlp.place 
 noc_adapters_clk_period 1.25 

@@ -4,7 +4,7 @@
 #define RADSIM_ROOT_DIR "/home/andrew/test_npu/rad-flow/rad-sim"
 
 // NoC-related Parameters
-#define NOC_LINKS_PAYLOAD_WIDTH   166
+#define NOC_LINKS_PAYLOAD_WIDTH   145
 #define NOC_LINKS_VCID_WIDTH      1
 #define NOC_LINKS_PACKETID_WIDTH  32
 #define NOC_LINKS_TYPEID_WIDTH    1

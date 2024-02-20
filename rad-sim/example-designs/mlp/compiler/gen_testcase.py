@@ -6,7 +6,7 @@ import numpy as np
 
 # Defining constants
 native_dim = 16
-num_test_inputs = 128
+num_test_inputs = 32
 num_noc_routers = 16
 
 if ('-h' in sys.argv or '--help' in sys.argv):

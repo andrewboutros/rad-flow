@@ -72,5 +72,5 @@ void dispatcher::RegisterModuleInfo() {
   _num_noc_axis_master_ports = 0;
 
   port_name = module_name + ".data_dispatch";
-  RegisterAxisMasterPort(port_name, &tx_interface, 512, 0);
+  RegisterAxisMasterPort(port_name, &tx_interface, LANES * 32, 0);
 }

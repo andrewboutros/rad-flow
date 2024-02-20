@@ -238,7 +238,7 @@ def generate_radsim_params_header(radsim_header_params):
     radsim_params_header_file.write("#define AXI4_DATA(t)  t.range(AXI4_MAX_DATAW + AXI4_RESPW + AXI4_USERW, AXI4_RESPW + AXI4_USERW + 1)\n")
     radsim_params_header_file.write("#define AXI4_CTRL(t)  t.range(AXI4_CTRLW + AXI4_RESPW + AXI4_USERW, AXI4_RESPW + AXI4_USERW + 1)\n")
     radsim_params_header_file.write("#define AXI4_ADDR(t)  t.range(AXI4_ADDRW + AXI4_CTRLW + AXI4_RESPW + AXI4_USERW, AXI4_CTRLW + AXI4_RESPW + AXI4_USERW + 1)\n\n")
-
+    
     radsim_params_header_file.write("// Constants (DO NOT CHANGE)\n")
     radsim_params_header_file.write("#define AXI_TYPE_AR       0\n")
     radsim_params_header_file.write("#define AXI_TYPE_AW       1\n")

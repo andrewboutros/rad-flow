@@ -2,7 +2,7 @@ noc:
   type: ['2d']
   num_nocs: 1
   clk_period: [1.0]
-  payload_width: [166]
+  payload_width: [145]
   topology: ['mesh']
   dim_x: [4]
   dim_y: [4] 
@@ -35,3 +35,7 @@ design:
 telemetry:
   log_verbosity: 2
   traces: []
+ 
+interfaces:
+  max_axis_tdata_width: 512
+  axis_tuser_width: 75
