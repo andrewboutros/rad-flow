@@ -8,7 +8,7 @@ void mem_controller::InitializeMemoryContents(std::string &init_filename) {
   unsigned int base_idx = std::stoi(base_idx_str);
 
   for (unsigned int ch_id = 0; ch_id < _num_channels; ch_id++) {
-    // std::cout << this->name() << " channel " << ch_id << std::endl;
+    std::cout << this->name() << " channel " << ch_id << std::endl;
     std::string full_name = name + std::to_string(ch_id + base_idx) + ".dat";
     std::ifstream io_file(full_name);
     if (!io_file)
@@ -19,13 +19,15 @@ void mem_controller::InitializeMemoryContents(std::string &init_filename) {
     sc_bv<AXI4_MAX_DATAW> data;
     while (std::getline(io_file, line)) {
       std::stringstream line_stream(line);
-      line_stream >> addr;
+      line_stream >> std::hex >> addr;
       line_stream >> data;
-      // std::cout << addr << std::endl;
+      std::cout << "[MEM CTRL] addr: " << addr << std::endl;
+      std::cout << "[MEM CTRL] data: " << data.to_uint() << std::endl;
+
       addr = AddressMapping(addr, ch_id);
       _mem_contents[ch_id][addr] = data;
     }
-    // std::cout << "-----------------" << std::endl;
+    std::cout << "-----------------" << std::endl;
   }
 }
 
@@ -142,8 +144,127 @@ mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
   SC_CTHREAD(MemTick, clk.pos());
   reset_signal_is(rst, true);
 
-  // this->PrintMemParameters();
+  this->PrintMemParameters();
   this->RegisterModuleInfo();
+  _debug_received_requests_counter.resize(_num_channels);
+  _debug_sent_responses_counter.resize(_num_channels);
+}
+
+
+mem_controller::mem_controller( const sc_module_name &name, hw_module &module_conf, unsigned int dram_id, std::string init_filename)
+                                 : RADSimModule(name), mem_clk("mem_clk"), rst("rst") {
+
+  std::string config_file =
+      radsim_config.GetStringKnob("radsim_root_dir") +
+      "/sim/dram/DRAMsim3/configs/" +
+      radsim_config.GetStringVectorKnob("dram_config_files", dram_id) + ".ini";
+
+  std::string output_dir =
+      radsim_config.GetStringKnob("radsim_root_dir") + "/logs";
+
+  _dramsim = new dramsim3::MemorySystem(
+      config_file, output_dir,
+      std::bind(&mem_controller::MemReadCallback, this, std::placeholders::_1),
+      std::bind(&mem_controller::MemWriteCallback, this, std::placeholders::_1),
+      dram_id);
+  _mem_id = dram_id;
+  _num_channels = _dramsim->GetChannels();
+  mem_channels.init(_num_channels);
+
+  _memory_channel_bitwidth = _dramsim->GetBusBits();
+  _controller_channel_bitwidth =
+      _dramsim->GetBusBits() * _dramsim->GetBurstLength();
+  _memory_clk_period_ns = _dramsim->GetTCK();
+  _controller_clk_period_ns =
+      radsim_config.GetDoubleVectorKnob("dram_clk_periods", dram_id);
+  double bitwidth_ratio =
+      1.0 * _controller_channel_bitwidth / _memory_channel_bitwidth;
+  double clk_period_ratio =
+      2.0 * _controller_clk_period_ns / _memory_clk_period_ns;
+
+  if (bitwidth_ratio != clk_period_ratio) {
+    sim_log.log(error,
+                "Controller/memory bitwidths (" +
+                    std::to_string(_controller_channel_bitwidth) + ", " +
+                    std::to_string(_memory_channel_bitwidth) + ") & periods (" +
+                    std::to_string(_controller_clk_period_ns) + ", " +
+                    std::to_string(_memory_clk_period_ns) + ") do not match!",
+                name);
+  }
+
+  _read_before_write = true;
+  _mem_contents.resize(_num_channels);
+  _write_address_queue.resize(_num_channels);
+  _write_data_queue.resize(_num_channels);
+  _read_address_queue.resize(_num_channels);
+  _outstanding_write_requests.resize(_num_channels);
+  _outstanding_read_requests.resize(_num_channels);
+  _out_of_order_read_requests.resize(_num_channels);
+  _output_read_responses.resize(_num_channels);
+  _output_write_responses.resize(_num_channels);
+  _write_address_queue_occupancy.init(_num_channels);
+  _write_data_queue_occupancy.init(_num_channels);
+  _read_address_queue_occupancy.init(_num_channels);
+  _num_outstanding_write_requests.init(_num_channels);
+  _num_outstanding_read_requests.init(_num_channels);
+  _output_write_queue_occupancy.init(_num_channels);
+  _output_read_queue_occupancy.init(_num_channels);
+  _input_queue_size =
+      radsim_config.GetIntVectorKnob("dram_queue_sizes", dram_id);
+  _output_queue_size =
+      radsim_config.GetIntVectorKnob("dram_queue_sizes", dram_id);
+
+  _num_ranks = _dramsim->GetRanks();
+  _num_bank_groups = _dramsim->GetBankGroups();
+  _num_banks_per_group = _dramsim->GetBanksPerGroup();
+  _num_rows = _dramsim->GetRows();
+  _num_word_cols = 1 << ((int)log2(_dramsim->GetCols()) -
+                         (int)log2(_dramsim->GetBurstLength()));
+  _total_num_addressable_words = _num_channels * _num_ranks * _num_bank_groups *
+                                 _num_banks_per_group * _num_rows *
+                                 _num_word_cols;
+  _total_num_addressable_words_M = _total_num_addressable_words / 1024 / 1024;
+  _addressable_size_bytes =
+      _dramsim->GetBusBits() * _dramsim->GetBurstLength() / 8;
+  _total_mem_capacity_megabytes =
+      _total_num_addressable_words_M * _addressable_size_bytes;
+
+  _field_widths["ch"] = (int)log2(_num_channels);
+  _field_widths["ra"] = (int)log2(_num_ranks);
+  _field_widths["bg"] = (int)log2(_num_bank_groups);
+  _field_widths["ba"] = (int)log2(_num_banks_per_group);
+  _field_widths["ro"] = (int)log2(_num_rows);
+  _field_widths["co"] = (int)log2(_num_word_cols);
+  _field_widths["bl"] =
+      (int)log2(_dramsim->GetBurstLength() * _dramsim->GetBusBits() / 8);
+  std::string address_mapping = _dramsim->GetAddressMapping();
+  for (unsigned int i = 0; i < address_mapping.size(); i += 2) {
+    std::string token = address_mapping.substr(i, 2);
+    _mem_addr_fields.push_back(token);
+  }
+
+  if (init_filename != "") {
+    InitializeMemoryContents(init_filename);
+  }
+
+  SC_METHOD(Assign);
+  sensitive << rst;
+  for (unsigned int ch_id = 0; ch_id < _num_channels; ch_id++) {
+    sensitive << _write_address_queue_occupancy[ch_id]
+              << _read_address_queue_occupancy[ch_id]
+              << _write_data_queue_occupancy[ch_id]
+              << _num_outstanding_write_requests[ch_id]
+              << _num_outstanding_read_requests[ch_id]
+              << _output_write_queue_occupancy[ch_id]
+              << _output_read_queue_occupancy[ch_id];
+  }
+  SC_CTHREAD(Tick, clk.pos());
+  reset_signal_is(rst, true);
+  SC_CTHREAD(MemTick, clk.pos());
+  reset_signal_is(rst, true);
+
+  this->PrintMemParameters();
+  this->RegisterModuleInfo(module_conf);
   _debug_received_requests_counter.resize(_num_channels);
   _debug_sent_responses_counter.resize(_num_channels);
 }
@@ -172,6 +293,8 @@ void mem_controller::MemReadCallback(uint64_t addr) {
   sc_bv<AXI4_MAX_DATAW> data_word;
   if (_mem_contents[ch_id].find(addr) != _mem_contents[ch_id].end()) {
     data_word = _mem_contents[ch_id][addr];
+    std::cout << "[MEM CTRL] READ CALLBACK " << "ch " << ch_id << "[" << addr << "] data_word: " << data_word << std::endl;
+
   } else {
     sim_log.log(warning, "Read from uninitialized address = " + to_string(addr),
                 this->name());
@@ -210,6 +333,8 @@ void mem_controller::MemReadCallback(uint64_t addr) {
         if (_mem_contents[ch_id].find(front_addr) !=
             _mem_contents[ch_id].end()) {
           data_word = _mem_contents[ch_id][front_addr];
+          // std::cout << "[MEM CTRL] READ CALLBACK " << "ch " << ch_id << "[" << front_addr << "] data_word: " << data_word << std::endl;
+
         } else {
           sim_log.log(warning,
                       "Read from uninitialized address = " +
@@ -262,6 +387,8 @@ void mem_controller::MemWriteCallback(uint64_t addr) {
   if (last)
     _output_write_responses[ch_id].push(resp_addr);
   _mem_contents[ch_id][addr] = data_word;
+
+  std::cout << "[MEM CTRL] WRITE CALLBACK " << " @ ch " << ch_id << " @ addr [" << std::hex << addr << "] data_word: " << std::hex << data_word.to_uint() << std::endl;
   return;
 }
 
@@ -288,7 +415,7 @@ void mem_controller::PrintMemParameters() {
   std::cout << "\t\tro = " << _field_widths["ro"] << std::endl;
   std::cout << "\t\tco = " << _field_widths["co"] << std::endl;
   std::cout << "\t\tbl = " << _field_widths["bl"] << std::endl;
-  cin.get();
+  // cin.get();
 }
 
 uint64_t mem_controller::AddressMapping(uint64_t addr,
@@ -363,6 +490,8 @@ void mem_controller::Tick() {
     _write_address_queue_occupancy[ch_id].write(0);
     _write_data_queue_occupancy[ch_id].write(0);
     _read_address_queue_occupancy[ch_id].write(0);
+    mem_channels[ch_id].bvalid.write(false);
+    mem_channels[ch_id].rvalid.write(false);
   }
   wait();
 
@@ -441,6 +570,8 @@ void mem_controller::Tick() {
       // Sending write responses
       if (mem_channels[ch_id].bvalid.read() &&
           mem_channels[ch_id].bready.read()) {
+        std::cout << "[MEM CTRL] Sending back B Response! @ Cycle" << GetSimulationCycle(3.32) << "!" << std::endl;
+        std::cout << "[MEM CTRL] _output_write_queue_occupancy: " << _output_write_queue_occupancy[0].read() << std::endl;
         _output_write_responses[ch_id].pop();
       }
       // Sending read responses
@@ -451,6 +582,8 @@ void mem_controller::Tick() {
         //           << std::endl;
       }
 
+      mem_channels[ch_id].bvalid.write(_output_write_responses[ch_id].size() >
+                                       0);
       mem_channels[ch_id].rvalid.write(_output_read_responses[ch_id].size() >
                                        0);
       if (_output_read_responses[ch_id].size() > 0) {
@@ -580,9 +713,7 @@ void mem_controller::Assign() {
     for (unsigned int ch_id = 0; ch_id < _num_channels; ch_id++) {
       mem_channels[ch_id].awready.write(false);
       mem_channels[ch_id].wready.write(false);
-      mem_channels[ch_id].bvalid.write(false);
       mem_channels[ch_id].arready.write(false);
-      // mem_channels[ch_id].rvalid.write(false);
     }
   } else {
     for (unsigned int ch_id = 0; ch_id < _num_channels; ch_id++) {
@@ -604,8 +735,6 @@ void mem_controller::Assign() {
       mem_channels[ch_id].arready.write(read_input_queue_ok &&
                                         read_output_queue_ok);
 
-      mem_channels[ch_id].bvalid.write(_output_write_queue_occupancy[ch_id] >
-                                       0);
       if (_output_write_responses[ch_id].size() > 0) {
         mem_channels[ch_id].buser.write(_output_write_responses[ch_id].front());
       }
@@ -621,8 +750,29 @@ void mem_controller::RegisterModuleInfo() {
   _num_noc_aximm_master_ports = 0;
 
   for (unsigned int ch_id = 0; ch_id < _num_channels; ch_id++) {
-    port_name = module_name + ".mem_channel_" + std::to_string(ch_id);
+    port_name = module_name + ".aximm_slave_mem_channel_" + std::to_string(ch_id);
     RegisterAximmSlavePort(port_name, &mem_channels[ch_id],
                            _addressable_size_bytes * 8);
   }
+}
+
+void mem_controller::RegisterModuleInfo(hw_module &module_conf) {
+    std::string port_name;
+    _num_noc_axis_slave_ports = 0;
+    _num_noc_axis_master_ports = 0;
+    _num_noc_aximm_slave_ports = 0;
+    _num_noc_aximm_master_ports = 0;
+    
+    // TODO make this more flexible, currently only allows for increasing sequential channel defs from 0 -> N
+    // Also only supports aximm slaves
+    unsigned int ch_id = 0;
+    for (auto &port: module_conf.ports){
+        if (port.type == "aximm"){
+            if (!port.is_master){
+                RegisterAximmSlavePort(port.name, &mem_channels[ch_id],
+                                    _addressable_size_bytes * 8);
+                ch_id++;
+            }
+        }
+    }
 }

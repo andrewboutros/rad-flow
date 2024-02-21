@@ -14,6 +14,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
+#include <traffic_gen.hpp>
 
 class mem_controller : public RADSimModule {
 private:
@@ -78,12 +79,16 @@ private:
   std::vector<unsigned int> _debug_sent_responses_counter;
   std::vector<unsigned int> _debug_received_requests_counter;
 
+    // multiple b resp fix
+    sc_signal<unsigned int> _b_resp_cnt;
 public:
   sc_in<bool> mem_clk;
   sc_in<bool> rst;
   sc_vector<aximm_slave_port> mem_channels;
 
   mem_controller(const sc_module_name &name, unsigned int dram_id,
+                 std::string init_filename = "");
+    mem_controller(const sc_module_name &name, hw_module &module_conf, unsigned int dram_id,
                  std::string init_filename = "");
   ~mem_controller();
 
@@ -104,4 +109,6 @@ public:
   SC_HAS_PROCESS(mem_controller);
 
   void RegisterModuleInfo();
+  void RegisterModuleInfo(hw_module &module_conf);
+
 };

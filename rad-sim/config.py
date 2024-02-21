@@ -303,92 +303,94 @@ def prepare_build_dir(design_name):
     os.makedirs("build")
     os.system("cd build; cmake -DDESIGN:STRING=" + design_name + " ..; cd ..;")
 
-# Get design name from command line argument
-if len(sys.argv) < 2:
-    print("Invalid arguments: python config.py <design_name>")
-    exit(1)
-design_name = sys.argv[1]
 
-# Check if design directory exists
-if not(os.path.isdir(os.getcwd() + "/example-designs/" + design_name)):
-    print("Cannot find design directory under rad-sim/example-designs/")
-    exit(1)
+if __name__ == "__main__":
+    # Get design name from command line argument
+    if len(sys.argv) < 2:
+        print("Invalid arguments: python config.py <design_name>")
+        exit(1)
+    design_name = sys.argv[1]
 
-# Point to YAML configuration file
-config_filename = "example-designs/" + design_name + "/config.yml"
+    # Check if design directory exists
+    if not(os.path.isdir(os.getcwd() + "/example-designs/" + design_name)):
+        print("Cannot find design directory under rad-sim/example-designs/")
+        exit(1)
 
-# List default parameter values
-booksim_params = {
-    "radsim_root_dir": os.getcwd(),
-    "noc_type": "2d",
-    "noc_num_nocs": 1,
-    "noc_topology": ["mesh"],
-    "noc_anynet_file": [os.getcwd() + "/sim/noc/anynet_file"],
-    "noc_dim_x": [8],
-    "noc_dim_y": [8],
-    "noc_routing_func": ["dim_order"],
-    "noc_vcs": [5],
-    "noc_vc_buffer_size": [8],
-    "noc_output_buffer_size": [8],
-    "noc_num_packet_types": [3],
-    "noc_router_uarch": ["iq"],
-    "noc_vc_allocator": ["islip"],
-    "noc_sw_allocator": ["islip"],
-    "noc_credit_delay": [1],
-    "noc_routing_delay": [1],
-    "noc_vc_alloc_delay": [1],
-    "noc_sw_alloc_delay": [1],
-}
-radsim_header_params = {
-    "radsim_root_dir": os.getcwd(),
-    "noc_payload_width": [166],
-    "noc_packet_id_width": 32,
-    "noc_vcs": [3],
-    "noc_num_packet_types": [3],
-    "noc_num_nodes": [0],
-    "noc_max_num_router_dest_interfaces": 32,
-    "interfaces_max_axis_tdata_width": 1024,
-    "interfaces_axis_tkeep_width": 8,
-    "interfaces_axis_tstrb_width": 8,
-    "interfaces_axis_tuser_width": 66,
-    "interfaces_axi_id_width": 8,
-    "interfaces_axi_user_width": 64,
-    "interfaces_max_axi_data_width": 512,
-}
-radsim_knobs = {
-    "radsim_root_dir": os.getcwd(),
-    "design_name": design_name,
-    "noc_num_nocs": 1,
-    "noc_clk_period": [0.571],
-    "noc_vcs": [3],
-    "noc_payload_width": [146],
-    "noc_num_nodes": [0],
-    "design_noc_placement": ["noc.place"],
-    "noc_adapters_clk_period": [1.25],
-    "noc_adapters_fifo_size": [16],
-    "noc_adapters_obuff_size": [2],
-    "noc_adapters_in_arbiter": ["fixed_rr"],
-    "noc_adapters_out_arbiter": ["priority_rr"],
-    "noc_adapters_vc_mapping": ["direct"],
-    "design_clk_periods": [5.0],
-    "sim_driver_period": 5.0,
-    "telemetry_log_verbosity": 0,
-    "telemetry_traces": ["trace0", "trace1"],
-    "dram_num_controllers": 0,
-    "dram_clk_periods": [2.0],
-    "dram_queue_sizes": [64],
-    "dram_config_files": ["HBM2_8Gb_x128"],
-}
+    # Point to YAML configuration file
+    config_filename = "example-designs/" + design_name + "/config.yml"
 
-# Parse configuration file
-parse_config_file(config_filename, booksim_params, radsim_header_params, radsim_knobs)
-#print_config(booksim_params, radsim_header_params, radsim_knobs)
+    # List default parameter values
+    booksim_params = {
+        "radsim_root_dir": os.getcwd(),
+        "noc_type": "2d",
+        "noc_num_nocs": 1,
+        "noc_topology": ["mesh"],
+        "noc_anynet_file": [os.getcwd() + "/sim/noc/anynet_file"],
+        "noc_dim_x": [8],
+        "noc_dim_y": [8],
+        "noc_routing_func": ["dim_order"],
+        "noc_vcs": [5],
+        "noc_vc_buffer_size": [8],
+        "noc_output_buffer_size": [8],
+        "noc_num_packet_types": [3],
+        "noc_router_uarch": ["iq"],
+        "noc_vc_allocator": ["islip"],
+        "noc_sw_allocator": ["islip"],
+        "noc_credit_delay": [1],
+        "noc_routing_delay": [1],
+        "noc_vc_alloc_delay": [1],
+        "noc_sw_alloc_delay": [1],
+    }
+    radsim_header_params = {
+        "radsim_root_dir": os.getcwd(),
+        "noc_payload_width": [166],
+        "noc_packet_id_width": 32,
+        "noc_vcs": [3],
+        "noc_num_packet_types": [3],
+        "noc_num_nodes": [0],
+        "noc_max_num_router_dest_interfaces": 32,
+        "interfaces_max_axis_tdata_width": 1024,
+        "interfaces_axis_tkeep_width": 8,
+        "interfaces_axis_tstrb_width": 8,
+        "interfaces_axis_tuser_width": 66,
+        "interfaces_axi_id_width": 8,
+        "interfaces_axi_user_width": 64,
+        "interfaces_max_axi_data_width": 512,
+    }
+    radsim_knobs = {
+        "radsim_root_dir": os.getcwd(),
+        "design_name": design_name,
+        "noc_num_nocs": 1,
+        "noc_clk_period": [0.571],
+        "noc_vcs": [3],
+        "noc_payload_width": [146],
+        "noc_num_nodes": [0],
+        "design_noc_placement": ["noc.place"],
+        "noc_adapters_clk_period": [1.25],
+        "noc_adapters_fifo_size": [16],
+        "noc_adapters_obuff_size": [2],
+        "noc_adapters_in_arbiter": ["fixed_rr"],
+        "noc_adapters_out_arbiter": ["priority_rr"],
+        "noc_adapters_vc_mapping": ["direct"],
+        "design_clk_periods": [5.0],
+        "sim_driver_period": 5.0,
+        "telemetry_log_verbosity": 0,
+        "telemetry_traces": ["trace0", "trace1"],
+        "dram_num_controllers": 0,
+        "dram_clk_periods": [2.0],
+        "dram_queue_sizes": [64],
+        "dram_config_files": ["HBM2_8Gb_x128"],
+    }
 
-# Generate RAD-Sim input files
-generate_booksim_config_files(booksim_params, radsim_header_params, radsim_knobs)
-generate_radsim_params_header(radsim_header_params)
-generate_radsim_config_file(radsim_knobs)
-generate_radsim_main(design_name)
-prepare_build_dir(design_name)
+    # Parse configuration file
+    parse_config_file(config_filename, booksim_params, radsim_header_params, radsim_knobs)
+    #print_config(booksim_params, radsim_header_params, radsim_knobs)
 
-print("RAD-Sim was configured successfully!")
+    # Generate RAD-Sim input files
+    generate_booksim_config_files(booksim_params, radsim_header_params, radsim_knobs)
+    generate_radsim_params_header(radsim_header_params)
+    generate_radsim_config_file(radsim_knobs)
+    generate_radsim_main(design_name)
+    prepare_build_dir(design_name)
+
+    print("RAD-Sim was configured successfully!")

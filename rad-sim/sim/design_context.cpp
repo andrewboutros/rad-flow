@@ -483,15 +483,15 @@ void RADSimDesignContext::ConnectModulesToNoC() {
   for (auto module_it = _design_modules.begin();
        module_it != _design_modules.end(); module_it++) {
     RADSimModule *module_ptr = module_it->second;
-    // std::cout << "MODULE " << module_ptr->name() << std::endl;
+    std::cout << "################# MODULE: " << module_ptr->name() << " #################" << std::endl;
 
     // Connect AXI-S Slave ports of the module
-    // std::cout << "AXI-S slave ports: " << std::endl;
+    std::cout << "\nAXI-S slave ports: ";
     for (auto slave_port_it = module_ptr->_axis_slave_ports.begin();
          slave_port_it != module_ptr->_axis_slave_ports.end();
          slave_port_it++) {
       std::string port_name = slave_port_it->first;
-      // std::cout << port_name << ", ";
+      std::cout << port_name << ", ";
       unsigned int noc_id = std::get<0>(_port_placement[port_name]);
       _axis_signals[axis_signal_id].Connect(
           *(_noc_axis_master_ports[noc_id][port_name]),
@@ -500,12 +500,12 @@ void RADSimDesignContext::ConnectModulesToNoC() {
     }
 
     // Connect AXI-S Master ports of the module
-    // std::cout << "\nAXI-S master ports: ";
+    std::cout << "\nAXI-S master ports: ";
     for (auto master_port_it = module_ptr->_axis_master_ports.begin();
          master_port_it != module_ptr->_axis_master_ports.end();
          master_port_it++) {
       std::string port_name = master_port_it->first;
-      // std::cout << port_name << ", ";
+      std::cout << port_name << ", ";
       unsigned int noc_id = std::get<0>(_port_placement[port_name]);
       _axis_signals[axis_signal_id].Connect(
           *(master_port_it->second),
@@ -514,12 +514,12 @@ void RADSimDesignContext::ConnectModulesToNoC() {
     }
 
     // Connect AXI-MM Slave ports of the module
-    // std::cout << "\nAXI-MM slave ports: ";
+    std::cout << "\nAXI-MM slave ports: ";
     for (auto slave_port_it = module_ptr->_aximm_slave_ports.begin();
          slave_port_it != module_ptr->_aximm_slave_ports.end();
          slave_port_it++) {
       std::string port_name = slave_port_it->first;
-      // std::cout << port_name << ", ";
+      std::cout << port_name << ", ";
       unsigned int noc_id = std::get<0>(_port_placement[port_name]);
       _aximm_signals[aximm_signal_id].Connect(
           *(_noc_aximm_master_ports[noc_id][port_name]),
@@ -528,19 +528,19 @@ void RADSimDesignContext::ConnectModulesToNoC() {
     }
 
     // Connect AXI-MM Master ports of the module
-    // std::cout << "\nAXI-MM master ports: ";
+    std::cout << "\nAXI-MM master ports: ";
     for (auto master_port_it = module_ptr->_aximm_master_ports.begin();
          master_port_it != module_ptr->_aximm_master_ports.end();
          master_port_it++) {
       std::string port_name = master_port_it->first;
-      // std::cout << port_name << ", ";
+      std::cout << port_name << ", ";
       unsigned int noc_id = std::get<0>(_port_placement[port_name]);
       _aximm_signals[aximm_signal_id].Connect(
           *(master_port_it->second),
           *(_noc_aximm_slave_ports[noc_id][port_name]));
       aximm_signal_id++;
     }
-    // std::cout << "\n";
+    std::cout << "\n\n";
   }
 }
 
@@ -679,4 +679,20 @@ uint64_t RADSimDesignContext::GetPortBaseAddress(std::string &port_name) {
   assert(_aximm_port_base_addresses.find(port_name) !=
          _aximm_port_base_addresses.end());
   return _aximm_port_base_addresses[port_name];
+}
+
+
+std::string FindKeyByValue(const std::unordered_map<std::string, uint64_t>& myMap, uint64_t targetValue) {
+    for (const auto& pair : myMap) {
+        if (pair.second == targetValue) {
+            return pair.first; // Found the key corresponding to the value
+        }
+    }
+    assert (false); // If the value is not found, we just exit with this assertion
+    return ""; // To avoid compiler warning
+}
+
+std::string RADSimDesignContext::GetPortNameFromBaseAddress(uint64_t &base_addr) {
+    std::string port_name = FindKeyByValue(_aximm_port_base_addresses, base_addr);
+    return port_name;
 }

@@ -28,6 +28,7 @@ set(srcfiles
   radsim_module.cpp
   radsim_telemetry.cpp
   radsim_utils.cpp
+  traffic_gen.cpp
 )
 
 set(hdrfiles
@@ -37,6 +38,7 @@ set(hdrfiles
   radsim_module.hpp
   radsim_telemetry.hpp
   radsim_utils.hpp
+  traffic_gen.hpp
 )
 
 add_compile_options(-Wall -Wextra -pedantic)

@@ -5,7 +5,9 @@ project(RADSim)
 set(CMAKE_BINARY_DIR "./build/")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-SET(DESIGN "dlrm" CACHE STRING "Design directory to be compiled. Must be under rad-flow/rad-sim/example-designs")
+set(CMAKE_BUILD_TYPE Debug)
+
+SET(DESIGN "hbm_traffic" CACHE STRING "Design directory to be compiled. Must be under rad-flow/rad-sim/example-designs")
 message(STATUS "Compiling the ${DESIGN} design")
 
 add_subdirectory(sim)

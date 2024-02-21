@@ -10,6 +10,11 @@
 #include <unordered_map>
 #include <vector>
 
+
+
+std::string FindKeyByValue(const std::unordered_map<std::string, uint64_t>& my_map, uint64_t target_val);
+
+
 class RADSimDesignContext {
 private:
   std::vector<sc_clock *> _noc_clks;
@@ -96,6 +101,7 @@ public:
   void DumpDesignContext();
   std::vector<std::vector<std::set<std::string>>> &GetNodeModuleNames();
   uint64_t GetPortBaseAddress(std::string &port_name);
+  std::string GetPortNameFromBaseAddress(uint64_t &base_addr);
 };
 
 extern RADSimDesignContext radsim_design;
