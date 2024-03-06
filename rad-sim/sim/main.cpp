@@ -47,6 +47,8 @@ int sc_main(int argc, char *argv[]) {
 		"node_clk0", radsim_config.GetDoubleKnob("sim_driver_period"), SC_NS); //AKB ADDED, use same period as sim driver
 	RADSimInterRad* blackbox = new RADSimInterRad("inter_rad_box", inter_rad_clk_sig, cluster);
 	blackbox->ConnectRadPair(0, 1);
+	blackbox->ConnectRadAxi(0);
+	blackbox->ConnectRadAxi(1);
 	
 	int start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
 	sc_bv<128> new_val;

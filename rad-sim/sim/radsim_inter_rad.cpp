@@ -58,12 +58,12 @@ RADSimInterRad::ConnectRadPair(int i, int j) {
     cluster->all_systems[i]->design_dut_inst->portal_out(all_signals[2]);
 	cluster->all_systems[j]->design_dut_inst->portal_in(all_signals[1]);
 	cluster->all_systems[j]->design_dut_inst->portal_out(all_signals[0]);
-    //axi interfaces for adder design
+}
+
+void
+RADSimInterRad::ConnectRadAxi(int i) {
     all_axis_master_signals[i]->Connect(*(all_axis_master_ports[i]), cluster->all_systems[i]->design_dut_inst->design_top_portal_axis_slave); //Connect(axis_master_port &m, axis_slave_port &s)
     all_axis_slave_signals[i]->Connect(cluster->all_systems[i]->design_dut_inst->design_top_portal_axis_master, *(all_axis_slave_ports[i])); //Connect(axis_master_port &m, axis_slave_port &s)
-    //axi interfaces for mult design
-    all_axis_master_signals[j]->Connect(*(all_axis_master_ports[j]), cluster->all_systems[j]->design_dut_inst->design_top_portal_axis_slave); //Connect(axis_master_port &m, axis_slave_port &s)
-    all_axis_slave_signals[j]->Connect(cluster->all_systems[j]->design_dut_inst->design_top_portal_axis_master, *(all_axis_slave_ports[j])); //Connect(axis_master_port &m, axis_slave_port &s)
 }
 
 bool wrote_yet = false;

@@ -32,6 +32,7 @@ class RADSimInterRad : public sc_module {
         RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_clk, RADSimCluster* cluster);
         ~RADSimInterRad();
         void ConnectRadPair(int i, int j);
+        void ConnectRadAxi(int i);
         /*sc_signal<bool> in_i_out_j;
 	    sc_signal<bool> in_j_out_i; */
         void writeFifo();
