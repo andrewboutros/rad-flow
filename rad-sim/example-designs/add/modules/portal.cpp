@@ -27,6 +27,7 @@ sc_bv<DATAW> data_to_buffer = 0;
 bool got_data = false;
 void portal::Tick() { //sequential logic
     portal_out.write(counter);
+    //portal_out_axi.tdata.write(counter);
     portal_recvd.write(0);
     wait();
     //Always @ positive edge of clock
@@ -55,9 +56,11 @@ void portal::Tick() { //sequential logic
         }
         if (got_data) {
             std::cout << "counter : " << counter << std::endl;
-            if (counter == 3) {
+            //if (counter == 3) {
+            if (counter == 0) { //always send, do not buffer in portal module bc moved that to interrad now
                 counter = 0;
                 portal_out.write(data_to_buffer);
+                //portal_out_axi.tdata.write(data_to_buffer);
                 portal_recvd.write(1);
             }
             else {
@@ -82,12 +85,18 @@ void portal::RegisterModuleInfo() {
     //std::cout << port_name << std::endl;
     RegisterAxisSlavePort(port_name, &axis_add_portal_slave_interface, DATAW, 0);
 
-    _num_noc_axis_slave_ports = 0;
+    /*_num_noc_axis_slave_ports = 0;
     _num_noc_axis_master_ports = 0;
     _num_noc_aximm_slave_ports = 0;
-    _num_noc_aximm_master_ports = 0;
+    _num_noc_aximm_master_ports = 0;*/
 
     port_name = module_name + ".axis_add_portal_master_interface";
     RegisterAxisMasterPort(port_name, &axis_add_portal_master_interface, DATAW, 0);
+
+    /*port_name = module_name + ".portal_axis_master";
+    RegisterAxisMasterPort(port_name, &portal_axis_master, DATAW, 0);
+
+    port_name = module_name + ".portal_axis_slave";
+    RegisterAxisSlavePort(port_name, &portal_axis_slave, DATAW, 0);*/
 
 }

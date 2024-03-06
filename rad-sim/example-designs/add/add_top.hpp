@@ -7,6 +7,7 @@
 #include <systemc.h>
 #include <vector>
 #include <design_top.hpp> //AKB ADDED
+#include <axis_interface.hpp> //AKB ADDED
 
 class add_top : public design_top {
 //class add_top : public sc_module {
@@ -28,6 +29,11 @@ public:
   //sc_in<bool> portal_in;
   //sc_out<bool> portal_out;
   sc_out<bool> portal_recvd;
+  axis_slave_port design_top_portal_axis_slave;
+  axis_master_port design_top_portal_axis_master;
+  //adding axis connections to portal module
+  axis_signal sig_portal_master_design_slave;
+  axis_signal sig_design_master_portal_slave;
 
   add_top(const sc_module_name &name, RADSimDesignContext* radsim_design); //AKB ADDED last arg
   ~add_top();

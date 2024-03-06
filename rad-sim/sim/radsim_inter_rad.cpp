@@ -25,8 +25,8 @@ void
 RADSimInterRad::ConnectRadPair(int i, int j) {
     //this works, commenting out to try manually writing to port
     cluster->all_systems[i]->design_dut_inst->portal_in(all_signals[0]);
-    //cluster->all_systems[i]->design_dut_inst->portal_out(all_signals[1]);
-    cluster->all_systems[i]->design_dut_inst->portal_out(all_signals[2]); //temp added extra signal just to bind
+    cluster->all_systems[i]->design_dut_inst->portal_out(all_signals[1]);
+    //cluster->all_systems[i]->design_dut_inst->portal_out(all_signals[2]); //temp added extra signal just to bind
 	cluster->all_systems[j]->design_dut_inst->portal_in(all_signals[1]);
 	cluster->all_systems[j]->design_dut_inst->portal_out(all_signals[0]);
 }

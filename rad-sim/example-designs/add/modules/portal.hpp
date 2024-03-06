@@ -16,7 +16,10 @@ class portal : public RADSimModule {
     RADSimDesignContext* radsim_design;
     sc_in<sc_bv<DATAW>> portal_in;
     sc_out<sc_bv<DATAW>> portal_out;
-    sc_out<bool> portal_recvd;
+    //try adding axis_master_port for portal_out
+    axis_master_port portal_axis_master;
+    axis_slave_port portal_axis_slave;
+    sc_out<bool> portal_recvd; //for testing: flag so add_driver keeps simulation going until data is sent to mult module
     //Interfaces to the NoC
     axis_slave_port axis_add_portal_slave_interface;
     axis_master_port axis_add_portal_master_interface;
