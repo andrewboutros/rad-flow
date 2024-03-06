@@ -56,14 +56,15 @@ int sc_main(int argc, char *argv[]) {
 	while (cluster->AllRADsNotDone()) {
 		sc_start(1, SC_NS);
 		//std::cout << "read system portal_in: " << system->dut_inst->portal_in.read() << std::endl;
-		new_val = system2->dut_inst->portal_in.read();
+		//new_val = system2->dut_inst->portal_in.read(); //works but replacing to test axi
+		new_val = system2->dut_inst->design_top_portal_axis_slave.tdata.read(); //TODO: use handshaking properly
 		//if (val != 0) {
-		if (new_val != old_val) { //to ensure only displayed once
+		//if (new_val != old_val) { //to ensure only displayed once
 			std::cout << "read system2 portal_in: " << new_val << std::endl;
 			old_val = new_val;
-		}
+		//}
 	}
-	//std::cout << "stopping" << std::endl;
+	std::cout << "stopping" << std::endl;
 	int end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
 	sc_stop();
 	//int end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));

@@ -36,37 +36,8 @@ add_top::add_top(const sc_module_name &name, RADSimDesignContext* radsim_design)
   //sig_design_master_portal_slave.Connect(this->design_top_portal_axis_master, portal_inst->portal_axis_slave);
   //connect master to master instead, to expose to top
   portal_inst->portal_axis_master.ConnectToPort(this->design_top_portal_axis_master);
-  portal_inst->portal_axis_slave.ConnectToPort(this->design_top_portal_axis_slave);
-  //master to slave port connections
-  /*portal_inst->portal_axis_master.tvalid(sig_portal_master_design_slave.tvalid);
-  portal_inst->portal_axis_master.tready(sig_portal_master_design_slave.tready);
-  portal_inst->portal_axis_master.tdata(sig_portal_master_design_slave.tdata);
-  portal_inst->portal_axis_master.tstrb(sig_portal_master_design_slave.tstrb);
-  portal_inst->portal_axis_master.tkeep(sig_portal_master_design_slave.tkeep);
-  portal_inst->portal_axis_master.tlast(sig_portal_master_design_slave.tlast);
-  portal_inst->portal_axis_master.tid(sig_portal_master_design_slave.tid);
-  portal_inst->portal_axis_master.tdest(sig_portal_master_design_slave.tdest);
-  portal_inst->portal_axis_master.tuser(sig_portal_master_design_slave.tuser);*/
-  /*this->design_top_portal_axis_master.tvalid(sig_portal_master_design_slave.tvalid);
-  this->design_top_portal_axis_master.tready(sig_portal_master_design_slave.tready);
-  this->design_top_portal_axis_master.tdata(sig_portal_master_design_slave.tdata);
-  this->design_top_portal_axis_master.tstrb(sig_portal_master_design_slave.tstrb);
-  this->design_top_portal_axis_master.tkeep(sig_portal_master_design_slave.tkeep);
-  this->design_top_portal_axis_master.tlast(sig_portal_master_design_slave.tlast);
-  this->design_top_portal_axis_master.tid(sig_portal_master_design_slave.tid);
-  this->design_top_portal_axis_master.tdest(sig_portal_master_design_slave.tdest);
-  this->design_top_portal_axis_master.tuser(sig_portal_master_design_slave.tuser);
-  //slave to master port connections
-  this->design_top_portal_axis_slave.tvalid(sig_portal_master_design_slave.tvalid);
-  this->design_top_portal_axis_slave.tready(sig_portal_master_design_slave.tready);
-  this->design_top_portal_axis_slave.tdata(sig_portal_master_design_slave.tdata);
-  this->design_top_portal_axis_slave.tstrb(sig_portal_master_design_slave.tstrb);
-  this->design_top_portal_axis_slave.tkeep(sig_portal_master_design_slave.tkeep);
-  this->design_top_portal_axis_slave.tlast(sig_portal_master_design_slave.tlast);
-  this->design_top_portal_axis_slave.tid(sig_portal_master_design_slave.tid);
-  this->design_top_portal_axis_slave.tdest(sig_portal_master_design_slave.tdest);
-  this->design_top_portal_axis_slave.tuser(sig_portal_master_design_slave.tuser);*/
-  //would need to repeat for other slave/master pair
+  //this->design_top_portal_axis_master.ConnectToPort(portal_inst->portal_axis_master); //portal module drives top
+  portal_inst->portal_axis_slave.ConnectToPort(this->design_top_portal_axis_slave); //top drives portal bc top receives slave inputs
 
   radsim_design->BuildDesignContext("/home/bassiabn/rad-sim/rad-flow/rad-sim/example-designs/add", "add.place",
                                    "add.clks"); //AKB changed to ptr deref and added first arg

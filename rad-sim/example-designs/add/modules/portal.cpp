@@ -24,6 +24,7 @@ void portal::Assign() { //combinational logic
 
 int counter = 0;
 sc_bv<DATAW> data_to_buffer = 0;
+sc_bv<AXIS_USERW> dest_device; //#define AXIS_USERW     66
 bool got_data = false;
 void portal::Tick() { //sequential logic
     portal_out.write(counter);
@@ -52,6 +53,7 @@ void portal::Tick() { //sequential logic
                         << axis_add_portal_slave_interface.tdata.read().to_uint64() << ")!"
                         << std::endl;
              data_to_buffer = axis_add_portal_slave_interface.tdata.read();
+             dest_device = 1;
              got_data = true;
         }
         if (got_data) {
@@ -59,8 +61,10 @@ void portal::Tick() { //sequential logic
             //if (counter == 3) {
             if (counter == 0) { //always send, do not buffer in portal module bc moved that to interrad now
                 counter = 0;
-                portal_out.write(data_to_buffer);
-                //portal_out_axi.tdata.write(data_to_buffer);
+                //portal_out.write(data_to_buffer); //works but replace with axi
+                portal_axis_master.tdata.write(data_to_buffer);
+                portal_axis_master.tuser.write(dest_device);
+                std::cout << "portal.cpp in add design sent dest_device: " << dest_device.to_int64() << std::endl;
                 portal_recvd.write(1);
             }
             else {
