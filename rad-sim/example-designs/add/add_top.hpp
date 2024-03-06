@@ -29,9 +29,9 @@ public:
   //sc_in<bool> portal_in;
   //sc_out<bool> portal_out;
   sc_out<bool> portal_recvd;
-  axis_slave_port design_top_portal_axis_slave;
-  axis_master_port design_top_portal_axis_master;
-  //adding axis connections to portal module
+  //axis_slave_port design_top_portal_axis_slave;
+  //axis_master_port design_top_portal_axis_master;
+  //adding axis connections to portal module -- no longer needed
   axis_signal sig_portal_master_design_slave;
   axis_signal sig_design_master_portal_slave;
 

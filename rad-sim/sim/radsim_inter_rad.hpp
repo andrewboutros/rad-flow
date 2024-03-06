@@ -7,6 +7,7 @@
 #include <string>
 #include <radsim_cluster.hpp>
 #include <radsim_config.hpp>
+#include <axis_interface.hpp>
 
 #define DATAW 128
 #define NUM_SLOTS 2 //number of fifo slots
@@ -21,6 +22,13 @@ class RADSimInterRad : public sc_module {
     public:
         sc_in<bool> clk;
         std::vector<sc_fifo<sc_bv<DATAW>>*> fifos;
+
+        //for axi interfaces
+        std::vector<axis_signal*> all_axis_master_signals;
+        std::vector<axis_signal*> all_axis_slave_signals;
+        std::vector<axis_slave_port*> all_axis_slave_ports;
+        std::vector<axis_master_port*> all_axis_master_ports;
+
         RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_clk, RADSimCluster* cluster);
         ~RADSimInterRad();
         void ConnectRadPair(int i, int j);

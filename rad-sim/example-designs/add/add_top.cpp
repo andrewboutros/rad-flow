@@ -32,8 +32,11 @@ add_top::add_top(const sc_module_name &name, RADSimDesignContext* radsim_design)
   //this->top_axis_portal_interface = &(portal_inst->axis_add_portal_slave_interface);
   portal_inst->portal_recvd(this->portal_recvd);
 
-  sig_portal_master_design_slave.Connect(portal_inst->portal_axis_master, this->design_top_portal_axis_slave); //Connect(axis_master_port &m, axis_slave_port &s)
-  sig_design_master_portal_slave.Connect(this->design_top_portal_axis_master, portal_inst->portal_axis_slave);
+  //sig_portal_master_design_slave.Connect(portal_inst->portal_axis_master, this->design_top_portal_axis_slave); //Connect(axis_master_port &m, axis_slave_port &s)
+  //sig_design_master_portal_slave.Connect(this->design_top_portal_axis_master, portal_inst->portal_axis_slave);
+  //connect master to master instead, to expose to top
+  portal_inst->portal_axis_master.ConnectToPort(this->design_top_portal_axis_master);
+  portal_inst->portal_axis_slave.ConnectToPort(this->design_top_portal_axis_slave);
   //master to slave port connections
   /*portal_inst->portal_axis_master.tvalid(sig_portal_master_design_slave.tvalid);
   portal_inst->portal_axis_master.tready(sig_portal_master_design_slave.tready);

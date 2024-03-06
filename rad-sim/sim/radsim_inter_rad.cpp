@@ -8,7 +8,25 @@ RADSimInterRad::RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_c
     for (int v = 0; v < cluster->num_rads; v++) { //width of vector = num of rads bc want fifo per rad
         sc_fifo<sc_bv<DATAW>>* new_fifo_ptr = new sc_fifo<sc_bv<DATAW>>(NUM_SLOTS);
         fifos.push_back(new_fifo_ptr);
+        //adding to axi vectors
+        axis_signal* new_axis_signal = new axis_signal;
+        all_axis_master_signals.push_back(new_axis_signal);
+        new_axis_signal = new axis_signal; //second signal (one for master, one for slave)
+        all_axis_slave_signals.push_back(new_axis_signal);
+        axis_slave_port* new_axis_slave_port = new axis_slave_port;
+        all_axis_slave_ports.push_back(new_axis_slave_port);
+        axis_master_port* new_axis_master_port = new axis_master_port;
+        all_axis_master_ports.push_back(new_axis_master_port);
     }
+    //temp: doing outside of loop bc not ready yet 
+    /*axis_signal* new_axis_signal = new axis_signal;
+    all_axis_signals.push_back(new_axis_signal);
+    new_axis_signal = new axis_signal; //second signal (one for master, one for slave)
+    all_axis_signals.push_back(new_axis_signal);
+    axis_slave_port* new_axis_slave_port = new axis_slave_port;
+    all_axis_slave_ports.push_back(new_axis_slave_port);
+    axis_master_port* new_axis_master_port = new axis_master_port;
+    all_axis_master_ports.push_back(new_axis_master_port);*/
 
     SC_THREAD(writeFifo);
     SC_THREAD(readFifo);
@@ -16,19 +34,36 @@ RADSimInterRad::RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_c
 }
 
 RADSimInterRad::~RADSimInterRad() {
-    for (int v = 0; v < this->cluster->num_rads; v++) {
+    int v;
+    for (v = 0; v < this->cluster->num_rads; v++) {
         delete fifos[v];
+        delete all_axis_master_signals[v];
+        delete all_axis_slave_signals[v];
+        delete all_axis_slave_ports[v];
+        delete all_axis_master_ports[v];
     }
+
+    //temp do manually
+    /*delete all_axis_signals[0];
+    delete all_axis_signals[1];
+    delete all_axis_slave_ports[0];
+    delete all_axis_master_ports[0];*/
 }
 
 void
 RADSimInterRad::ConnectRadPair(int i, int j) {
-    //this works, commenting out to try manually writing to port
+    //this works
     cluster->all_systems[i]->design_dut_inst->portal_in(all_signals[0]);
-    cluster->all_systems[i]->design_dut_inst->portal_out(all_signals[1]);
-    //cluster->all_systems[i]->design_dut_inst->portal_out(all_signals[2]); //temp added extra signal just to bind
+    //cluster->all_systems[i]->design_dut_inst->portal_out(all_signals[1]); //commenting out to demo sending data through fifo instead
+    cluster->all_systems[i]->design_dut_inst->portal_out(all_signals[2]);
 	cluster->all_systems[j]->design_dut_inst->portal_in(all_signals[1]);
 	cluster->all_systems[j]->design_dut_inst->portal_out(all_signals[0]);
+    //axi interfaces for adder design
+    all_axis_master_signals[i]->Connect(*(all_axis_master_ports[i]), cluster->all_systems[i]->design_dut_inst->design_top_portal_axis_slave); //Connect(axis_master_port &m, axis_slave_port &s)
+    all_axis_slave_signals[i]->Connect(cluster->all_systems[i]->design_dut_inst->design_top_portal_axis_master, *(all_axis_slave_ports[i])); //Connect(axis_master_port &m, axis_slave_port &s)
+    //axi interfaces for mult design
+    all_axis_master_signals[j]->Connect(*(all_axis_master_ports[j]), cluster->all_systems[j]->design_dut_inst->design_top_portal_axis_slave); //Connect(axis_master_port &m, axis_slave_port &s)
+    all_axis_slave_signals[j]->Connect(cluster->all_systems[j]->design_dut_inst->design_top_portal_axis_master, *(all_axis_slave_ports[j])); //Connect(axis_master_port &m, axis_slave_port &s)
 }
 
 bool wrote_yet = false;

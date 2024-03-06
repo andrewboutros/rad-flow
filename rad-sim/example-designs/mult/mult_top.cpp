@@ -31,6 +31,10 @@ mult_top::mult_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
   portal_inst->portal_out(this->portal_out);
   //this->top_axis_portal_interface = &(portal_inst->axis_mult_portal_slave_interface);
 
+  //connect master to master instead, to expose to top
+  portal_inst->portal_axis_master.ConnectToPort(this->design_top_portal_axis_master);
+  portal_inst->portal_axis_slave.ConnectToPort(this->design_top_portal_axis_slave);
+
   radsim_design->BuildDesignContext("/home/bassiabn/rad-sim/rad-flow/rad-sim/example-designs/mult", "mult.place",
                                    "mult.clks"); //AKB changed to ptr deref, added first arg
   radsim_design->CreateSystemNoCs(rst); //AKB changed to ptr deref
