@@ -22,6 +22,7 @@ struct axis_fields {
   sc_bv<AXIS_IDW> tid;
   sc_bv<AXIS_DESTW> tdest;
   sc_bv<AXIS_USERW> tuser;
+  //needed to create sc_fifo of custom struct type
   friend std::ostream& operator<<(std::ostream& os, const axis_fields& I);
 };
 

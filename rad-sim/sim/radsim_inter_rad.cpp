@@ -1,7 +1,7 @@
 #include <radsim_inter_rad.hpp>
 
 std::ostream& operator<<(std::ostream& os, const axis_fields& I) {
-    return os;
+    return os; //needed to create sc_fifo of custom struct type
 }
 
 RADSimInterRad::RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_clk, RADSimCluster* cluster) : sc_module(name) {
@@ -22,16 +22,6 @@ RADSimInterRad::RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_c
         axis_master_port* new_axis_master_port = new axis_master_port;
         all_axis_master_ports.push_back(new_axis_master_port);
     }
-    //temp: doing outside of loop bc not ready yet 
-    /*axis_signal* new_axis_signal = new axis_signal;
-    all_axis_signals.push_back(new_axis_signal);
-    new_axis_signal = new axis_signal; //second signal (one for master, one for slave)
-    all_axis_signals.push_back(new_axis_signal);
-    axis_slave_port* new_axis_slave_port = new axis_slave_port;
-    all_axis_slave_ports.push_back(new_axis_slave_port);
-    axis_master_port* new_axis_master_port = new axis_master_port;
-    all_axis_master_ports.push_back(new_axis_master_port);*/
-
     SC_THREAD(writeFifo);
     SC_THREAD(readFifo);
 
@@ -46,12 +36,6 @@ RADSimInterRad::~RADSimInterRad() {
         delete all_axis_slave_ports[v];
         delete all_axis_master_ports[v];
     }
-
-    //temp do manually
-    /*delete all_axis_signals[0];
-    delete all_axis_signals[1];
-    delete all_axis_slave_ports[0];
-    delete all_axis_master_ports[0];*/
 }
 
 void
