@@ -14,6 +14,7 @@ private:
   sc_signal<bool> client_ready_sig;
   sc_signal<sc_bv<DATAW>> response_sig;
   sc_signal<bool> response_valid_sig;
+  sc_signal<bool> mult_inter_rad_recvd_sig;
 
 public:
   sc_signal<bool> rst_sig;

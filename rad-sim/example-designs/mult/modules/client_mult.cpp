@@ -55,7 +55,7 @@ void client_mult::Tick() {
     // Sending transactions to AXI-S NoC
     if (!client_tdata_fifo.empty()) {
       sc_bv<DATAW> tdata = client_tdata_fifo.front();
-      std::string dst_port_name = "mult_inst.axis_mult_interface";
+      /*std::string dst_port_name = "mult_inst.axis_mult_interface";
       uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
       uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
 
@@ -73,9 +73,9 @@ void client_mult::Tick() {
     }
 
     if (axis_client_interface.tvalid.read() &&
-        axis_client_interface.tready.read()) {
+        axis_client_interface.tready.read()) {*/
       client_tdata_fifo.pop();
-      std::cout << module_name << ": Sent Transaction!" << std::endl;
+      //std::cout << module_name << ": Sent Transaction!" << std::endl;
     }
     wait();
   }

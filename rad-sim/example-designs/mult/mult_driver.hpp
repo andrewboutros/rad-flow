@@ -24,6 +24,7 @@ public:
   sc_in<bool> client_ready;
   sc_in<sc_bv<DATAW>> response;
   sc_in<bool> response_valid;
+  sc_in<bool> mult_inter_rad_recvd;
 
   mult_driver(const sc_module_name &name, RADSimDesignContext* radsim_design); //AKB ADDED last arg
   ~mult_driver();

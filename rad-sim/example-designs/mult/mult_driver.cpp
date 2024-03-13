@@ -1,6 +1,6 @@
 #include <mult_driver.hpp>
 
-#define NUM_ADDENDS 3
+#define NUM_ADDENDS 5
 
 mult_driver::mult_driver(const sc_module_name &name, RADSimDesignContext* radsim_design)
     : sc_module(name) {
@@ -57,7 +57,8 @@ void mult_driver::source() {
 }
 
 void mult_driver::sink() {
-  while (!response_valid.read()) {
+  //works, temp commented out to test, returned now
+  while (!(response_valid.read())) { //&& mult_inter_rad_recvd.read())) {
     wait();
   }
   std::cout << "Received " << response.read().to_uint64() << " product from the multiplier!" << std::endl;

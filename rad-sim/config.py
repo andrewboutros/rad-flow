@@ -323,20 +323,23 @@ def generate_radsim_main(design_name):
     main_cpp_file.write("}\n")
 
 def prepare_build_dir(design_names):
-    if os.path.isdir("build_akb_test"):
-        shutil.rmtree("build_akb_test", ignore_errors=True)
-    os.makedirs("build_akb_test")
-    #os.system("cd build_akb_test; cmake -DDESIGN:STRING=" + design_name + " ..; cd ..;")
-    os.system("cd build_akb_test;")
+    if os.path.isdir("build"):
+        shutil.rmtree("build", ignore_errors=True)
+    os.makedirs("build")
+    #os.system("cd build; cmake -DDESIGN:STRING=" + design_name + " ..; cd ..;")
+    #os.system("cd build;")
     semicol_sep_design_names = ''
-    flag_first_design = True
+    count = 0
+    count_max = len(design_names)
     for design_name in design_names:
         semicol_sep_design_names += design_name
-        if not flag_first_design:
+        if count < count_max-1:
             semicol_sep_design_names += ';' 
-        flag_first_design = False
-    os.system("cmake -DDESIGN_NAMES=" + semicol_sep_design_names + " ..;")
-    os.system("cd ..;")
+        count = count+1
+    #print("cmake -DDESIGN_NAMES=\"" + semicol_sep_design_names + "\" ..;")
+    os.system("cd build; cmake -DDESIGN_NAMES=\"" + semicol_sep_design_names + "\" ..; cd .;")
+    #os.system("cd build; cmake -DDESIGN:STRING=\"" + 'add' + "\" ..; cd .;")
+    #os.system("cd ..;")
 
 # Get design name from command line argument
 if len(sys.argv) < 2:
@@ -358,7 +361,7 @@ for design_name in design_names:
 config_filename = "uni_config.yml"
 
 # List default parameter values
-booksim_params = {
+'''booksim_params = {
     "radsim_root_dir": os.getcwd(),
     "noc_type": "2d",
     "noc_num_nocs": 1,
@@ -423,17 +426,17 @@ radsim_knobs = { #includes cluster config
     "cluster_topology":["all-to-all"],
     "cluster_connection_model":["wire"]
 
-}
+}'''
 
 # Parse configuration file
-parse_config_file(config_filename, booksim_params, radsim_header_params, radsim_knobs)
-print_config(booksim_params, radsim_header_params, radsim_knobs)
+#parse_config_file(config_filename, booksim_params, radsim_header_params, radsim_knobs)
+#print_config(booksim_params, radsim_header_params, radsim_knobs)
 
 # Generate RAD-Sim input files
-'''generate_booksim_config_files(booksim_params, radsim_header_params, radsim_knobs)
-generate_radsim_params_header(radsim_header_params)
-generate_radsim_config_file(radsim_knobs)
-generate_radsim_main(design_name)
+#generate_booksim_config_files(booksim_params, radsim_header_params, radsim_knobs)
+#generate_radsim_params_header(radsim_header_params)
+#generate_radsim_config_file(radsim_knobs)
+#generate_radsim_main(design_name)
 prepare_build_dir(design_names)
 
-print("RAD-Sim was configured successfully!")'''
+print("RAD-Sim was configured successfully!")

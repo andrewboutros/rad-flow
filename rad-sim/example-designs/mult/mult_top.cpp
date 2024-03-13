@@ -22,6 +22,7 @@ mult_top::mult_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
   mult_inst->rst(rst);
   mult_inst->response(response);
   mult_inst->response_valid(response_valid);
+  mult_inst->mult_inter_rad_recvd(this->mult_inter_rad_recvd);
 
   //AKB: added code block for portal module
   module_name_str = "portal_inst";
@@ -29,6 +30,7 @@ mult_top::mult_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
   portal_inst = new portal_mult(module_name, radsim_design);
   portal_inst->portal_in(this->portal_in); //connecting portal's portal_in to the parent class system_top's portal_in
   portal_inst->portal_out(this->portal_out);
+  portal_inst->rst(rst);
   //this->top_axis_portal_interface = &(portal_inst->axis_mult_portal_slave_interface);
 
   //connect master to master instead, to expose to top

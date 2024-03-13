@@ -59,10 +59,10 @@ int sc_main(int argc, char *argv[]) {
 		//new_val = system2->dut_inst->portal_in.read(); //works but replacing to test axi
 		new_val = system2->dut_inst->design_top_portal_axis_slave.tdata.read(); //TODO: use handshaking properly
 		//if (val != 0) {
-		//if (new_val != old_val) { //to ensure only displayed once
-			std::cout << "read system2 portal_in: " << new_val << std::endl;
+		if (new_val != old_val) { //to ensure only displayed once
+			std::cout << "read system2 portal_in: " << new_val.to_uint64() << std::endl;
 			old_val = new_val;
-		//}
+		}
 	}
 	std::cout << "stopping" << std::endl;
 	int end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));

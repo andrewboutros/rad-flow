@@ -48,29 +48,32 @@ void portal::Tick() { //sequential logic
         if (axis_add_portal_slave_interface.tvalid.read() &&
             axis_add_portal_slave_interface.tready.read()) {
             std::cout << "Also got here" << std:: endl;
-            std::cout << "Add design " << module_name << ": Got Transaction (user = "
+            std::cout << "Add design sending data over portal module " << module_name << ": Got Transaction (user = "
                         << axis_add_portal_slave_interface.tuser.read().to_uint64() << ") (addend = "
                         << axis_add_portal_slave_interface.tdata.read().to_uint64() << ")!"
                         << std::endl;
              data_to_buffer = axis_add_portal_slave_interface.tdata.read();
-             dest_device = 1;
+             dest_device = 1; //for testing, fixed at 1 to send to RAD1 which has mult design
              got_data = true;
-        }
-        if (got_data) {
-            std::cout << "counter : " << counter << std::endl;
+        //}
+        //if (got_data) {
+            //std::cout << "counter : " << counter << std::endl;
             //if (counter == 3) {
-            if (counter == 0) { //always send, do not buffer in portal module bc moved that to interrad now
-                counter = 0;
+            //if (counter == 0) { //always send, do not buffer in portal module bc moved that to interrad now
+            //    counter = 0;
                 //portal_out.write(data_to_buffer); //works but replace with axi
                 portal_axis_master.tdata.write(data_to_buffer);
                 portal_axis_master.tuser.write(dest_device);
+                portal_axis_master.tvalid.write(true);
+                portal_axis_master.tlast.write(axis_add_portal_slave_interface.tlast.read());
                 std::cout << "portal.cpp in add design sent dest_device: " << dest_device.to_int64() << std::endl;
                 portal_recvd.write(1);
             }
             else {
-                counter++;
+                //counter++;
+                portal_axis_master.tvalid.write(false);
             }
-        }
+        //}
 
         wait();
     }

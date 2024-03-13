@@ -10,7 +10,7 @@
 #include <axis_interface.hpp>
 
 #define DATAW 128
-#define NUM_SLOTS 2 //number of fifo slots
+#define NUM_SLOTS 5 //number of fifo slots
 
 struct axis_fields {
   bool tvalid;

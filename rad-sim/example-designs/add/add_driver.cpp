@@ -1,6 +1,6 @@
 #include <add_driver.hpp>
 
-#define NUM_ADDENDS 3
+#define NUM_ADDENDS 5 //3
 
 add_driver::add_driver(const sc_module_name &name, RADSimDesignContext* radsim_design)
     : sc_module(name) {

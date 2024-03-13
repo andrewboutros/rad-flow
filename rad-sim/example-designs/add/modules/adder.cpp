@@ -34,7 +34,8 @@ void adder::Tick() {
   response.write(0);
   wait();
 
-  bool sent_first_addend = false;
+  int count_sent_addends = 0;
+  int total_num_addends = 10;
   // Always @ positive edge of the clock
   while (true) {
     // Receiving transaction from AXI-S interface
@@ -47,27 +48,24 @@ void adder::Tick() {
                 << axis_adder_interface.tuser.read().to_uint64() << ") (addend = "
                 << axis_adder_interface.tdata.read().to_uint64() << ")!"
                 << std::endl;
-      if (!sent_first_addend) {
-        std::cout << "Got here" << std::endl;
-        sent_first_addend = true;
+        std::cout << "Sending the " << count_sent_addends << "th addend over NoC to portal module " << std::endl;
+        count_sent_addends++;
         std::string src_port_name = module_name + ".axis_adder_master_interface";
         std::string dst_port_name = "portal_inst.axis_add_portal_slave_interface";
         cout << axis_adder_interface.tdata.read().to_uint64() << endl;
         uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
         uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
-
         axis_adder_master_interface.tdest.write(dst_addr);
         axis_adder_master_interface.tid.write(0);
         axis_adder_master_interface.tstrb.write(0);
         axis_adder_master_interface.tkeep.write(0);
         axis_adder_master_interface.tuser.write(src_addr);
-        axis_adder_master_interface.tlast.write(true); //true bc only writing first addend
+        axis_adder_master_interface.tlast.write(axis_adder_interface.tlast.read()); //true only for last addend
         axis_adder_master_interface.tdata.write(axis_adder_interface.tdata.read().to_uint64());
-
         axis_adder_master_interface.tvalid.write(true);
-      } else {
-        axis_adder_master_interface.tvalid.write(false);
-      }
+    }
+    else {
+      axis_adder_master_interface.tvalid.write(false);
     }
 
     // Print Sum and Exit

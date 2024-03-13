@@ -27,6 +27,7 @@ public:
   //AKB ADDED for portal module:
   //sc_in<bool> portal_in;
   //sc_out<bool> portal_out;
+  sc_out<bool> mult_inter_rad_recvd;
 
   mult_top(const sc_module_name &name, RADSimDesignContext* radsim_design); //AKB ADDED last arg
   ~mult_top();

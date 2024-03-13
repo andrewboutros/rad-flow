@@ -2,6 +2,8 @@
 
 mult::mult(const sc_module_name &name, RADSimDesignContext* radsim_design) //AKB added last arg
     : RADSimModule(name, radsim_design) {
+  
+  this->radsim_design = radsim_design;
 
   // Combinational logic and its sensitivity list
   SC_METHOD(Assign);
@@ -37,8 +39,8 @@ void mult::Tick() {
     // Receiving transaction from AXI-S interface
     if (axis_mult_interface.tvalid.read() &&
         axis_mult_interface.tready.read()) {
-      uint64_t current_product = mult_rolling_product.to_uint64();
-      mult_rolling_product = current_product * axis_mult_interface.tdata.read().to_uint64();
+      uint64_t current_product = mult_rolling_product.to_uint64(); //removing for experiment
+      mult_rolling_product = current_product * axis_mult_interface.tdata.read().to_uint64(); //removing for experiment
       t_finished.write(axis_mult_interface.tlast.read());
       std::cout << module_name << ": Got Transaction (user = "
                 << axis_mult_interface.tuser.read().to_uint64() << ") (factor = "
@@ -50,6 +52,7 @@ void mult::Tick() {
     if (t_finished.read()) {
         response_valid.write(1);
         response.write(mult_rolling_product);
+        //mult_inter_rad_recvd.write(1); //maybe not needed if using the
     }
     wait();
   }
