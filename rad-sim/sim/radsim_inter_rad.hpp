@@ -34,6 +34,7 @@ class RADSimInterRad : public sc_module {
         //sc_fifo<sc_bv<DATAW>> data_in_rad1 = sc_fifo<sc_bv<DATAW>>(2); //2 slots for now
         //sc_vector<sc_fifo<sc_bv<DATAW>>> switch_port_fifos{"switch_port_fifos"};
     public:
+        int num_rads;
         sc_in<bool> clk;
         //std::vector<sc_fifo<sc_bv<DATAW>>*> fifos; //works but replacing with struct elems
         std::vector<sc_fifo<axis_fields>*> fifos;

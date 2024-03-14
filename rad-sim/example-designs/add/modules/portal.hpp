@@ -9,6 +9,7 @@
 #include <string>
 #include <systemc.h>
 #include <vector>
+#include <radsim_utils.hpp>
 
 class portal : public RADSimModule {
     private:

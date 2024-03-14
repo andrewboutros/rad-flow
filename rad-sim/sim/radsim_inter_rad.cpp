@@ -1,5 +1,7 @@
 #include <radsim_inter_rad.hpp>
 
+int num_wait = 1; //7;
+
 std::ostream& operator<<(std::ostream& os, const axis_fields& I) {
     return os; //needed to create sc_fifo of custom struct type
 }
@@ -7,9 +9,11 @@ std::ostream& operator<<(std::ostream& os, const axis_fields& I) {
 RADSimInterRad::RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_clk, RADSimCluster* cluster) : sc_module(name) {
     this->cluster = cluster;
     this->clk(*inter_rad_clk);
-    all_signals.init(cluster->num_rads + 1);
+    num_rads = cluster->num_rads;
+    all_signals.init(num_rads + 1);
+    std::cout << num_rads << std::endl;
 
-    for (int v = 0; v < cluster->num_rads; v++) { //width of vector = num of rads bc want fifo per rad
+    for (int v = 0; v < num_rads; v++) { //width of vector = num of rads bc want fifo per rad
         sc_fifo<axis_fields>* new_fifo_ptr = new sc_fifo<axis_fields>(NUM_SLOTS);
         fifos.push_back(new_fifo_ptr);
         //adding to axi vectors
@@ -22,14 +26,15 @@ RADSimInterRad::RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_c
         axis_master_port* new_axis_master_port = new axis_master_port;
         all_axis_master_ports.push_back(new_axis_master_port);
     }
-    SC_THREAD(writeFifo);
-    SC_THREAD(readFifo);
-
+    //SC_THREAD(writeFifo);
+    //SC_THREAD(readFifo);
+    SC_CTHREAD(writeFifo, clk.pos());
+    SC_CTHREAD(readFifo, clk.pos());
 }
 
 RADSimInterRad::~RADSimInterRad() {
     int v;
-    for (v = 0; v < this->cluster->num_rads; v++) {
+    for (v = 0; v < num_rads; v++) {
         delete fifos[v];
         delete all_axis_master_signals[v];
         delete all_axis_slave_signals[v];
@@ -72,6 +77,7 @@ RADSimInterRad::writeFifo() {
         //std::cout << "reached inter_rad " << std::endl;
         //sc_bv<DATAW> curr_val = cluster->all_systems[0]->design_dut_inst->portal_out.read(); //this works, but try using signal instead
         //sc_bv<DATAW> curr_val = all_signals[2]; //works but replacing with axi
+        //for (int i = 0; i < num_rads; i++) 
         struct axis_fields curr_transaction;
         curr_transaction.tdata = all_axis_slave_ports[0]->tdata.read(); //0 bc adder
         curr_transaction.tuser = all_axis_slave_ports[0]->tuser.read();
@@ -88,9 +94,15 @@ RADSimInterRad::writeFifo() {
             }
         }
         prev_valid = curr_transaction.tvalid;
-        wait(1, SC_NS); //eventually change to 1.3, SC_US -- assuming 2.6 us / 2 latency for one piece of data
+        //wait(num_wait, SC_NS); //SC_NS); //eventually change to 1.3, SC_US -- assuming 2.6 us / 2 latency for one piece of data
+        wait();
     }
 }
+
+int counter_delay = 0; //to delay X number of cycles
+float latency_sec = 2.6 * pow(10, -6);
+float period_sec = 5.0 * pow(10, -9);
+int target_delay = ceil(latency_sec/period_sec); //number of cycles to delay
 
 void
 RADSimInterRad::readFifo() {
@@ -107,28 +119,39 @@ RADSimInterRad::readFifo() {
         
         //sc_bv<DATAW> val = this->fifos[0]->read();
 
-        struct axis_fields read_from_fifo;
-        this->fifos[0]->nb_read(read_from_fifo);
-        sc_bv<DATAW> val = read_from_fifo.tdata;
-        int dest_device = read_from_fifo.tuser.to_uint64(); //#define AXIS_USERW     66
-        
-        //std::cout << "inter_rad fifo data READ is " << this->fifos[0]->read() << std::endl;
-        if (read_from_fifo.tvalid) {
-            std::cout << "inter_rad fifo data READ is " << val.to_uint64() << std::endl;
-            std::cout << "dest_device: " << dest_device << std::endl;
-            //all_signals[1].write(val); //works but replacing with axi
-            //all_axis_master_ports[1]->tdata.write(val); //1 bc sending to mult design
-            all_axis_master_signals[dest_device]->tdata.write(val); //works if write to either this or line above
-            all_axis_master_signals[dest_device]->tvalid.write(read_from_fifo.tvalid);
-            all_axis_master_signals[dest_device]->tlast.write(read_from_fifo.tlast);
-            //std::cout << "inter_rad fifo free after READ is " << this->fifos[0]->num_free() << "/" << this->fifos[0]->num_available() << std::endl;
+        if ((this->fifos[0]->num_available() != 0) && (counter_delay == target_delay)){ //check that fifo is not empty
+            counter_delay = 0; //reset counter
+            struct axis_fields read_from_fifo;
+            this->fifos[0]->nb_read(read_from_fifo);
+            sc_bv<DATAW> val = read_from_fifo.tdata;
+            int dest_device = read_from_fifo.tuser.to_uint64(); //#define AXIS_USERW     66
+            
+            //std::cout << "inter_rad fifo data READ is " << this->fifos[0]->read() << std::endl;
+            if (read_from_fifo.tvalid) {
+                std::cout << "inter_rad fifo data READ is " << val.to_uint64() << std::endl;
+                std::cout << "dest_device: " << dest_device << std::endl;
+                //all_signals[1].write(val); //works but replacing with axi
+                //all_axis_master_ports[1]->tdata.write(val); //1 bc sending to mult design
+                all_axis_master_signals[dest_device]->tdata.write(val); //works if write to either this or line above
+                all_axis_master_signals[dest_device]->tvalid.write(read_from_fifo.tvalid);
+                all_axis_master_signals[dest_device]->tlast.write(read_from_fifo.tlast);
+                //std::cout << "inter_rad fifo free after READ is " << this->fifos[0]->num_free() << "/" << this->fifos[0]->num_available() << std::endl;
+            }
+            //std::cout << "radsim_inter_rad value is (val): " << val << std::endl; //used for testing
+            /*std::cout << "radsim_inter_rad value is (master_ports): " << all_axis_master_ports[1]->tdata.read() << std::endl;
+            std::cout << "radsim_inter_rad value is (master_signals): " << all_axis_master_signals[1]->tdata.read() << std::endl;
+            std::cout << "radsim_inter_rad value is (dut_inst): " << cluster->all_systems[1]->design_dut_inst->design_top_portal_axis_slave.tdata.read() << std::endl;
+            */
         }
-        //std::cout << "radsim_inter_rad value is (val): " << val << std::endl; //used for testing
-        /*std::cout << "radsim_inter_rad value is (master_ports): " << all_axis_master_ports[1]->tdata.read() << std::endl;
-        std::cout << "radsim_inter_rad value is (master_signals): " << all_axis_master_signals[1]->tdata.read() << std::endl;
-        std::cout << "radsim_inter_rad value is (dut_inst): " << cluster->all_systems[1]->design_dut_inst->design_top_portal_axis_slave.tdata.read() << std::endl;
-        */
+        else {
+            //no data to be written to any RAD's portal module
+            //all_axis_master_signals[0]->tvalid.write(false);
+            all_axis_master_signals[1]->tvalid.write(false);
+        }
+        counter_delay++;
 
-        wait(1, SC_NS); //eventually change to 1.3, SC_US -- assuming 2.6 us / 2 latency for one piece of data
+        //wait(num_wait, SC_NS); //eventually change to 1.3, SC_US -- assuming 2.6 us / 2 latency for one piece of data
+        wait();
+        //wait(2);
     }
 }

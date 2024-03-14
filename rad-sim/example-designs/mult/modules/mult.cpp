@@ -33,6 +33,8 @@ void mult::Tick() {
   response_valid.write(0);
   response.write(0);
   wait();
+  bool printed_end_cycle = false;
+
 
   // Always @ positive edge of the clock
   while (true) {
@@ -53,6 +55,11 @@ void mult::Tick() {
         response_valid.write(1);
         response.write(mult_rolling_product);
         //mult_inter_rad_recvd.write(1); //maybe not needed if using the
+        if (!printed_end_cycle) {
+          int end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+          std::cout << "mult.cpp received all factors from add RAD at cycle " << end_cycle << std::endl;
+          printed_end_cycle = true;
+        }
     }
     wait();
   }

@@ -68,6 +68,10 @@ void portal::Tick() { //sequential logic
                 portal_axis_master.tlast.write(axis_add_portal_slave_interface.tlast.read());
                 std::cout << "portal.cpp in add design sent dest_device: " << dest_device.to_int64() << std::endl;
                 portal_recvd.write(1);
+                if (axis_add_portal_slave_interface.tlast.read()) {
+                    int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+                    std::cout << "Add design portal.cpp sent last data via inter_rad at cycle " << curr_cycle << std::endl;
+                }
             }
             else {
                 //counter++;
