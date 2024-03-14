@@ -11,6 +11,8 @@
 
 #define DATAW 128
 #define NUM_SLOTS 5 //number of fifo slots
+#define DEST_RAD_LSB 0
+#define DEST_RAD_MSB 7
 
 struct axis_fields {
   bool tvalid;
@@ -33,6 +35,10 @@ class RADSimInterRad : public sc_module {
         sc_vector<sc_signal<sc_bv<DATAW>>> all_signals{"all_signals"};
         //sc_fifo<sc_bv<DATAW>> data_in_rad1 = sc_fifo<sc_bv<DATAW>>(2); //2 slots for now
         //sc_vector<sc_fifo<sc_bv<DATAW>>> switch_port_fifos{"switch_port_fifos"};
+        //for latency
+        float latency_sec = 5.0*2 * pow(10, -9); //2.6 * pow(10, -6);
+        float period_sec = 5.0 * pow(10, -9);
+        int target_delay = ceil(latency_sec/period_sec); //number of cycles to delay
     public:
         int num_rads;
         sc_in<bool> clk;
@@ -44,6 +50,14 @@ class RADSimInterRad : public sc_module {
         std::vector<axis_signal*> all_axis_slave_signals;
         std::vector<axis_slave_port*> all_axis_slave_ports;
         std::vector<axis_master_port*> all_axis_master_ports;
+
+        //for rising edge detection on each interface
+        std::vector<bool> prev_valid;
+
+        //for latency counter
+        //std::vector<std::array<int, NUM_SLOTS>> fifos_latency_counters;
+        //using vector of vectors bc dynamic sizing based on num_rads, allows pushback and erase, and faster incrementing (we increment more often than erase from front) than std::deque
+        std::vector<std::vector<int>> fifos_latency_counters;
 
         RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_clk, RADSimCluster* cluster);
         ~RADSimInterRad();
