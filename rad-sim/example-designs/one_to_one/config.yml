@@ -1,13 +1,13 @@
 noc:
   type: ['2d']
   num_nocs: 1
-  clk_period: [1.0]
+  clk_period: [2.0]
   payload_width: [166]
-  topology: ['mesh']
+  topology: ['torus']
   dim_x: [4]
   dim_y: [4] 
-  routing_func: ['dim_order']
-  vcs: [5]
+  routing_func: ['dim_order_ni']
+  vcs: [80]
   vc_buffer_size: [8]
   output_buffer_size: [8]
   num_packet_types: [5]
@@ -27,10 +27,24 @@ noc_adapters:
   out_arbiter: ['priority_rr']
   vc_mapping: ['direct']
 
+dram:
+  num_controllers: 1
+  clk_periods: [2.0]
+  queue_sizes: [64]
+  config_files: ['HBM2_8Gb_x128']
+
+# DDR example
+# dram:
+#   num_controllers: 1
+#   clk_periods: [3.32]
+#   queue_sizes: [64]
+#   config_files: ['DDR4_8Gb_x16_2400']
+  
+
 design:
   name: 'one_to_one'
   noc_placement: ['one_to_one.place']
-  clk_periods: [5.0]
+  clk_periods: [10.0]
 
 telemetry:
   log_verbosity: 2
