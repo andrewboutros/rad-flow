@@ -1,0 +1,44 @@
+noc:
+  type: ['2d']
+  num_nocs: 1
+  clk_period: [2.0]
+  payload_width: [166]
+  topology: ['mesh']
+  dim_x: [5]
+  dim_y: [5] 
+  routing_func: ['xy_yx']
+  vcs: [10]
+  vc_buffer_size: [50]
+  output_buffer_size: [8]
+  num_packet_types: [5]
+  router_uarch: ['iq']
+  vc_allocator: ['islip']
+  sw_allocator:  ['islip']
+  credit_delay: [1]
+  routing_delay: [1]
+  vc_alloc_delay: [1]
+  sw_alloc_delay: [1]
+
+noc_adapters:
+  clk_period: [1.25]
+  fifo_size: [16]
+  obuff_size: [2]
+  in_arbiter: ['fixed_rr']
+  out_arbiter: ['priority_rr']
+  vc_mapping: ['direct']
+
+dram:
+  num_controllers: 2
+  clk_periods: [3.32, 3.32]
+  queue_sizes: [64, 64]
+  config_files: ['DDR4_8Gb_x16_2400', 'DDR4_8Gb_x16_2400']
+  
+
+design:
+  name: 'two_to_two'
+  noc_placement: ['two_to_two.place']
+  clk_periods: [10.0]
+
+telemetry:
+  log_verbosity: 2
+  traces: []

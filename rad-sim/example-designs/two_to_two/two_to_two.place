@@ -1,0 +1,4 @@
+ext_mem_0.mem_channel_0 0 0 aximm
+traffic_generator_inst_0.aximm_req_interface 0 4 aximm
+ext_mem_1.mem_channel_0 0 1 aximm
+traffic_generator_inst_1.aximm_req_interface 0 2 aximm
