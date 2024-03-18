@@ -1,7 +1,7 @@
 #pragma once
 
 // clang-format off
-#define RADSIM_ROOT_DIR "/home/andrew/test_npu/rad-flow/rad-sim"
+#define RADSIM_ROOT_DIR "/home/andrew/yan/rad-flow/rad-sim"
 
 // NoC-related Parameters
 #define NOC_LINKS_PAYLOAD_WIDTH   145
