@@ -22,29 +22,46 @@ adder::~adder() {}
 void adder::Assign() {
   if (rst) {
     adder_rolling_sum = 0;
-    axis_adder_interface.tready.write(false);
+    //axis_adder_interface.tready.write(false); //moving to Tick() bc needs to toggle with clock cycles
   } else {
     // Always ready to accept the transaction
-    axis_adder_interface.tready.write(true);
+    //axis_adder_interface.tready.write(true);
   }
 }
 
 void adder::Tick() {
   response_valid.write(0);
   response.write(0);
+  axis_adder_interface.tready.write(false);
   wait();
 
   int count_sent_addends = 0;
   int total_num_addends = 10;
+  //bool accept_data = true;
+  int accept_data = 0;
+  int accept_delay = 0; //change this to experiment with delaying acceptance of data from NoC
   // Always @ positive edge of the clock
+  int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+  std::cout << "adder.cpp while loop at cycle " << curr_cycle << std::endl;
   while (true) {
+    //Toggle ready signal
+    if (accept_data == accept_delay) {
+      axis_adder_interface.tready.write(true);
+      accept_data = 0;
+    }
+    else {
+      axis_adder_interface.tready.write(false);
+      accept_data++;
+    }
+    //accept_data = !accept_data;
     // Receiving transaction from AXI-S interface
     if (axis_adder_interface.tvalid.read() &&
         axis_adder_interface.tready.read()) {
       uint64_t current_sum = adder_rolling_sum.to_uint64();
       adder_rolling_sum = current_sum + axis_adder_interface.tdata.read().to_uint64();
       t_finished.write(axis_adder_interface.tlast.read());
-      std::cout << module_name << ": Got Transaction (user = "
+      int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+      std::cout << module_name << ": Got Transaction " << count_sent_addends << " on cycle " << curr_cycle <<" (user = "
                 << axis_adder_interface.tuser.read().to_uint64() << ") (addend = "
                 << axis_adder_interface.tdata.read().to_uint64() << ")!"
                 << std::endl;

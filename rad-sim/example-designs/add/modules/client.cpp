@@ -76,7 +76,8 @@ void client::Tick() {
     if (axis_client_interface.tvalid.read() &&
         axis_client_interface.tready.read()) {
       client_tdata_fifo.pop();
-      std::cout << module_name << ": Sent Transaction!" << std::endl;
+      int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+      std::cout << module_name << ": Sent Transaction! on cycle " << curr_cycle << std::endl;
     }
     wait();
   }
