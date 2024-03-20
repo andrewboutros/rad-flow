@@ -10,7 +10,7 @@
 #include <axis_interface.hpp>
 
 #define DATAW 128
-#define NUM_SLOTS 5 //number of fifo slots
+#define NUM_SLOTS 5 //number of fifo slots, for now = NUM_ADDENDS
 #define DEST_RAD_LSB 0
 #define DEST_RAD_MSB 7
 

@@ -36,7 +36,7 @@ void adder::Tick() {
   wait();
 
   int count_sent_addends = 0;
-  int total_num_addends = 10;
+  //int total_num_addends = 10;
   //bool accept_data = true;
   int accept_data = 0;
   int accept_delay = 0; //change this to experiment with delaying acceptance of data from NoC
@@ -53,10 +53,17 @@ void adder::Tick() {
       axis_adder_interface.tready.write(false);
       accept_data++;
     }
+
+    //std::cout << "tready: " << axis_adder_master_interface.tready.read() << std::endl;
+
     //accept_data = !accept_data;
     // Receiving transaction from AXI-S interface
     if (axis_adder_interface.tvalid.read() &&
-        axis_adder_interface.tready.read()) {
+        axis_adder_interface.tready.read()
+        //also check master since sending on master in same cycle
+        //in future if needed, could decouple receiving and sending using a fifo
+        //&& axis_adder_master_interface.tready.read() //this is input from NoC
+    ){
       uint64_t current_sum = adder_rolling_sum.to_uint64();
       adder_rolling_sum = current_sum + axis_adder_interface.tdata.read().to_uint64();
       t_finished.write(axis_adder_interface.tlast.read());
@@ -65,8 +72,12 @@ void adder::Tick() {
                 << axis_adder_interface.tuser.read().to_uint64() << ") (addend = "
                 << axis_adder_interface.tdata.read().to_uint64() << ")!"
                 << std::endl;
-        std::cout << "Sending the " << count_sent_addends << "th addend over NoC to portal module " << std::endl;
-        count_sent_addends++;
+        
+        adder_tdata_tlast_fifo.push(std::make_tuple(axis_adder_interface.tdata.read(), axis_adder_interface.tlast.read()));
+    }
+
+    if (adder_tdata_tlast_fifo.size() > 0) { //fifo not empty
+        //TODO: restrict fifo size, not doing so for now
         std::string src_port_name = module_name + ".axis_adder_master_interface";
         std::string dst_port_name = "portal_inst.axis_add_portal_slave_interface";
         cout << axis_adder_interface.tdata.read().to_uint64() << endl;
@@ -77,12 +88,19 @@ void adder::Tick() {
         axis_adder_master_interface.tstrb.write(0);
         axis_adder_master_interface.tkeep.write(0);
         axis_adder_master_interface.tuser.write(src_addr);
-        axis_adder_master_interface.tlast.write(axis_adder_interface.tlast.read()); //true only for last addend
-        axis_adder_master_interface.tdata.write(axis_adder_interface.tdata.read().to_uint64());
+        axis_adder_master_interface.tlast.write(std::get<1>(adder_tdata_tlast_fifo.front())); //true only for last addend
+        axis_adder_master_interface.tdata.write(std::get<0>(adder_tdata_tlast_fifo.front()));
         axis_adder_master_interface.tvalid.write(true);
     }
     else {
       axis_adder_master_interface.tvalid.write(false);
+    }
+
+    //sent to portal module
+    if (axis_adder_master_interface.tvalid.read() && axis_adder_master_interface.tready.read()) {
+        count_sent_addends++;
+        std::cout << "Sent the " << count_sent_addends << "th addend over NoC to portal module " << std::endl;
+        adder_tdata_tlast_fifo.pop();
     }
 
     // Print Sum and Exit
@@ -105,10 +123,10 @@ void adder::RegisterModuleInfo() {
   RegisterAxisSlavePort(port_name, &axis_adder_interface, DATAW, 0);
 
   _num_noc_axis_slave_ports = 0;
-    _num_noc_axis_master_ports = 0;
-    _num_noc_aximm_slave_ports = 0;
-    _num_noc_aximm_master_ports = 0;
+  _num_noc_axis_master_ports = 0;
+  _num_noc_aximm_slave_ports = 0;
+  _num_noc_aximm_master_ports = 0;
 
-    port_name = module_name + ".axis_adder_master_interface";
-    RegisterAxisMasterPort(port_name, &axis_adder_master_interface, DATAW, 0);
+  port_name = module_name + ".axis_adder_master_interface";
+  RegisterAxisMasterPort(port_name, &axis_adder_master_interface, DATAW, 0);
 }

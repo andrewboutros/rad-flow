@@ -33,18 +33,7 @@ void portal::Tick() { //sequential logic
     wait();
     //Always @ positive edge of clock
     while (true) {
-        /*if (counter == 0) {
-            counter = 1;
-        }
-        else {
-            counter = 0;
-        }
-        portal_out.write(counter);*/
-        //std::cout << module_name << ": Wire in is showing " << portal_in.read() << std::endl;
-        //std::cout << counter << std::endl;
 
-        /*std::cout << axis_add_portal_slave_interface.tvalid.read() << std::endl;
-        std::cout << axis_add_portal_slave_interface.tready.read() << std::endl;*/
         if (axis_add_portal_slave_interface.tvalid.read() &&
             axis_add_portal_slave_interface.tready.read()) {
             std::cout << "Also got here" << std:: endl;
@@ -55,13 +44,7 @@ void portal::Tick() { //sequential logic
              data_to_buffer = axis_add_portal_slave_interface.tdata.read();
              dest_device = 1; //for testing, fixed at 1 to send to RAD1 which has mult design
              got_data = true;
-        //}
-        //if (got_data) {
-            //std::cout << "counter : " << counter << std::endl;
-            //if (counter == 3) {
-            //if (counter == 0) { //always send, do not buffer in portal module bc moved that to interrad now
-            //    counter = 0;
-                //portal_out.write(data_to_buffer); //works but replace with axi
+
                 portal_axis_master.tdata.write(data_to_buffer);
                 portal_axis_master.tuser.write(dest_device);
                 portal_axis_master.tvalid.write(true);
@@ -96,10 +79,10 @@ void portal::RegisterModuleInfo() {
     //std::cout << port_name << std::endl;
     RegisterAxisSlavePort(port_name, &axis_add_portal_slave_interface, DATAW, 0);
 
-    /*_num_noc_axis_slave_ports = 0;
+    _num_noc_axis_slave_ports = 0;
     _num_noc_axis_master_ports = 0;
     _num_noc_aximm_slave_ports = 0;
-    _num_noc_aximm_master_ports = 0;*/
+    _num_noc_aximm_master_ports = 0;
 
     port_name = module_name + ".axis_add_portal_master_interface";
     RegisterAxisMasterPort(port_name, &axis_add_portal_master_interface, DATAW, 0);

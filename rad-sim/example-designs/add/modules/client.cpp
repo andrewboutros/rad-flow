@@ -56,7 +56,7 @@ void client::Tick() {
     if (!client_tdata_fifo.empty()) {
       sc_bv<DATAW> tdata = client_tdata_fifo.front();
       std::string dst_port_name = "adder_inst.axis_adder_interface";
-      cout << dst_port_name << endl;
+      //cout << dst_port_name << endl;
       uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
       uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
 

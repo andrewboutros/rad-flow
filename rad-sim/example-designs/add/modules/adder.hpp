@@ -10,11 +10,13 @@
 #include <systemc.h>
 #include <vector>
 #include <radsim_utils.hpp>
+#include <tuple>
 
 class adder : public RADSimModule {
 private:
   sc_bv<DATAW> adder_rolling_sum; // Sum to store result
   sc_signal<bool> t_finished; // Signal flagging that the transaction has terminated
+  std::queue<std::tuple<sc_bv<DATAW>, bool>> adder_tdata_tlast_fifo;
 
 public:
   RADSimDesignContext* radsim_design;

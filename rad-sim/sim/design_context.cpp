@@ -499,7 +499,7 @@ void RADSimDesignContext::ConnectModulesToNoC() {
          slave_port_it++) {
           //std::cout << "here" << std::endl;
       std::string port_name = slave_port_it->first;
-     std::cout << port_name << ", ";
+     //std::cout << port_name << ", ";
       unsigned int noc_id = std::get<0>(_port_placement[port_name]);
       //std::cout << _noc_axis_master_ports[noc_id][port_name] << std::endl;
       _axis_signals[axis_signal_id].Connect(
