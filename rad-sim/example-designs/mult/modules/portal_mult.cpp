@@ -43,7 +43,7 @@ void portal_mult::Tick() { //sequential logic
                 << portal_axis_slave.tuser.read().to_uint64() << ") (addend = "
                 << portal_axis_slave.tdata.read().to_uint64() << ")!"
                 << std::endl;
-                //TODO: write the addend into the mult module and that will flag when received all values and can end simulation
+                //write the addend into the mult module and that will flag when received all values and can end simulation
                 std::string src_port_name = module_name + ".axis_mult_portal_master_interface";
                 std::string dst_port_name = "mult_inst.axis_mult_interface";
                 uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
@@ -56,6 +56,11 @@ void portal_mult::Tick() { //sequential logic
                 axis_mult_portal_master_interface.tlast.write(portal_axis_slave.tlast.read());
                 axis_mult_portal_master_interface.tdata.write(portal_axis_slave.tdata.read());
                 axis_mult_portal_master_interface.tvalid.write(true);
+                //checking if last transaction and if so, printing current simulation cycle count
+                if (portal_axis_slave.tlast.read()) {
+                    int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+                    std::cout << "Mult design portal_mult.cpp received last data via inter_rad at cycle " << curr_cycle << std::endl;
+                }
         }
         else {
             axis_mult_portal_master_interface.tvalid.write(false);
