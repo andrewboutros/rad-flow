@@ -31,7 +31,7 @@ void portal::Tick() { //sequential logic
     //portal_out_axi.tdata.write(counter);
     portal_recvd.write(0);
     portal_axis_master.tvalid.write(false);
-    bool test_ready_toggle = false;
+    //bool test_ready_toggle = false;
     wait();
     //Always @ positive edge of clock
     while (true) {
@@ -60,20 +60,20 @@ void portal::Tick() { //sequential logic
             portal_axis_fifo.push(curr_transaction);
         }
 
-        if ((portal_axis_fifo.size() > 0) && test_ready_toggle) {
+        if ((portal_axis_fifo.size() > 0) ) { //&& test_ready_toggle) {
             portal_axis_fields curr_transaction = portal_axis_fifo.front();
             portal_axis_master.tdata.write(curr_transaction.tdata);
             portal_axis_master.tuser.write(dest_device);
             portal_axis_master.tvalid.write(true);
             portal_axis_master.tlast.write(curr_transaction.tlast);
-            test_ready_toggle = false;
+            //test_ready_toggle = false;
         }
         else {
             //counter++;
             portal_axis_master.tdata.write(0);
             portal_axis_master.tuser.write(dest_device);
             portal_axis_master.tvalid.write(false);
-            test_ready_toggle = true;
+            //test_ready_toggle = true;
         }
 
         /*if (portal_axis_master.tvalid.read()) {
