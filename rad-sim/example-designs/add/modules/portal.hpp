@@ -11,9 +11,7 @@
 #include <vector>
 #include <radsim_utils.hpp>
 
-class portal : public RADSimModule {
-    public:
-        struct portal_axis_fields {
+struct portal_axis_fields {
             bool tvalid;
             bool tready;
             sc_bv<DATAW> tdata;
@@ -25,6 +23,7 @@ class portal : public RADSimModule {
             sc_bv<AXIS_USERW> tuser;
         };
 
+class portal : public RADSimModule {
     private:
         std::queue<portal_axis_fields> portal_axis_fifo;
 

@@ -30,6 +30,8 @@ void portal::Tick() { //sequential logic
     portal_out.write(counter);
     //portal_out_axi.tdata.write(counter);
     portal_recvd.write(0);
+    portal_axis_master.tvalid.write(false);
+    bool test_ready_toggle = false;
     wait();
     //Always @ positive edge of clock
     while (true) {
@@ -58,26 +60,40 @@ void portal::Tick() { //sequential logic
             portal_axis_fifo.push(curr_transaction);
         }
 
-        if (portal_axis_fifo.size() > 0) {
-                portal_axis_fields curr_transaction = portal_axis_fifo.front();
-                portal_axis_master.tdata.write(curr_transaction.tdata);
-                portal_axis_master.tuser.write(dest_device);
-                portal_axis_master.tvalid.write(true);
-                portal_axis_master.tlast.write(curr_transaction.tlast);
+        if ((portal_axis_fifo.size() > 0) && test_ready_toggle) {
+            portal_axis_fields curr_transaction = portal_axis_fifo.front();
+            portal_axis_master.tdata.write(curr_transaction.tdata);
+            portal_axis_master.tuser.write(dest_device);
+            portal_axis_master.tvalid.write(true);
+            portal_axis_master.tlast.write(curr_transaction.tlast);
+            test_ready_toggle = false;
         }
         else {
             //counter++;
+            portal_axis_master.tdata.write(0);
+            portal_axis_master.tuser.write(dest_device);
             portal_axis_master.tvalid.write(false);
+            test_ready_toggle = true;
         }
+
+        /*if (portal_axis_master.tvalid.read()) {
+            test_ready_toggle = !test_ready_toggle;
+        }*/
         
-        if (portal_axis_master.tvalid.read() && portal_axis_master.tready.read()) {
+        if (portal_axis_master.tvalid.read() && portal_axis_master.tready.read()) { // && test_ready_toggle){
             //pop out of fifo
-            portal_axis_fifo.pop();
-            std::cout << "portal.cpp in add design sent to dest_device: " << dest_device.to_int64() << std::endl;
-            portal_recvd.write(1);
-            if (portal_axis_master.tlast.read()) {
-                int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
-                std::cout << "Add design portal.cpp sent last data via inter_rad at cycle " << curr_cycle << std::endl;
+            if (!portal_axis_fifo.empty()) {
+                //test_ready_toggle = false;
+                portal_axis_fifo.pop();
+                std::cout << "portal.cpp in add design sent to dest_device: " << dest_device.to_int64() << std::endl;
+                portal_recvd.write(1);
+                if (portal_axis_master.tlast.read()) {
+                    int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+                    std::cout << "Add design portal.cpp sent last data via inter_rad at cycle " << curr_cycle << std::endl;
+                }
+            }
+            else { //should never reach here because valid should be false if fifo is empty
+                std::cout << "reached here but why? portal_axis_fifo.size(): " << portal_axis_fifo.size() << std::endl;
             }
         }
 
