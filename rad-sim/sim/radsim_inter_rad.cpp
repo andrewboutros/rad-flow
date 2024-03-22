@@ -96,16 +96,20 @@ RADSimInterRad::writeFifo() {
             curr_transaction.tvalid = all_axis_slave_ports[i]->tvalid.read();
             curr_transaction.tlast = all_axis_slave_ports[i]->tlast.read();
             all_axis_slave_ports[i]->tready.write(true);
-            if (all_axis_slave_ports[i]->tready.read()) {
+            /*if (all_axis_slave_ports[i]->tready.read()) {
                 //std::cout << "valid" << std::endl;
-            }
-            if (curr_transaction.tvalid) { //&& !prev_valid[i]) { //detect rising edge bc operating at higher clk freq than modules
+            }*/
+            if (curr_transaction.tvalid && all_axis_slave_ports[i]->tready.read()) { //&& !prev_valid[i]) { //detect rising edge bc operating at higher clk freq than modules
                 int dest_rad = curr_transaction.tuser.to_int64();
                 //std::cout << dest_rad << std::endl;
                 if (this->fifos[dest_rad]->nb_write(curr_transaction) != false) { //there was an available slot to write to
                     std::cout << "inter_rad fifo data WRITTEN is " << curr_transaction.tdata.to_uint64() << std::endl;
                     fifos_latency_counters[dest_rad].push_back(0); //for latency counters
                 }
+                all_axis_slave_ports[i]->tready.write(false);
+            }
+            else if (!all_axis_slave_ports[i]->tready.read()) {
+                all_axis_slave_ports[i]->tready.write(true);
             }
             prev_valid[i] = curr_transaction.tvalid;
         }

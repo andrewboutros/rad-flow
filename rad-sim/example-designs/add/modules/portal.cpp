@@ -80,7 +80,7 @@ void portal::Tick() { //sequential logic
             test_ready_toggle = !test_ready_toggle;
         }*/
         
-        if (portal_axis_master.tvalid.read() && portal_axis_master.tready.read()) { // && test_ready_toggle){
+        if (portal_axis_master.tvalid.read() && portal_axis_master.tready.read()) { // && test_ready_toggle) { 
             //pop out of fifo
             if (!portal_axis_fifo.empty()) {
                 //test_ready_toggle = false;
@@ -96,6 +96,9 @@ void portal::Tick() { //sequential logic
                 std::cout << "reached here but why? portal_axis_fifo.size(): " << portal_axis_fifo.size() << std::endl;
             }
         }
+        /*else if (!test_ready_toggle) {
+            test_ready_toggle = true;
+        }*/
 
         wait();
     }
