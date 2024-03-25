@@ -25,7 +25,7 @@ RADSimInterRad::RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_c
         new_axis_signal = new axis_signal; //second signal (one for master, one for slave)
         all_axis_slave_signals.push_back(new_axis_signal);
         axis_slave_port* new_axis_slave_port = new axis_slave_port;
-        //new_axis_slave_port->tready.write(true); //initialize ready to true
+        //new_axis_slave_port->tready.write(false); //initialize ready to false
         all_axis_slave_ports.push_back(new_axis_slave_port);
         axis_master_port* new_axis_master_port = new axis_master_port;
         all_axis_master_ports.push_back(new_axis_master_port);
@@ -82,11 +82,11 @@ RADSimInterRad::writeFifo() {
     TODO: use tdest instead of tuser
     TODO: automating adding all fields to curr_transaction
     */
-    /*wait();
+    //wait();
     for (int i = 0; i < num_rads; i++) {
-        all_axis_slave_signals[i]->tready.write(true);
-    }*/
-
+        all_axis_slave_signals[i]->tready.write(false);
+    }
+    int bw_counter = 0;
     wait();
     while (true) {
         for (int i = 0; i < num_rads; i++) {
@@ -95,7 +95,7 @@ RADSimInterRad::writeFifo() {
             curr_transaction.tuser = all_axis_slave_ports[i]->tuser.read();
             curr_transaction.tvalid = all_axis_slave_ports[i]->tvalid.read();
             curr_transaction.tlast = all_axis_slave_ports[i]->tlast.read();
-            all_axis_slave_ports[i]->tready.write(true);
+            //all_axis_slave_ports[i]->tready.write(true);
             /*if (all_axis_slave_ports[i]->tready.read()) {
                 //std::cout << "valid" << std::endl;
             }*/
@@ -109,7 +109,13 @@ RADSimInterRad::writeFifo() {
                 all_axis_slave_ports[i]->tready.write(false);
             }
             else if (!all_axis_slave_ports[i]->tready.read()) {
-                all_axis_slave_ports[i]->tready.write(true);
+                if (bw_counter == 0) {
+                    all_axis_slave_ports[i]->tready.write(true);
+                    bw_counter = 0;
+                }
+                else {
+                    bw_counter++;
+                }
             }
             prev_valid[i] = curr_transaction.tvalid;
         }

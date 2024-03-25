@@ -97,11 +97,12 @@ void adder::Tick() {
     }
 
     //for testing: checking handshaking
-    int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+    /*int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
     if (curr_cycle < 200) {
       std::cout << "axis_adder_master_interface.tvalid.read() " << axis_adder_master_interface.tvalid.read() << " on cycle " << curr_cycle << std::endl;
       std::cout << "axis_adder_master_interface.tready.read() " << axis_adder_master_interface.tready.read() << " on cycle " << curr_cycle << std::endl;
-    }
+    }*/
+    
     //sent to portal module
     if (axis_adder_master_interface.tvalid.read() && axis_adder_master_interface.tready.read()) {
         count_sent_addends++;

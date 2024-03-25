@@ -38,8 +38,10 @@ void portal_mult::Tick() { //sequential logic
         // Receiving transaction from AXI-S interface
         if (portal_axis_slave.tvalid.read() &&
             portal_axis_slave.tready.read()) {
+                //get current cycle
+                int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
                 //read 
-                std::cout << module_name << ": Portal_Mult Module Got Transaction (user (in this case, this device ID) = "
+                std::cout << module_name << ": Portal_Mult Module Got Transaction on cycle " << curr_cycle << " (user (in this case, this device ID) = "
                 << portal_axis_slave.tuser.read().to_uint64() << ") (addend = "
                 << portal_axis_slave.tdata.read().to_uint64() << ")!"
                 << std::endl;
@@ -58,7 +60,6 @@ void portal_mult::Tick() { //sequential logic
                 axis_mult_portal_master_interface.tvalid.write(true);
                 //checking if last transaction and if so, printing current simulation cycle count
                 if (portal_axis_slave.tlast.read()) {
-                    int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
                     std::cout << "Mult design portal_mult.cpp received last data via inter_rad at cycle " << curr_cycle << std::endl;
                 }
         }
