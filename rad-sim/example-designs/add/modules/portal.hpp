@@ -19,7 +19,7 @@ struct portal_axis_fields {
             sc_bv<AXIS_KEEPW> tkeep;
             bool tlast;
             sc_bv<AXIS_IDW> tid;
-            sc_bv<AXIS_DESTW> tdest;
+            sc_bv<AXIS_DESTW+RAD_DESTW> tdest;
             sc_bv<AXIS_USERW> tuser;
         };
 
