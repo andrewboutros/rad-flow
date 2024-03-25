@@ -16,7 +16,7 @@ add_system::add_system(const sc_module_name &name, sc_clock *driver_clk_sig, RAD
   driver_inst->portal_recvd(portal_recvd_sig);
 
   // Instantiate design top-level
-  dut_inst = new add_top("dut", radsim_design); //AKB added last arg
+  dut_inst = new add_top("dut", radsim_design);
   dut_inst->rst(rst_sig);
   dut_inst->client_tdata(client_tdata_sig);
   dut_inst->client_tlast(client_tlast_sig);
@@ -25,10 +25,8 @@ add_system::add_system(const sc_module_name &name, sc_clock *driver_clk_sig, RAD
   dut_inst->response(response_sig);
   dut_inst->response_valid(response_valid_sig);
   dut_inst->portal_recvd(portal_recvd_sig);
-  //AKB added:
+  //add add_top as dut instance for parent class design_system
   this->design_dut_inst = dut_inst;
-  //dut_inst->portal_in(portal_in_sig);
-  //dut_inst->portal_out(portal_out_sig);
 }
 
 add_system::~add_system() {

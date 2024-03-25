@@ -69,8 +69,7 @@ void add_driver::sink() {
   end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
   std::cout << "Simulation Cycles for Just Adder Portion = " << end_cycle - start_cycle << std::endl;
 
-  //sc_stop(); //AKB: replaced with setting flag
-  this->radsim_design_->set_rad_done(); //AKB ADDED: flag to replace sc_stop calls
-  return; //AKB ADDED
+  this->radsim_design_->set_rad_done(); //flag to replace sc_stop calls
+  return;
 
 }

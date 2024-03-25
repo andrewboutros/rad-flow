@@ -27,8 +27,6 @@ sc_bv<DATAW> data_to_buffer = 0;
 sc_bv<AXIS_USERW> dest_device = 1; //for testing, fixed at 1 to send to RAD1 which has mult design; //#define AXIS_USERW     66
 //bool got_data = false;
 void portal::Tick() { //sequential logic
-    //portal_out.write(counter);
-    //portal_out_axi.tdata.write(counter);
     portal_recvd.write(0);
     portal_axis_master.tvalid.write(false);
     //bool test_ready_toggle = false;

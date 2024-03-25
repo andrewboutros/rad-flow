@@ -5,7 +5,7 @@
 mult_driver::mult_driver(const sc_module_name &name, RADSimDesignContext* radsim_design)
     : sc_module(name) {
   
-  this->radsim_design_ = radsim_design; //AKB ADDED: update member for later use
+  this->radsim_design_ = radsim_design;
 
   //for simulation cycle count
   start_cycle = 0;
@@ -57,7 +57,7 @@ void mult_driver::source() {
 }
 
 void mult_driver::sink() {
-  //works, temp commented out to test, returned now
+
   while (!(response_valid.read())) { //&& mult_inter_rad_recvd.read())) {
     wait();
   }
@@ -70,9 +70,7 @@ void mult_driver::sink() {
   end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
   std::cout << "Simulation Cycles for Just Mult Portion = " << end_cycle - start_cycle << std::endl;
 
-
-  //sc_stop(); //AKB: replaced with setting flag
-  this->radsim_design_->set_rad_done(); //AKB ADDED: flag to replace sc_stop calls
-  return; //AKB ADDED
+  this->radsim_design_->set_rad_done(); //flag to replace sc_stop calls
+  return;
 
 }

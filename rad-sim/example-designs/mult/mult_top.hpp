@@ -3,17 +3,17 @@
 #include <radsim_config.hpp>
 #include <mult.hpp>
 #include <client_mult.hpp>
-#include <portal_mult.hpp> //AKB ADDED
+#include <portal_mult.hpp>
 #include <systemc.h>
 #include <vector>
-#include <design_top.hpp> //AKB ADDED
+#include <design_top.hpp>
 #include <radsim_module.hpp>
 
 class mult_top : public design_top {
 private:
   mult *mult_inst;
   client_mult *client_inst;
-  portal_mult *portal_inst; //AKB added
+  portal_mult *portal_inst;
 
 public:
   sc_in<bool> rst;
@@ -24,11 +24,8 @@ public:
   sc_out<bool> client_ready;
   sc_out<sc_bv<DATAW>> response;
   sc_out<bool> response_valid;
-  //AKB ADDED for portal module:
-  //sc_in<bool> portal_in;
-  //sc_out<bool> portal_out;
   sc_out<bool> mult_inter_rad_recvd;
 
-  mult_top(const sc_module_name &name, RADSimDesignContext* radsim_design); //AKB ADDED last arg
+  mult_top(const sc_module_name &name, RADSimDesignContext* radsim_design);
   ~mult_top();
 };

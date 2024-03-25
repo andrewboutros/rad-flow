@@ -16,7 +16,7 @@ mult_system::mult_system(const sc_module_name &name, sc_clock *driver_clk_sig, R
   driver_inst->mult_inter_rad_recvd(mult_inter_rad_recvd_sig);
 
   // Instantiate design top-level
-  dut_inst = new mult_top("dut", radsim_design); //AKB added last arg
+  dut_inst = new mult_top("dut", radsim_design);
   dut_inst->rst(rst_sig);
   dut_inst->client_tdata(client_tdata_sig);
   dut_inst->client_tlast(client_tlast_sig);
@@ -24,11 +24,9 @@ mult_system::mult_system(const sc_module_name &name, sc_clock *driver_clk_sig, R
   dut_inst->client_ready(client_ready_sig);
   dut_inst->response(response_sig);
   dut_inst->response_valid(response_valid_sig);
-  //AKB added:
+  //add mult_top as dut instance for parent class design_system
   this->design_dut_inst = dut_inst;
   dut_inst->mult_inter_rad_recvd(mult_inter_rad_recvd_sig);
-  //dut_inst->portal_in(portal_in_sig);
-  //dut_inst->portal_out(portal_out_sig);
 }
 
 mult_system::~mult_system() {
