@@ -34,10 +34,12 @@ void portal::Tick() { //sequential logic
     //Always @ positive edge of clock
     while (true) {
 
+        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+
         if (axis_portal_slave_interface.tvalid.read() &&
             axis_portal_slave_interface.tready.read()) {
             //std::cout << "Also got here" << std:: endl;
-            std::cout << "Add design sending data over portal module " << module_name << ": Got Transaction (user = "
+            std::cout << "Add design raising valid data to send over portal module on cycle " << curr_cycle << " , will see valid high next clk cycle " << module_name << ": Got Transaction (user = "
                         << axis_portal_slave_interface.tuser.read().to_uint64() << ") (addend = "
                         << axis_portal_slave_interface.tdata.read().to_uint64() << ")!"
                         << std::endl;
@@ -83,10 +85,9 @@ void portal::Tick() { //sequential logic
             if (!portal_axis_fifo.empty()) {
                 //test_ready_toggle = false;
                 portal_axis_fifo.pop();
-                std::cout << "portal.cpp in add design sent to dest_device: " << dest_device.to_int64() << std::endl;
+                std::cout << "portal.cpp in add design sent to dest_device " << dest_device.to_int64() << " on cycle " << curr_cycle << std::endl;
                 portal_recvd.write(1);
                 if (portal_axis_master.tlast.read()) {
-                    int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
                     std::cout << "Add design portal.cpp sent last data via inter_rad at cycle " << curr_cycle << std::endl;
                 }
             }

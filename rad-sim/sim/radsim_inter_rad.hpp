@@ -8,6 +8,7 @@
 #include <radsim_cluster.hpp>
 #include <radsim_config.hpp>
 #include <axis_interface.hpp>
+#include <radsim_utils.hpp>
 
 #define DATAW 128
 #define NUM_SLOTS 5 //number of fifo slots, for now = NUM_ADDENDS
@@ -36,9 +37,10 @@ class RADSimInterRad : public sc_module {
         //sc_fifo<sc_bv<DATAW>> data_in_rad1 = sc_fifo<sc_bv<DATAW>>(2); //2 slots for now
         //sc_vector<sc_fifo<sc_bv<DATAW>>> switch_port_fifos{"switch_port_fifos"};
         //for latency
-        float latency_sec = 5.0*100 * pow(10, -9); //2.6 * pow(10, -6);
+        float latency_sec = 5.0*1 * pow(10, -9); //2.6 * pow(10, -6);
         float period_sec = 5.0 * pow(10, -9);
         int target_delay = ceil(latency_sec/period_sec); //number of cycles to delay
+        int bw_limit = 0;
     public:
         int num_rads;
         sc_in<bool> clk;

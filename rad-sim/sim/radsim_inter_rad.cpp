@@ -89,6 +89,10 @@ RADSimInterRad::writeFifo() {
     int bw_counter = 0;
     wait();
     while (true) {
+        //get current cycle for experiments
+        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+
+        //iterate thru all RADs
         for (int i = 0; i < num_rads; i++) {
             struct axis_fields curr_transaction;
             curr_transaction.tdata = all_axis_slave_ports[i]->tdata.read(); //0 bc adder
@@ -103,13 +107,13 @@ RADSimInterRad::writeFifo() {
                 int dest_rad = curr_transaction.tuser.to_int64();
                 //std::cout << dest_rad << std::endl;
                 if (this->fifos[dest_rad]->nb_write(curr_transaction) != false) { //there was an available slot to write to
-                    std::cout << "inter_rad fifo data WRITTEN is " << curr_transaction.tdata.to_uint64() << std::endl;
+                    std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << curr_transaction.tdata.to_uint64() << std::endl;
                     fifos_latency_counters[dest_rad].push_back(0); //for latency counters
                 }
                 all_axis_slave_ports[i]->tready.write(false);
             }
             else if (!all_axis_slave_ports[i]->tready.read()) {
-                if (bw_counter == 0) {
+                if (bw_counter >= bw_limit) {
                     all_axis_slave_ports[i]->tready.write(true);
                     bw_counter = 0;
                 }
@@ -138,6 +142,9 @@ RADSimInterRad::readFifo() {
     while (true) {
         //std::cout << "inter_rad fifo free before READ is " << this->fifos[0]->num_free() << "/" << this->fifos[0]->num_available() << std::endl;
         
+        //get current cycle for experiments
+        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+
         //sc_bv<DATAW> val = this->fifos[0]->read();
         for (int i = 0; i < num_rads; i++) { //iterate through all rad's fifos
             //increment delay on all counters
@@ -146,7 +153,7 @@ RADSimInterRad::readFifo() {
                 fifos_latency_counters[i][j]++;
             }
             //try reading from front of fifo
-            if ((this->fifos[i]->num_available() != 0) && (fifos_latency_counters[i][0] == target_delay)){ //check that fifo is not empty
+            if ((this->fifos[i]->num_available() != 0) && (fifos_latency_counters[i][0] >= target_delay)){ //check that fifo is not empty
                 //counter_delay = 0; //reset counter
                 fifos_latency_counters[i].erase(fifos_latency_counters[i].begin()); //to reset counter, remove first elem
                 struct axis_fields read_from_fifo;
@@ -156,7 +163,7 @@ RADSimInterRad::readFifo() {
                 
                 //std::cout << "inter_rad fifo data READ is " << this->fifos[0]->read() << std::endl;
                 if (read_from_fifo.tvalid) {
-                    std::cout << "inter_rad fifo data READ is " << val.to_uint64() << std::endl;
+                    std::cout << "inter_rad fifo data READ is " << val.to_uint64() << " on cycle " << curr_cycle << std::endl;
                     //std::cout << "dest_device: " << dest_device << std::endl;
                     //all_signals[1].write(val); //works but replacing with axi
                     //all_axis_master_ports[1]->tdata.write(val); //1 bc sending to mult design
