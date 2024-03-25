@@ -57,11 +57,11 @@ RADSimInterRad::~RADSimInterRad() {
 void
 RADSimInterRad::ConnectRadPair(int i, int j) {
     //this works
-    cluster->all_systems[i]->design_dut_inst->portal_in(all_signals[0]);
+    /*cluster->all_systems[i]->design_dut_inst->portal_in(all_signals[0]);
     //cluster->all_systems[i]->design_dut_inst->portal_out(all_signals[1]); //commenting out to demo sending data through fifo instead
     cluster->all_systems[i]->design_dut_inst->portal_out(all_signals[2]);
 	cluster->all_systems[j]->design_dut_inst->portal_in(all_signals[1]);
-	cluster->all_systems[j]->design_dut_inst->portal_out(all_signals[0]);
+	cluster->all_systems[j]->design_dut_inst->portal_out(all_signals[0]);*/
 }
 
 void

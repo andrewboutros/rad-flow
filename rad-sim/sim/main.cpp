@@ -46,13 +46,13 @@ int sc_main(int argc, char *argv[]) {
 	sc_clock *inter_rad_clk_sig = new sc_clock(
 		"node_clk0", radsim_config.GetDoubleKnob("sim_driver_period"), SC_NS); //AKB ADDED, use same period as sim driver
 	RADSimInterRad* blackbox = new RADSimInterRad("inter_rad_box", inter_rad_clk_sig, cluster);
-	blackbox->ConnectRadPair(0, 1); //TODO: comment out bc not using this
+	//blackbox->ConnectRadPair(0, 1); //TODO: comment out bc not using this
 	blackbox->ConnectRadAxi(0);
 	blackbox->ConnectRadAxi(1);
 	
 	int start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
 	sc_bv<128> new_val;
-	sc_bv<128> old_val = system2->dut_inst->portal_in.read();
+	sc_bv<128> old_val = system2->dut_inst->design_top_portal_axis_slave.tdata.read();
 	while (cluster->AllRADsNotDone()) {
 		sc_start(1, SC_NS);
 		//std::cout << "read system portal_in: " << system->dut_inst->portal_in.read() << std::endl;
@@ -60,7 +60,7 @@ int sc_main(int argc, char *argv[]) {
 		new_val = system2->dut_inst->design_top_portal_axis_slave.tdata.read(); //TODO: use handshaking properly
 		//if (val != 0) {
 		if (new_val != old_val) { //to ensure only displayed once
-			std::cout << "read system2 portal_in: " << new_val.to_uint64() << std::endl;
+			std::cout << "read system2 design_top_portal_axis_slave: " << new_val.to_uint64() << std::endl;
 			old_val = new_val;
 		}
 	}

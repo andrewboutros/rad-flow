@@ -79,7 +79,7 @@ void adder::Tick() {
     if (adder_tdata_tlast_fifo.size() > 0) { //fifo not empty
         //TODO: restrict fifo size, not doing so for now
         std::string src_port_name = module_name + ".axis_adder_master_interface";
-        std::string dst_port_name = "portal_inst.axis_add_portal_slave_interface";
+        std::string dst_port_name = "portal_inst.axis_portal_slave_interface";
         cout << axis_adder_interface.tdata.read().to_uint64() << endl;
         uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
         uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref

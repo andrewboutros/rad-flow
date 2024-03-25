@@ -31,7 +31,7 @@ void portal_mult::Assign() { //combinational logic
 
 int counter_mult = 0;
 void portal_mult::Tick() { //sequential logic
-    portal_out.write(counter_mult);
+    //portal_out.write(counter_mult);
     wait();
     //Always @ positive edge of clock
     while (true) {
@@ -68,13 +68,13 @@ void portal_mult::Tick() { //sequential logic
 
 
         //added earlier for testing: writing alternating 0s and 1s to send data directly back to RAD0 with add design
-        if (counter_mult == 0) {
+        /*if (counter_mult == 0) {
             counter_mult = 1;
         }
         else {
             counter_mult = 0;
         }
-        portal_out.write(counter_mult);
+        portal_out.write(counter_mult);*/
         //std::cout << module_name << ": Wire in is showing " << portal_in.read() << std::endl;
         //std::cout << counter << std::endl;
         wait();

@@ -16,8 +16,8 @@ class portal_mult : public RADSimModule {
     public:
     RADSimDesignContext* radsim_design;
     sc_in<bool> rst;
-    sc_in<sc_bv<DATAW>> portal_in;
-    sc_out<sc_bv<DATAW>> portal_out;
+    //sc_in<sc_bv<DATAW>> portal_in;
+    //sc_out<sc_bv<DATAW>> portal_out;
     //try adding axis_master_port for portal_out
     axis_master_port portal_axis_master;
     axis_slave_port portal_axis_slave;
