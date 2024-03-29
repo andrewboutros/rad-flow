@@ -13,7 +13,7 @@ struct axis_master_port {
   sc_out<sc_bv<AXIS_KEEPW>> tkeep;
   sc_out<bool> tlast;
   sc_out<sc_bv<AXIS_IDW>> tid;
-  sc_out<sc_bv<AXIS_DESTW+RAD_DESTW>> tdest;
+  sc_out<sc_bv<AXIS_DESTW>> tdest;
   sc_out<sc_bv<AXIS_USERW>> tuser;
 
   axis_master_port()
@@ -62,7 +62,7 @@ struct axis_slave_port {
   sc_in<sc_bv<AXIS_KEEPW>> tkeep;
   sc_in<bool> tlast;
   sc_in<sc_bv<AXIS_IDW>> tid;
-  sc_in<sc_bv<AXIS_DESTW+RAD_DESTW>> tdest;
+  sc_in<sc_bv<AXIS_DESTW>> tdest;
   sc_in<sc_bv<AXIS_USERW>> tuser;
 
   axis_slave_port()
@@ -102,7 +102,7 @@ struct axis_signal {
   sc_signal<sc_bv<AXIS_KEEPW>> tkeep;
   sc_signal<bool> tlast;
   sc_signal<sc_bv<AXIS_IDW>> tid;
-  sc_signal<sc_bv<AXIS_DESTW+RAD_DESTW>> tdest;
+  sc_signal<sc_bv<AXIS_DESTW>> tdest;
   sc_signal<sc_bv<AXIS_USERW>> tuser;
 
   axis_signal()

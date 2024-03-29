@@ -194,7 +194,9 @@ void axis_slave_adapter::InputPacketization() {
         AXIS_TLAST(packet_bv) = _input_axis_transaction.tlast.read();
         AXIS_TUSER(packet_bv) = _input_axis_transaction.tuser.read();
         AXIS_TDATA(packet_bv) = _input_axis_transaction.tdata.read();
-
+        std::cout << "_input_axis_transaction.tdest.read().range(AXIS_DESTW-1, AXIS_DESTW-RAD_DESTW)" << _input_axis_transaction.tdest.read().range(AXIS_DESTW-1, AXIS_DESTW-RAD_DESTW) << std::endl;
+        AXIS_RAD(packet_bv) = _input_axis_transaction.tdest.read().range(AXIS_DESTW-1, AXIS_DESTW-RAD_DESTW);
+        std::cout << "assigning AXIS_RAD(packet_bv) " << AXIS_RAD(packet_bv) << std::endl;
         // Form flits and push them to the injection FIFO
         for (unsigned int flit_id = 0;
              flit_id < _num_flits_per_packet[used_interface_id]; flit_id++) {

@@ -80,6 +80,7 @@ void axis_master_adapter::OutputEjection() {
       int vc_id = _ejected_booksim_flit->vc;
       if (_ejection_afifos[vc_id].size() < _ejection_afifo_depth) {
         // Create a SystemC flit and push it to its corresponding ejection FIFO
+        std::cout << "_ejected_booksim_flit->dest: " << _ejected_booksim_flit->dest << std::endl;
         sc_flit ejected_flit(
             _ejected_booksim_flit->head, _ejected_booksim_flit->tail,
             _ejected_booksim_flit->type, _ejected_booksim_flit->vc,
@@ -215,6 +216,7 @@ void axis_master_adapter::write_sc_packet_to_axis_output(
 
   for (unsigned int flit_id = 0; flit_id < num_flits; flit_id++) {
     if (flit_id == 0) {
+      std::cout << "packet.GetFlit(flit_id)->_dest is " << packet.GetFlit(flit_id)->_dest << std::endl;
       dest = packet.GetFlit(flit_id)->_dest.to_uint();
       dest_interface = packet.GetFlit(flit_id)->_dest_interface.to_uint();
     }
@@ -234,7 +236,9 @@ void axis_master_adapter::write_sc_packet_to_axis_output(
   else
     axis_port.tlast.write(false);
   axis_port.tid.write(dest_interface);
-  axis_port.tdest.write(dest);
+  std::cout << "testing AXIS RAD: " << AXIS_RAD(packet_bv) << std::endl;
+  axis_port.tdest.write(AXIS_RAD(packet_bv));
+  //axis_port.tdest.write(dest);
   axis_port.tuser.write(AXIS_TUSER(packet_bv));
   axis_port.tstrb.write(0);
   axis_port.tkeep.write(0);
