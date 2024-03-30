@@ -40,10 +40,9 @@ private:
   sc_signal<bool> _injection_afifo_full;
 
   // Input interfacing variables
-  axis_signal _input_axis_transaction;
-  sc_signal<unsigned int> _input_axis_transaction_id;
-  sc_signal<Flit::FlitType> _input_axis_transaction_type;
-  sc_signal<unsigned int> _input_axis_transaction_interface;
+  std::queue<axis_transaction> _input_axis_transactions_afifo;
+  unsigned int _input_axis_transactions_afifo_depth;
+  sc_signal<bool> _input_axis_transactions_afifo_full;
 
   // Input packetization variables
   std::queue<sc_flit> _injection_afifo;

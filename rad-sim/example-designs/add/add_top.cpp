@@ -9,7 +9,7 @@ add_top::add_top(const sc_module_name &name)
   module_name_str = "client_inst";
   std::strcpy(module_name, module_name_str.c_str());
 
-  client_inst = new client(module_name, 16);
+  client_inst = new client(module_name);
   client_inst->rst(rst);
   client_inst->client_tdata(client_tdata);
   client_inst->client_tlast(client_tlast);

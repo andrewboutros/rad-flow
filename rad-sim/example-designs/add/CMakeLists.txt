@@ -14,6 +14,7 @@ include_directories(
 set(srcfiles
   modules/adder.cpp
   modules/client.cpp
+  modules/fifo.cpp
   add_top.cpp
   add_driver.cpp
   add_system.cpp
@@ -22,6 +23,7 @@ set(srcfiles
 set(hdrfiles
   modules/adder.hpp
   modules/client.hpp
+  modules/fifo.hpp
   add_top.hpp
   add_driver.hpp
   add_system.hpp

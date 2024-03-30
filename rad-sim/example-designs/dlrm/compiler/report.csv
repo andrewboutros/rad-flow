@@ -294,3 +294,4 @@ flit_width, vc_buf_size, mvm_lanes, model, num_inputs, cycles
 131, 16, 32, small, 256, 20206
 131, 16, 32, large, 1, 333
 131, 16, 32, large, 256, 22210
+flit_width, vc_buf_size, mvm_lanes, model, num_inputs, cycles
