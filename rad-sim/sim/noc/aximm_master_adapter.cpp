@@ -390,7 +390,7 @@ void aximm_master_adapter::InputReady() {
 }
 
 int aximm_master_adapter::GetInputDestinationNode(sc_bv<AXI4_ADDRW> &addr) {
-  return addr.range(AXI4_ADDRW - 1, AXI4_ADDRW - NOC_LINKS_DEST_WIDTH)
+  return addr.range(AXI4_ADDRW - 1, AXI4_ADDRW - AXI4_NODE_ADDRW)
       .to_uint();
 }
 

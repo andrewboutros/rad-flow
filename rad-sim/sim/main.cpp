@@ -5,7 +5,7 @@
 #include <sstream>
 #include <systemc.h>
 
-#include <mlp_system.hpp>
+#include <dlrm_system.hpp>
 
 RADSimConfig radsim_config;
 RADSimDesignContext radsim_design;
@@ -24,7 +24,7 @@ int sc_main(int argc, char *argv[]) {
 	sc_clock *driver_clk_sig = new sc_clock(
 		"node_clk0", radsim_config.GetDoubleKnob("sim_driver_period"), SC_NS);
 
-	mlp_system *system = new mlp_system("mlp_system", driver_clk_sig);
+	dlrm_system *system = new dlrm_system("dlrm_system", driver_clk_sig);
 	sc_start();
 
 	delete system;

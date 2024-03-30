@@ -260,7 +260,7 @@ void aximm_slave_adapter::InputInterface() {
 // specified by the N most-significant address bits, such that num_nodes =
 // log2(N))
 int aximm_slave_adapter::GetInputDestinationNode(sc_bv<AXI4_ADDRW> &addr) {
-  return addr.range(AXI4_ADDRW - 1, AXI4_ADDRW - NOC_LINKS_DEST_WIDTH)
+  return addr.range(AXI4_ADDRW - 1, AXI4_ADDRW - AXI4_NODE_ADDRW)
       .to_uint();
 }
 

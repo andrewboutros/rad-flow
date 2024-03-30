@@ -220,6 +220,7 @@ def generate_radsim_params_header(radsim_header_params):
     radsim_params_header_file.write("#define AXI4_SIZEW  3\n")
     radsim_params_header_file.write("#define AXI4_BURSTW 2\n")
     radsim_params_header_file.write("#define AXI4_RESPW  2\n")
+    radsim_params_header_file.write("#define AXI4_NODE_ADDRW " + str(max_destination_field_bitwidth) + "\n")
     radsim_params_header_file.write("#define AXI4_CTRLW  (AXI4_LENW + AXI4_SIZEW + AXI4_BURSTW)\n\n")
 
     radsim_params_header_file.write("// AXI Packetization Defines\n")
