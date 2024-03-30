@@ -9,7 +9,7 @@ sudo apt install zlibc zlib1g zlib1g-dev
 git clone https://github.com/verilator/verilator
 unset VERILATOR_ROOT  # For bash
 cd verilator
-git checkout 4a439beae5ccdfc0fff5cfd56d01e25d180f38a2
+git checkout 7507c5f56c67aae1c5018844e0f3e10837af711e
 autoconf         # Create ./configure script
 ./configure      # Configure and create Makefile
 make -j `nproc`  # Build Verilator itself (if error, try just 'make')
