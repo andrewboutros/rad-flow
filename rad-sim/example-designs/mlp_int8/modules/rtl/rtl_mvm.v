@@ -16,7 +16,7 @@ module rtl_mvm # (
 	parameter DATAW = 512,         // Bitwidth of axi-s tdata
 	parameter BYTEW = 8,   		   // Bitwidth of axi-s tkeep, tstrb
 	parameter IDW = 32,            // Bitwidth of axi-s tid
-	parameter DESTW = 4,		   // Bitwidth of axi-s tdest
+	parameter DESTW = 12,		   // Bitwidth of axi-s tdest
 	parameter USERW = 75,          // Bitwidth of axi-s tuser
 	parameter IPRECISION = 8,      // Input precision in bits
 	parameter OPRECISION = 32,     // Output precision in bits
