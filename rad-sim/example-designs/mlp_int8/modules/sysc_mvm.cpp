@@ -1,6 +1,6 @@
-#include "mvm.hpp"
+#include "sysc_mvm.hpp"
 
-mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer)
+sysc_mvm::sysc_mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer)
     : RADSimModule(name),
       rf_rdata("rf_rdata", DPES),
       rf_wdata("rf_wdata"),
@@ -180,7 +180,7 @@ mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer)
   this->RegisterModuleInfo();
 }
 
-mvm::~mvm() { 
+sysc_mvm::~sysc_mvm() { 
   delete instruction_fifo;
   delete inst_rf_pipeline;
   delete inst_valid_rf_pipeline;
@@ -196,7 +196,7 @@ mvm::~mvm() {
   delete output_data_fifo;
 }
 
-void mvm::Tick() {
+void sysc_mvm::Tick() {
   // Reset logic
   input_fifo_push.write(false);
   reduction_fifo_push.write(false);
@@ -284,7 +284,7 @@ void mvm::Tick() {
   }
 }
 
-void mvm::Assign() {
+void sysc_mvm::Assign() {
   if (rst.read()) {
     // Module signals
     inst_rf_raddr.write(0);
@@ -392,14 +392,14 @@ void mvm::Assign() {
   }
 }
 
-void mvm::RegisterModuleInfo() {
+void sysc_mvm::RegisterModuleInfo() {
   std::string port_name;
   _num_noc_axis_slave_ports = 0;
   _num_noc_axis_master_ports = 0;
 
-  port_name = module_name + ".tx_interface";
+  port_name = module_name + ".axis_tx";
   RegisterAxisMasterPort(port_name, &tx_interface, DATAW, 0);
 
-  port_name = module_name + ".rx_interface";
+  port_name = module_name + ".axis_rx";
   RegisterAxisSlavePort(port_name, &rx_interface, DATAW, 0);
 }

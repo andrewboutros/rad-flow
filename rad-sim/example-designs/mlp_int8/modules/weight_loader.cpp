@@ -135,7 +135,7 @@ void weight_loader::Assign() {
       tx_interface.tuser.write(tuser_value);
       std::string dest_name =
           "layer" + std::to_string(layer_id_fifo_odata.read()) + 
-          "_mvm" + std::to_string(mvm_id_fifo_odata.read()) + ".rx_interface";
+          "_mvm" + std::to_string(mvm_id_fifo_odata.read()) + ".axis_rx";
       tx_interface.tdest.write(radsim_design.GetPortDestinationID(dest_name));
     } else {
       tx_interface.tvalid.write(false);

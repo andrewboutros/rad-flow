@@ -114,39 +114,47 @@ mlp_driver::mlp_driver(const sc_module_name& name) : sc_module(name) {
   std::string design_root_dir = radsim_config.GetStringKnob("radsim_user_design_root_dir");
   std::string design_config_filename = design_root_dir + "/compiler/layer_mvm_config";
   std::ifstream design_config_file(design_config_filename);
-  if(!design_config_file) {
+  if (!design_config_file) {
     std::cerr << "Cannot read MLP design configuration file!" << std::endl;
     exit(1);
   }
   std::string line;
   std::getline(design_config_file, line);
   std::stringstream line_stream(line);
-  unsigned int tmp;
+  std::string num_mvms_sysc_layer, num_mvms_rtl_layer;
+  std::string layer_mvms;
   line_stream >> num_layers;
-  num_mvms.resize(num_layers);
+  num_mvms_sysc.resize(num_layers);
+  num_mvms_rtl.resize(num_layers);
+  num_mvms_total.resize(num_layers);
   for (unsigned int layer_id = 0; layer_id < num_layers; layer_id++) {
-    line_stream >> tmp;
-    num_mvms[layer_id] = tmp;
+    line_stream >> layer_mvms;
+    std::stringstream layer_mvms_stream(layer_mvms);
+    std::getline(layer_mvms_stream, num_mvms_sysc_layer, ',');
+    std::getline(layer_mvms_stream, num_mvms_rtl_layer, ',');
+    num_mvms_sysc[layer_id] = std::stoi(num_mvms_sysc_layer);
+    num_mvms_rtl[layer_id] = std::stoi(num_mvms_rtl_layer);
+    num_mvms_total[layer_id] = num_mvms_sysc[layer_id] + num_mvms_rtl[layer_id];
   }
 
   // Intialize input/output interface vectors
-  init_vector<sc_in<bool>>::init_sc_vector(dispatcher_fifo_rdy, num_mvms[0]);
-  init_vector<sc_out<bool>>::init_sc_vector(dispatcher_fifo_wen, num_mvms[0]);
-  init_vector<sc_out<data_vector<sc_int<IPRECISION>>>>::init_sc_vector(dispatcher_fifo_wdata, num_mvms[0]);
+  init_vector<sc_in<bool>>::init_sc_vector(dispatcher_fifo_rdy, num_mvms_total[0]);
+  init_vector<sc_out<bool>>::init_sc_vector(dispatcher_fifo_wen, num_mvms_total[0]);
+  init_vector<sc_out<data_vector<sc_int<IPRECISION>>>>::init_sc_vector(dispatcher_fifo_wdata, num_mvms_total[0]);
 
   // Parse weights
   ParseWeights(weight_data, weight_rf_id, weight_rf_addr, weight_layer_id, 
-    weight_mvm_id, num_layers, num_mvms);
+    weight_mvm_id, num_layers, num_mvms_total);
   std::cout << "# Weight vectors = " << weight_data.size() << std::endl;
 
   // Parse instructions
-  ParseInstructions(inst_data, inst_layer_id, inst_mvm_id, num_layers, num_mvms); 
+  ParseInstructions(inst_data, inst_layer_id, inst_mvm_id, num_layers, num_mvms_total); 
   std::cout << "# Instructions = " << inst_data.size() << std::endl;
 
   // Parse test inputs
-  test_inputs.resize(num_mvms[0]);
+  test_inputs.resize(num_mvms_total[0]);
   std::string filename;
-  for (unsigned int dispatcher_id = 0; dispatcher_id < num_mvms[0]; dispatcher_id++) {
+  for (unsigned int dispatcher_id = 0; dispatcher_id < num_mvms_total[0]; dispatcher_id++) {
     filename = design_root_dir + "/compiler/input_mifs/inputs_mvm" + std::to_string(dispatcher_id) + ".mif";
     if (!ParseIO(test_inputs[dispatcher_id], filename)) {
       std::cout << "Failed to parse test inputs file: " << filename << std::endl;
@@ -182,7 +190,7 @@ void mlp_driver::source() {
   inst_loader_inst_fifo_wen.write(false);
   inst_loader_layer_id_fifo_wen.write(false);
   inst_loader_mvm_id_fifo_wen.write(false);
-  for (unsigned int dispatcher_id = 0; dispatcher_id < num_mvms[0]; dispatcher_id++)
+  for (unsigned int dispatcher_id = 0; dispatcher_id < num_mvms_total[0]; dispatcher_id++)
     dispatcher_fifo_wen[dispatcher_id].write(false);
   wait();
   rst.write(false);
@@ -250,13 +258,14 @@ void mlp_driver::source() {
     wait();
   }
 
-  start_cycle = GetSimulationCycle(1.0);
+  start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+  start_time = std::chrono::steady_clock::now();
   wait();
 
-  std::vector<unsigned int> written_inputs(num_mvms[0], 0);
+  std::vector<unsigned int> written_inputs(num_mvms_total[0], 0);
   bool still_have_inputs_to_feed = true;
   while (still_have_inputs_to_feed) {
-    for (unsigned int dispatcher_id = 0; dispatcher_id < num_mvms[0]; dispatcher_id++) {
+    for (unsigned int dispatcher_id = 0; dispatcher_id < num_mvms_total[0]; dispatcher_id++) {
       if (dispatcher_fifo_rdy[dispatcher_id].read() 
         && written_inputs[dispatcher_id] < test_inputs[dispatcher_id].size()) {
         data_vector<sc_int<IPRECISION>> tmp(test_inputs[dispatcher_id][written_inputs[dispatcher_id]]);
@@ -268,13 +277,13 @@ void mlp_driver::source() {
       }
     }
     still_have_inputs_to_feed = false;
-    for (unsigned int i = 0; i < num_mvms[0]; i++)
+    for (unsigned int i = 0; i < num_mvms_total[0]; i++)
       still_have_inputs_to_feed = still_have_inputs_to_feed || 
         (written_inputs[i] < test_inputs[i].size());
     wait();
   }
   std::cout << "Finished writing all test inputs!" << std::endl;
-  for (unsigned int dispatcher_id = 0; dispatcher_id < num_mvms[0]; dispatcher_id++)
+  for (unsigned int dispatcher_id = 0; dispatcher_id < num_mvms_total[0]; dispatcher_id++)
     dispatcher_fifo_wen[dispatcher_id].write(false);
   wait();
 }
@@ -298,12 +307,19 @@ void mlp_driver::sink() {
     }
     wait();
   }
-  if (mistake) std::cout << "FAILURE - Some outputs NOT matching!" << std::endl;
-  else std::cout << "SUCCESS - All outputs are matching!" << std::endl;
+  if (mistake) {
+    std::cout << "FAILURE - Some outputs NOT matching!" << std::endl;
+    radsim_design.ReportDesignFailure();
+  } else {
+    std::cout << "SUCCESS - All outputs are matching!" << std::endl;
+  }
 
-  end_cycle = GetSimulationCycle(1.0);
+  end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+  end_time = std::chrono::steady_clock::now();
   std::cout << "Simulation Cycles = " << end_cycle - start_cycle << std::endl;
+  std::cout << "Simulation Time = " << std::chrono::duration_cast<std::chrono::milliseconds> (end_time - start_time).count() << " ms" << std::endl;
   NoCTransactionTelemetry::DumpStatsToFile("stats.csv");
+  NoCFlitTelemetry::DumpNoCFlitTracesToFile("flit_traces.csv");
 
   std::vector<double> aggregate_bandwidths = NoCTransactionTelemetry::DumpTrafficFlows("traffic_flows", 
     end_cycle - start_cycle, radsim_design.GetNodeModuleNames());

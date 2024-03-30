@@ -5,7 +5,8 @@ channels:
 dependencies:
         - typeguard
         - python=3.8
-        - tensorflow-estimator
+        - tensorflow=2.6.0
+        - tensorflow-estimator=2.6.0
         - absl-py
         - ipython
         - wheel
@@ -14,7 +15,7 @@ dependencies:
         - python-flatbuffers
         - typing_extensions
         - keras-preprocessing
-        - tensorboard
+        - tensorboard=2.6.0
         - termcolor
         - gast
         - pip=20.2.4
@@ -22,7 +23,7 @@ dependencies:
         - google-pasta
         - wrapt
         - astunparse
-        - numpy
+        - numpy=1.19.5
         - scipy
         - h5py
         - plotly=5.5.0

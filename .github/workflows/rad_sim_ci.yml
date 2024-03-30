@@ -47,7 +47,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-script: [mlp_test.sh, dlrm_test.sh, npu_test.sh]
+        test-script: [mlp_test.sh, dlrm_test.sh, npu_test.sh, mlp_int8_test.sh]
         test: [""]
         exclude:
           - test-script: npu_test.sh # Don't run all the NPU tests in the same runner
@@ -75,6 +75,10 @@ jobs:
 
     - name: Setup SystemC
       run: ./.github/scripts/setup_system_c.sh -v ${{ env.SYSTEMC_VERSION }}
+
+    - name: Setup Verilator IFF test requires it
+      if: matrix.test-script == 'mlp_int8_test.sh'
+      run: ./.github/scripts/setup_verilator.sh
 
     - name: Setup Mambaforge (Conda)
       uses: conda-incubator/setup-miniconda@v2

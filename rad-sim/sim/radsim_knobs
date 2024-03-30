@@ -1,9 +1,9 @@
-radsim_root_dir /home/andrew/rad-flow/rad-sim
-design_name mlp_int8
+radsim_root_dir /home/andrew/yan/rad-flow/rad-sim
+design_name mlp
 noc_num_nocs 1
 noc_clk_period 1.0 
-noc_vcs 5 
-noc_payload_width 166 
+noc_vcs 1 
+noc_payload_width 145 
 noc_num_nodes 16 
 design_noc_placement mlp.place 
 noc_adapters_clk_period 1.25 
@@ -20,4 +20,4 @@ dram_num_controllers 0
 dram_clk_periods 2.0 
 dram_queue_sizes 64 
 dram_config_files HBM2_8Gb_x128 
-radsim_user_design_root_dir /home/andrew/rad-flow/rad-sim/example-designs/mlp_int8
+radsim_user_design_root_dir /home/andrew/yan/rad-flow/rad-sim/example-designs/mlp

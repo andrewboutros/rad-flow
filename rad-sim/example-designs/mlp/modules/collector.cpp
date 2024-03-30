@@ -60,5 +60,5 @@ void collector::RegisterModuleInfo() {
   _num_noc_axis_master_ports = 0;
 
   port_name = module_name + ".data_collect";
-  RegisterAxisSlavePort(port_name, &rx_interface, 512, 0);
+  RegisterAxisSlavePort(port_name, &rx_interface, DOT_PRODUCTS * 32, 0);
 }

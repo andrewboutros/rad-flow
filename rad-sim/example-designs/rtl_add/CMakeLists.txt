@@ -13,6 +13,8 @@ include_directories(
   ../../sim/noc/booksim/routers
 )
 
+include_directories(SYSTEM "${VERILATOR_ROOT}/include")
+
 set(srcfiles
   modules/adder.cpp
   modules/client.cpp

@@ -34,7 +34,7 @@ File Structure Overview
 
 Prerequisites
 --------------
-It is recommended to be familiar with :doc:`rad-sim-code-structure` before following this example.
+It is recommended to be familiar with :doc:`../rad-sim-code-structure` before following this example.
 
 The source code for this example design can be found included in the RAD-Sim GitHub repository, under ``rad-flow/rad-sim/example-designs/add``.
 
@@ -184,7 +184,7 @@ The driver is the testbench for the entire design. For the add example, the test
 
 The numbers in this queue are fed to the client module, as shown in the following flow chart.
 
-.. image:: _static/add_driver_flowchart.png
+.. image:: ../_static/adder-design_driver_flowchart.png
   :width: 1000
   :alt: Add Driver Flowchart
 
@@ -243,7 +243,7 @@ In addition to the standard items in the CMakeLists.txt file required for the bu
 
 config.yml
 ^^^^^^^^^^
-The example config provided in :doc:`rad-sim-code-structure` is used.
+The example config provided in :doc:`../rad-sim-code-structure` is used.
 
 Running the Example
 -------------------

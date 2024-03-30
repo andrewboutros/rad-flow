@@ -1,0 +1,22 @@
+module rtl_mvm
+input 1 clk clk
+input 1 rst rst
+axis slave axis_rx_tvalid axis_rx tvalid
+axis slave axis_rx_tdata axis_rx tdata
+axis slave axis_rx_tstrb axis_rx tstrb
+axis slave axis_rx_tkeep axis_rx tkeep
+axis slave axis_rx_tid axis_rx tid
+axis slave axis_rx_tdest axis_rx tdest
+axis slave axis_rx_tuser axis_rx tuser
+axis slave axis_rx_tlast axis_rx tlast
+axis slave axis_rx_tready axis_rx tready
+axis master axis_tx_tvalid axis_tx tvalid
+axis master axis_tx_tdata axis_tx tdata
+axis master axis_tx_tstrb axis_tx tstrb
+axis master axis_tx_tkeep axis_tx tkeep
+axis master axis_tx_tid axis_tx tid
+axis master axis_tx_tdest axis_tx tdest
+axis master axis_tx_tuser axis_tx tuser
+axis master axis_tx_tlast axis_tx tlast
+axis master axis_tx_tready axis_tx tready
+

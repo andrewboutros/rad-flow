@@ -165,6 +165,11 @@ void RADSimDesignContext::ParseNoCPlacement(
 
       int port_noc_placement = std::stoi(port_noc_placement_str);
       int port_node_placement = std::stoi(port_node_placement_str);
+
+      // Ensure the module has been instantiated
+      if (_design_modules.find(module_name) == _design_modules.end())
+        sim_log.log(error, "NoC module " + module_name + " is not defined!");
+
       RADSimModule *module_ptr = _design_modules[module_name];
 
       if (port_axi_type == "axis") {
@@ -683,4 +688,12 @@ uint64_t RADSimDesignContext::GetPortBaseAddress(std::string &port_name) {
   assert(_aximm_port_base_addresses.find(port_name) !=
          _aximm_port_base_addresses.end());
   return _aximm_port_base_addresses[port_name];
+}
+
+int RADSimDesignContext::GetSimExitCode() {
+  return _sim_exit_code;
+}
+
+void RADSimDesignContext::ReportDesignFailure() {
+  _sim_exit_code = 1;
 }

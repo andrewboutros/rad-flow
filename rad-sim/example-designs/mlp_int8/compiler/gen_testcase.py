@@ -240,5 +240,5 @@ output_file.close()
 config_file = open('./layer_mvm_config', 'w')
 config_file.write(str(num_layers) + ' ')
 for mvm_count in num_mvms:
-  config_file.write(str(mvm_count) + ' ')
+  config_file.write(str(mvm_count) + ',0 ') # by default, initialize all MVM instances to be all native SystemC modules
 config_file.close()

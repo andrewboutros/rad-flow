@@ -1,0 +1,3 @@
+module mock_module
+axis master axis_mock_module_tdata axis_mock_module tdata
+axis slave axis_mock_module_tid axis_mock_module tid
