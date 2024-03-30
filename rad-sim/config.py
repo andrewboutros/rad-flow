@@ -353,13 +353,13 @@ radsim_header_params = {
     "noc_num_packet_types": [3],
     "noc_num_nodes": [0],
     "noc_max_num_router_dest_interfaces": 32,
-    "interfaces_max_axis_tdata_width": 2048,
+    "interfaces_max_axis_tdata_width": 512,
     "interfaces_axis_tkeep_width": 8,
     "interfaces_axis_tstrb_width": 8,
     "interfaces_axis_tuser_width": 75,
     "interfaces_axi_id_width": 8,
     "interfaces_axi_user_width": 64,
-    "interfaces_max_axi_data_width": 2048,
+    "interfaces_max_axi_data_width": 512,
 }
 radsim_knobs = {
     "radsim_root_dir": os.getcwd(),

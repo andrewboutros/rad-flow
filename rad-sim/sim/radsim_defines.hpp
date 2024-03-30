@@ -1,20 +1,20 @@
 #pragma once
 
 // clang-format off
-#define RADSIM_ROOT_DIR "/home/andrew/yan/rad-flow/rad-sim"
+#define RADSIM_ROOT_DIR "/home/andrew/rad-flow/rad-sim"
 
 // NoC-related Parameters
-#define NOC_LINKS_PAYLOAD_WIDTH   145
-#define NOC_LINKS_VCID_WIDTH      1
+#define NOC_LINKS_PAYLOAD_WIDTH   166
+#define NOC_LINKS_VCID_WIDTH      3
 #define NOC_LINKS_PACKETID_WIDTH  32
-#define NOC_LINKS_TYPEID_WIDTH    1
+#define NOC_LINKS_TYPEID_WIDTH    3
 #define NOC_LINKS_DEST_WIDTH      4
 #define NOC_LINKS_DEST_INTERFACE_WIDTH 5
 #define NOC_LINKS_WIDTH           (NOC_LINKS_PAYLOAD_WIDTH + NOC_LINKS_VCID_WIDTH         + NOC_LINKS_PACKETID_WIDTH + NOC_LINKS_DEST_WIDTH + NOC_LINKS_DEST_INTERFACE_WIDTH)
 
 // AXI Parameters
-#define AXIS_MAX_DATAW 2048
-#define AXI4_MAX_DATAW 2048
+#define AXIS_MAX_DATAW 512
+#define AXI4_MAX_DATAW 512
 #define AXIS_USERW     75
 #define AXI4_USERW     64
 // (Almost always) Constant AXI Parameters
