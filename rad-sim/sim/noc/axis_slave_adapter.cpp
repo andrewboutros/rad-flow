@@ -11,6 +11,7 @@ axis_slave_adapter::axis_slave_adapter(
   axis_interfaces.init(interface_types.size());
 
   // Node properties
+  _rad_id = 0; // TO-DO-MR: set appropriate RAD ID through constructor
   _node_id = node_id;
   _network_id = network_id;
   _node_period = node_period;
@@ -227,8 +228,21 @@ void axis_slave_adapter::InputInjection() {
         booksim_flit->head = _to_be_injected_flit._head;
         booksim_flit->tail = _to_be_injected_flit._tail;
         booksim_flit->type = _to_be_injected_flit._type;
-        booksim_flit->dest =
-            GetInputDestinationNode(_to_be_injected_flit._dest);
+
+        // TO-DO-MR BEGIN
+        if (DEST_RAD(_to_be_injected_flit._dest) == _rad_id) {
+          sc_bv<AXIS_DESTW> booksim_flit_dest = DEST_LOCAL_NODE(_to_be_injected_flit._dest);
+          booksim_flit->dest = GetInputDestinationNode(booksim_flit_dest);
+          booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_uint();
+          booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_uint();
+        } else {
+          sc_bv<AXIS_DESTW> booksim_flit_dest = 0; // TO-DO-MR: set to portal node ID
+          booksim_flit->dest = GetInputDestinationNode(booksim_flit_dest);
+          booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_uint();
+          booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_uint();
+        }
+        // TO-DO-MR END
+
         booksim_flit->dest_interface =
             _to_be_injected_flit._dest_interface.to_uint();
         booksim_flit->pri = 0;
