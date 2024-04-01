@@ -62,7 +62,7 @@ public:
   sc_in<bool> rst;
   sc_vector<axis_slave_port> axis_interfaces;
 
-  axis_slave_adapter(const sc_module_name &name, int node_id, int network_id,
+  axis_slave_adapter(const sc_module_name &name, unsigned int rad_id, int node_id, int network_id,
                      std::vector<Flit::FlitType> &interface_types,
                      std::vector<unsigned int> &interface_dataw,
                      double node_period, double adapter_period,

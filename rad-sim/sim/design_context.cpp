@@ -1,9 +1,12 @@
 #include <design_context.hpp>
 
-RADSimDesignContext::RADSimDesignContext() {
+RADSimDesignContext::RADSimDesignContext(unsigned int rad_id_) {
   std::string radsim_knobs_filename = "/sim/radsim_knobs";
   std::string radsim_knobs_filepath = RADSIM_ROOT_DIR + radsim_knobs_filename;
   ParseRADSimKnobs(radsim_knobs_filepath);
+
+  //assign its rad id
+  rad_id = rad_id_;
 
   // Create NoC clocks
   std::string clk_name;
@@ -474,7 +477,7 @@ void RADSimDesignContext::CreateSystemNoCs(sc_in<bool> &rst) {
     std::string noc_name_str = "radsim_noc_" + std::to_string(noc_id);
     const char *noc_name = noc_name_str.c_str();
     radsim_noc *noc_inst =
-        new radsim_noc(noc_name, noc_id, _adapter_clks, _module_clks,
+        new radsim_noc(noc_name, rad_id, noc_id, _adapter_clks, _module_clks,
                        _noc_axis_master_adapter_info[noc_id],
                        _noc_axis_slave_adapter_info[noc_id],
                        _noc_aximm_master_adapter_info[noc_id],

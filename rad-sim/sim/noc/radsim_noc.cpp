@@ -1,7 +1,7 @@
 #include <design_context.hpp> //AKB: moved to header file
 #include <radsim_noc.hpp>
 
-radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
+radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, int noc_id,
                        std::vector<sc_clock *> &adapter_clks,
                        std::vector<sc_clock *> &module_clks,
                        std::vector<AdapterInfo> &axis_master_adapter_info,
@@ -10,7 +10,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
                        std::vector<AdapterInfo> &aximm_slave_adapter_info,
                        RADSimDesignContext* radsim_design) //AKB: ADDED
     : sc_module(name), noc_clk("noc_clk"), rst("rst") {
-
+  _rad_id = rad_id; 
   _noc_id = noc_id;
   _num_noc_nodes = radsim_config.GetIntVectorKnob("noc_num_nodes", _noc_id);
 
@@ -127,7 +127,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
 
     // Create adapter
     axis_slave_adapter *slave_adapter = new axis_slave_adapter(
-        adapter_name, axis_slave_adapter_info[adapter_id]._node_id, _noc_id,
+        adapter_name, _rad_id, axis_slave_adapter_info[adapter_id]._node_id, _noc_id,
         adapter_port_types, axis_slave_adapter_info[adapter_id]._port_dataw,
         adapter_module_period, adapter_period, &_config, _booksim_noc,
         _buffer_state[axis_slave_adapter_info[adapter_id]._node_id],

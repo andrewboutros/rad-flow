@@ -1,7 +1,7 @@
 #include <axis_slave_adapter.hpp>
 
 axis_slave_adapter::axis_slave_adapter(
-    const sc_module_name &name, int node_id, int network_id,
+    const sc_module_name &name, unsigned int rad_id, int node_id, int network_id,
     std::vector<Flit::FlitType> &interface_types,
     std::vector<unsigned int> &interface_dataw, double node_period,
     double adapter_period, BookSimConfig *noc_config, Network *noc,
@@ -11,7 +11,8 @@ axis_slave_adapter::axis_slave_adapter(
   axis_interfaces.init(interface_types.size());
 
   // Node properties
-  _rad_id = 0; // TO-DO-MR: set appropriate RAD ID through constructor
+  _rad_id = rad_id; // TO-DO-MR: set appropriate RAD ID through constructor
+  //std::cout << "set rad_id in axis_slave_adapter " << name << " to: " << _rad_id << std::endl;
   _node_id = node_id;
   _network_id = network_id;
   _node_period = node_period;

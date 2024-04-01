@@ -2,8 +2,8 @@
 
 RADSimCluster::RADSimCluster(int num_rads) {
     this->num_rads = num_rads;
-    for (int i = 0; i < num_rads; i++) {
-        RADSimDesignContext* new_rad = new RADSimDesignContext();
+    for (unsigned int i = 0; i < num_rads; i++) {
+        RADSimDesignContext* new_rad = new RADSimDesignContext(i); //pass in unique RAD ID
         all_rads.push_back(new_rad);
     }
     inter_rad_topo = ALL_TO_ALL;
@@ -17,8 +17,8 @@ RADSimCluster::~RADSimCluster() {
 }
 
 RADSimDesignContext* 
-RADSimCluster::CreateNewRAD() {
-    RADSimDesignContext* new_rad = new RADSimDesignContext();
+RADSimCluster::CreateNewRAD(unsigned int i) {
+    RADSimDesignContext* new_rad = new RADSimDesignContext(i);
     num_rads++;
     all_rads.push_back(new_rad);
     return new_rad;

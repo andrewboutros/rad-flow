@@ -58,7 +58,8 @@ private:
   bool rad_done;
 
 public:
-  RADSimDesignContext();
+  unsigned int rad_id; //unique ID of this RAD
+  RADSimDesignContext(unsigned int rad_id_);
   ~RADSimDesignContext();
   void ParseNoCPlacement(const std::string &design_path, const std::string &placement_filename); //AKB added first arg
   void ParseClockSettings(const std::string &design_path, const std::string &clks_filename); //AKB added first arg
