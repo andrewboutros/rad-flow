@@ -54,7 +54,7 @@ void portal::Tick() { //sequential logic
                 axis_portal_slave_interface.tlast.read(),
                 axis_portal_slave_interface.tid.read(),
                 axis_portal_slave_interface.tdest.read(),
-                axis_portal_slave_interface.tuser.read()
+                dest_device //tuser field
              };
 
             portal_axis_fifo.push(curr_transaction);
@@ -63,11 +63,7 @@ void portal::Tick() { //sequential logic
         if ((portal_axis_fifo.size() > 0) ) { //&& test_ready_toggle) {
             portal_axis_fields curr_transaction = portal_axis_fifo.front();
             portal_axis_master.tdata.write(curr_transaction.tdata);
-            portal_axis_master.tuser.write(curr_transaction.tuser);
-            std::cout << "before splitting gives me: " << curr_transaction.tdest << std::endl;
-            std::cout << "splitting gives me: " << curr_transaction.tdest.range(AXIS_DESTW-RAD_DESTW,AXIS_DESTW-1) << std::endl;
-            //portal_axis_master.tdest.write(curr_transaction.tdest.range(AXIS_DESTW,AXIS_DESTW+RAD_DESTW-1));
-            portal_axis_master.tdest.write(curr_transaction.tdest);
+            portal_axis_master.tuser.write(dest_device);
             portal_axis_master.tvalid.write(true);
             portal_axis_master.tlast.write(curr_transaction.tlast);
             //test_ready_toggle = false;
@@ -75,6 +71,7 @@ void portal::Tick() { //sequential logic
         else {
             //counter++;
             portal_axis_master.tdata.write(0);
+            portal_axis_master.tuser.write(dest_device);
             portal_axis_master.tvalid.write(false);
             //test_ready_toggle = true;
         }
@@ -88,7 +85,7 @@ void portal::Tick() { //sequential logic
             if (!portal_axis_fifo.empty()) {
                 //test_ready_toggle = false;
                 portal_axis_fifo.pop();
-                std::cout << "portal.cpp in add design sent to dest_device " << portal_axis_master.tdest.read().to_uint64() << " on cycle " << curr_cycle << std::endl;
+                std::cout << "portal.cpp in add design sent to dest_device " << dest_device.to_int64() << " on cycle " << curr_cycle << std::endl;
                 portal_recvd.write(1);
                 if (portal_axis_master.tlast.read()) {
                     std::cout << "Add design portal.cpp sent last data via inter_rad at cycle " << curr_cycle << std::endl;

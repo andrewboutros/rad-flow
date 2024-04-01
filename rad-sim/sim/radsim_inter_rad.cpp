@@ -97,7 +97,6 @@ RADSimInterRad::writeFifo() {
             struct axis_fields curr_transaction;
             curr_transaction.tdata = all_axis_slave_ports[i]->tdata.read(); //0 bc adder
             curr_transaction.tuser = all_axis_slave_ports[i]->tuser.read();
-            curr_transaction.tdest = all_axis_slave_ports[i]->tdest.read();
             curr_transaction.tvalid = all_axis_slave_ports[i]->tvalid.read();
             curr_transaction.tlast = all_axis_slave_ports[i]->tlast.read();
             //all_axis_slave_ports[i]->tready.write(true);
@@ -105,7 +104,7 @@ RADSimInterRad::writeFifo() {
                 //std::cout << "valid" << std::endl;
             }*/
             if (curr_transaction.tvalid && all_axis_slave_ports[i]->tready.read()) { //&& !prev_valid[i]) { //detect rising edge bc operating at higher clk freq than modules
-                int dest_rad = curr_transaction.tdest.to_int64();
+                int dest_rad = curr_transaction.tuser.to_int64();
                 //std::cout << dest_rad << std::endl;
                 if (this->fifos[dest_rad]->nb_write(curr_transaction) != false) { //there was an available slot to write to
                     std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << curr_transaction.tdata.to_uint64() << std::endl;
@@ -160,7 +159,7 @@ RADSimInterRad::readFifo() {
                 struct axis_fields read_from_fifo;
                 this->fifos[i]->nb_read(read_from_fifo);
                 sc_bv<DATAW> val = read_from_fifo.tdata;
-                int dest_device = read_from_fifo.tdest.to_uint64(); //#define AXIS_USERW     66
+                int dest_device = read_from_fifo.tuser.to_uint64(); //#define AXIS_USERW     66
                 
                 //std::cout << "inter_rad fifo data READ is " << this->fifos[0]->read() << std::endl;
                 if (read_from_fifo.tvalid) {

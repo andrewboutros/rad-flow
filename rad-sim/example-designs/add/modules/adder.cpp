@@ -81,14 +81,9 @@ void adder::Tick() {
         std::string src_port_name = module_name + ".axis_adder_master_interface";
         std::string dst_port_name = "portal_inst.axis_portal_slave_interface";
         cout << axis_adder_interface.tdata.read().to_uint64() << endl;
-        sc_bv<AXIS_DESTW> dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
+        uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
         uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
-        //sc_bv<AXIS_DESTW> test_dst_addr = dst_addr; 
-        sc_bv<AXIS_DESTW> test_dst_addr = dst_addr;
-        std::cout << "dst_addr is " << dst_addr << " and test_dst_addr is" << test_dst_addr << std::endl;
-        sc_bv<AXIS_DESTW> test_dst_addr2 = (test_dst_addr.range(3, 0), dst_addr.range(3,0));  //(test_dst_addr, dst_addr); 
-        std::cout << "test_dst_addr2 is " << test_dst_addr2 << std::endl;
-        axis_adder_master_interface.tdest.write(test_dst_addr2);
+        axis_adder_master_interface.tdest.write(dst_addr);
         axis_adder_master_interface.tid.write(0);
         axis_adder_master_interface.tstrb.write(0);
         axis_adder_master_interface.tkeep.write(0);

@@ -24,7 +24,7 @@ public:
   Flit::FlitType _type;               // Transaction type
   sc_bv<NOC_LINKS_VCID_WIDTH> _vc_id; // Virtual channel ID this flit uses
   sc_bv<NOC_LINKS_PACKETID_WIDTH> _packet_id; // Packet ID this flit belongs to
-  sc_bv<NOC_LINKS_DEST_WIDTH+RAD_DESTW> _dest;          // Packet destination
+  sc_bv<NOC_LINKS_DEST_WIDTH> _dest;          // Packet destination
   sc_bv<NOC_LINKS_PAYLOAD_WIDTH> *_payload;   // Payload data of the flit
   sc_bv<NOC_LINKS_DEST_INTERFACE_WIDTH>
       _dest_interface; // Packet destination interface ID
@@ -34,7 +34,7 @@ public:
   sc_flit();
   sc_flit(const sc_flit &f);
   sc_flit(bool head, bool tail, Flit::FlitType type, unsigned int vc_id,
-          const sc_bv<NOC_LINKS_DEST_WIDTH> &dest, //used to be sc_uint
+          const sc_uint<NOC_LINKS_DEST_WIDTH> &dest,
           const sc_bv<NOC_LINKS_DEST_INTERFACE_WIDTH> &dest_interface,
           const sc_bv<NOC_LINKS_PACKETID_WIDTH> &packet_id,
           unsigned int sim_transaction_id);
