@@ -2,15 +2,15 @@ noc:
   type: ['2d']
   num_nocs: 1
   clk_period: [1.0]
-  payload_width: [166]
+  payload_width: [145]
   topology: ['mesh']
   dim_x: [4]
   dim_y: [4] 
   routing_func: ['dim_order']
-  vcs: [5]
+  vcs: [1]
   vc_buffer_size: [8]
   output_buffer_size: [8]
-  num_packet_types: [5]
+  num_packet_types: [1]
   router_uarch: ['iq']
   vc_allocator: ['islip']
   sw_allocator:  ['islip']
@@ -35,3 +35,7 @@ design:
 telemetry:
   log_verbosity: 2
   traces: []
+ 
+interfaces:
+  max_axis_tdata_width: 512
+  axis_tuser_width: 75

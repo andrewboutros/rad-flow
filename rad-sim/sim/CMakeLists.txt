@@ -24,6 +24,11 @@ include_directories(
   ../example-designs/mult/modules
 )
 
+find_package(verilator CONFIG)
+if (verilator_FOUND)
+    include_directories(SYSTEM "${VERILATOR_ROOT}/include")
+endif()
+
 set(srcfiles
   design_context.cpp
   radsim_config.cpp

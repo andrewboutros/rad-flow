@@ -11,6 +11,7 @@ axis_slave_adapter::axis_slave_adapter(
   axis_interfaces.init(interface_types.size());
 
   // Node properties
+  _rad_id = 0; // TO-DO-MR: set appropriate RAD ID through constructor
   _node_id = node_id;
   _network_id = network_id;
   _node_period = node_period;
@@ -46,12 +47,14 @@ axis_slave_adapter::axis_slave_adapter(
        interface_id++)
     _axis_interface_priority.push(interface_id);
 
+  _input_axis_transactions_afifo_depth = 2;
+
   _injection_afifo_depth =
       radsim_config.GetIntVectorKnob("noc_adapters_fifo_size", _network_id);
   _injection_flit_ready = false;
 
   SC_METHOD(InputReady);
-  sensitive << _injection_afifo_full << rst << _packetization_cycle;
+  sensitive << _injection_afifo_full << rst << _packetization_cycle << _input_axis_transactions_afifo_full;
   for (unsigned int interface_id = 0; interface_id < _num_axis_interfaces;
        interface_id++)
     sensitive << axis_interfaces[interface_id].tvalid;
@@ -73,27 +76,20 @@ int axis_slave_adapter::GetInputDestinationNode(
 // Combinational logic for setting the tready signal of the slave NoC adapter
 void axis_slave_adapter::InputReady() {
   // Set all tready values to false initially
-  for (unsigned int interface_id = 0; interface_id < _num_axis_interfaces;
-       interface_id++)
+  for (unsigned int interface_id = 0; interface_id < _num_axis_interfaces; interface_id++)
     _tready_values[interface_id] = false;
 
-  // If packetization is busy, skip arbitration logic since adapter can't accept
-  // new transaction anyway
-  if (_packetization_cycle.read() == 0) {
-    // Go over interfaces (in order of their current priority) -- if the
-    // injection FIFO is not full, the first interface with valid data is going
-    // to be accepted and its corresponding tready value is set to true
-    for (unsigned int interface_id = 0; interface_id < _num_axis_interfaces;
-         interface_id++) {
-      unsigned int nxt_interface_id = _axis_interface_priority.front();
-      if (!_injection_afifo_full &&
-          axis_interfaces[nxt_interface_id].tvalid.read()) {
-        _tready_values[nxt_interface_id] = true;
-        break;
-      }
-      _axis_interface_priority.push(nxt_interface_id);
-      _axis_interface_priority.pop();
+  // Go over interfaces (in order of their current priority) -- if the
+  // injection FIFO is not full, the first interface with valid data is going
+  // to be accepted and its corresponding tready value is set to true
+  for (unsigned int interface_id = 0; interface_id < _num_axis_interfaces; interface_id++) {
+    unsigned int nxt_interface_id = _axis_interface_priority.front();
+    if (!_injection_afifo_full && axis_interfaces[nxt_interface_id].tvalid.read()) {
+      _tready_values[nxt_interface_id] = true;
+      break;
     }
+    _axis_interface_priority.push(nxt_interface_id);
+    _axis_interface_priority.pop();
   }
 
   while (_axis_interface_priority.front() != 0) {
@@ -102,71 +98,51 @@ void axis_slave_adapter::InputReady() {
   }
 
   // Set tready output ports to their corresponding values
-  for (unsigned int interface_id = 0; interface_id < _num_axis_interfaces;
-       interface_id++)
-    axis_interfaces[interface_id].tready.write(
-        (_packetization_cycle.read() == 0) && _tready_values[interface_id]);
+  //std::cout << GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period")) << ": " << this->name() << std::endl;
+  for (unsigned int interface_id = 0; interface_id < _num_axis_interfaces; interface_id++)
+    axis_interfaces[interface_id].tready.write(!_input_axis_transactions_afifo_full.read() && _tready_values[interface_id]);
 }
 
 // Sequential logic for registering an AXI streaming transaction from one of the
 // input interfaces -- this typically operates at the node frequency
 void axis_slave_adapter::InputInterface() {
-  _input_axis_transaction_id.write(0);
-  _input_axis_transaction_interface.write(0);
-  _input_axis_transaction.Reset();
+  _input_axis_transactions_afifo_full.write(false);
   wait();
 
   while (true) {
     // Go over all interfaces checking for one with both tready and tvalid set
-    // to true. If found, register this AXI streaming transaction for
-    // packetization
-    bool transaction_registered = false;
-    for (unsigned int interface_id = 0; interface_id < _num_axis_interfaces;
-         interface_id++) {
-      if (axis_interfaces[interface_id].tready.read() &&
-          axis_interfaces[interface_id].tvalid.read()) {
-        // Register AXI streaming transaction signals
-        _input_axis_transaction.tdata.write(
-            axis_interfaces[interface_id].tdata.read());
-        _input_axis_transaction.tdest.write(
-            axis_interfaces[interface_id].tdest.read());
-        _input_axis_transaction.tid.write(
-            axis_interfaces[interface_id].tid.read());
-        _input_axis_transaction.tkeep.write(
-            axis_interfaces[interface_id].tkeep.read());
-        _input_axis_transaction.tlast.write(
-            axis_interfaces[interface_id].tlast.read());
-        _input_axis_transaction.tstrb.write(
-            axis_interfaces[interface_id].tstrb.read());
-        _input_axis_transaction.tuser.write(
-            axis_interfaces[interface_id].tuser.read());
-        _input_axis_transaction.tvalid.write(
-            axis_interfaces[interface_id].tvalid.read());
-        transaction_registered = true;
-
+    for (unsigned int interface_id = 0; interface_id < _num_axis_interfaces; interface_id++) {
+      if (axis_interfaces[interface_id].tready.read() && axis_interfaces[interface_id].tvalid.read()) {
+        // Create an AXIS transaction struct
+        axis_transaction input_transaction;
+        input_transaction.tdata = axis_interfaces[interface_id].tdata.read();
+        input_transaction.tdest = axis_interfaces[interface_id].tdest.read();
+        input_transaction.tid = axis_interfaces[interface_id].tid.read();
+        input_transaction.tkeep = axis_interfaces[interface_id].tkeep.read();
+        input_transaction.tlast = axis_interfaces[interface_id].tlast.read();
+        input_transaction.tstrb = axis_interfaces[interface_id].tstrb.read();
+        input_transaction.tuser = axis_interfaces[interface_id].tuser.read();
+        
         // Log transaction initiation to get a unique packet ID
         int unique_sim_packet_id =
             NoCTransactionTelemetry::RecordTransactionInitiation(
                 _node_id,
-                GetInputDestinationNode(
-                    axis_interfaces[interface_id].tdest.read()),
+                GetInputDestinationNode(axis_interfaces[interface_id].tdest.read()),
                 _interface_types[interface_id], _interface_dataw[interface_id],
                 _network_id);
 
-        // Register the packet ID, transaction type, and which interface it came
-        // from
-        _input_axis_transaction_id.write(unique_sim_packet_id);
-        _input_axis_transaction_type.write(_interface_types[interface_id]);
-        _input_axis_transaction_interface.write(interface_id);
+        // Register the packet ID, transaction type, and which interface it came from
+        input_transaction.transaction_id = unique_sim_packet_id;
+        input_transaction.transaction_type = _interface_types[interface_id];
+        input_transaction.transaction_interface = interface_id;
 
+        _input_axis_transactions_afifo.push(input_transaction);
         break;
       }
     }
-
-    // If no transactions were registered, set the valid signal of the
-    // registered transaction to false
-    if (!transaction_registered)
-      _input_axis_transaction.tvalid.write(false);
+    _input_axis_transactions_afifo_full.write(_input_axis_transactions_afifo.size() >=
+      _input_axis_transactions_afifo_depth);
+    assert(_input_axis_transactions_afifo.size() <= _input_axis_transactions_afifo_depth);
     wait();
   }
 }
@@ -175,69 +151,54 @@ void axis_slave_adapter::InputInterface() {
 void axis_slave_adapter::InputPacketization() {
   _injection_afifo_full.write(false);
   _packetization_cycle.write(0);
-  _packetization_cycle = 0;
   wait();
 
   while (true) {
-    int used_interface_id = _input_axis_transaction_interface.read();
-    if (_input_axis_transaction.tvalid.read() &&
-        (_injection_afifo.size() < _injection_afifo_depth)) {
-      // During the first packetization cycle, form as many flits as needed by
-      // this transaction and push them to the injection FIFO -- In hardware,
-      // this happens over P clock cycles where a flit is formed and buffered
-      // each cycle, but is modeled by doing all the work in the 1st cycle &
-      // remaining idle for (P-1) cycles
-      if (_packetization_cycle.read() == 0) {
-        // Put the AXI-streaming transaction in bit vector format
-        sc_bv<AXIS_PAYLOADW> packet_bv;
-        unsigned int num_flits = _num_flits_per_packet[used_interface_id];
-        AXIS_TLAST(packet_bv) = _input_axis_transaction.tlast.read();
-        AXIS_TUSER(packet_bv) = _input_axis_transaction.tuser.read();
-        AXIS_TDATA(packet_bv) = _input_axis_transaction.tdata.read();
+    // If the input AXIS transation FIFO has pending transaction, process them
+    if (!_input_axis_transactions_afifo.empty()) {
+      axis_transaction input_transaction = _input_axis_transactions_afifo.front();
+      int used_interface_id = input_transaction.transaction_interface;
+      unsigned int num_flits = _num_flits_per_packet[used_interface_id];
+      bool injection_fifo_full = !(_injection_afifo.size() < _injection_afifo_depth);
 
-        // Form flits and push them to the injection FIFO
-        for (unsigned int flit_id = 0;
-             flit_id < _num_flits_per_packet[used_interface_id]; flit_id++) {
-          sc_flit packetization_flit(
-              flit_id == 0,
-              flit_id == _num_flits_per_packet[used_interface_id] - 1,
-              _input_axis_transaction_type,
-              VCIDFromType(_input_axis_transaction_type, _noc_config),
-              _input_axis_transaction.tdest.read(),
-              _input_axis_transaction.tid.read(),
-              _input_axis_transaction_id.read(),
-              _input_axis_transaction_id.read());
-          set_flit_payload(packetization_flit, packet_bv, flit_id);
-          _injection_afifo.push(packetization_flit);
+      // Form a bitvector with the AXIS transaction payload
+      sc_bv<AXIS_PAYLOADW> packet_bv;
+      AXIS_TLAST(packet_bv) = input_transaction.tlast;
+      AXIS_TUSER(packet_bv) = input_transaction.tuser;
+      AXIS_TDATA(packet_bv) = input_transaction.tdata;
+
+      // If injection FIFO is not full, create a flit and push it to the FIFO
+      if (!injection_fifo_full) {
+        sc_flit packetization_flit(
+            _packetization_cycle.read() == 0,
+            _packetization_cycle.read() == num_flits - 1,
+            input_transaction.transaction_type,
+            VCIDFromType(input_transaction.transaction_type, _noc_config),
+            input_transaction.tdest,
+            input_transaction.tid,
+            input_transaction.transaction_id,
+            input_transaction.transaction_id);
+        set_flit_payload(packetization_flit, packet_bv, _packetization_cycle.read());
+        _injection_afifo.push(packetization_flit);
+
+        // If all flits of a packet are created, pop the transaction from queue
+        if (_packetization_cycle.read() == num_flits - 1) {
+          _packetization_cycle.write(0);
+          NoCTransactionTelemetry::RecordTransactionTailPacketization(
+              input_transaction.transaction_id);
+          _input_axis_transactions_afifo.pop();
+        } else {
+          _packetization_cycle.write(_packetization_cycle.read() + 1);
         }
-        _num_packetization_flits.write(num_flits);
-        _packetization_cycle.write(_packetization_cycle.read() + 1);
       }
     }
 
-    if (_packetization_cycle.read() > 0) {
-      uint8_t limit;
-      if (_num_packetization_flits.read() >= _freq_ratio) {
-        limit = _num_packetization_flits.read() - 1;
-      } else {
-        limit = _freq_ratio - 1;
-      }
-      if (_packetization_cycle.read() == limit) {
-        NoCTransactionTelemetry::RecordTransactionTailPacketization(
-            _input_axis_transaction_id.read());
-        _packetization_cycle.write(0);
-      } else {
-        _packetization_cycle.write(_packetization_cycle.read() + 1);
-      }
-    }
-
-    _injection_afifo_full.write(_injection_afifo.size() >=
-                                _injection_afifo_depth -
-                                    _max_num_flits_per_packet);
+    _injection_afifo_full.write(_injection_afifo.size() >= _injection_afifo_depth);
     wait();
   }
 }
 
+// Sequential logic for injecting flits into the Booksim NoC
 void axis_slave_adapter::InputInjection() {
   _injection_flit_ready = false;
   wait();
@@ -267,8 +228,21 @@ void axis_slave_adapter::InputInjection() {
         booksim_flit->head = _to_be_injected_flit._head;
         booksim_flit->tail = _to_be_injected_flit._tail;
         booksim_flit->type = _to_be_injected_flit._type;
-        booksim_flit->dest =
-            GetInputDestinationNode(_to_be_injected_flit._dest);
+
+        // TO-DO-MR BEGIN
+        if (DEST_RAD(_to_be_injected_flit._dest) == _rad_id) {
+          sc_bv<AXIS_DESTW> booksim_flit_dest = DEST_LOCAL_NODE(_to_be_injected_flit._dest);
+          booksim_flit->dest = GetInputDestinationNode(booksim_flit_dest);
+          booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_uint();
+          booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_uint();
+        } else {
+          sc_bv<AXIS_DESTW> booksim_flit_dest = 0; // TO-DO-MR: set to portal node ID
+          booksim_flit->dest = GetInputDestinationNode(booksim_flit_dest);
+          booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_uint();
+          booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_uint();
+        }
+        // TO-DO-MR END
+
         booksim_flit->dest_interface =
             _to_be_injected_flit._dest_interface.to_uint();
         booksim_flit->pri = 0;

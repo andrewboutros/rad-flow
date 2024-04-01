@@ -66,6 +66,8 @@ public:
   int  src;
   int  dest;
   int  dest_interface;
+  int  dest_rad; // TO-DO-MR: flit field to hold destination RAD ID
+  int  dest_remote; // TO-DO-MR: flit field to hold remote destination node in multi-RAD systems
 
   int  pri;
 

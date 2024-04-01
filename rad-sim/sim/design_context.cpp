@@ -168,6 +168,11 @@ void RADSimDesignContext::ParseNoCPlacement(const std::string &design_path, //AK
 
       int port_noc_placement = std::stoi(port_noc_placement_str);
       int port_node_placement = std::stoi(port_node_placement_str);
+
+      // Ensure the module has been instantiated
+      if (_design_modules.find(module_name) == _design_modules.end())
+        sim_log.log(error, "NoC module " + module_name + " is not defined!");
+
       RADSimModule *module_ptr = _design_modules[module_name];
 
       if (port_axi_type == "axis") {
@@ -499,7 +504,9 @@ void RADSimDesignContext::ConnectModulesToNoC() {
          slave_port_it++) {
           //std::cout << "here" << std::endl;
       std::string port_name = slave_port_it->first;
-     //std::cout << port_name << ", ";
+      // std::cout << port_name << ", ";
+      if (_port_placement.find(port_name) == _port_placement.end())
+        sim_log.log(error, "Port " + port_name + " has no NoC placement defined!");
       unsigned int noc_id = std::get<0>(_port_placement[port_name]);
       //std::cout << _noc_axis_master_ports[noc_id][port_name] << std::endl;
       _axis_signals[axis_signal_id].Connect(
@@ -516,7 +523,9 @@ void RADSimDesignContext::ConnectModulesToNoC() {
          master_port_it != module_ptr->_axis_master_ports.end();
          master_port_it++) {
       std::string port_name = master_port_it->first;
-       //std::cout << port_name << ", ";
+      // std::cout << port_name << ", ";
+      if (_port_placement.find(port_name) == _port_placement.end())
+        sim_log.log(error, "Port " + port_name + " has no NoC placement defined!");
       unsigned int noc_id = std::get<0>(_port_placement[port_name]);
       _axis_signals[axis_signal_id].Connect(
           *(master_port_it->second),
@@ -530,7 +539,9 @@ void RADSimDesignContext::ConnectModulesToNoC() {
          slave_port_it != module_ptr->_aximm_slave_ports.end();
          slave_port_it++) {
       std::string port_name = slave_port_it->first;
-       //std::cout << port_name << ", ";
+      // std::cout << port_name << ", ";
+      if (_port_placement.find(port_name) == _port_placement.end())
+        sim_log.log(error, "Port " + port_name + " has no NoC placement defined!");
       unsigned int noc_id = std::get<0>(_port_placement[port_name]);
       _aximm_signals[aximm_signal_id].Connect(
           *(_noc_aximm_master_ports[noc_id][port_name]),
@@ -544,7 +555,9 @@ void RADSimDesignContext::ConnectModulesToNoC() {
          master_port_it != module_ptr->_aximm_master_ports.end();
          master_port_it++) {
       std::string port_name = master_port_it->first;
-       //std::cout << port_name << ", ";
+      // std::cout << port_name << ", ";
+      if (_port_placement.find(port_name) == _port_placement.end())
+        sim_log.log(error, "Port " + port_name + " has no NoC placement defined!");
       unsigned int noc_id = std::get<0>(_port_placement[port_name]);
       _aximm_signals[aximm_signal_id].Connect(
           *(master_port_it->second),
@@ -649,24 +662,20 @@ RADSimDesignContext::GetNumAxisMasterAdapterPorts(unsigned int noc_id,
 
 std::tuple<unsigned int, unsigned int, unsigned int>
 RADSimDesignContext::GetPortPlacement(std::string &port_name) {
+  if (_port_placement.find(port_name) == _port_placement.end())
+    sim_log.log(error, "Port " + port_name + " has no NoC placement defined!");
   return _port_placement[port_name];
 }
 
 unsigned int RADSimDesignContext::GetPortDestinationID(std::string &port_name) {
-  if (_port_placement.find(port_name) == _port_placement.end()) {
-    std::cerr << "Cannot find port \"" << port_name
-              << "\" in list of registered ports!" << std::endl;
-    exit(1);
-  }
+  if (_port_placement.find(port_name) == _port_placement.end())
+    sim_log.log(error, "Port " + port_name + " has no NoC placement defined!");
   return std::get<1>(_port_placement[port_name]);
 }
 
 unsigned int RADSimDesignContext::GetPortInterfaceID(std::string &port_name) {
-  if (_port_placement.find(port_name) == _port_placement.end()) {
-    std::cerr << "Cannot find port \"" << port_name
-              << "\" in list of registered ports!" << std::endl;
-    exit(1);
-  }
+  if (_port_placement.find(port_name) == _port_placement.end())
+    sim_log.log(error, "Port " + port_name + " has no NoC placement defined!");
   return std::get<2>(_port_placement[port_name]);
 }
 
@@ -690,6 +699,14 @@ uint64_t RADSimDesignContext::GetPortBaseAddress(std::string &port_name) {
   assert(_aximm_port_base_addresses.find(port_name) !=
          _aximm_port_base_addresses.end());
   return _aximm_port_base_addresses[port_name];
+}
+
+int RADSimDesignContext::GetSimExitCode() {
+  return _sim_exit_code;
+}
+
+void RADSimDesignContext::ReportDesignFailure() {
+  _sim_exit_code = 1;
 }
 
 //AKB ADDED: returns info (because private member) of if the RAD is done simulation

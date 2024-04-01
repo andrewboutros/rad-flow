@@ -9,14 +9,34 @@
 #include <systemc.h>
 #include <vector>
 #include <radsim_utils.hpp>
+#include <fifo.hpp>
 
-#define DATAW 128
+#define FIFO_DEPTH 16
 
 class client : public RADSimModule {
 private:
-  std::queue<sc_bv<DATAW>> client_tdata_fifo; // FIFO to store numbers
-  unsigned int client_fifo_depth;    // MAXIMUM number of addends to store in FIFO
-  sc_signal<bool> client_fifo_full;  // Signal flagging addend FIFO is full
+  // FIFO to store numbers
+  fifo<sc_bv<DATAW>>* client_tdata_fifo;
+  fifo<bool>* client_tlast_fifo;
+
+  // Data FIFO signals
+  sc_signal<sc_bv<DATAW>> client_tdata_fifo_rdata_signal;
+  sc_signal<bool> client_tdata_fifo_wen_signal;
+  sc_signal<bool> client_tdata_fifo_ren_signal;
+  sc_signal<bool> client_tdata_fifo_full_signal;
+  sc_signal<bool> client_tdata_fifo_empty_signal; 
+  sc_signal<bool> client_tdata_fifo_almost_full_signal; 
+  sc_signal<bool> client_tdata_fifo_almost_empty_signal;
+
+  // Last FIFO signals
+  sc_signal<bool> client_tlast_fifo_rdata_signal;
+  sc_signal<bool> client_tlast_fifo_wen_signal;
+  sc_signal<bool> client_tlast_fifo_ren_signal;
+  sc_signal<bool> client_tlast_fifo_full_signal;
+  sc_signal<bool> client_tlast_fifo_empty_signal; 
+  sc_signal<bool> client_tlast_fifo_almost_full_signal; 
+  sc_signal<bool> client_tlast_fifo_almost_empty_signal;
+
   bool testbench_tlast;
 
 public:

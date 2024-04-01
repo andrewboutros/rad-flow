@@ -52,10 +52,11 @@ def parse_config_file(config_filename, booksim_params, radsim_header_params, rad
                     exit(1)
 
     '''noc_num_nodes = []
+    '''noc_num_nodes = []
     for n in range(radsim_knobs["noc_num_nocs"]):
         noc_num_nodes.append(0)
     radsim_knobs["noc_num_nodes"] = noc_num_nodes
-    radsim_header_params["noc_num_nodes"] = noc_num_nodes
+    radsim_header_params["noc_num_nodes"] = noc_num_nodes'''
     
     radsim_knobs["radsim_user_design_root_dir"] = radsim_knobs["radsim_root_dir"] + "/example-designs/" + radsim_knobs["design_name"]
 
@@ -86,11 +87,11 @@ def generate_booksim_config_files(booksim_params, radsim_header_params, radsim_k
         booksim_config_file.write("// Topology\n")
         noc_topology = booksim_params["noc_topology"][i]
         noc_type = booksim_params["noc_type"][i]
-        if noc_topology == "mesh":
+        if noc_topology == "mesh" or noc_topology == "torus":
             # A 3D RAD instance is modeled as a concenterated mesh NoC
             if noc_type == "2d":
-                booksim_config_file.write("topology = mesh;\n")
-            elif noc_type == "3d":
+                booksim_config_file.write("topology = " + noc_topology + ";\n")
+            elif noc_type == "3d" and noc_topology == "mesh":
                 booksim_config_file.write("topology = cmesh;\n")
             else:
                 print("Config Error: noc_type parameter value has to be 2d or 3d")
@@ -190,7 +191,10 @@ def generate_radsim_params_header(radsim_header_params):
     for v in radsim_header_params["noc_vcs"]:
         if v > max_noc_vcs:
             max_noc_vcs = v
-    max_vc_id_bitwidth = int(math.ceil(math.log(max_noc_vcs, 2)))
+    if max_noc_vcs == 1:
+        max_vc_id_bitwidth = 1
+    else:
+        max_vc_id_bitwidth = int(math.ceil(math.log(max_noc_vcs, 2)))
     radsim_params_header_file.write("#define NOC_LINKS_VCID_WIDTH      " + str(max_vc_id_bitwidth) + "\n")
     # Setting definition for packet ID bitwidth as directly specified by the user
     packet_id_bitwidth = radsim_header_params["noc_packet_id_width"]
@@ -201,14 +205,18 @@ def generate_radsim_params_header(radsim_header_params):
     for t in radsim_header_params["noc_num_packet_types"]:
         if t > max_num_types:
             max_num_types = t
-    max_type_id_bitwidth = int(math.ceil(math.log(max_num_types, 2)))
+    if (max_num_types == 1):
+        max_type_id_bitwidth = 1
+    else:
+        max_type_id_bitwidth = int(math.ceil(math.log(max_num_types, 2)))
     radsim_params_header_file.write("#define NOC_LINKS_TYPEID_WIDTH    " + str(max_type_id_bitwidth) + "\n")
     # Finding maximum NoC node count and setting definition for destination bitwidth
     max_num_nodes = 0
     for n in radsim_header_params["noc_num_nodes"]:
         if n > max_num_nodes:
             max_num_nodes = n
-    max_destination_bitwidth = int(math.ceil(math.log(max_num_nodes, 2)))
+    max_destination_bitwidth = int(math.ceil(math.log(max_num_nodes, 2))) * 3 # TO-DO-MR: Multiply by 3 for (rad_id, node_id1, node_id0). If single RAD, node_id0 and node_id1 is the same. If not, node_id0 is portal and node_id1 is destination node on other RAD. 
+    max_destination_field_bitwidth = int(math.ceil(math.log(max_num_nodes, 2))) # TO-DO-MR: Bitwidth of a single field of the destination described above.
     radsim_params_header_file.write("#define NOC_LINKS_DEST_WIDTH      " + str(max_destination_bitwidth) + "\n")
 
     dest_interface_bitwidth = int(math.ceil(math.log(radsim_header_params["noc_max_num_router_dest_interfaces"], 2)))
@@ -231,12 +239,14 @@ def generate_radsim_params_header(radsim_header_params):
     radsim_params_header_file.write("#define AXIS_KEEPW  " + str(radsim_header_params["interfaces_axis_tkeep_width"]) + "\n")
     radsim_params_header_file.write("#define AXIS_IDW    NOC_LINKS_PACKETID_WIDTH\n")
     radsim_params_header_file.write("#define AXIS_DESTW  NOC_LINKS_DEST_WIDTH\n")
+    radsim_params_header_file.write("#define AXIS_DEST_FIELDW  " + str(max_destination_field_bitwidth) + "\n") # TO-DO-MR: Define parameter for destination field width (to separate 3 fields)
     radsim_params_header_file.write("#define AXI4_IDW    " + str(radsim_header_params["interfaces_axi_id_width"]) + "\n")
     radsim_params_header_file.write("#define AXI4_ADDRW  64\n")
     radsim_params_header_file.write("#define AXI4_LENW   8\n")
     radsim_params_header_file.write("#define AXI4_SIZEW  3\n")
     radsim_params_header_file.write("#define AXI4_BURSTW 2\n")
     radsim_params_header_file.write("#define AXI4_RESPW  2\n")
+    radsim_params_header_file.write("#define AXI4_NODE_ADDRW " + str(max_destination_field_bitwidth) + "\n")
     radsim_params_header_file.write("#define AXI4_CTRLW  (AXI4_LENW + AXI4_SIZEW + AXI4_BURSTW)\n\n")
 
     radsim_params_header_file.write("// AXI Packetization Defines\n")
@@ -249,6 +259,9 @@ def generate_radsim_params_header(radsim_header_params):
     radsim_params_header_file.write("#define AXIS_TID(t)   t.range(AXIS_MAX_DATAW + AXIS_USERW + AXIS_STRBW + AXIS_KEEPW + AXIS_IDW, AXIS_MAX_DATAW + AXIS_USERW + AXIS_STRBW + AXIS_KEEPW + 1)\n")
     radsim_params_header_file.write("#define AXIS_TDEST(t) t.range(AXIS_MAX_DATAW + AXIS_USERW + AXIS_STRBW + AXIS_KEEPW + AXIS_IDW + AXIS_DESTW, AXIS_MAX_DATAW + AXIS_USERW + AXIS_STRBW + AXIS_KEEPW + AXIS_IDW + 1)\n")
     radsim_params_header_file.write("#define AXIS_TUSER_RANGE(t, s, e) t.range(1 + e, 1 + s)\n")
+    radsim_params_header_file.write("#define DEST_LOCAL_NODE(t) t.range(AXIS_DEST_FIELDW - 1, 0)\n") # TO-DO-MR: Extract local destination node from destination bitvector
+    radsim_params_header_file.write("#define DEST_REMOTE_NODE(t) t.range(2 * AXIS_DEST_FIELDW - 1, AXIS_DEST_FIELDW)\n") # TO-DO-MR: Extract remote destination node from destination bitvector
+    radsim_params_header_file.write("#define DEST_RAD(t) t.range(3 * AXIS_DEST_FIELDW - 1, 2 * AXIS_DEST_FIELDW)\n") # TO-DO-MR: Extract destination RAD from destination bitvector
     radsim_params_header_file.write("#define AXIS_TRANSACTION_WIDTH (AXIS_MAX_DATAW + AXIS_STRBW + AXIS_KEEPW + AXIS_IDW + AXIS_DESTW + AXIS_USERW + 1)\n")
     radsim_params_header_file.write("#define AXI4_PAYLOADW (AXI4_MAX_DATAW + AXI4_RESPW + AXI4_USERW + 1)\n")
     radsim_params_header_file.write("#define AXI4_LAST(t)  t.range(0, 0)\n")
@@ -257,7 +270,7 @@ def generate_radsim_params_header(radsim_header_params):
     radsim_params_header_file.write("#define AXI4_DATA(t)  t.range(AXI4_MAX_DATAW + AXI4_RESPW + AXI4_USERW, AXI4_RESPW + AXI4_USERW + 1)\n")
     radsim_params_header_file.write("#define AXI4_CTRL(t)  t.range(AXI4_CTRLW + AXI4_RESPW + AXI4_USERW, AXI4_RESPW + AXI4_USERW + 1)\n")
     radsim_params_header_file.write("#define AXI4_ADDR(t)  t.range(AXI4_ADDRW + AXI4_CTRLW + AXI4_RESPW + AXI4_USERW, AXI4_CTRLW + AXI4_RESPW + AXI4_USERW + 1)\n\n")
-
+    
     radsim_params_header_file.write("// Constants (DO NOT CHANGE)\n")
     radsim_params_header_file.write("#define AXI_TYPE_AR       0\n")
     radsim_params_header_file.write("#define AXI_TYPE_AW       1\n")
@@ -319,7 +332,7 @@ def generate_radsim_main(design_name):
     main_cpp_file.write("\tsim_trace_probe.dump_traces();\n")
     main_cpp_file.write("\t(void)argc;\n")
     main_cpp_file.write("\t(void)argv;\n")
-    main_cpp_file.write("\treturn 0;\n")
+    main_cpp_file.write("\treturn radsim_design.GetSimExitCode();\n")
     main_cpp_file.write("}\n")
 
 def prepare_build_dir(design_names):
@@ -390,10 +403,10 @@ radsim_header_params = {
     "noc_num_packet_types": [3],
     "noc_num_nodes": [0],
     "noc_max_num_router_dest_interfaces": 32,
-    "interfaces_max_axis_tdata_width": 1024,
+    "interfaces_max_axis_tdata_width": 512,
     "interfaces_axis_tkeep_width": 8,
     "interfaces_axis_tstrb_width": 8,
-    "interfaces_axis_tuser_width": 66,
+    "interfaces_axis_tuser_width": 75,
     "interfaces_axi_id_width": 8,
     "interfaces_axi_user_width": 64,
     "interfaces_max_axi_data_width": 512,

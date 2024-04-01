@@ -279,3 +279,10 @@ void Network::DumpNodeMap( ostream & os, string const & prefix ) const
        << _eject[s]->GetSource()->GetID() << ','
        << _inject[s]->GetSink()->GetID() << endl;
 }
+
+void Network::Trace(ostream & os, double sim_time )
+{
+  for(auto _timed_module : _timed_modules) {
+    _timed_module->Trace(os, sim_time);
+  }
+}

@@ -13,7 +13,7 @@ private:
   int start_cycle, end_cycle;
   std::queue<int> numbers_to_send;
   int actual_product;
-  RADSimDesignContext* radsim_design_; //store ptr passed into constructor for use in source() and sink()
+  RADSimDesignContext* radsim_design; //store ptr passed into constructor for use in source() and sink()
   
 public:
   sc_in<bool> clk;
@@ -26,7 +26,7 @@ public:
   sc_in<bool> response_valid;
   sc_in<bool> mult_inter_rad_recvd;
 
-  mult_driver(const sc_module_name &name, RADSimDesignContext* radsim_design);
+  mult_driver(const sc_module_name &name, RADSimDesignContext* radsim_design_);
   ~mult_driver();
 
   void source();

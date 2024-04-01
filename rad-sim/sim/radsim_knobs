@@ -12,7 +12,7 @@ noc_adapters_obuff_size 2
 noc_adapters_in_arbiter fixed_rr 
 noc_adapters_out_arbiter priority_rr 
 noc_adapters_vc_mapping direct 
-design_clk_periods 5.0 
+design_clk_periods 5.0 2.0 3.32 1.5 
 sim_driver_period 5.0
 telemetry_log_verbosity 2
 telemetry_traces 

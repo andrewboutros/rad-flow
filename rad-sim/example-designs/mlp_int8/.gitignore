@@ -1,0 +1,6 @@
+compiler/input_mifs/*.mif
+compiler/inst_mifs/*.mif
+compiler/weight_mifs/*.mif
+golden_outputs.mif
+layer_mvm_config
+*.pdf

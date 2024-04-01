@@ -18,7 +18,7 @@ communication. The flow consists of the following tools:
 
 - **RAD-Gen:** A push button tool for silicon area/timing/power implementation results of hard (ASIC) RAD components, FPGA fabric circuitry, and different 3D considerations (Under development)
 
-.. image:: _static/radflow.png
+.. image:: _static/index_radflow.png
   :width: 1000
   :alt: RAD Flow Overview
 
@@ -46,8 +46,8 @@ The following paper may be used as a general citation for RAD-Sim:
    rad-sim-quick-start
    rad-sim-code-structure
    rad-sim-rtl-code
-   rad-sim-adder-design
-   rad-sim-testing
+   examples/rad-sim-examples
+   rad-sim-developer
 
 .. toctree::
    :caption: RAD-Gen Documentation

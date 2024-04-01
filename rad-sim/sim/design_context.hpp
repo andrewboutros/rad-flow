@@ -12,6 +12,8 @@
 
 class RADSimDesignContext {
 private:
+  int _sim_exit_code = 0;
+
   std::vector<sc_clock *> _noc_clks;
   std::vector<sc_clock *> _adapter_clks;
   std::vector<sc_clock *> _module_clks;
@@ -99,6 +101,9 @@ public:
   void DumpDesignContext();
   std::vector<std::vector<std::set<std::string>>> &GetNodeModuleNames();
   uint64_t GetPortBaseAddress(std::string &port_name);
+
+  int GetSimExitCode();
+  void ReportDesignFailure();
   //AKB ADDED:
   bool is_rad_done();
   void set_rad_done();

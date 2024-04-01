@@ -521,8 +521,8 @@ void mvm::RegisterModuleInfo() {
   _num_noc_axis_master_ports = 0;
 
   port_name = module_name + ".tx_interface";
-  RegisterAxisMasterPort(port_name, &tx_interface, 512, 0);
+  RegisterAxisMasterPort(port_name, &tx_interface, DOT_PRODUCTS * 32, 0);
 
   port_name = module_name + ".rx_interface";
-  RegisterAxisSlavePort(port_name, &rx_interface, 512, 0);
+  RegisterAxisSlavePort(port_name, &rx_interface, LANES * 32, 0);
 }

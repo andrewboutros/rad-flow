@@ -77,6 +77,7 @@ public:
 
   virtual void ReadInputs();
   virtual void WriteOutputs();
+  virtual void Trace(ostream & os, double sim_time);
 
 private:
   

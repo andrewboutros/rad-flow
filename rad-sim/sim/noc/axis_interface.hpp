@@ -2,6 +2,7 @@
 
 #include <radsim_defines.hpp>
 #include <radsim_utils.hpp>
+#include <flit.hpp>
 #include <systemc.h>
 
 // Encapsulation of all AXI-stream master interface ports in a single struct
@@ -164,4 +165,19 @@ struct axis_signal {
     tdest.write(0);
     tuser.write(0);
   }
+};
+
+struct axis_transaction {
+  sc_bv<AXIS_MAX_DATAW> tdata;
+  sc_bv<AXIS_STRBW> tstrb;
+  sc_bv<AXIS_KEEPW> tkeep;
+  bool tlast;
+  sc_bv<AXIS_IDW> tid;
+  sc_bv<AXIS_DESTW> tdest;
+  sc_bv<AXIS_USERW> tuser;
+  unsigned int transaction_id;
+  Flit::FlitType transaction_type;
+  unsigned int transaction_interface;
+
+  axis_transaction() {}
 };

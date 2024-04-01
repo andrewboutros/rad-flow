@@ -20,6 +20,8 @@ num_lanes = 40
 vrf_depth = 512
 mrf_depth = 1024
 instances = 1
+qor_tolerance = 10.00 # 10 percent
+runtime_tolerance = 100.00 # 100 percent
 
 # Parse command line arguments
 if('-t' in sys.argv):
@@ -122,13 +124,15 @@ baseline_results = {}
 baseline = open('../scripts/perf_baseline', 'r')
 for line in baseline:
 	split_line = line.split(' ')
-	baseline_results[split_line[0]] = float(split_line[1])
+	baseline_results[split_line[0]] = (float(split_line[1]), float(split_line[2]))
 
-print(colors.BOLD + '{:<35}    {:<4}    {:<5}    {:<7}    {:<8}    {:<11}    {:<20}'.format('WORKLOAD', 'TEST', 'TOPS', 'QoR', 'Cycles', 'Runtime(s)', 'Speed(s/cyc)') + colors.RESET)
+print(colors.BOLD + '{:<35}    {:<4}    {:<4}    {:<5}    {:<7}    {:<8}    {:<11}    {:<20}'.format('WORKLOAD', 'TEST', 'PERF', 'TOPS', 'QoR', 'Cycles', 'Runtime(s)', 'Speed(s/cyc)') + colors.RESET)
 
 chdir('../compiler')
+subprocess.call(['chmod', '777', 'perf_sim.sh'], shell=False)
 first_flag = True
 cycles = ''
+global_failed = False
 for workload in workloads:
 	subprocess.call(['cp', '../scripts/workloads/'+workload+'.py', './'], shell=False)
 	sys.stdout.write('{:<35}    '.format(workload))
@@ -146,33 +150,59 @@ for workload in workloads:
 		subprocess.call(call_args, stdout=outfile, stderr=outfile, shell=False)
 	rptfile = open('../scripts/reports/'+workload+'_perf.rpt', 'r')
 	parse_perf_res = False
+
+	# Parse File
+	tops = 0
+	cycles = 0
+	runtime = 0
+	speed = 0
+	correctness = False
 	for line in rptfile:
 		if (parse_perf_res and ('Running simulation ... ' in line)):
 			args = line.split()
 			if('PASSED' in args[3]):
-				print(colors.PASS + 'PASS' + colors.RESET, end='    ')
 				result = args[10]
-				cycles = args[4][1:]
-				if workload in baseline_results:
-					comparison_to_baseline = ((float(args[10]) * instances/baseline_results[workload])-1) * 100
-					if comparison_to_baseline >= 0:
-						print ('{:<5}    +{:<5.2f}%    {:<8}    '.format(float(result) * instances, comparison_to_baseline, int(cycles)), end='')
-					else:
-						print ('{:<5}     {:<5.2f}%    {:<8}    '.format(float(result) * instances, comparison_to_baseline, int(cycles)), end='')
-				else:
-					print ('{:<5}    {:<7}    {:<8}    '.format(float(result) * instances, 'N/A', int(cycles)), end='')
+				tops = float(result) * instances
+				cycles = int(args[4][1:])
+				correctness = True	
 			else:
-				print(colors.FAIL + 'FAIL' + colors.RESET)
+				correctness = False
 		elif (parse_perf_res and ('Simulation took' in line)):
 			args = line.split()
 			args = args[2].split('m')
 			runtime = int(args[0]) * 60.0
 			args = args[1].split('s')
 			runtime = runtime + float(args[0])
-			print('{:<11.2f}    {:<20.2f}'.format(runtime, runtime/int(cycles)))	
+			speed = runtime/cycles
 		elif 'SystemC Performance Simulation' in line:
 			parse_perf_res = True
+
+	# Write Results
 	if(not parse_perf_res):
 		print(colors.FAIL + 'FAIL' + colors.RESET)
+		global_failed = True
+	else:
+		if(correctness):
+			print(colors.PASS + 'PASS' + colors.RESET, end='    ') # Correctness PASS
+			if workload in baseline_results:
+				qor_comparison_to_baseline = ((tops/baseline_results[workload][0])-1) * 100
+				runtime_comparison_to_baseline = ((runtime/baseline_results[workload][1])-1) * 100
+				if (abs(qor_comparison_to_baseline) < qor_tolerance and abs(runtime_comparison_to_baseline) < runtime_tolerance):
+					print(colors.PASS + 'PASS' + colors.RESET, end='    ') # Performance PASS
+				else:
+					print(colors.FAIL + 'FAIL' + colors.RESET, end='    ') # Performance FAIL
+					global_failed = True
+				if qor_comparison_to_baseline >= 0:
+					print ('{:<5}    +{:<5.2f}%    {:<8}    {:<11.2f}    {:<20.2f}'.format(tops, qor_comparison_to_baseline, cycles, runtime, speed))
+				else:
+					print ('{:<5}     {:<5.2f}%    {:<8}    {:<11.2f}    {:<20.2f}'.format(tops, qor_comparison_to_baseline, cycles, runtime, speed))
+			else:
+				print ('    ', end='    ') # No Performance Result
+				print ('{:<5}    {:<7}    {:<8}    {:<11.2f}    {:<20.2f}'.format(tops, 'N/A', cycles, runtime, speed))
+		else:
+			print(colors.FAIL + 'FAIL' + colors.RESET) # Correctness FAIL
+			global_failed = True
+
 	subprocess.call(['rm', workload+'.py'], shell=False)
 
+exit(global_failed)

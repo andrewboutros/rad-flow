@@ -79,11 +79,18 @@ void axis_master_adapter::OutputEjection() {
       // Check if corresponding ejection FIFO can accept a new flit
       int vc_id = _ejected_booksim_flit->vc;
       if (_ejection_afifos[vc_id].size() < _ejection_afifo_depth) {
+        // TO-DO-MR Begin: Re-assemble full destination bitvector from booksim flit fields
+        sc_bv<AXIS_DESTW> sc_flit_dest;
+        DEST_LOCAL_NODE(sc_flit_dest) = _ejected_booksim_flit->dest;
+        DEST_REMOTE_NODE(sc_flit_dest) = _ejected_booksim_flit->dest_remote;
+        DEST_RAD(sc_flit_dest) = _ejected_booksim_flit->dest_rad;
+        // TO-DO-MR End
+        
         // Create a SystemC flit and push it to its corresponding ejection FIFO
         sc_flit ejected_flit(
             _ejected_booksim_flit->head, _ejected_booksim_flit->tail,
             _ejected_booksim_flit->type, _ejected_booksim_flit->vc,
-            _ejected_booksim_flit->dest, _ejected_booksim_flit->dest_interface,
+            sc_flit_dest, _ejected_booksim_flit->dest_interface, // TO-DO-MR: Set sc_flit destination to re-assembled bitvector
             _ejected_booksim_flit->pid, _ejected_booksim_flit->id);
         ejected_flit._payload = static_cast<sc_bv<NOC_LINKS_PAYLOAD_WIDTH> *>(
             _ejected_booksim_flit->data);

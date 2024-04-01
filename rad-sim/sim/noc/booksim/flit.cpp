@@ -47,7 +47,8 @@ ostream& operator<<( ostream& os, const Flit& f )
      << " Type: " << f.type 
      << " Head: " << f.head
      << " Tail: " << f.tail << endl;
-  os << "  Source: " << f.src << "  Dest: " << f.dest << " Dest Interface: " << f.dest_interface << " Intm: "<<f.intm<<endl;
+  os << " Source: " << f.src << "  Dest: " << f.dest << " Dest Interface: " << f.dest_interface << " Intm: "<<f.intm<<endl;
+  os << " Dest RAD: " << f.dest_rad << " Remote Dest: " << f.dest_remote << endl; // TO-DO-MR: Print multi-RAD dest info
   os << "  Creation time: " << f.ctime << " Injection time: " << f.itime << " Arrival time: " << f.atime << " Phase: "<<f.ph<< endl;
   os << "  VC: " << f.vc << endl;
   return os;
@@ -77,6 +78,8 @@ void Flit::Reset()
   src = -1;
   dest = -1;
   dest_interface = -1;
+  dest_rad = -1; // TO-DO-MR: Initialize destination RAD ID
+  dest_remote = -1; // TO-DO-MR: Initialize remote destination node ID
   pri = 0;
   intm =-1;
   ph = -1;
