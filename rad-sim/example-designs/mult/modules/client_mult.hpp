@@ -8,8 +8,10 @@
 #include <string>
 #include <systemc.h>
 #include <vector>
+#include <radsim_utils.hpp>
+#include <fifo.hpp>
 
-#define DATAW 128
+#define FIFO_DEPTH 16
 
 class client_mult : public RADSimModule {
 private:

@@ -85,7 +85,7 @@ void portal::Tick() { //sequential logic
             if (!portal_axis_fifo.empty()) {
                 //test_ready_toggle = false;
                 portal_axis_fifo.pop();
-                std::cout << "portal.cpp in add design sent to dest_device " << dest_device.to_int64() << " on cycle " << curr_cycle << std::endl;
+                std::cout << "portal.cpp in add design sent " << portal_axis_master.tdata.read().to_int64() << " to dest_device " << dest_device.to_int64() << " on cycle " << curr_cycle << std::endl;
                 portal_recvd.write(1);
                 if (portal_axis_master.tlast.read()) {
                     std::cout << "Add design portal.cpp sent last data via inter_rad at cycle " << curr_cycle << std::endl;

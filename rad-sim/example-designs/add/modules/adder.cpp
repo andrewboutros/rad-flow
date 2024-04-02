@@ -45,7 +45,7 @@ adder::adder(const sc_module_name &name, RADSimDesignContext* radsim_design) //A
     << axis_adder_interface.tvalid << adder_tdata_fifo_almost_full_signal
     << adder_tdata_fifo_empty_signal << axis_adder_master_interface.tready 
     << axis_adder_master_interface.tvalid << adder_tdata_fifo_rdata_signal 
-    << adder_tlast_fifo_rdata_signal;
+    << adder_tlast_fifo_rdata_signal << clk; //AKB: must be sensitive to clk or get occasional unexpected behaviour where rdata stagnates
   // Sequential logic and its clock/reset setup
   SC_CTHREAD(Tick, clk.pos());
   reset_signal_is(rst, true); // Reset is active high
@@ -161,7 +161,7 @@ void adder::Tick() {
 
     //sent to portal module
     if (axis_adder_master_interface.tvalid.read() && axis_adder_master_interface.tready.read()) {
-        std::cout << "Sent the " << count_out_addends << "th addend over NoC to portal module on cycle " << curr_cycle << std::endl;
+        std::cout << "Sent the " << count_out_addends << "th addend " << axis_adder_master_interface.tdata.read().to_uint64() << " over NoC to portal module on cycle " << curr_cycle << std::endl;
         //adder_tdata_tlast_fifo.pop();
         count_out_addends++;
     }

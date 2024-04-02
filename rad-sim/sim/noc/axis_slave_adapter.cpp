@@ -11,7 +11,7 @@ axis_slave_adapter::axis_slave_adapter(
   axis_interfaces.init(interface_types.size());
 
   // Node properties
-  _rad_id = rad_id; // TO-DO-MR: set appropriate RAD ID through constructor
+  _rad_id = rad_id; // TO-DO-MR-DONE: set appropriate RAD ID through constructor
   //std::cout << "set rad_id in axis_slave_adapter " << name << " to: " << _rad_id << std::endl;
   _node_id = node_id;
   _network_id = network_id;
@@ -231,7 +231,7 @@ void axis_slave_adapter::InputInjection() {
         booksim_flit->type = _to_be_injected_flit._type;
 
         // TO-DO-MR BEGIN
-        if (DEST_RAD(_to_be_injected_flit._dest) == _rad_id) {
+        if (DEST_RAD(_to_be_injected_flit._dest) == _rad_id) { //not crossing to other RAD
           sc_bv<AXIS_DESTW> booksim_flit_dest = DEST_LOCAL_NODE(_to_be_injected_flit._dest);
           booksim_flit->dest = GetInputDestinationNode(booksim_flit_dest);
           booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_uint();

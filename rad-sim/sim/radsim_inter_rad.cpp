@@ -84,7 +84,7 @@ RADSimInterRad::writeFifo() {
     */
     //wait();
     for (int i = 0; i < num_rads; i++) {
-        all_axis_slave_signals[i]->tready.write(false);
+        all_axis_slave_signals[i]->tready.write(true);
     }
     int bw_counter = 0;
     wait();
@@ -110,9 +110,9 @@ RADSimInterRad::writeFifo() {
                     std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << curr_transaction.tdata.to_uint64() << std::endl;
                     fifos_latency_counters[dest_rad].push_back(0); //for latency counters
                 }
-                all_axis_slave_ports[i]->tready.write(false);
+                //all_axis_slave_ports[i]->tready.write(false);
             }
-            else if (!all_axis_slave_ports[i]->tready.read()) {
+            /*else if (!all_axis_slave_ports[i]->tready.read()) {
                 if (bw_counter >= bw_limit) {
                     all_axis_slave_ports[i]->tready.write(true);
                     bw_counter = 0;
@@ -120,10 +120,22 @@ RADSimInterRad::writeFifo() {
                 else {
                     bw_counter++;
                 }
+            }*/
+            if (bw_counter >= bw_limit) {
+                all_axis_slave_ports[i]->tready.write(true);
+            }
+            else {
+                all_axis_slave_ports[i]->tready.write(false);
             }
             prev_valid[i] = curr_transaction.tvalid;
         }
         //wait(num_wait, SC_NS); //SC_NS); //eventually change to 1.3, SC_US -- assuming 2.6 us / 2 latency for one piece of data
+        if (bw_counter >= bw_limit) {
+            bw_counter = 0;
+        }
+        else {
+            bw_counter++;
+        }
         wait();
     }
 }
