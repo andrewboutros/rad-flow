@@ -60,6 +60,24 @@ void portal::Tick() { //sequential logic
             portal_axis_fifo.push(curr_transaction);
         }
 
+        //warning: must do this before next if-else block so that we pop before reading front. otherwise we get outtdated value on second turn.
+        //we see valid as high the clock cycle AFTER we set it as high in the if-else below
+        if (portal_axis_master.tvalid.read() && portal_axis_master.tready.read()) { // && test_ready_toggle) { 
+            //pop out of fifo
+            if (!portal_axis_fifo.empty()) {
+                //test_ready_toggle = false;
+                portal_axis_fifo.pop();
+                std::cout << "portal.cpp in add design sent " << portal_axis_master.tdata.read().to_int64() << " to dest_device " << dest_device.to_int64() << " on cycle " << curr_cycle << std::endl;
+                portal_recvd.write(1);
+                if (portal_axis_master.tlast.read()) {
+                    std::cout << "Add design portal.cpp sent last data via inter_rad at cycle " << curr_cycle << std::endl;
+                }
+            }
+            else { //should never reach here because valid should be false if fifo is empty
+                std::cout << "reached here but why? portal_axis_fifo.size(): " << portal_axis_fifo.size() << std::endl;
+            }
+        }
+
         if ((portal_axis_fifo.size() > 0) ) { //&& test_ready_toggle) {
             portal_axis_fields curr_transaction = portal_axis_fifo.front();
             portal_axis_master.tdata.write(curr_transaction.tdata);
@@ -80,21 +98,6 @@ void portal::Tick() { //sequential logic
             test_ready_toggle = !test_ready_toggle;
         }*/
         
-        if (portal_axis_master.tvalid.read() && portal_axis_master.tready.read()) { // && test_ready_toggle) { 
-            //pop out of fifo
-            if (!portal_axis_fifo.empty()) {
-                //test_ready_toggle = false;
-                portal_axis_fifo.pop();
-                std::cout << "portal.cpp in add design sent " << portal_axis_master.tdata.read().to_int64() << " to dest_device " << dest_device.to_int64() << " on cycle " << curr_cycle << std::endl;
-                portal_recvd.write(1);
-                if (portal_axis_master.tlast.read()) {
-                    std::cout << "Add design portal.cpp sent last data via inter_rad at cycle " << curr_cycle << std::endl;
-                }
-            }
-            else { //should never reach here because valid should be false if fifo is empty
-                std::cout << "reached here but why? portal_axis_fifo.size(): " << portal_axis_fifo.size() << std::endl;
-            }
-        }
         /*else if (!test_ready_toggle) {
             test_ready_toggle = true;
         }*/

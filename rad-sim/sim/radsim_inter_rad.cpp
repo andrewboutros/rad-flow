@@ -94,6 +94,13 @@ RADSimInterRad::writeFifo() {
 
         //iterate thru all RADs
         for (int i = 0; i < num_rads; i++) {
+            if (bw_counter >= bw_limit) {
+                all_axis_slave_ports[i]->tready.write(true);
+            }
+            else {
+                all_axis_slave_ports[i]->tready.write(false);
+            }
+
             struct axis_fields curr_transaction;
             curr_transaction.tdata = all_axis_slave_ports[i]->tdata.read(); //0 bc adder
             curr_transaction.tuser = all_axis_slave_ports[i]->tuser.read();
@@ -121,12 +128,6 @@ RADSimInterRad::writeFifo() {
                     bw_counter++;
                 }
             }*/
-            if (bw_counter >= bw_limit) {
-                all_axis_slave_ports[i]->tready.write(true);
-            }
-            else {
-                all_axis_slave_ports[i]->tready.write(false);
-            }
             prev_valid[i] = curr_transaction.tvalid;
         }
         //wait(num_wait, SC_NS); //SC_NS); //eventually change to 1.3, SC_US -- assuming 2.6 us / 2 latency for one piece of data
@@ -184,6 +185,12 @@ RADSimInterRad::readFifo() {
                     all_axis_master_signals[dest_device]->tlast.write(read_from_fifo.tlast);
                     //std::cout << "inter_rad fifo free after READ is " << this->fifos[0]->num_free() << "/" << this->fifos[0]->num_available() << std::endl;
                 }
+                else {
+                    //no data to be written to any RAD's portal module
+                    //all_axis_master_signals[0]->tvalid.write(false);
+                    all_axis_master_signals[i]->tvalid.write(false);
+                }
+            
             }
             else {
                 //no data to be written to any RAD's portal module
