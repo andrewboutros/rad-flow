@@ -115,7 +115,11 @@ void portal::RegisterModuleInfo() {
 
     port_name = module_name + ".axis_portal_slave_interface";
     RegisterAxisSlavePort(port_name, &axis_portal_slave_interface, DATAW, 0);
+    //radsim_design->portal_id = radsim_design->GetPortDestinationID(port_name); //store slave port info
+    //radsim_design->AssignPortalSlaveID(radsim_design->GetPortDestinationID(port_name));
+    radsim_design->AssignPortalSlaveName(port_name); //bc other modules will send to this slave interface
 
     port_name = module_name + ".axis_portal_master_interface";
     RegisterAxisMasterPort(port_name, &axis_portal_master_interface, DATAW, 0);
+
 }

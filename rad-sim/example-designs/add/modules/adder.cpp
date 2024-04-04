@@ -74,9 +74,9 @@ void adder::Assign() {
       bool tlast = adder_tlast_fifo_rdata_signal.read();
       std::string src_port_name = module_name + ".axis_adder_master_interface";
       std::string dst_port_name = "portal_inst.axis_portal_slave_interface";
-      cout << dst_port_name << endl;
       uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
       uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
+      std::cout << "adder.cpp portal dest is: " << dst_addr << std::endl;
       axis_adder_master_interface.tdest.write(dst_addr);
       axis_adder_master_interface.tid.write(0);
       axis_adder_master_interface.tstrb.write(0);

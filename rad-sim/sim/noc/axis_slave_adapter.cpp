@@ -237,7 +237,8 @@ void axis_slave_adapter::InputInjection() {
           booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_uint();
           booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_uint();
         } else {
-          sc_bv<AXIS_DESTW> booksim_flit_dest = 0; // TO-DO-MR: set to portal node ID
+          std::cout << "(TO-DO-MR) _portal_id in axis_slave_adapter.cpp: " << _portal_id << std::endl;
+          sc_bv<AXIS_DESTW> booksim_flit_dest = _portal_id; // TO-DO-MR: set to portal node ID
           booksim_flit->dest = GetInputDestinationNode(booksim_flit_dest);
           booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_uint();
           booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_uint();
@@ -278,4 +279,10 @@ void axis_slave_adapter::InputInjection() {
     }
     wait();
   }
+}
+
+void 
+axis_slave_adapter::AssignPortalSlaveID(int id) {
+  _portal_id = id;
+  //std::cout << "set portal_id of RAD "<< _rad_id << " in axis_slave_adapter.cpp to: " << _portal_id << std::endl;
 }

@@ -22,6 +22,7 @@ class RADSimDesignContext; //AKB ADDED
 class radsim_noc : public sc_module {
 private:
   int _rad_id;
+  std::string _portal_slave_name;
   int _noc_id;
   int _num_noc_nodes;
   BookSimConfig _config;                    // Booksim NoC configuration
@@ -48,7 +49,7 @@ public:
   sc_vector<aximm_master_port> noc_aximm_master_ports;
   sc_vector<aximm_slave_port> noc_aximm_slave_ports;
 
-  radsim_noc(const sc_module_name &name, unsigned int rad_id, int noc_id,
+  radsim_noc(const sc_module_name &name, unsigned int rad_id, std::string portal_slave_name, int noc_id,
              std::vector<sc_clock *> &adapter_clks,
              std::vector<sc_clock *> &module_clks,
              std::vector<AdapterInfo> &axis_master_adapter_info,

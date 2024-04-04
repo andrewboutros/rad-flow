@@ -18,6 +18,7 @@
 class axis_slave_adapter : public sc_module {
 private:
   unsigned int _rad_id; // TO-DO-MR-DONE: RAD ID of this adapter (for multi-RAD systems)
+  unsigned int _portal_id; //AKB ADDED FOR TO-DO-MR
   unsigned int _node_id; // Node ID of this adapter
   double _node_period, _adapter_period, _noc_period;
   unsigned int _network_id;
@@ -77,4 +78,5 @@ public:
   void InputPacketization();
   void InputInjection();
   SC_HAS_PROCESS(axis_slave_adapter);
+  void AssignPortalSlaveID(int id);
 };

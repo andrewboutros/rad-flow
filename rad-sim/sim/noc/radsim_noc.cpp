@@ -1,7 +1,7 @@
 #include <design_context.hpp> //AKB: moved to header file
 #include <radsim_noc.hpp>
 
-radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, int noc_id,
+radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, std::string portal_slave_name, int noc_id,
                        std::vector<sc_clock *> &adapter_clks,
                        std::vector<sc_clock *> &module_clks,
                        std::vector<AdapterInfo> &axis_master_adapter_info,
@@ -11,6 +11,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, int noc_
                        RADSimDesignContext* radsim_design) //AKB: ADDED
     : sc_module(name), noc_clk("noc_clk"), rst("rst") {
   _rad_id = rad_id; 
+  _portal_slave_name = portal_slave_name;
   _noc_id = noc_id;
   _num_noc_nodes = radsim_config.GetIntVectorKnob("noc_num_nodes", _noc_id);
 
@@ -93,6 +94,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, int noc_
     for (unsigned int port_id = 0; port_id < num_adapter_ports; port_id++) {
       std::string port_name =
           axis_master_adapter_info[adapter_id]._port_names[port_id];
+          std::cout << "axis_master_adapter_info radsim_noc.cpp port_name is: " << port_name << std::endl;
       master_adapter->axis_interfaces[port_id].ConnectToPort(
           noc_axis_master_ports[adapter_id][port_id]);
       radsim_design->RegisterNoCMasterPort( //AKB to ptr
@@ -106,6 +108,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, int noc_
   _num_axis_slave_endpoints =
       radsim_design->GetNumNoCSlaveAdapters(_noc_id, false); //AKB to ptr
   noc_axis_slave_ports.init(_num_axis_slave_endpoints);
+  int local_idx_portal = -1;
   for (unsigned int adapter_id = 0; adapter_id < _num_axis_slave_endpoints;
        adapter_id++) {
     unsigned int num_adapter_ports =
@@ -143,6 +146,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, int noc_
     for (unsigned int port_id = 0; port_id < num_adapter_ports; port_id++) {
       std::string port_name =
           axis_slave_adapter_info[adapter_id]._port_names[port_id];
+       std::cout << "axis_slave_adapter radsim_noc.cpp port_name is: " << port_name << std::endl;
       slave_adapter->axis_interfaces[port_id].ConnectToPort(
           noc_axis_slave_ports[adapter_id][port_id]);
       radsim_design->RegisterNoCSlavePort( //AKB to ptr
@@ -236,6 +240,14 @@ radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, int noc_
 
     _aximm_slave_adapters.push_back(slave_adapter);
   }
+
+    //set portal ID to use in axis_slave_adapter for NoC versus inter_rad
+    unsigned int PortalSlaveID = radsim_design->GetPortalSlaveID();
+    std::cout << "Set portal slave ids in radsim_noc.cpp to: " << PortalSlaveID << std::endl;
+    for (int i = 0; i < _axis_slave_adapters.size(); i++) {
+        _axis_slave_adapters[i]->AssignPortalSlaveID(PortalSlaveID);
+    }
+    std::cout <<  "DONE AXIS SLAVE ADAPTER CREATION " << std::endl;
 
   SC_CTHREAD(Tick, noc_clk.pos());
   reset_signal_is(rst, true);

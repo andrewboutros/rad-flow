@@ -12,6 +12,7 @@
 
 class RADSimDesignContext {
 private:
+    unsigned int rad_id; //unique ID of this RAD
   int _sim_exit_code = 0;
 
   std::vector<sc_clock *> _noc_clks;
@@ -58,7 +59,8 @@ private:
   bool rad_done;
 
 public:
-  unsigned int rad_id; //unique ID of this RAD
+  //unsigned int portal_id; //NoC ID of portal module on RAD
+  std::string portal_slave_name;
   RADSimDesignContext(unsigned int rad_id_);
   ~RADSimDesignContext();
   void ParseNoCPlacement(const std::string &design_path, const std::string &placement_filename); //AKB added first arg
@@ -108,6 +110,8 @@ public:
   //AKB ADDED:
   bool is_rad_done();
   void set_rad_done();
+  void AssignPortalSlaveName(std::string name);
+  unsigned int GetPortalSlaveID ();
 };
 
 //extern RADSimDesignContext radsim_design; //AKB: commented out

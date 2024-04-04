@@ -477,7 +477,7 @@ void RADSimDesignContext::CreateSystemNoCs(sc_in<bool> &rst) {
     std::string noc_name_str = "radsim_noc_" + std::to_string(noc_id);
     const char *noc_name = noc_name_str.c_str();
     radsim_noc *noc_inst =
-        new radsim_noc(noc_name, rad_id, noc_id, _adapter_clks, _module_clks,
+        new radsim_noc(noc_name, rad_id, portal_slave_name, noc_id, _adapter_clks, _module_clks,
                        _noc_axis_master_adapter_info[noc_id],
                        _noc_axis_slave_adapter_info[noc_id],
                        _noc_aximm_master_adapter_info[noc_id],
@@ -721,4 +721,15 @@ RADSimDesignContext::is_rad_done() {
 void
 RADSimDesignContext::set_rad_done() {
   this->rad_done = true;
+}
+
+void 
+RADSimDesignContext::AssignPortalSlaveName(std::string name) {
+  //std::cout << "design_context assigned portal name: " << name << std::endl;
+  this->portal_slave_name = name;
+}
+
+unsigned int
+RADSimDesignContext::GetPortalSlaveID () {
+  return GetPortDestinationID(portal_slave_name);
 }
