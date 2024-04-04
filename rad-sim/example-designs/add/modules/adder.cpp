@@ -1,5 +1,7 @@
 #include <adder.hpp>
 
+int which_rad = 1;
+
 adder::adder(const sc_module_name &name, RADSimDesignContext* radsim_design) //AKB added last arg
     : RADSimModule(name, radsim_design) {
 
@@ -78,7 +80,7 @@ void adder::Assign() {
       uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
       std::cout << "adder.cpp portal dest is: " << dst_addr << std::endl;
       sc_bv<AXIS_DESTW> concat_dest;
-      DEST_RAD(concat_dest) = 1;
+      DEST_RAD(concat_dest) = which_rad; //1;
       DEST_LOCAL_NODE(concat_dest) = dst_addr;
       DEST_REMOTE_NODE(concat_dest) = 0; //for mult module on RAD 2 -- I know this, but designer would not... -- for proof of concept tho
       axis_adder_master_interface.tdest.write(concat_dest); //dst_addr);
@@ -131,14 +133,20 @@ void adder::Tick() {
         //in future if needed, could decouple receiving and sending using a fifo
         //&& axis_adder_master_interface.tready.read() //this is input from NoC
     ){
-      uint64_t current_sum = adder_rolling_sum.to_uint64();
-      adder_rolling_sum = current_sum + axis_adder_interface.tdata.read().to_uint64();
-      t_finished.write(axis_adder_interface.tlast.read());
-      std::cout << module_name << ": Got Transaction " << count_in_addends << " on cycle " << curr_cycle << " (user = "
-                << axis_adder_interface.tuser.read().to_uint64() << ") (addend = "
-                << axis_adder_interface.tdata.read().to_uint64() << ")!"
-                << std::endl;
-      count_in_addends++;
+      if (which_rad == 1) { //only calculate sum when sending to RAD 1 -- prevents doubly adding
+        uint64_t current_sum = adder_rolling_sum.to_uint64();
+        adder_rolling_sum = current_sum + axis_adder_interface.tdata.read().to_uint64();
+        t_finished.write(axis_adder_interface.tlast.read()); //this should still work even with 2 RADs because of which_rad check
+        std::cout << module_name << ": Got Transaction " << count_in_addends << " on cycle " << curr_cycle << " (user = "
+                  << axis_adder_interface.tuser.read().to_uint64() << ") (addend = "
+                  << axis_adder_interface.tdata.read().to_uint64() << ")!"
+                  << std::endl;
+        count_in_addends++;
+        which_rad = 2; //can send to other RAD next time
+      }
+      else {
+        which_rad = 1;
+      }
         
         //adder_tdata_tlast_fifo.push(std::make_tuple(axis_adder_interface.tdata.read(), axis_adder_interface.tlast.read()));
     }
