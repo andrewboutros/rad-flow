@@ -12,7 +12,6 @@
 
 class RADSimDesignContext {
 private:
-    unsigned int rad_id; //unique ID of this RAD
   int _sim_exit_code = 0;
 
   std::vector<sc_clock *> _noc_clks;
@@ -60,6 +59,7 @@ private:
 
 public:
   //unsigned int portal_id; //NoC ID of portal module on RAD
+  unsigned int rad_id; //unique ID of this RAD
   std::string portal_slave_name;
   RADSimDesignContext(unsigned int rad_id_);
   ~RADSimDesignContext();

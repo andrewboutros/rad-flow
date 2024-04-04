@@ -77,7 +77,11 @@ void adder::Assign() {
       uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
       uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
       std::cout << "adder.cpp portal dest is: " << dst_addr << std::endl;
-      axis_adder_master_interface.tdest.write(dst_addr);
+      sc_bv<AXIS_DESTW> concat_dest;
+      DEST_RAD(concat_dest) = 1;
+      DEST_LOCAL_NODE(concat_dest) = dst_addr;
+      DEST_REMOTE_NODE(concat_dest) = 0; //for mult module on RAD 2 -- I know this, but designer would not... -- for proof of concept tho
+      axis_adder_master_interface.tdest.write(concat_dest); //dst_addr);
       axis_adder_master_interface.tid.write(0);
       axis_adder_master_interface.tstrb.write(0);
       axis_adder_master_interface.tkeep.write(0);

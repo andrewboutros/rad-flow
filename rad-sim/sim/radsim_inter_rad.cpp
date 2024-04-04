@@ -106,13 +106,20 @@ RADSimInterRad::writeFifo() {
             curr_transaction.tuser = all_axis_slave_ports[i]->tuser.read();
             curr_transaction.tvalid = all_axis_slave_ports[i]->tvalid.read();
             curr_transaction.tlast = all_axis_slave_ports[i]->tlast.read();
+            //since crossing RADs, DEST_LOCAL_NODE is now DEST_REMOTE_NODE, and DEST_REMOTE_NODE can be reset to 0
+            sc_bv<AXIS_DESTW> concat_dest_swap = all_axis_slave_ports[i]->tdest.read();
+            //std::cout << "concat_dest_swap: " << concat_dest_swap << std::endl;
+            DEST_LOCAL_NODE(concat_dest_swap) = DEST_REMOTE_NODE(all_axis_slave_ports[i]->tdest.read());
+            DEST_REMOTE_NODE(concat_dest_swap) = 0;
+            curr_transaction.tdest = concat_dest_swap; //all_axis_slave_ports[i]->tdest.read();
+            //std::cout << "curr_transaction.tdest: " << concat_dest_swap << std::endl;
             //all_axis_slave_ports[i]->tready.write(true);
             /*if (all_axis_slave_ports[i]->tready.read()) {
                 //std::cout << "valid" << std::endl;
             }*/
             if (curr_transaction.tvalid && all_axis_slave_ports[i]->tready.read()) { //&& !prev_valid[i]) { //detect rising edge bc operating at higher clk freq than modules
-                int dest_rad = curr_transaction.tuser.to_int64();
-                //std::cout << dest_rad << std::endl;
+                unsigned int dest_rad = DEST_RAD(curr_transaction.tdest).to_uint64();
+                std::cout << "radsim_inter_rad.cpp dest_rad is: "<< dest_rad << std::endl;
                 if (this->fifos[dest_rad]->nb_write(curr_transaction) != false) { //there was an available slot to write to
                     std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << curr_transaction.tdata.to_uint64() << std::endl;
                     fifos_latency_counters[dest_rad].push_back(0); //for latency counters
@@ -172,7 +179,7 @@ RADSimInterRad::readFifo() {
                 struct axis_fields read_from_fifo;
                 this->fifos[i]->nb_read(read_from_fifo);
                 sc_bv<DATAW> val = read_from_fifo.tdata;
-                int dest_device = read_from_fifo.tuser.to_uint64(); //#define AXIS_USERW     66
+                int dest_device = (DEST_RAD(read_from_fifo.tdest)).to_uint64(); //#define AXIS_USERW     66
                 
                 //std::cout << "inter_rad fifo data READ is " << this->fifos[0]->read() << std::endl;
                 if (read_from_fifo.tvalid) {
@@ -183,6 +190,7 @@ RADSimInterRad::readFifo() {
                     all_axis_master_signals[dest_device]->tdata.write(val); //works if write to either this or line above
                     all_axis_master_signals[dest_device]->tvalid.write(read_from_fifo.tvalid);
                     all_axis_master_signals[dest_device]->tlast.write(read_from_fifo.tlast);
+                    all_axis_master_signals[dest_device]->tdest.write(read_from_fifo.tdest);
                     //std::cout << "inter_rad fifo free after READ is " << this->fifos[0]->num_free() << "/" << this->fifos[0]->num_available() << std::endl;
                 }
                 else {

@@ -18,6 +18,7 @@
 #define AXIS_USERW     75
 #define AXI4_USERW     64
 // (Almost always) Constant AXI Parameters
+// NOTE: AXIS_DEST_FIELDW must be NOC_LINKS_DEST_WIDTH/3 to fit RAD_DEST_ID, REMOTE_NODE_ID, and LOCAL_NODE_ID
 #define AXIS_STRBW  8
 #define AXIS_KEEPW  8
 #define AXIS_IDW    NOC_LINKS_PACKETID_WIDTH
