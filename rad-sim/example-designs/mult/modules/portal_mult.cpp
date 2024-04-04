@@ -41,8 +41,9 @@ void portal_mult::Tick() { //sequential logic
                 //get current cycle
                 int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
                 //read 
-                std::cout << module_name << ": Portal_Mult Module Got Transaction on cycle " << curr_cycle << " (user (in this case, this device ID) = "
-                << portal_axis_slave.tuser.read().to_uint64() << ") (addend = "
+                std::cout << module_name << ": Portal_Mult Module Got Transaction on cycle " << curr_cycle << " (RAD ID) = "
+                << radsim_design->rad_id  //<< portal_axis_slave.tuser.read().to_uint64() 
+                << ") (addend = "
                 << portal_axis_slave.tdata.read().to_uint64() << ")!"
                 << std::endl;
                 //write the addend into the mult module and that will flag when received all values and can end simulation
