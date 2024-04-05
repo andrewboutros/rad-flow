@@ -509,7 +509,11 @@ void mvm::Assign() {
                   std::to_string(dest_mvm_int) + ".rx_interface";
     }
     dest_id = radsim_design->GetPortDestinationID(dest_name);
-
+    sc_bv<AXIS_DESTW> dest_id_concat = dest_id;
+    // if (radsim_design->rad_id == 1){
+    //   std::cout << "mvm.cpp on RAD " << radsim_design->rad_id << "'s dest_id: " << dest_id << " and DEST_RAD(dest_id): " << DEST_RAD(dest_id_concat) << std::endl;
+    // }
+    DEST_RAD(dest_id_concat) = radsim_design->rad_id;
     unsigned int dest_interface;    // which FIFO
     unsigned int dest_interface_id; // added for separate ports
     // If destination is the same layer, send to reduce FIFO
@@ -538,7 +542,7 @@ void mvm::Assign() {
       tx_input_interface.tdata.write(tx_tdata_bv);
       tx_input_interface.tvalid.write(true);
       tx_input_interface.tuser.write(dest_interface);
-      tx_input_interface.tdest.write(dest_id);
+      tx_input_interface.tdest.write(dest_id_concat); //dest_id);
       tx_input_interface.tid.write(dest_interface_id);
       tx_reduce_interface.tvalid.write(false);
       // if (mvm_id == 1 && layer_id == 2 && !ofifo_empty_signal) {
@@ -556,7 +560,7 @@ void mvm::Assign() {
       tx_reduce_interface.tdata.write(tx_tdata_bv);
       tx_reduce_interface.tvalid.write(true);
       tx_reduce_interface.tuser.write(dest_interface);
-      tx_reduce_interface.tdest.write(dest_id);
+      tx_reduce_interface.tdest.write(dest_id_concat); //dest_id);
       tx_reduce_interface.tid.write(dest_interface_id);
       tx_input_interface.tvalid.write(false);
     } else {

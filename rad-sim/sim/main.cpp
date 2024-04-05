@@ -20,7 +20,7 @@ SimTraceRecording sim_trace_probe;
 int sc_main(int argc, char *argv[]) {
 	//AKB: using RADSimCluster class instead of creating new above
 	//RADSimCluster* cluster = new RADSimCluster(3); //2);
-	RADSimCluster* cluster = new RADSimCluster(1); //2);
+	RADSimCluster* cluster = new RADSimCluster(2);
 
 	gWatchOut = &cout;
 	int log_verbosity = radsim_config.GetIntKnob("telemetry_log_verbosity");
@@ -35,6 +35,10 @@ int sc_main(int argc, char *argv[]) {
 
 	//add_system *system = new add_system("add_system", driver_clk_sig, cluster->all_rads[0]); //AKB ADDED
 	dlrm_system *system = new dlrm_system("dlrm_system", driver_clk_sig, cluster->all_rads[0]);
+	
+	sc_clock *driver_clk_sig1 = new sc_clock(
+		"node_clk0", radsim_config.GetDoubleKnob("sim_driver_period"), SC_NS);
+	dlrm_system *system1 = new dlrm_system("dlrm_system1", driver_clk_sig1, cluster->all_rads[1]);
 	//mult_system *system = new mult_system("mult_system", driver_clk_sig, cluster->all_rads[0]); //AKB ADDED
 
 	// sc_clock *driver_clk_sig2 = new sc_clock(
@@ -50,6 +54,7 @@ int sc_main(int argc, char *argv[]) {
 	
 	//AKB ADDED:
 	cluster->StoreSystem(system);
+	cluster->StoreSystem(system1);
 	// cluster->StoreSystem(system2);
 	// cluster->StoreSystem(system3);
 	sc_clock *inter_rad_clk_sig = new sc_clock(
@@ -57,7 +62,7 @@ int sc_main(int argc, char *argv[]) {
 	RADSimInterRad* blackbox = new RADSimInterRad("inter_rad_box", inter_rad_clk_sig, cluster);
 	//blackbox->ConnectRadPair(0, 1); //TODO: comment out bc not using this
 	blackbox->ConnectRadAxi(0);
-	// blackbox->ConnectRadAxi(1);
+	blackbox->ConnectRadAxi(1);
 	// blackbox->ConnectRadAxi(2);
 	
 	int start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
@@ -81,9 +86,11 @@ int sc_main(int argc, char *argv[]) {
 	std::cout << "Simulation Cycles from main.cpp = " << end_cycle - start_cycle << std::endl;
 
 	delete system;
+	delete system1;
 	// delete system2; //AKB ADDED
 	// delete system3; //AKB ADDED
 	delete driver_clk_sig;
+	delete driver_clk_sig1;
 	// delete driver_clk_sig2; //AKB ADDED
 	// delete driver_clk_sig3; //AKB ADDED
 	sc_flit scf;

@@ -41,7 +41,8 @@ void portal::Tick() { //sequential logic
             //std::cout << "Also got here" << std:: endl;
             std::cout << "DLRM design raising valid data to send over portal module on cycle " << curr_cycle << " , will see valid high next clk cycle " << module_name << ": Got Transaction (user = "
                         << axis_portal_slave_interface.tuser.read().to_uint64() << ") (value = "
-                        << axis_portal_slave_interface.tdata.read().to_uint64() << ")!"
+                        << axis_portal_slave_interface.tdata.read().to_uint64() << ")! Destination field is "
+                        << axis_portal_slave_interface.tdest.read().to_uint64()
                         << std::endl;
              data_to_buffer = axis_portal_slave_interface.tdata.read();
              //got_data = true;

@@ -10,7 +10,7 @@
 #include <axis_interface.hpp>
 #include <radsim_utils.hpp>
 
-#define DATAW 128
+#define DATAW 16*32 //changed to match dlrm defines file //128
 #define NUM_SLOTS 5 //number of fifo slots, for now = NUM_ADDENDS
 #define DEST_RAD_LSB 0
 #define DEST_RAD_MSB 7

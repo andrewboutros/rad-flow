@@ -249,8 +249,11 @@ void custom_feature_interaction::Tick() {
         axis_interface[ch_id].tid.write(0);
         std::string dest_name =
             "layer0_mvm" + std::to_string(ch_id) + ".rx_interface";
+        sc_bv<AXIS_DESTW> dest_id_concat =  radsim_design->GetPortDestinationID(dest_name);
+        DEST_RAD(dest_id_concat) = radsim_design->rad_id;
         axis_interface[ch_id].tdest.write(
-            radsim_design->GetPortDestinationID(dest_name));
+            dest_id_concat);
+            //radsim_design->GetPortDestinationID(dest_name));
       } else {
         axis_interface[ch_id].tvalid.write(false);
       }
