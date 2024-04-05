@@ -42,4 +42,5 @@ add_top::add_top(const sc_module_name &name, RADSimDesignContext* radsim_design)
 add_top::~add_top() {
   delete adder_inst;
   delete client_inst;
+  delete portal_inst;
 }

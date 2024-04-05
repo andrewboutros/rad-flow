@@ -71,7 +71,8 @@ bool ParseOutputs(std::vector<std::vector<int16_t>> &fi_outputs,
   return true;
 }
 
-dlrm_driver::dlrm_driver(const sc_module_name &name) : sc_module(name) {
+dlrm_driver::dlrm_driver(const sc_module_name &name, , RADSimDesignContext* radsim_design_) : sc_module(name) {
+  this->radsim_design = radsim_design_; //AKB ADDED
 
   // Parse design configuration (number of layers & number of MVM per layer)
   std::string design_root_dir =
@@ -195,7 +196,7 @@ void dlrm_driver::sink() {
     std::cout << "Simulation PASSED! All outputs matching!" << std::endl;
   } else {
     std::cout << "Simulation FAILED! Some outputs are NOT matching!" << std::endl;
-    radsim_design.ReportDesignFailure();
+    radsim_design->ReportDesignFailure();
   }
   _end_cycle =
       GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
@@ -205,5 +206,7 @@ void dlrm_driver::sink() {
   for (unsigned int i = 0; i < 10; i++) {
     wait();
   }
-  sc_stop();
+  //sc_stop();
+  this->radsim_design->set_rad_done(); //flag to replace sc_stop calls
+  return;
 }

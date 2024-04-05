@@ -26,6 +26,7 @@ set(srcfiles
   modules/fifo.cpp
   modules/instructions.cpp
   modules/collector.cpp
+  modules/portal.cpp
   dlrm_top.cpp
   dlrm_driver.cpp
   dlrm_system.cpp
@@ -42,6 +43,7 @@ set(hdrfiles
   modules/fifo.hpp
   modules/instructions.hpp
   modules/collector.hpp
+  modules/portal.hpp
   modules/dlrm_defines.hpp
   dlrm_top.hpp
   dlrm_driver.hpp

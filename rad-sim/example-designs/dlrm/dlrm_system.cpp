@@ -1,6 +1,6 @@
 #include <dlrm_system.hpp>
 
-dlrm_system::dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig)
+dlrm_system::dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig, RADSimDesignContext* radsim_design)
     : sc_module(name) {
 
   // Instantiate driver
@@ -32,6 +32,8 @@ dlrm_system::dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig)
   dut_inst->collector_fifo_rdy(collector_fifo_rdy_sig);
   dut_inst->collector_fifo_ren(collector_fifo_ren_sig);
   dut_inst->collector_fifo_rdata(collector_fifo_rdata_sig);
+  //add _top as dut instance for parent class design_system
+  this->design_dut_inst = dut_inst;
 }
 
 dlrm_system::~dlrm_system() {
