@@ -27,7 +27,7 @@ sc_bv<DATAW> data_to_buffer = 0;
 sc_bv<AXIS_USERW> dest_device = 1; //for testing, fixed at 1 to send to RAD1 which has mult design; //#define AXIS_USERW     66
 //bool got_data = false;
 void portal::Tick() { //sequential logic
-    portal_recvd.write(0);
+    //portal_recvd.write(0);
     portal_axis_master.tvalid.write(false);
     //bool test_ready_toggle = false;
     wait();
@@ -68,7 +68,7 @@ void portal::Tick() { //sequential logic
                 //test_ready_toggle = false;
                 portal_axis_fifo.pop();
                 std::cout << "portal.cpp in dlrm design sent " << portal_axis_master.tdata.read().to_int64() << " to dest_device " << dest_device.to_int64() << " on cycle " << curr_cycle << std::endl;
-                portal_recvd.write(1);
+                //portal_recvd.write(1);
                 if (portal_axis_master.tlast.read()) {
                     std::cout << "dlrm design portal.cpp sent last data via inter_rad at cycle " << curr_cycle << std::endl;
                 }

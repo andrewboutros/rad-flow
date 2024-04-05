@@ -5,11 +5,11 @@
 #include <queue>
 #include <radsim_defines.hpp>
 #include <radsim_module.hpp>
-#include <client.hpp>
 #include <string>
 #include <systemc.h>
 #include <vector>
 #include <radsim_utils.hpp>
+#include <dlrm_defines.hpp>
 
 struct portal_axis_fields {
             bool tvalid;

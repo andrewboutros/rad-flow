@@ -52,5 +52,5 @@ set(hdrfiles
 
 add_compile_options(-Wall -Wextra -pedantic)
 
-add_library(design STATIC ${srcfiles} ${hdrfiles})
-target_link_libraries(design PUBLIC SystemC::systemc booksim noc dram)
+add_library(design_dlrm STATIC ${srcfiles} ${hdrfiles})
+target_link_libraries(design_dlrm PUBLIC SystemC::systemc booksim noc dram)

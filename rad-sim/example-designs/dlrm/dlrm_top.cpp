@@ -45,7 +45,7 @@ dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
   module_name_str = "embedding_lookup_inst";
   std::strcpy(module_name, module_name_str.c_str());
   embedding_lookup_inst = new embedding_lookup(
-      module_name, line_bitwidth, mem_channels, embedding_lookup_fifos_depth);
+      module_name, line_bitwidth, mem_channels, embedding_lookup_fifos_depth, radsim_design);
   embedding_lookup_inst->rst(rst);
   embedding_lookup_inst->lookup_indecies_data(lookup_indecies_data);
   embedding_lookup_inst->lookup_indecies_target_channels(
@@ -64,7 +64,7 @@ dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
   feature_interaction_inst = new custom_feature_interaction(
       module_name, line_bitwidth, element_bitwidth, total_mem_channels,
       feature_interaction_fifos_depth, num_mvms[0],
-      feature_interaction_inst_file);
+      feature_interaction_inst_file, radsim_design);
   feature_interaction_inst->rst(rst);
   feature_interaction_inst->received_responses(received_responses);
 
@@ -79,7 +79,7 @@ dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
       std::strcpy(module_name, module_name_str.c_str());
       std::string inst_filename = design_root_dir + "/compiler/instructions/" +
                                   module_name_str + ".inst";
-      mvms[l][m] = new mvm(module_name, m, l, inst_filename);
+      mvms[l][m] = new mvm(module_name, m, l, inst_filename, radsim_design);
       mvms[l][m]->rst(rst);
       axis_signal_count++;
     }
@@ -106,7 +106,7 @@ dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
   // Instantiate Output Collector
   module_name_str = "output_collector";
   std::strcpy(module_name, module_name_str.c_str());
-  output_collector = new collector(module_name);
+  output_collector = new collector(module_name, radsim_design);
   output_collector->rst(rst);
   output_collector->data_fifo_rdy(collector_fifo_rdy);
   output_collector->data_fifo_ren(collector_fifo_ren);
@@ -128,7 +128,7 @@ dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
     std::strcpy(module_name, module_name_str.c_str());
     std::string mem_content_init = mem_content_init_prefix + to_string(ch_id);
     ext_mem[ctrl_id] =
-        new mem_controller(module_name, ctrl_id, mem_content_init);
+        new mem_controller(module_name, ctrl_id, radsim_design, mem_content_init);
     ext_mem[ctrl_id]->mem_clk(*mem_clks[ctrl_id]);
     ext_mem[ctrl_id]->rst(rst);
     ch_id += mem_channels[ctrl_id];
@@ -138,15 +138,15 @@ dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
   module_name_str = "portal_inst";
   std::strcpy(module_name, module_name_str.c_str());
   portal_inst = new portal(module_name, radsim_design);
-  portal_inst->portal_recvd(this->portal_recvd);
+  //portal_inst->portal_recvd(this->portal_recvd);
 
   //connect master to master instead, to expose to top
   portal_inst->portal_axis_master.ConnectToPort(this->design_top_portal_axis_master);
   portal_inst->portal_axis_slave.ConnectToPort(this->design_top_portal_axis_slave); //top drives portal bc top receives slave inputs
 
-  radsim_design.BuildDesignContext("/home/bassiabn/rad-sim/rad-flow/rad-sim/example-designs/dlrm", "dlrm.place", "dlrm.clks");
-  radsim_design.CreateSystemNoCs(rst);
-  radsim_design.ConnectModulesToNoC();
+  radsim_design->BuildDesignContext("/home/bassiabn/rad-sim/rad-flow/rad-sim/example-designs/dlrm", "dlrm.place", "dlrm.clks");
+  radsim_design->CreateSystemNoCs(rst);
+  radsim_design->ConnectModulesToNoC();
 }
 
 dlrm_top::~dlrm_top() {

@@ -71,7 +71,7 @@ bool ParseOutputs(std::vector<std::vector<int16_t>> &fi_outputs,
   return true;
 }
 
-dlrm_driver::dlrm_driver(const sc_module_name &name, , RADSimDesignContext* radsim_design_) : sc_module(name) {
+dlrm_driver::dlrm_driver(const sc_module_name &name, RADSimDesignContext* radsim_design_) : sc_module(name) {
   this->radsim_design = radsim_design_; //AKB ADDED
 
   // Parse design configuration (number of layers & number of MVM per layer)

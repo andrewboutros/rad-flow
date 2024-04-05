@@ -3,7 +3,7 @@
 #include <systemc.h>
 #include <vector>
 
-#define DATAW 128
+//#define DATAW 128
 
 class design_top : virtual public sc_module {
     public:

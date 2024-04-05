@@ -18,10 +18,8 @@ include_directories(
   dram
   dram/DRAMsim3
   dram/DRAMsim3/src
-  ../example-designs/add
-  ../example-designs/add/modules
-  ../example-designs/mult
-  ../example-designs/mult/modules
+  ../example-designs/dlrm
+  ../example-designs/dlrm/modules
 )
 
 find_package(verilator CONFIG)
@@ -57,10 +55,10 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 add_library(radsim STATIC ${srcfiles} ${hdrfiles})
-target_link_libraries(radsim PUBLIC SystemC::systemc booksim noc dram design_add design_mult)
+target_link_libraries(radsim PUBLIC SystemC::systemc booksim noc dram design_dlrm)
 
 add_executable(system main.cpp ${srcfiles} ${hdrfiles})
-target_link_libraries(system PUBLIC radsim SystemC::systemc booksim noc dram design_add design_mult)
+target_link_libraries(system PUBLIC radsim SystemC::systemc booksim noc dram design_dlrm)
 add_custom_target(run
   COMMAND system
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

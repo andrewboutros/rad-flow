@@ -4,7 +4,7 @@ dlrm_system::dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig, R
     : sc_module(name) {
 
   // Instantiate driver
-  driver_inst = new dlrm_driver("driver");
+  driver_inst = new dlrm_driver("driver", radsim_design);
   driver_inst->clk(*driver_clk_sig);
   driver_inst->rst(rst_sig);
   driver_inst->lookup_indecies_data(lookup_indecies_data_sig);
@@ -20,7 +20,7 @@ dlrm_system::dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig, R
   driver_inst->collector_fifo_rdata(collector_fifo_rdata_sig);
 
   // Instantiate design top-level
-  dut_inst = new dlrm_top("dut");
+  dut_inst = new dlrm_top("dut", radsim_design);
   dut_inst->rst(rst_sig);
   dut_inst->lookup_indecies_data(lookup_indecies_data_sig);
   dut_inst->lookup_indecies_target_channels(

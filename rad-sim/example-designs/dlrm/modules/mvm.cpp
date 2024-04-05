@@ -39,8 +39,8 @@ bool ParseInstructions(std::vector<mvm_inst> &inst_mem,
 }
 
 mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
-         const std::string &inst_filename)
-    : RADSimModule(name), matrix_mem_rdata("matrix_mem_rdata", DOT_PRODUCTS),
+         const std::string &inst_filename, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design), matrix_mem_rdata("matrix_mem_rdata", DOT_PRODUCTS),
       matrix_mem_wen("matrix_mem_wen", DOT_PRODUCTS),
       ififo_pipeline("ififo_pipeline", RF_RD_LATENCY),
       reduce_pipeline("reduce_pipeline", RF_RD_LATENCY),
@@ -54,6 +54,7 @@ mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
       dest_mvm_pipeline("mvm_layer_pipeline", COMPUTE_LATENCY + RF_RD_LATENCY),
       tdata_vec(LANES), result(DOT_PRODUCTS), rst("rst") {
 
+  this->radsim_design = radsim_design;
   module_name = name;
   mvm_id = id_mvm;
   layer_id = id_layer;
@@ -507,7 +508,7 @@ void mvm::Assign() {
       dest_name = "layer" + std::to_string(dest_layer_int - 1) + "_mvm" +
                   std::to_string(dest_mvm_int) + ".rx_interface";
     }
-    dest_id = radsim_design.GetPortDestinationID(dest_name);
+    dest_id = radsim_design->GetPortDestinationID(dest_name);
 
     unsigned int dest_interface;    // which FIFO
     unsigned int dest_interface_id; // added for separate ports

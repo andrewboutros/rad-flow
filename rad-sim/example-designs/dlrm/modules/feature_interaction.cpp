@@ -50,9 +50,10 @@ feature_interaction::feature_interaction(const sc_module_name &name,
                                          unsigned int num_mem_channels,
                                          unsigned int fifos_depth,
                                          unsigned int num_output_channels,
-                                         std::string &instructions_file)
-    : RADSimModule(name) {
-
+                                         std::string &instructions_file,
+                                         RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design) {
+  this->radsim_design = radsim_design;
   _fifos_depth = fifos_depth;
   _afifo_width_ratio_in = 32 / 4;
   _afifo_width_ratio_out = LANES / 4;
@@ -286,7 +287,7 @@ void feature_interaction::Tick() {
         std::string dest_name =
             "layer0_mvm" + std::to_string(ch_id) + ".rx_interface";
         axis_interface[ch_id].tdest.write(
-            radsim_design.GetPortDestinationID(dest_name));
+            radsim_design->GetPortDestinationID(dest_name));
       } else {
         axis_interface[ch_id].tvalid.write(false);
       }
