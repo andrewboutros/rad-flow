@@ -29,6 +29,7 @@ class portal : public RADSimModule {
 
     public:
         RADSimDesignContext* radsim_design;
+        sc_in<bool> rst;
         //sc_in<sc_bv<DATAW>> portal_in;
         //sc_out<sc_bv<DATAW>> portal_out;
         //axis ports for external access to inter_rad

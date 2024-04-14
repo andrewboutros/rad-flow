@@ -1,7 +1,7 @@
 #include <dlrm_top.hpp>
 
 dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_design) : sc_module(name) {
-
+  this->radsim_design = radsim_design;
   unsigned int line_bitwidth = 512;
   unsigned int element_bitwidth = 16;
   std::vector<unsigned int> mem_channels = {1, 1, 8, 8};
@@ -138,6 +138,7 @@ dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
   module_name_str = "portal_inst";
   std::strcpy(module_name, module_name_str.c_str());
   portal_inst = new portal(module_name, radsim_design);
+  portal_inst->rst(rst);
   //portal_inst->portal_recvd(this->portal_recvd);
 
   //connect master to master instead, to expose to top

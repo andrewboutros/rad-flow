@@ -55,7 +55,7 @@ void embedding_lookup::Assign() {
       aximm_req_interface[ch_id].bready.write(false);
       aximm_req_interface[ch_id].rready.write(false);
     }
-  } else {
+  } else if ((radsim_design->rad_id == 0)) {
     bool all_fifos_not_full = true;
 
     // Always ready to accept read/write response from the AXI-MM NoC
@@ -73,6 +73,7 @@ void embedding_lookup::Assign() {
 }
 
 void embedding_lookup::Tick() {
+  if (radsim_design->rad_id == 0) {
   // Reset logic
   for (unsigned int ch_id = 0; ch_id < _total_num_channels; ch_id++) {
     aximm_req_interface[ch_id].arvalid.write(false);
@@ -90,8 +91,7 @@ void embedding_lookup::Tick() {
   wait();
 
   // Always @ positive edge of the clock
-  while (true) {
-    // Interface with testbench driver
+  while (true) { //&& (radsim_design->rad_id == 0)) {
     if (lookup_indecies_ready.read() && lookup_indecies_valid.read()) {
       data_vector<uint64_t> lookup_indecies = lookup_indecies_data.read();
       data_vector<unsigned int> target_channels =
@@ -184,6 +184,7 @@ void embedding_lookup::Tick() {
       }
     }
     wait();
+  }
   }
 }
 

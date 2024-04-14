@@ -202,6 +202,7 @@ int16_t dot(data_vector<int16_t> v1, data_vector<int16_t> v2) {
 }
 
 void mvm::Tick() {
+  if (radsim_design->rad_id == 1) {
   // Reset logic
   for (unsigned int lane_id = 0; lane_id < LANES; lane_id++) {
     tdata_vec[lane_id] = 0;
@@ -211,7 +212,7 @@ void mvm::Tick() {
   // next_inst.write(rst_inst);
   wait();
   // Sequential logic
-  while (true) {
+  while (true && (radsim_design->rad_id == 1)) {
     /*std::cout << this->name() << " iFIFO occ: " << ififo->occupancy()
               << " rFIFO occ: " << reduce_fifo->occupancy()
               << " oFIFO occ: " << ofifo->occupancy()
@@ -315,7 +316,16 @@ void mvm::Tick() {
 
     if (rx_input_interface.tvalid.read() && rx_input_interface.tready.read()) {
       sc_bv<AXIS_MAX_DATAW> tdata = rx_input_interface.tdata.read();
-
+      data_vector<int16_t> tdatavector(32);
+      unsigned int start_idx, end_idx;
+      for (unsigned int e = 0; e < 32; e++) {
+        start_idx = e * 16;
+        end_idx = (e + 1) * 16;
+        tdatavector[e] = tdata.range(end_idx - 1, start_idx).to_int();
+      }
+      if (layer_id == 0) std::cout << "got tdatavector on rad " << radsim_design->rad_id << ": " << tdatavector << std::endl;
+      sc_bv<7> testing_width = "1000110";
+      std::cout << "testing_width.to_uint64(): " << testing_width.to_uint64() << std::endl;
       if (rx_input_interface.tuser.read().range(15, 13).to_uint() == 1) {
         unsigned int waddr =
             rx_input_interface.tuser.read().range(8, 0).to_uint();
@@ -399,6 +409,7 @@ void mvm::Tick() {
     }
     wait();
   }
+  }
 }
 
 void mvm::Assign() {
@@ -427,7 +438,7 @@ void mvm::Assign() {
     matrix_mem_raddr.write(0);
     dot_op.write(false);
     dot_reduce_op.write(false);
-  } else {
+  } else if (radsim_design->rad_id == 1) {
     if (rx_input_interface.tuser.read().range(15, 13).to_uint() ==
         1) { // Inst memory
       rx_input_interface.tready.write(true);
@@ -509,7 +520,9 @@ void mvm::Assign() {
                   std::to_string(dest_mvm_int) + ".rx_interface";
     }
     dest_id = radsim_design->GetPortDestinationID(dest_name);
-    sc_bv<AXIS_DESTW> dest_id_concat = dest_id;
+    sc_bv<AXIS_DESTW> dest_id_concat;
+    DEST_LOCAL_NODE(dest_id_concat) = dest_id;
+    DEST_REMOTE_NODE(dest_id_concat) = dest_id;
     // if (radsim_design->rad_id == 1){
     //   std::cout << "mvm.cpp on RAD " << radsim_design->rad_id << "'s dest_id: " << dest_id << " and DEST_RAD(dest_id): " << DEST_RAD(dest_id_concat) << std::endl;
     // }

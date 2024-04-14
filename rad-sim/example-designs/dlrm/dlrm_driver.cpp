@@ -168,7 +168,7 @@ void dlrm_driver::sink() {
         matching = (dut_output[e] == _mlp_outputs[outputs_count][e]);
       }
       if (!matching) {
-        std::cout << "Output " << outputs_count << " does not match!\n";
+        std::cout << "Output " << outputs_count << " on rad " << radsim_design->rad_id << " does not match!\n";
         std::cout << "TRUE: [ ";
         for (unsigned int e = 0; e < _mlp_outputs[outputs_count].size(); e++) {
           std::cout << _mlp_outputs[outputs_count][e] << " ";
@@ -185,6 +185,7 @@ void dlrm_driver::sink() {
       all_outputs_matching &= matching;
 
       print_progress_bar(outputs_count, _num_mlp_outputs);
+      std::cout << "outputs_count " << outputs_count << " and _num_mlp_outputs " << _num_mlp_outputs << std::endl;
     }
     wait();
   }

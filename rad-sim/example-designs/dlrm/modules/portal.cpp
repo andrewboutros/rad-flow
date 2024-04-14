@@ -7,10 +7,12 @@ portal::portal(const sc_module_name &name, RADSimDesignContext* radsim_design)
 
     //combinational logic
     SC_METHOD(Assign);
+    sensitive << rst;
     //sequential logic
     SC_CTHREAD(Tick, clk.pos());
     // This function must be defined & called for any RAD-Sim module to register
     // its info for automatically connecting to the NoC
+    reset_signal_is(rst, true); // Reset is active high
     this->RegisterModuleInfo(); //can comment out if not connecting to NoC
 }
 
@@ -18,8 +20,15 @@ portal::portal(const sc_module_name &name, RADSimDesignContext* radsim_design)
 portal::~portal() {}
 
 void portal::Assign() { //combinational logic
-    //maybe add reset signal later
-    axis_portal_slave_interface.tready.write(true);
+    if (rst) {
+        portal_axis_slave.tready.write(false);
+        axis_portal_slave_interface.tready.write(false);
+    }
+    else {
+        // Always ready to accept the transaction
+        portal_axis_slave.tready.write(true);
+        axis_portal_slave_interface.tready.write(true);
+    }
 }
 
 int counter = 0;
@@ -39,11 +48,11 @@ void portal::Tick() { //sequential logic
         if (axis_portal_slave_interface.tvalid.read() &&
             axis_portal_slave_interface.tready.read()) {
             //std::cout << "Also got here" << std:: endl;
-            std::cout << "DLRM design raising valid data to send over portal module on cycle " << curr_cycle << " , will see valid high next clk cycle " << module_name << ": Got Transaction (user = "
-                        << axis_portal_slave_interface.tuser.read().to_uint64() << ") (value = "
-                        << axis_portal_slave_interface.tdata.read().to_uint64() << ")! Destination field is "
-                        << axis_portal_slave_interface.tdest.read().to_uint64()
-                        << std::endl;
+            // std::cout << "DLRM design raising valid data to send over portal module on cycle " << curr_cycle << " , will see valid high next clk cycle " << module_name << ": Got Transaction (user = "
+            //             << axis_portal_slave_interface.tuser.read().to_uint64() << ") (value = "
+            //             << axis_portal_slave_interface.tdata.read().to_uint64() << ")! Destination field is "
+            //             << axis_portal_slave_interface.tdest.read().to_uint64()
+            //             << std::endl;
              data_to_buffer = axis_portal_slave_interface.tdata.read();
              //got_data = true;
              portal_axis_fields curr_transaction = {
@@ -68,7 +77,7 @@ void portal::Tick() { //sequential logic
             if (!portal_axis_fifo.empty()) {
                 //test_ready_toggle = false;
                 portal_axis_fifo.pop();
-                std::cout << "portal.cpp in dlrm design sent " << portal_axis_master.tdata.read().to_int64() << " to dest_device " << dest_device.to_int64() << " on cycle " << curr_cycle << std::endl;
+                //std::cout << "portal.cpp in dlrm design sent " << portal_axis_master.tdata.read().to_int64() << " to dest_device " << dest_device.to_int64() << " on cycle " << curr_cycle << std::endl;
                 //portal_recvd.write(1);
                 if (portal_axis_master.tlast.read()) {
                     std::cout << "dlrm design portal.cpp sent last data via inter_rad at cycle " << curr_cycle << std::endl;
@@ -103,6 +112,42 @@ void portal::Tick() { //sequential logic
         /*else if (!test_ready_toggle) {
             test_ready_toggle = true;
         }*/
+
+        // Receiving transaction from AXI-S interface
+        if (portal_axis_slave.tvalid.read() &&
+            portal_axis_slave.tready.read()) {
+                //get current cycle
+                int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+                //read 
+                // std::cout << module_name << ": Portal Module Got Transaction on cycle " << curr_cycle << " (RAD ID) = "
+                // << radsim_design->rad_id  //<< portal_axis_slave.tuser.read().to_uint64() 
+                // << ") (val = "
+                // << portal_axis_slave.tdata.read().to_uint64() << ")!"
+                // << std::endl;
+                //write the addend into the mult module and that will flag when received all values and can end simulation
+                std::string src_port_name = module_name + ".axis_portal_master_interface";
+                uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
+                //sc_bv<AXIS_DESTW> concat_dest = portal_axis_slave.tdest.read();
+                //DEST_RAD(concat_dest) = radsim_design->rad_id;
+                //DEST_LOCAL_NODE(concat_dest) = //dst_addr;
+                //std::cout << "portal_axis_slave.tdest.read() is: " << portal_axis_slave.tdest.read() << std::endl;
+                axis_portal_master_interface.tdest.write(portal_axis_slave.tdest.read()); //concat_dest); //dst_addr);
+                axis_portal_master_interface.tid.write(0);
+                axis_portal_master_interface.tstrb.write(0);
+                axis_portal_master_interface.tkeep.write(0);
+                axis_portal_master_interface.tuser.write(portal_axis_slave.tuser.read());
+                //std::cout << "portal_axis_slave.tuser.read()" << portal_axis_slave.tuser.read().range(15, 13).to_uint() << std::endl;
+                axis_portal_master_interface.tlast.write(portal_axis_slave.tlast.read());
+                axis_portal_master_interface.tdata.write(portal_axis_slave.tdata.read());
+                axis_portal_master_interface.tvalid.write(true);
+                //checking if last transaction and if so, printing current simulation cycle count
+                if (portal_axis_slave.tlast.read()) {
+                    std::cout << "portal.cpp received last data via inter_rad at cycle " << curr_cycle << std::endl;
+                }
+        }
+        else {
+            axis_portal_master_interface.tvalid.write(false);
+        }
 
         wait();
     }

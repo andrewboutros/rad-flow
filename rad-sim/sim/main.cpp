@@ -68,6 +68,7 @@ int sc_main(int argc, char *argv[]) {
 	int start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
 	// sc_bv<128> new_val;
 	// sc_bv<128> old_val = system2->dut_inst->design_top_portal_axis_slave.tdata.read();
+	//sc_start();
 	while (cluster->AllRADsNotDone()) {
 		sc_start(1, SC_NS);
 		// //std::cout << "read system portal_in: " << system->dut_inst->portal_in.read() << std::endl;

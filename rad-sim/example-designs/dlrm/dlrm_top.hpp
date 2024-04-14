@@ -24,6 +24,7 @@ private:
 
   std::vector<axis_signal> axis_sig;
   std::vector<sc_clock *> mem_clks;
+  RADSimDesignContext* radsim_design; //AKB ADDED
 
 public:
   sc_in<bool> rst;
