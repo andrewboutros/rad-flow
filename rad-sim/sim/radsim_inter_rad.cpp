@@ -155,9 +155,7 @@ RADSimInterRad::readFifo() {
         Read from fifo slot
         Iterates thru all fifos
         Matches the dest index of fifo to the dest rad
-        TODO: use tdest instead of tuser
-        TODO: automating adding all fields to curr_transaction
-        currently hardcoded to pull from same fifo that we use in writeFifo
+        DONE: use tdest instead of tuser
     */
     while (true) {
         //std::cout << "inter_rad fifo free before READ is " << this->fifos[0]->num_free() << "/" << this->fifos[0]->num_available() << std::endl;
@@ -191,6 +189,7 @@ RADSimInterRad::readFifo() {
                     all_axis_master_signals[dest_device]->tvalid.write(read_from_fifo.tvalid);
                     all_axis_master_signals[dest_device]->tlast.write(read_from_fifo.tlast);
                     all_axis_master_signals[dest_device]->tdest.write(read_from_fifo.tdest);
+		    all_axis_master_signals[dest_device]->tuser.write(read_from_fifo.tuser);
                     //std::cout << "inter_rad fifo free after READ is " << this->fifos[0]->num_free() << "/" << this->fifos[0]->num_available() << std::endl;
                 }
                 else {
