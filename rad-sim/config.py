@@ -51,12 +51,12 @@ def parse_config_file(config_filename, booksim_params, radsim_header_params, rad
                     print("Config Error: Parameter " + param_name + " is invalid!")
                     exit(1)
 
-    '''noc_num_nodes = []
+
     '''noc_num_nodes = []
     for n in range(radsim_knobs["noc_num_nocs"]):
         noc_num_nodes.append(0)
     radsim_knobs["noc_num_nodes"] = noc_num_nodes
-    radsim_header_params["noc_num_nodes"] = noc_num_nodes'''
+    radsim_header_params["noc_num_nodes"] = noc_num_nodes
     
     radsim_knobs["radsim_user_design_root_dir"] = radsim_knobs["radsim_root_dir"] + "/example-designs/" + radsim_knobs["design_name"]
 
