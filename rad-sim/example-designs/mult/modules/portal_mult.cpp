@@ -50,7 +50,7 @@ void portal_mult::Tick() { //sequential logic
                 std::string src_port_name = module_name + ".axis_mult_portal_master_interface";
                 std::string dst_port_name = "mult_inst.axis_mult_interface";
                 uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
-                uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
+                //uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
                 //std::cout << "dst_addr in portal_mult.cpp is: " << dst_addr << std::endl;
                 //sc_bv<AXIS_DESTW> concat_dest = portal_axis_slave.tdest.read();
                 //DEST_RAD(concat_dest) = radsim_design->rad_id;
@@ -60,7 +60,7 @@ void portal_mult::Tick() { //sequential logic
                 axis_mult_portal_master_interface.tid.write(0);
                 axis_mult_portal_master_interface.tstrb.write(0);
                 axis_mult_portal_master_interface.tkeep.write(0);
-                axis_mult_portal_master_interface.tuser.write(src_addr);
+                axis_mult_portal_master_interface.tuser.write(portal_axis_slave.tuser.read()); //src_addr);
                 axis_mult_portal_master_interface.tlast.write(portal_axis_slave.tlast.read());
                 axis_mult_portal_master_interface.tdata.write(portal_axis_slave.tdata.read());
                 axis_mult_portal_master_interface.tvalid.write(true);
