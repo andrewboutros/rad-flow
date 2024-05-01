@@ -1,6 +1,7 @@
 #include <add_driver.hpp>
 
 #define NUM_ADDENDS 5 //3
+#define TOTAL_RADS 5
 
 add_driver::add_driver(const sc_module_name &name, RADSimDesignContext* radsim_design_)
     : sc_module(name) {
@@ -20,8 +21,11 @@ add_driver::add_driver(const sc_module_name &name, RADSimDesignContext* radsim_d
   for (unsigned int i = 0; i < NUM_ADDENDS; i++) {
     unsigned int r_num = std::rand() % 10 + 1;
     std::cout << r_num << " ";
-    numbers_to_send.push(r_num);
-    numbers_to_send.push(r_num); //push twice bc two mult modules now
+    for (int i = 1; i < TOTAL_RADS; i++) {
+      numbers_to_send.push(r_num);
+    }
+    // numbers_to_send.push(r_num);
+    // numbers_to_send.push(r_num); //push twice bc two mult modules now
     actual_sum += r_num;
   }
   std::cout << std::endl << "----------------------------------------" << std::endl;
@@ -45,7 +49,7 @@ void add_driver::source() {
   while (!numbers_to_send.empty()) {
     client_tdata.write(numbers_to_send.front());
     //client_tlast.write(numbers_to_send.size() <= 1);
-    client_tlast.write(numbers_to_send.size() <= 2); //bc sending to 2 RADs, so both receive the last flag
+    client_tlast.write(numbers_to_send.size() <= TOTAL_RADS-1); //bc sending to TOTAL_RADS-1 mult RADs, so both receive the last flag
     client_valid.write(true);
 
     wait();

@@ -11,7 +11,7 @@ RADSimInterRad::RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_c
     this->clk(*inter_rad_clk);
     num_rads = cluster->num_rads;
     all_signals.init(num_rads + 1);
-    std::cout << "num_rads is " << num_rads << std::endl;
+    //std::cout << "num_rads is " << num_rads << std::endl;
 
     fifos_latency_counters.resize(num_rads);
     //std::cout << "fifos_latency_counters[0].size() " << fifos_latency_counters[0].size() << std::endl;
@@ -119,9 +119,9 @@ RADSimInterRad::writeFifo() {
             }*/
             if (curr_transaction.tvalid && all_axis_slave_ports[i]->tready.read()) { //&& !prev_valid[i]) { //detect rising edge bc operating at higher clk freq than modules
                 unsigned int dest_rad = DEST_RAD(curr_transaction.tdest).to_uint64();
-                std::cout << "radsim_inter_rad.cpp dest_rad is: "<< dest_rad << std::endl;
+                //std::cout << "radsim_inter_rad.cpp dest_rad is: "<< dest_rad << std::endl;
                 if (this->fifos[dest_rad]->nb_write(curr_transaction) != false) { //there was an available slot to write to
-                    std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << curr_transaction.tdata.to_uint64() << std::endl;
+                    //std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << curr_transaction.tdata.to_uint64() << std::endl;
                     fifos_latency_counters[dest_rad].push_back(0); //for latency counters
                 }
                 //all_axis_slave_ports[i]->tready.write(false);
@@ -183,7 +183,7 @@ RADSimInterRad::readFifo() {
                 
                 //std::cout << "inter_rad fifo data READ is " << this->fifos[0]->read() << std::endl;
                 if (read_from_fifo.tvalid) {
-                    std::cout << "inter_rad fifo data READ is " << val.to_uint64() << " on cycle " << curr_cycle << std::endl;
+                    //std::cout << "inter_rad fifo data READ is " << val.to_uint64() << " on cycle " << curr_cycle << std::endl;
                     //std::cout << "dest_device: " << dest_device << std::endl;
                     //all_signals[1].write(val); //works but replacing with axi
                     //all_axis_master_ports[1]->tdata.write(val); //1 bc sending to mult design

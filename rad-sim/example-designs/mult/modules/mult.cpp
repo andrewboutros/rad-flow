@@ -44,10 +44,10 @@ void mult::Tick() {
       uint64_t current_product = mult_rolling_product.to_uint64(); //removing for experiment
       mult_rolling_product = current_product * axis_mult_interface.tdata.read().to_uint64(); //removing for experiment
       t_finished.write(axis_mult_interface.tlast.read());
-      std::cout << module_name << ": Got Transaction (user = "
-                << axis_mult_interface.tuser.read().to_uint64() << ") (factor = "
-                << axis_mult_interface.tdata.read().to_uint64() << ")!"
-                << std::endl;
+      // std::cout << module_name << ": Got Transaction (user = "
+      //           << axis_mult_interface.tuser.read().to_uint64() << ") (factor = "
+      //           << axis_mult_interface.tdata.read().to_uint64() << ")!"
+      //           << std::endl;
     }
 
     // Print Sum and Exit
@@ -57,7 +57,7 @@ void mult::Tick() {
         //mult_inter_rad_recvd.write(1); //maybe not needed if using the
         if (!printed_end_cycle) {
           int end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
-          std::cout << "mult.cpp received all factors from add RAD at cycle " << end_cycle << std::endl;
+          //std::cout << "mult.cpp received all factors from add RAD at cycle " << end_cycle << std::endl;
           printed_end_cycle = true;
         }
     }

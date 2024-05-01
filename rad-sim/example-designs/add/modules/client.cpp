@@ -59,15 +59,15 @@ void client::Tick() {
   wait();
   while (true) {
     if (client_ready.read() && client_valid.read()) {
-      std::cout << this->name() << " @ cycle " 
-        << GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period")) << ": "
-        << " Pushed request to FIFO!" << std::endl;
+      // std::cout << this->name() << " @ cycle " 
+      //   << GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period")) << ": "
+      //   << " Pushed request to FIFO!" << std::endl;
     }
 
     if (axis_client_interface.tvalid.read() && axis_client_interface.tready.read()) {
-      std::cout << this->name() << " @ cycle " 
-        << GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period")) << ": "
-        << " Sent Transaction!" << std::endl;
+      // std::cout << this->name() << " @ cycle " 
+      //   << GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period")) << ": "
+      //   << " Sent Transaction!" << std::endl;
     }
     wait();
   }

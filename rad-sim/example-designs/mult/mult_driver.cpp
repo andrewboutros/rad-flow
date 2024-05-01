@@ -52,7 +52,7 @@ void mult_driver::source() {
     }
   }
   client_valid.write(false);
-  std::cout << "Finished sending all numbers to client module!" << std::endl;
+  //std::cout << "Finished sending all numbers to client module!" << std::endl;
   wait();
 }
 

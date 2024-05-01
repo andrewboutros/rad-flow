@@ -48,7 +48,7 @@ void client_mult::Tick() {
     if (client_ready.read() && client_valid.read()) {
       client_tdata_fifo.push(client_tdata);
       testbench_tlast = client_tlast.read();
-      std::cout << module_name << ": Pushed request to FIFO" << std::endl;
+      //std::cout << module_name << ": Pushed request to FIFO" << std::endl;
     }
     client_fifo_full.write(client_tdata_fifo.size() >= client_fifo_depth);
 

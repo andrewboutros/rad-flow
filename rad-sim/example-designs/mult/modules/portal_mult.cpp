@@ -41,21 +41,21 @@ void portal_mult::Tick() { //sequential logic
                 //get current cycle
                 int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
                 //read 
-                std::cout << module_name << ": Portal_Mult Module Got Transaction on cycle " << curr_cycle << " (RAD ID) = "
-                << radsim_design->rad_id  //<< portal_axis_slave.tuser.read().to_uint64() 
-                << ") (addend = "
-                << portal_axis_slave.tdata.read().to_uint64() << ")!"
-                << std::endl;
+                //std::cout << module_name << ": Portal_Mult Module Got Transaction on cycle " << curr_cycle << " (RAD ID) = "
+                // << radsim_design->rad_id  //<< portal_axis_slave.tuser.read().to_uint64() 
+                // << ") (addend = "
+                // << portal_axis_slave.tdata.read().to_uint64() << ")!"
+                // << std::endl;
                 //write the addend into the mult module and that will flag when received all values and can end simulation
                 std::string src_port_name = module_name + ".axis_mult_portal_master_interface";
                 std::string dst_port_name = "mult_inst.axis_mult_interface";
                 uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
                 uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
-                std::cout << "dst_addr in portal_mult.cpp is: " << dst_addr << std::endl;
+                //std::cout << "dst_addr in portal_mult.cpp is: " << dst_addr << std::endl;
                 //sc_bv<AXIS_DESTW> concat_dest = portal_axis_slave.tdest.read();
                 //DEST_RAD(concat_dest) = radsim_design->rad_id;
                 //DEST_LOCAL_NODE(concat_dest) = //dst_addr;
-                std::cout << "portal_axis_slave.tdest.read() is: " << portal_axis_slave.tdest.read() << std::endl;
+                //std::cout << "portal_axis_slave.tdest.read() is: " << portal_axis_slave.tdest.read() << std::endl;
                 axis_mult_portal_master_interface.tdest.write(portal_axis_slave.tdest.read()); //concat_dest); //dst_addr);
                 axis_mult_portal_master_interface.tid.write(0);
                 axis_mult_portal_master_interface.tstrb.write(0);
@@ -66,7 +66,7 @@ void portal_mult::Tick() { //sequential logic
                 axis_mult_portal_master_interface.tvalid.write(true);
                 //checking if last transaction and if so, printing current simulation cycle count
                 if (portal_axis_slave.tlast.read()) {
-                    std::cout << "Mult design portal_mult.cpp received last data via inter_rad at cycle " << curr_cycle << std::endl;
+                    //std::cout << "Mult design portal_mult.cpp received last data via inter_rad at cycle " << curr_cycle << std::endl;
                 }
         }
         else {

@@ -1,6 +1,7 @@
 #include <adder.hpp>
 
 int which_rad = 1;
+int TOTAL_RADS = 5;
 
 adder::adder(const sc_module_name &name, RADSimDesignContext* radsim_design) //AKB added last arg
     : RADSimModule(name, radsim_design) {
@@ -78,7 +79,7 @@ void adder::Assign() {
       std::string dst_port_name = "portal_inst.axis_portal_slave_interface";
       uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
       uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
-      std::cout << "adder.cpp portal dest is: " << dst_addr << std::endl;
+      //std::cout << "adder.cpp portal dest is: " << dst_addr << std::endl;
       sc_bv<AXIS_DESTW> concat_dest;
       DEST_RAD(concat_dest) = which_rad; //1;
       DEST_LOCAL_NODE(concat_dest) = dst_addr;
@@ -119,7 +120,7 @@ void adder::Tick() {
   wait();
 
   int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
-  std::cout << "adder.cpp is before while loop at cycle " << curr_cycle << std::endl;
+  //std::cout << "adder.cpp is before while loop at cycle " << curr_cycle << std::endl;
   // Always @ positive edge of the clock
   while (true) {
     curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
@@ -137,15 +138,22 @@ void adder::Tick() {
         uint64_t current_sum = adder_rolling_sum.to_uint64();
         adder_rolling_sum = current_sum + axis_adder_interface.tdata.read().to_uint64();
         t_finished.write(axis_adder_interface.tlast.read()); //this should still work even with 2 RADs because of which_rad check
-        std::cout << module_name << ": Got Transaction " << count_in_addends << " on cycle " << curr_cycle << " (user = "
-                  << axis_adder_interface.tuser.read().to_uint64() << ") (addend = "
-                  << axis_adder_interface.tdata.read().to_uint64() << ")!"
-                  << std::endl;
+        // std::cout << module_name << ": Got Transaction " << count_in_addends << " on cycle " << curr_cycle << " (user = "
+        //           << axis_adder_interface.tuser.read().to_uint64() << ") (addend = "
+        //           << axis_adder_interface.tdata.read().to_uint64() << ")!"
+        //           << std::endl;
         count_in_addends++;
-        which_rad = 2; //can send to other RAD next time
+        //which_rad = 2; //can send to other RAD next time
+      }
+      // else {
+      //   which_rad = 1;
+      // }
+
+      if (which_rad < (TOTAL_RADS-1)) {
+        which_rad++;
       }
       else {
-        which_rad = 1;
+        which_rad = 1; //rollback
       }
         
         //adder_tdata_tlast_fifo.push(std::make_tuple(axis_adder_interface.tdata.read(), axis_adder_interface.tlast.read()));
@@ -173,7 +181,7 @@ void adder::Tick() {
 
     //sent to portal module
     if (axis_adder_master_interface.tvalid.read() && axis_adder_master_interface.tready.read()) {
-        std::cout << "Sent the " << count_out_addends << "th addend " << axis_adder_master_interface.tdata.read().to_uint64() << " over NoC to portal module on cycle " << curr_cycle << std::endl;
+        //std::cout << "Sent the " << count_out_addends << "th addend " << axis_adder_master_interface.tdata.read().to_uint64() << " over NoC to portal module on cycle " << curr_cycle << std::endl;
         //adder_tdata_tlast_fifo.pop();
         count_out_addends++;
     }
