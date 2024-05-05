@@ -64,13 +64,13 @@ void NoCTransactionTelemetry::DumpStatsToFile(const std::string& filename) {
 }
 
 std::vector<double> NoCTransactionTelemetry::DumpTrafficFlows(const std::string& filename, unsigned int cycle_count, 
-  std::vector<std::vector<std::set<std::string>>>& node_module_names) {
-  double sim_driver_period = radsim_config.GetDoubleKnob("sim_driver_period") / 1000000000.0;
-  unsigned int num_nocs = radsim_config.GetIntKnob("noc_num_nocs");
+  std::vector<std::vector<std::set<std::string>>>& node_module_names, RADSimConfig* radsim_config) { //AKB added last arg
+  double sim_driver_period = radsim_config->GetDoubleKnob("sim_driver_period") / 1000000000.0;
+  unsigned int num_nocs = radsim_config->GetIntKnob("noc_num_nocs");
   std::vector<std::vector<std::unordered_map<unsigned int, unsigned int>>> traffic_bits(num_nocs);
   std::vector<std::vector<std::unordered_map<unsigned int, unsigned int>>> traffic_num_hops(num_nocs);
   for (unsigned int noc_id = 0; noc_id < num_nocs; noc_id++) {
-    unsigned int num_nodes = radsim_config.GetIntVectorKnob("noc_num_nodes", noc_id);
+    unsigned int num_nodes = radsim_config->GetIntVectorKnob("noc_num_nodes", noc_id);
     traffic_bits[noc_id].resize(num_nodes);
     traffic_num_hops[noc_id].resize(num_nodes);
   }
@@ -90,7 +90,7 @@ std::vector<double> NoCTransactionTelemetry::DumpTrafficFlows(const std::string&
     double aggregate_bandwidth = 0.0;
     std::ofstream traffic_file(filename + "_noc" + std::to_string(noc_id) + ".xml", std::ofstream::out);
     traffic_file << "<traffic_flows>" << endl;
-    unsigned int num_nodes = radsim_config.GetIntVectorKnob("noc_num_nodes", noc_id);
+    unsigned int num_nodes = radsim_config->GetIntVectorKnob("noc_num_nodes", noc_id);
     for (unsigned int src_id = 0; src_id < num_nodes; src_id++) {
       if (traffic_bits[noc_id][src_id].size() > 0) {
         for (auto& flow : traffic_bits[noc_id][src_id]) {
@@ -123,13 +123,15 @@ void NoCFlitTelemetry::DumpNoCFlitTracesToFile(const std::string& filename) {
   ofile.close();
 }
 
-SimLog::SimLog() {
+SimLog::SimLog(RADSimConfig* radsim_config) { //AKB added arg
   verbosity = 0;
+  this->radsim_config = radsim_config; //AKB added
 }
 
-SimLog::SimLog(unsigned int verbosity_level, std::string log_filename) {
+SimLog::SimLog(unsigned int verbosity_level, std::string log_filename, RADSimConfig* radsim_config) { //AKB added last arg
   verbosity = verbosity_level;
   log_file.open(log_filename);
+  this->radsim_config = radsim_config; //AKB added
 }
 
 SimLog::~SimLog() { log_file.close(); }
@@ -157,12 +159,12 @@ void SimLog::log(info_t, std::string msg, sc_module_name module, bool log_to_fil
   }
 }
 
-void SimLog::log(trace_t, std::string msg, sc_module_name module, bool log_to_file) {
+void SimLog::log(trace_t, std::string msg, sc_module_name module, bool log_to_file) { 
   if (verbosity >= 2) {
-    std::cout << "\033[36m[TRACE] " << module << " @ " << GetSimulationCycle() << ": " << msg << "\033[0m"
+    std::cout << "\033[36m[TRACE] " << module << " @ " << GetSimulationCycle(this->radsim_config) << ": " << msg << "\033[0m"
               << std::endl;
     if (log_to_file) {
-      log_file << "[TRACE] " << module << " @ " << GetSimulationCycle() << ": " << msg << std::endl;
+      log_file << "[TRACE] " << module << " @ " << GetSimulationCycle(this->radsim_config) << ": " << msg << std::endl;
     }
   }
 }
@@ -209,8 +211,8 @@ void SimTraceRecording::SetTraceRecordingSettings(std::string filename, unsigned
   trace_cycles.resize(num_traces_monitored);
 }
 
-void SimTraceRecording::record_event(unsigned int trace_id) {
-  trace_cycles[trace_id].push_back(GetSimulationCycle());
+void SimTraceRecording::record_event(unsigned int trace_id, RADSimConfig* radsim_config) { //AKB added arg
+  trace_cycles[trace_id].push_back(GetSimulationCycle(radsim_config));
 }
 
 void SimTraceRecording::dump_traces() {

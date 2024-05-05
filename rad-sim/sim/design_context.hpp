@@ -58,6 +58,7 @@ private:
   bool rad_done;
 
 public:
+  RADSimConfig* radsim_config; //AKB added
   //unsigned int portal_id; //NoC ID of portal module on RAD
   unsigned int rad_id; //unique ID of this RAD
   std::string portal_slave_name;

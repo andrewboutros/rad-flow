@@ -7,15 +7,20 @@ aximm_slave_adapter::aximm_slave_adapter(
     BookSimConfig *noc_config, Network *noc, BufferState *buffer_state,
     tRoutingFunction routing_func, bool lookahead_routing,
     bool wait_for_tail_credit, map<int, int> *ejected_flits,
-    unsigned int interface_dataw, double node_period, double adapter_period)
+    unsigned int interface_dataw, double node_period, double adapter_period,
+    RADSimConfig* radsim_config //AKB added
+    )
     : sc_module(name) {
+
+  //AKB ADDED
+  this->radsim_config = radsim_config;
 
   // Initialize basic adapter member variables
   _node_id = node_id;
   _network_id = network_id;
   _node_period = node_period;
   _adapter_period = adapter_period;
-  _noc_period = radsim_config.GetDoubleVectorKnob("noc_clk_period", _network_id);
+  _noc_period = radsim_config->GetDoubleVectorKnob("noc_clk_period", _network_id);
   _interface_dataw = interface_dataw;
 
   _noc_config = noc_config;
@@ -28,7 +33,7 @@ aximm_slave_adapter::aximm_slave_adapter(
 
   // Initialize request interface (AR, AW, W) member variables
   _injection_afifo_depth =
-      radsim_config.GetIntVectorKnob("noc_adapters_fifo_size", _network_id);
+      radsim_config->GetIntVectorKnob("noc_adapters_fifo_size", _network_id);
 
   _axi_transaction_width = AXI4_USERW;
   if ((AXI4_ADDRW + AXI4_CTRLW) > (_interface_dataw + AXI4_RESPW + 1)) {
@@ -61,7 +66,7 @@ aximm_slave_adapter::aximm_slave_adapter(
   // Initialize response interface (B, R) member variables
   _ejected_booksim_flit = nullptr;
   _ejection_afifo_depth =
-      radsim_config.GetIntVectorKnob("noc_adapters_fifo_size", _network_id);
+      radsim_config->GetIntVectorKnob("noc_adapters_fifo_size", _network_id);
   _ejection_afifos.resize(AXI_NUM_RSP_TYPES);
   _ejection_afifo_push_counter.init(AXI_NUM_RSP_TYPES);
   _ejection_afifo_pop_counter.init(AXI_NUM_RSP_TYPES);
@@ -402,9 +407,9 @@ void aximm_slave_adapter::InputInjection() {
         booksim_flit->subnetwork = 0;
         booksim_flit->src = _node_id;
         booksim_flit->ctime = GetSimulationCycle(
-            radsim_config.GetDoubleVectorKnob("noc_clk_period", _network_id));
+            radsim_config->GetDoubleVectorKnob("noc_clk_period", _network_id));
         booksim_flit->itime = GetSimulationCycle(
-            radsim_config.GetDoubleVectorKnob("noc_clk_period", _network_id));
+            radsim_config->GetDoubleVectorKnob("noc_clk_period", _network_id));
         booksim_flit->cl = 0;
         booksim_flit->head = _to_be_injected_flit._head;
         booksim_flit->tail = _to_be_injected_flit._tail;

@@ -35,12 +35,12 @@ mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
     : RADSimModule(name, radsim_design), mem_clk("mem_clk"), rst("rst") { //AKB added radsim_design
 
   std::string config_file =
-      radsim_config.GetStringKnob("radsim_root_dir") +
+      radsim_design->radsim_config->GetStringKnob("radsim_root_dir") +
       "/sim/dram/DRAMsim3/configs/" +
-      radsim_config.GetStringVectorKnob("dram_config_files", dram_id) + ".ini";
+      radsim_design->radsim_config->GetStringVectorKnob("dram_config_files", dram_id) + ".ini";
 
   std::string output_dir =
-      radsim_config.GetStringKnob("radsim_root_dir") + "/logs";
+      radsim_design->radsim_config->GetStringKnob("radsim_root_dir") + "/logs";
 
   _dramsim = new dramsim3::MemorySystem(
       config_file, output_dir,
@@ -56,7 +56,7 @@ mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
       _dramsim->GetBusBits() * _dramsim->GetBurstLength();
   _memory_clk_period_ns = _dramsim->GetTCK();
   _controller_clk_period_ns =
-      radsim_config.GetDoubleVectorKnob("dram_clk_periods", dram_id);
+      radsim_design->radsim_config->GetDoubleVectorKnob("dram_clk_periods", dram_id);
   double bitwidth_ratio =
       1.0 * _controller_channel_bitwidth / _memory_channel_bitwidth;
   double clk_period_ratio =
@@ -90,9 +90,9 @@ mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
   _output_write_queue_occupancy.init(_num_channels);
   _output_read_queue_occupancy.init(_num_channels);
   _input_queue_size =
-      radsim_config.GetIntVectorKnob("dram_queue_sizes", dram_id);
+      radsim_design->radsim_config->GetIntVectorKnob("dram_queue_sizes", dram_id);
   _output_queue_size =
-      radsim_config.GetIntVectorKnob("dram_queue_sizes", dram_id);
+      radsim_design->radsim_config->GetIntVectorKnob("dram_queue_sizes", dram_id);
 
   _num_ranks = _dramsim->GetRanks();
   _num_bank_groups = _dramsim->GetBankGroups();

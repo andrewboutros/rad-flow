@@ -6,7 +6,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <radsim_telemetry.hpp>
+//#include <radsim_telemetry.hpp>
 
 // Class for storing all RADSim configuration knobs
 class RADSimConfig {
@@ -42,8 +42,9 @@ class RADSimConfig {
   bool HasIntVectorKnob(const std::string& key);
   bool HasDoubleVectorKnob(const std::string& key);
   bool HasStringVectorKnob(const std::string& key);
+  void ParseRADSimKnobs(const std::string& knobs_filename);
 };
 
-void ParseRADSimKnobs(const std::string& knobs_filename);
+//void ParseRADSimKnobs(const std::string& knobs_filename); //AKB: turned into a member function so can act on same object
 
-extern RADSimConfig radsim_config;
+//extern RADSimConfig radsim_config; //AKB: commented out

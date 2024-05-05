@@ -39,7 +39,7 @@ void portal_mult::Tick() { //sequential logic
         if (portal_axis_slave.tvalid.read() &&
             portal_axis_slave.tready.read()) {
                 //get current cycle
-                int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+                //int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
                 //read 
                 //std::cout << module_name << ": Portal_Mult Module Got Transaction on cycle " << curr_cycle << " (RAD ID) = "
                 // << radsim_design->rad_id  //<< portal_axis_slave.tuser.read().to_uint64() 
