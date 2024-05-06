@@ -6,9 +6,7 @@ axis_slave_adapter::axis_slave_adapter(
     std::vector<unsigned int> &interface_dataw, double node_period,
     double adapter_period, BookSimConfig *noc_config, Network *noc,
     BufferState *buffer_state, tRoutingFunction routing_func,
-    bool lookahead_routing, bool wait_for_tail_credit,
-    RADSimConfig* radsim_config //AKB added
-    )
+    bool lookahead_routing, bool wait_for_tail_credit)
     : sc_module(name) {
   axis_interfaces.init(interface_types.size());
 
@@ -19,7 +17,7 @@ axis_slave_adapter::axis_slave_adapter(
   _network_id = network_id;
   _node_period = node_period;
   _adapter_period = adapter_period;
-  _noc_period = radsim_config->GetDoubleVectorKnob("noc_clk_period", _network_id);
+  _noc_period = radsim_config.GetDoubleVectorKnob("noc_clk_period", _network_id);
   _num_axis_interfaces = interface_types.size();
   _interface_types = interface_types;
   _interface_dataw = interface_dataw;
@@ -53,7 +51,7 @@ axis_slave_adapter::axis_slave_adapter(
   _input_axis_transactions_afifo_depth = 2;
 
   _injection_afifo_depth =
-      radsim_config->GetIntVectorKnob("noc_adapters_fifo_size", _network_id);
+      radsim_config.GetIntVectorKnob("noc_adapters_fifo_size", _network_id);
   _injection_flit_ready = false;
 
   SC_METHOD(InputReady);

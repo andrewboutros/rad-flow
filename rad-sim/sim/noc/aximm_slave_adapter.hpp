@@ -13,7 +13,6 @@
 #include <cmath>
 #include <queue>
 #include <systemc.h>
-#include <radsim_telemetry.hpp> //AKB added
 
 /* This class is the SystemC implementation of the AXI Memory Mapped (AXI-MM)
  * slave NoC adapter. This adapter acts as the access point to the NoC. On one
@@ -157,9 +156,6 @@ private:
   // waiting for ouptut interface to be ready
   bool _output_packet_ready;
 
-  //AKB ADDED
-  RADSimConfig* radsim_config;
-
 public:
   // Clocks and reset
   sc_in<bool> node_clk;
@@ -175,9 +171,7 @@ public:
                       bool lookahead_routing, bool wait_for_tail_credit,
                       map<int, int> *ejected_flits,
                       unsigned int interface_dataw, double node_period,
-                      double adapter_period,
-                      RADSimConfig* radsim_config //AKB added
-                      );
+                      double adapter_period);
   ~aximm_slave_adapter() override;
 
   // SystemC Threads implementing stages of input pipeline of the adapter

@@ -18,7 +18,7 @@ struct AdapterInfo {
 // Returns the current simulation cycle number given a certain clock period
 int GetSimulationCycle(double period);
 
-int GetSimulationCycle(RADSimConfig* radsim_config); //AKB added argument
+int GetSimulationCycle();
 
 // Returns the current simulation cycle number given the NoC clock period
 // int GetSimTime();

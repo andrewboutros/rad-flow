@@ -12,7 +12,6 @@
 #include <cmath>
 #include <queue>
 #include <systemc.h>
-#include <radsim_telemetry.hpp> //AKB added
 
 class aximm_master_adapter : public sc_module {
 private:
@@ -78,9 +77,6 @@ private:
   sc_flit _to_be_injected_flit;
   int _last_vc_id;
 
-  //AKB ADDED
-  RADSimConfig* radsim_config;
-
 public:
   sc_in<bool> node_clk;
   sc_in<bool> adapter_clk;
@@ -94,9 +90,7 @@ public:
                        bool lookahead_routing, bool wait_for_tail_credit,
                        map<int, int> *ejected_flits,
                        unsigned int interface_dataw, double node_period,
-                       double adapter_period,
-                       RADSimConfig* radsim_config //AKB added
-                       );
+                       double adapter_period);
   ~aximm_master_adapter();
 
   void OutputInterface();

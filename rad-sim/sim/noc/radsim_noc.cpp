@@ -1,8 +1,6 @@
 #include <design_context.hpp> //AKB: moved to header file
 #include <radsim_noc.hpp>
 
-//AKB replaced all radsim_config. with radsim_design->radsim_config->
-
 radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, std::string portal_slave_name, int noc_id,
                        std::vector<sc_clock *> &adapter_clks,
                        std::vector<sc_clock *> &module_clks,
@@ -15,11 +13,11 @@ radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, std::str
   _rad_id = rad_id; 
   _portal_slave_name = portal_slave_name;
   _noc_id = noc_id;
-  _num_noc_nodes = radsim_design->radsim_config->GetIntVectorKnob("noc_num_nodes", _noc_id);
+  _num_noc_nodes = radsim_config.GetIntVectorKnob("noc_num_nodes", _noc_id);
 
   // Parse config file, initialize routing data structures and create Booksim
   // NoC
-  std::string config_filename = radsim_design->radsim_config->GetStringKnob("radsim_root_dir") +
+  std::string config_filename = radsim_config.GetStringKnob("radsim_root_dir") +
                                 "/sim/noc/noc" + std::to_string(noc_id) +
                                 "_config";
   _config.ParseFile(config_filename);
@@ -84,9 +82,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, std::str
         &_config, _booksim_noc,
         _buffer_state[axis_master_adapter_info[adapter_id]._node_id],
         _routing_func, _lookahead_routing, _wait_for_tail_credit,
-        _ejected_flits,
-        radsim_design->radsim_config //AKB added
-        );
+        _ejected_flits);
 
     // Connect adapter ports and register NoC port in design context
     master_adapter->noc_clk(noc_clk);
@@ -127,9 +123,9 @@ radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, std::str
     for (auto it = axis_slave_adapter_info[adapter_id]._port_types.begin();
          it != axis_slave_adapter_info[adapter_id]._port_types.end(); it++)
       adapter_port_types.push_back(static_cast<Flit::FlitType>(*it));
-    double adapter_module_period = radsim_design->radsim_config->GetDoubleVectorKnob(
+    double adapter_module_period = radsim_config.GetDoubleVectorKnob(
         "design_clk_periods", axis_slave_adapter_info[adapter_id]._module_clk_idx);
-    double adapter_period = radsim_design->radsim_config->GetDoubleVectorKnob(
+    double adapter_period = radsim_config.GetDoubleVectorKnob(
         "noc_adapters_clk_period", axis_slave_adapter_info[adapter_id]._adapter_clk_idx);
 
     // Create adapter
@@ -138,9 +134,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, std::str
         adapter_port_types, axis_slave_adapter_info[adapter_id]._port_dataw,
         adapter_module_period, adapter_period, &_config, _booksim_noc,
         _buffer_state[axis_slave_adapter_info[adapter_id]._node_id],
-        _routing_func, _lookahead_routing, _wait_for_tail_credit,
-        radsim_design->radsim_config //AKB added
-        );
+        _routing_func, _lookahead_routing, _wait_for_tail_credit);
 
     // Connect adapter ports and register NoC port in design context
     slave_adapter->noc_clk(noc_clk);
@@ -173,9 +167,9 @@ radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, std::str
     std::string adapter_name_str =
         "aximm_master_adapter_" + std::to_string(adapter_id);
     const char *adapter_name = adapter_name_str.c_str();
-    double adapter_module_period = radsim_design->radsim_config->GetDoubleVectorKnob(
+    double adapter_module_period = radsim_config.GetDoubleVectorKnob(
         "design_clk_periods", aximm_master_adapter_info[adapter_id]._module_clk_idx);
-    double adapter_period = radsim_design->radsim_config->GetDoubleVectorKnob(
+    double adapter_period = radsim_config.GetDoubleVectorKnob(
         "noc_adapters_clk_period",
         aximm_master_adapter_info[adapter_id]._adapter_clk_idx);
 
@@ -186,9 +180,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, std::str
         _buffer_state[aximm_master_adapter_info[adapter_id]._node_id],
         _routing_func, _lookahead_routing, _wait_for_tail_credit,
         _ejected_flits, aximm_master_adapter_info[adapter_id]._port_dataw[0],
-        adapter_module_period, adapter_period,
-        radsim_design->radsim_config //AKB added
-        );
+        adapter_module_period, adapter_period);
 
     // Connect adapter ports and register NoC port in design context
     master_adapter->noc_clk(noc_clk);
@@ -218,9 +210,9 @@ radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, std::str
     std::string adapter_name_str =
         "aximm_slave_adapter_" + std::to_string(adapter_id);
     const char *adapter_name = adapter_name_str.c_str();
-    double adapter_module_period = radsim_design->radsim_config->GetDoubleVectorKnob(
+    double adapter_module_period = radsim_config.GetDoubleVectorKnob(
         "design_clk_periods", aximm_slave_adapter_info[adapter_id]._module_clk_idx);
-    double adapter_period = radsim_design->radsim_config->GetDoubleVectorKnob(
+    double adapter_period = radsim_config.GetDoubleVectorKnob(
         "noc_adapters_clk_period",
         aximm_slave_adapter_info[adapter_id]._adapter_clk_idx);
 
@@ -231,9 +223,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, std::str
         _buffer_state[aximm_slave_adapter_info[adapter_id]._node_id],
         _routing_func, _lookahead_routing, _wait_for_tail_credit,
         _ejected_flits, aximm_slave_adapter_info[adapter_id]._port_dataw[0],
-        adapter_module_period, adapter_period,
-        radsim_design->radsim_config //AKB added
-        );
+        adapter_module_period, adapter_period);
 
     // Connect adapter ports and register NoC port in design context
     slave_adapter->noc_clk(noc_clk);

@@ -69,9 +69,7 @@ public:
                      double node_period, double adapter_period,
                      BookSimConfig *noc_config, Network *noc,
                      BufferState *buffer_state, tRoutingFunction routing_func,
-                     bool lookahead_routing, bool wait_for_tail_credit,
-                    RADSimConfig* radsim_config //AKB added
-                    );
+                     bool lookahead_routing, bool wait_for_tail_credit);
   ~axis_slave_adapter();
 
   int GetInputDestinationNode(const sc_bv<AXIS_DESTW> axis_transaction_dest);

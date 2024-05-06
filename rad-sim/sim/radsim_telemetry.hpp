@@ -58,7 +58,7 @@ class NoCTransactionTelemetry {
   static void UpdateHops(int id, int num_hops);
   static void DumpStatsToFile(const std::string& filename);
   static std::vector<double> DumpTrafficFlows(const std::string& filename, unsigned int cycle_count,
-    std::vector<std::vector<std::set<std::string>>>& node_module_names, RADSimConfig* radsim_config); //AKB added last arg
+    std::vector<std::vector<std::set<std::string>>>& node_module_names);
 };
 
 // Class for recording and storing flit traces
@@ -88,12 +88,10 @@ class SimLog {
  private:
   unsigned int verbosity;
   std::ofstream log_file;
-  //AKB added
-  RADSimConfig* radsim_config;
 
  public:
-  SimLog(RADSimConfig* radsim_config); //AKB added arg
-  SimLog(unsigned int verbosity_level, std::string log_filename, RADSimConfig* radsim_config); //AKB added last arg
+  SimLog();
+  SimLog(unsigned int verbosity_level, std::string log_filename);
   ~SimLog();
   void SetLogSettings(unsigned int verbosity_level, std::string log_filename);
   void log(debug_t, std::string msg, sc_module_name module = "", bool log_to_file = true);
@@ -115,7 +113,7 @@ class SimTraceRecording {
   SimTraceRecording(std::string filename, unsigned int num_traces);
   ~SimTraceRecording();
   void SetTraceRecordingSettings(std::string filename, unsigned int num_traces);
-  void record_event(unsigned int trace_id, RADSimConfig* radsim_config); //AKB added last arg
+  void record_event(unsigned int trace_id);
   void dump_traces();
 };
 

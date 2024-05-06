@@ -6,7 +6,7 @@ int GetSimulationCycle(double period) {
   return cycle;
 }
 
-int GetSimulationCycle(RADSimConfig* radsim_config) { //AKB added argument
+int GetSimulationCycle() {
   double period = radsim_config.GetDoubleKnob("max_period");
   sc_time t = sc_time_stamp();
   int cycle = (int)ceil(t.value() / period / 1000);

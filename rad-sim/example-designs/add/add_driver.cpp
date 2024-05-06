@@ -42,8 +42,7 @@ void add_driver::source() {
   client_valid.write(false);
   wait();
   rst.write(false);
-  //start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period")); //AKB replaced with line below
-  start_cycle = GetSimulationCycle(this->radsim_design->radsim_config->GetDoubleKnob("sim_driver_period"));
+  start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
   start_time = std::chrono::steady_clock::now();
   wait();
 
@@ -78,15 +77,13 @@ void add_driver::sink() {
     std::cout << "SUCCESS - Output is matching!" << std::endl;
   }
 
-  //end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
-  end_cycle = GetSimulationCycle(this->radsim_design->radsim_config->GetDoubleKnob("sim_driver_period"));
+  end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
   end_time = std::chrono::steady_clock::now();
   std::cout << "Simulation Cycles = " << end_cycle - start_cycle << std::endl;
   std::cout << "Simulation Time = " << std::chrono::duration_cast<std::chrono::microseconds> (end_time - start_time).count() << " us" << std::endl;
   NoCTransactionTelemetry::DumpStatsToFile("stats.csv");
 
-  //end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
-  end_cycle = GetSimulationCycle(this->radsim_design->radsim_config->GetDoubleKnob("sim_driver_period"));
+  end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
   std::cout << "Simulation Cycles for Just Adder Portion = " << end_cycle - start_cycle << std::endl;
 
   this->radsim_design->set_rad_done(); //flag to replace sc_stop calls

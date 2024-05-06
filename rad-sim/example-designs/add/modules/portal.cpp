@@ -34,7 +34,7 @@ void portal::Tick() { //sequential logic
     //Always @ positive edge of clock
     while (true) {
 
-        //int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
 
         if (axis_portal_slave_interface.tvalid.read() &&
             axis_portal_slave_interface.tready.read()) {

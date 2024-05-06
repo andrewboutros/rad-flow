@@ -58,9 +58,7 @@ public:
                       BookSimConfig *noc_config, Network *noc,
                       BufferState *buffer_state, tRoutingFunction routing_func,
                       bool lookahead_routing, bool wait_for_tail_credit,
-                      map<int, int> *ejected_flits,
-                      RADSimConfig* radsim_config //AKB added
-                      );
+                      map<int, int> *ejected_flits);
   ~axis_master_adapter();
 
   void write_sc_packet_to_axis_output(sc_packet &packet,

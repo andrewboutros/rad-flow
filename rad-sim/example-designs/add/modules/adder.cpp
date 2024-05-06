@@ -119,11 +119,11 @@ void adder::Tick() {
   int count_out_addends = 0;
   wait();
 
-  //int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+  int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
   //std::cout << "adder.cpp is before while loop at cycle " << curr_cycle << std::endl;
   // Always @ positive edge of the clock
   while (true) {
-    //curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+    curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
     //std::cout << "tready: " << axis_adder_master_interface.tready.read() << std::endl;
 
     //accept_data = !accept_data;

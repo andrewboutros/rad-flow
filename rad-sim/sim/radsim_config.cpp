@@ -1,7 +1,5 @@
 #include "radsim_config.hpp"
 
-//AKB: replaced all radsim_config. with this->
-
 RADSimConfig::RADSimConfig() {}
 RADSimConfig::~RADSimConfig() {}
 
@@ -162,8 +160,7 @@ bool RADSimConfig::HasStringVectorKnob(const std::string &key) {
 }
 
 // Parse RADSim knobs from file into RADSimConfig data structures
-//void ParseRADSimKnobs(const std::string &knobs_filename) {
-void RADSimConfig::ParseRADSimKnobs(const std::string &knobs_filename) {
+void ParseRADSimKnobs(const std::string &knobs_filename) {
   std::ifstream knobs_file(knobs_filename);
   std::string line;
 
@@ -184,13 +181,13 @@ void RADSimConfig::ParseRADSimKnobs(const std::string &knobs_filename) {
         (param == "design_name")) {
       std::string value;
       std::getline(ss, value, ' ');
-      this->AddStringKnob(param, value);
+      radsim_config.AddStringKnob(param, value);
     } else if ((param == "noc_num_nocs") || (param == "telemetry_log_verbosity") ||
                (param == "dram_num_controllers")) {
       std::string value_str;
       std::getline(ss, value_str, ' ');
       int value = std::stoi(value_str);
-      this->AddIntKnob(param, value);
+      radsim_config.AddIntKnob(param, value);
     } else if ((param == "noc_payload_width") || (param == "noc_vcs") ||
                (param == "noc_num_nodes") || (param == "noc_adapters_fifo_size") ||
                (param == "noc_adapters_obuff_size") ||
@@ -202,7 +199,7 @@ void RADSimConfig::ParseRADSimKnobs(const std::string &knobs_filename) {
         value_element = std::stoi(value_element_str);
         value.push_back(value_element);
       }
-      this->AddIntVectorKnob(param, value);
+      radsim_config.AddIntVectorKnob(param, value);
     } else if ((param == "sim_driver_period")) {
       std::string value_element_str;
       std::getline(ss, value_element_str, ' ');
@@ -210,7 +207,7 @@ void RADSimConfig::ParseRADSimKnobs(const std::string &knobs_filename) {
       if (value > max_period) {
         max_period = value;
       }
-      this->AddDoubleKnob(param, value);
+      radsim_config.AddDoubleKnob(param, value);
     } else if ((param == "noc_clk_period") || (param == "noc_adapters_clk_period") ||
                (param == "design_clk_periods") ||
                (param == "dram_clk_periods")) {
@@ -224,7 +221,7 @@ void RADSimConfig::ParseRADSimKnobs(const std::string &knobs_filename) {
         }
         value.push_back(value_element);
       }
-      this->AddDoubleVectorKnob(param, value);
+      radsim_config.AddDoubleVectorKnob(param, value);
     } else if ((param == "design_noc_placement") ||
                (param == "noc_adapters_in_arbiter") ||
                (param == "noc_adapters_out_arbiter") ||
@@ -235,14 +232,14 @@ void RADSimConfig::ParseRADSimKnobs(const std::string &knobs_filename) {
       while (getline(ss, value_element, ' ')) {
         value.push_back(value_element);
       }
-      this->AddStringVectorKnob(param, value);
+      radsim_config.AddStringVectorKnob(param, value);
       if (param == "telemetry_traces") {
-        this->AddIntKnob("telemetry_num_traces", value.size());
+        radsim_config.AddIntKnob("telemetry_num_traces", value.size());
       }
     } else {
       std::cerr << "Undefined RADSim knob \"" << param << "\"" << std::endl;
       exit(1);
     }
   }
-  this->AddDoubleKnob("max_period", max_period);
+  radsim_config.AddDoubleKnob("max_period", max_period);
 }
