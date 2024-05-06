@@ -3,37 +3,76 @@
 RADSimConfig::RADSimConfig() {}
 RADSimConfig::~RADSimConfig() {}
 
+// template<class T> 
+// void insert_with_resize(std::vector<> ) {
+
+// }
+
 // Adds a new integer configuration knob
-void RADSimConfig::AddIntKnob(const std::string &key, int val) {
-  _int_knobs[key] = val;
+void RADSimConfig::AddIntKnobShared(const std::string &key, int val) {
+  _int_knobs_shared[key] = val;
 }
 
 // Adds a new double configuration knob
-void RADSimConfig::AddDoubleKnob(const std::string &key, double val) {
-  _double_knobs[key] = val;
+void RADSimConfig::AddDoubleKnobShared(const std::string &key, double val) {
+  _double_knobs_shared[key] = val;
 }
 
 // Adds a new string configuration knob
-void RADSimConfig::AddStringKnob(const std::string &key, std::string &val) {
-  _string_knobs[key] = val;
+void RADSimConfig::AddStringKnobShared(const std::string &key, std::string &val) {
+  _string_knobs_shared[key] = val;
 }
 
 // Adds a new integer vector configuration knob
-void RADSimConfig::AddIntVectorKnob(const std::string &key,
+void RADSimConfig::AddIntVectorKnobShared(const std::string &key,
                                     std::vector<int> &val) {
-  _int_vector_knobs[key] = val;
+  _int_vector_knobs_shared[key] = val;
 }
 
 // Adds a new double vector configuration knob
-void RADSimConfig::AddDoubleVectorKnob(const std::string &key,
+void RADSimConfig::AddDoubleVectorKnobShared(const std::string &key,
                                        std::vector<double> &val) {
-  _double_vector_knobs[key] = val;
+  _double_vector_knobs_shared[key] = val;
 }
 
 // Adds a new string vector configuration knob
-void RADSimConfig::AddStringVectorKnob(const std::string &key,
+void RADSimConfig::AddStringVectorKnobShared(const std::string &key,
                                        std::vector<std::string> &val) {
-  _string_vector_knobs[key] = val;
+  _string_vector_knobs_shared[key] = val;
+}
+
+//RAD-specific functions
+// Adds a new integer configuration knob
+void RADSimConfig::AddIntKnobPerRad(const std::string &key, int val, int rad_id) {
+  _int_knobs_per_rad[key] = val;
+}
+
+// Adds a new double configuration knob
+void RADSimConfig::AddDoubleKnobPerRad(const std::string &key, double val, int rad_id) {
+  _double_knobs_per_rad[key] = val;
+}
+
+// Adds a new string configuration knob
+void RADSimConfig::AddStringKnobPerRad(const std::string &key, std::string &val, int rad_id) {
+  _string_knobs_per_rad[key] = val;
+}
+
+// Adds a new integer vector configuration knob
+void RADSimConfig::AddIntVectorKnobPerRad(const std::string &key,
+                                    std::vector<int> &val, int rad_id) {
+  _int_vector_knobs_per_rad[key] = val;
+}
+
+// Adds a new double vector configuration knob
+void RADSimConfig::AddDoubleVectorKnobPerRad(const std::string &key,
+                                       std::vector<double> &val, int rad_id) {
+  _double_vector_knobs_per_rad[key] = val;
+}
+
+// Adds a new string vector configuration knob
+void RADSimConfig::AddStringVectorKnobPerRad(const std::string &key,
+                                       std::vector<std::string> &val, int rad_id) {
+  _string_vector_knobs_per_rad[key] = val;
 }
 
 // Gets the value of an integer configuration knob
