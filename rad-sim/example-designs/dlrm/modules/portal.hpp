@@ -26,7 +26,8 @@ struct portal_axis_fields {
 
 class portal : public RADSimModule {
     private:
-        std::queue<portal_axis_fields> portal_axis_fifo;
+        std::queue<portal_axis_fields> portal_axis_fifo_noc_incoming;
+        std::queue<portal_axis_fields> portal_axis_fifo_noc_outgoing;
 
     public:
         RADSimDesignContext* radsim_design;

@@ -323,7 +323,7 @@ void mvm::Tick() {
         end_idx = (e + 1) * 16;
         tdatavector[e] = tdata.range(end_idx - 1, start_idx).to_int();
       }
-      if (layer_id == 0) std::cout << "got tdatavector on rad " << radsim_design->rad_id << ": " << tdatavector << std::endl;
+      //if (layer_id == 0) std::cout << "got tdatavector on rad " << radsim_design->rad_id << ": " << tdatavector << std::endl;
       // sc_bv<7> testing_width = "1000110";
       // std::cout << "testing_width.to_uint64(): " << testing_width.to_uint64() << std::endl;
       if (rx_input_interface.tuser.read().range(15, 13).to_uint() == 1) {
