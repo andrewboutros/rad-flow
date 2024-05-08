@@ -7,7 +7,7 @@ portal::portal(const sc_module_name &name, RADSimDesignContext* radsim_design)
 
     //combinational logic
     SC_METHOD(Assign);
-    sensitive << rst;
+    sensitive << rst << axis_portal_master_interface.tready;
     //sequential logic
     SC_CTHREAD(Tick, clk.pos());
     // This function must be defined & called for any RAD-Sim module to register
@@ -25,10 +25,23 @@ void portal::Assign() { //combinational logic
         axis_portal_slave_interface.tready.write(false);
     }
     else {
-        // Always ready to accept the transaction
-        portal_axis_slave.tready.write(true);
-        axis_portal_slave_interface.tready.write(true);
+        // Always ready to accept the transaction -- nvm, should make sure NoC is ready because no FIFO buffer in this direction
+        portal_axis_slave.tready.write(axis_portal_master_interface.tready.read()); //true); //Accepting data from inter-rad and sending into NoC without FIFO
+        axis_portal_slave_interface.tready.write(true); //Always ready to accept from NoC because we have FIFO buffer in this direction
     }
+}
+
+void bv_to_data_vector(
+    sc_bv<AXI4_MAX_DATAW> &bitvector, data_vector<int16_t> &datavector,
+    unsigned int num_elements) {
+
+  unsigned int start_idx, end_idx;
+  unsigned int _bitwidth = 16; //AKB: extra added
+  for (unsigned int e = 0; e < num_elements; e++) {
+    start_idx = e * _bitwidth;
+    end_idx = (e + 1) * _bitwidth;
+    datavector[e] = bitvector.range(end_idx - 1, start_idx).to_int();
+  }
 }
 
 int counter = 0;
@@ -45,6 +58,7 @@ void portal::Tick() { //sequential logic
 
         int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
 
+        //Accepting incoming NoC transaction
         if (axis_portal_slave_interface.tvalid.read() &&
             axis_portal_slave_interface.tready.read()) {
             //std::cout << "Also got here" << std:: endl;
@@ -70,14 +84,21 @@ void portal::Tick() { //sequential logic
             portal_axis_fifo.push(curr_transaction);
         }
 
+        //Sending outgoing inter-rad data
         //warning: must do this before next if-else block so that we pop before reading front. otherwise we get outtdated value on second turn.
         //we see valid as high the clock cycle AFTER we set it as high in the if-else below
         if (portal_axis_master.tvalid.read() && portal_axis_master.tready.read()) { // && test_ready_toggle) { 
             //pop out of fifo
             if (!portal_axis_fifo.empty()) {
                 //test_ready_toggle = false;
+                int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+                sc_bv<DATAW> tx_tdata_bv = portal_axis_fifo.front().tdata;
+                data_vector<int16_t> tx_tdata(32);
+                bv_to_data_vector(tx_tdata_bv, tx_tdata, 32);
+                std::cout << "portal @ cycle " << curr_cycle << ": recieved " << tx_tdata << " on RAD " << radsim_design->rad_id << std::endl;
+                
                 portal_axis_fifo.pop();
-                //std::cout << "portal.cpp in dlrm design sent " << portal_axis_master.tdata.read().to_int64() << " to dest_device " << dest_device.to_int64() << " on cycle " << curr_cycle << std::endl;
+                //std::cout << "portal.cpp in dlrm design sent " << portal_axis_master.tdata.read().to_uint64() << " to dest_device " << dest_device.to_uint64() << " on cycle " << curr_cycle << std::endl;
                 //portal_recvd.write(1);
                 if (portal_axis_master.tlast.read()) {
                     std::cout << "dlrm design portal.cpp sent last data via inter_rad at cycle " << curr_cycle << std::endl;
@@ -113,17 +134,21 @@ void portal::Tick() { //sequential logic
             test_ready_toggle = true;
         }*/
 
-        // Receiving transaction from AXI-S interface
-        if (portal_axis_slave.tvalid.read() &&
-            portal_axis_slave.tready.read()) {
+        //Accepting incoming inter-rad data and then sending to correct module on RAD over NoC
+        if (portal_axis_slave.tvalid.read() && //tvalid is written by inter-rad module
+            portal_axis_slave.tready.read()) { //tready is written by this portal module
                 //get current cycle
                 int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
                 //read 
-                // std::cout << module_name << ": Portal Module Got Transaction on cycle " << curr_cycle << " (RAD ID) = "
-                // << radsim_design->rad_id  //<< portal_axis_slave.tuser.read().to_uint64() 
-                // << ") (val = "
-                // << portal_axis_slave.tdata.read().to_uint64() << ")!"
-                // << std::endl;
+                sc_bv<DATAW> rx_tdata_bv = portal_axis_slave.tdata.read();
+                data_vector<int16_t> rx_tdata(32);
+                bv_to_data_vector(rx_tdata_bv, rx_tdata, 32);
+                std::cout << module_name << ": Portal Module Got Transaction on cycle " << curr_cycle << " (RAD ID) = "
+                << radsim_design->rad_id  //<< portal_axis_slave.tuser.read().to_uint64() 
+                << ") (val = " //<< portal_axis_slave.tdata.read().to_uint64() << ")!"
+                << rx_tdata << ") with tdest field of "
+                << portal_axis_slave.tdest.read() << "!"
+                << std::endl;
                 //write the addend into the mult module and that will flag when received all values and can end simulation
                 std::string src_port_name = module_name + ".axis_portal_master_interface";
                 uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
@@ -147,6 +172,9 @@ void portal::Tick() { //sequential logic
         }
         else {
             axis_portal_master_interface.tvalid.write(false);
+            std::cout << "portal_axis_slave.tvalid.read(): " << portal_axis_slave.tvalid.read()
+            << " portal_axis_slave.tready.read() " << portal_axis_slave.tready.read() 
+            << " axis_portal_master_interface.tready.read() " << axis_portal_master_interface.tready.read() << std::endl;
         }
 
         wait();

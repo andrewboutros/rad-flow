@@ -52,7 +52,7 @@ custom_feature_interaction::custom_feature_interaction(
   _num_mem_channels = num_mem_channels;
   _dataw = dataw;
   _bitwidth = element_bitwidth;
-  _num_input_elements = dataw / element_bitwidth;
+  _num_input_elements = dataw / element_bitwidth; //512/16=32
   _num_output_elements = DATAW / element_bitwidth;
   _num_output_channels = num_output_channels;
 
@@ -239,12 +239,15 @@ void custom_feature_interaction::Tick() {
     for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
       if (axis_interface[ch_id].tready.read() &&
           axis_interface[ch_id].tvalid.read()) {
+        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+        data_vector<int16_t> tx_tdata = _output_fifos[ch_id].front();
+        //std::cout << "custom_feature_interaction @ cycle " << curr_cycle << ": tx_tdata sent " << tx_tdata << " from RAD " << radsim_design->rad_id << " with tdest field " << axis_interface[ch_id].tdest.read() << std::endl;
         _output_fifos[ch_id].pop();
       }
 
       if ( (!_output_fifos[ch_id].empty()) ) { //&& (radsim_design->rad_id == 0) ) {
         data_vector<int16_t> tx_tdata = _output_fifos[ch_id].front();
-        //std::cout << "tx_tdata " << tx_tdata << " on RAD " << radsim_design->rad_id << std::endl;
+        //std::cout << "custom_feature_interaction: tx_tdata sent " << tx_tdata << " from RAD " << radsim_design->rad_id << std::endl;
         sc_bv<AXIS_MAX_DATAW> tx_tdata_bv;
         data_vector_to_bv(tx_tdata, tx_tdata_bv, _num_output_elements);
         axis_interface[ch_id].tvalid.write(true);

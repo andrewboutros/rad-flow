@@ -10,6 +10,7 @@
 #include <vector>
 #include <radsim_utils.hpp>
 #include <dlrm_defines.hpp>
+#include <sim_utils.hpp> //AKB: added for data_vector template class
 
 struct portal_axis_fields {
             bool tvalid;
@@ -48,3 +49,7 @@ class portal : public RADSimModule {
         SC_HAS_PROCESS(portal);
         void RegisterModuleInfo(); //even tho did not add AXI Interface, need because is virtual fn in derived class
 };
+
+void bv_to_data_vector(
+    sc_bv<AXI4_MAX_DATAW> &bitvector, data_vector<int16_t> &datavector,
+    unsigned int num_elements);

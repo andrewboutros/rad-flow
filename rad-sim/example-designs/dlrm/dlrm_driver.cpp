@@ -181,6 +181,20 @@ void dlrm_driver::sink() {
         std::cout << "]\n";
         std::cout << "-------------------------------\n";
       }
+      else {
+        std::cout << "Output " << outputs_count << " on rad " << radsim_design->rad_id << " does match :)\n";
+        std::cout << "TRUE: [ ";
+        for (unsigned int e = 0; e < _mlp_outputs[outputs_count].size(); e++) {
+          std::cout << _mlp_outputs[outputs_count][e] << " ";
+        }
+        std::cout << "]\n";
+        std::cout << "DUT : [ ";
+        for (unsigned int e = 0; e < dut_output.size(); e++) {
+          std::cout << dut_output[e] << " ";
+        }
+        std::cout << "]\n";
+        std::cout << "-------------------------------\n";
+      }
       outputs_count++;
       all_outputs_matching &= matching;
 
