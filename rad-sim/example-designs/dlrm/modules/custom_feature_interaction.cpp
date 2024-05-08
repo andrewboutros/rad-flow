@@ -169,6 +169,7 @@ void custom_feature_interaction::Tick() {
   wait();
 
   int no_val_counter = 0;
+  bool got_all_mem_responses = false;
 
   // Always @ positive edge of the clock
   while (true ) { //&& (radsim_design->rad_id == 0)) {
@@ -184,6 +185,7 @@ void custom_feature_interaction::Tick() {
         if (_num_received_responses == _num_expected_responses) {
           std::cout << this->name() << ": Got all memory responses at cycle "
                     << GetSimulationCycle(5.0) << "!" << std::endl;
+          got_all_mem_responses = true;
         }
       }
     }
@@ -236,6 +238,7 @@ void custom_feature_interaction::Tick() {
     }
 
     // Interface with AXI-S NoC
+    bool non_empty_output_fifo = false;
     for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
       if (axis_interface[ch_id].tready.read() &&
           axis_interface[ch_id].tvalid.read()) {
@@ -246,6 +249,7 @@ void custom_feature_interaction::Tick() {
       }
 
       if ( (!_output_fifos[ch_id].empty()) ) { //&& (radsim_design->rad_id == 0) ) {
+        non_empty_output_fifo = true;
         data_vector<int16_t> tx_tdata = _output_fifos[ch_id].front();
         //std::cout << "custom_feature_interaction: tx_tdata sent " << tx_tdata << " from RAD " << radsim_design->rad_id << std::endl;
         sc_bv<AXIS_MAX_DATAW> tx_tdata_bv;
@@ -281,6 +285,11 @@ void custom_feature_interaction::Tick() {
       _ofifo_full[ch_id].write(_output_fifos[ch_id].size() >= _fifos_depth - 2);
     }
     received_responses.write(_num_received_responses);
+
+    if (non_empty_output_fifo && got_all_mem_responses) {
+      radsim_design->set_rad_done();
+    }
+
     wait();
   }
   }
