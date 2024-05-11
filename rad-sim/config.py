@@ -51,7 +51,6 @@ def parse_config_file(config_filename, booksim_params, radsim_header_params, rad
                     print("Config Error: Parameter " + param_name + " is invalid!")
                     exit(1)
 
-
     '''noc_num_nodes = []
     for n in range(radsim_knobs["noc_num_nocs"]):
         noc_num_nodes.append(0)

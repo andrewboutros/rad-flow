@@ -26,6 +26,7 @@ set(srcfiles
   modules/fifo.cpp
   modules/instructions.cpp
   modules/collector.cpp
+  modules/portal.cpp
   dlrm_top.cpp
   dlrm_driver.cpp
   dlrm_system.cpp
@@ -42,6 +43,7 @@ set(hdrfiles
   modules/fifo.hpp
   modules/instructions.hpp
   modules/collector.hpp
+  modules/portal.hpp
   modules/dlrm_defines.hpp
   dlrm_top.hpp
   dlrm_driver.hpp
@@ -50,5 +52,5 @@ set(hdrfiles
 
 add_compile_options(-Wall -Wextra -pedantic)
 
-add_library(design STATIC ${srcfiles} ${hdrfiles})
-target_link_libraries(design PUBLIC SystemC::systemc booksim noc dram)
+add_library(design_dlrm STATIC ${srcfiles} ${hdrfiles})
+target_link_libraries(design_dlrm PUBLIC SystemC::systemc booksim noc dram)

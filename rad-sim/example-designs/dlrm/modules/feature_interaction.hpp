@@ -50,6 +50,7 @@ private:
   ofstream *_debug_feature_interaction_out;
 
 public:
+  RADSimDesignContext* radsim_design;
   sc_in<bool> rst;
   // Interface to driver logic
   sc_out<unsigned int> received_responses;
@@ -61,7 +62,8 @@ public:
                       unsigned int element_bitwidth,
                       unsigned int num_mem_channels, unsigned int fifos_depth,
                       unsigned int num_output_channels,
-                      std::string &instructions_file);
+                      std::string &instructions_file,
+                      RADSimDesignContext* radsim_design);
   ~feature_interaction();
 
   void Assign(); // Combinational logic process

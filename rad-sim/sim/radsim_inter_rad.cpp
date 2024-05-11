@@ -104,6 +104,7 @@ RADSimInterRad::writeFifo() {
             struct axis_fields curr_transaction;
             curr_transaction.tdata = all_axis_slave_ports[i]->tdata.read(); //0 bc adder
             curr_transaction.tuser = all_axis_slave_ports[i]->tuser.read();
+            //std::cout << "curr_transaction.tuser in interrad: " << curr_transaction.tuser << std::endl;
             curr_transaction.tvalid = all_axis_slave_ports[i]->tvalid.read();
             curr_transaction.tlast = all_axis_slave_ports[i]->tlast.read();
             //since crossing RADs, DEST_LOCAL_NODE is now DEST_REMOTE_NODE, and DEST_REMOTE_NODE can be reset to 0
@@ -121,6 +122,10 @@ RADSimInterRad::writeFifo() {
                 unsigned int dest_rad = DEST_RAD(curr_transaction.tdest).to_uint64();
                 //std::cout << "radsim_inter_rad.cpp dest_rad is: "<< dest_rad << std::endl;
                 if (this->fifos[dest_rad]->nb_write(curr_transaction) != false) { //there was an available slot to write to
+                    sc_bv<DATAW> rx_tdata_bv = curr_transaction.tdata;
+                    data_vector<int16_t> rx_tdata(32);
+                    bv_to_data_vector(rx_tdata_bv, rx_tdata, 32);
+                    //std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << rx_tdata << std::endl;
                     //std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << curr_transaction.tdata.to_uint64() << std::endl;
                     fifos_latency_counters[dest_rad].push_back(0); //for latency counters
                 }
@@ -171,7 +176,11 @@ RADSimInterRad::readFifo() {
                 fifos_latency_counters[i][j]++;
             }
             //try reading from front of fifo
-            if ((this->fifos[i]->num_available() != 0) && (fifos_latency_counters[i][0] >= target_delay)){ //check that fifo is not empty
+            //std::cout << "all_axis_master_signals[dest_device]->tready.read(): " << all_axis_master_signals[dest_device]->tready.read() << std::endl;
+            //tried adding && (all_axis_master_signals[dest_device]->tready.read() as condn below, but no support for peek on sc_fifo to get the dest
+            //TODO: replace sc_fifo with something else std::queue that can support peeks
+            //IMPORTANT: currently does not accept backpressure. Portal module must create a buffer for backpressure on the RAD's NoC
+            if ( (this->fifos[i]->num_available() != 0) && (fifos_latency_counters[i][0] >= target_delay) ){ //check that fifo is not empty
                 //counter_delay = 0; //reset counter
                 fifos_latency_counters[i].erase(fifos_latency_counters[i].begin()); //to reset counter, remove first elem
                 struct axis_fields read_from_fifo;
@@ -189,7 +198,7 @@ RADSimInterRad::readFifo() {
                     all_axis_master_signals[dest_device]->tvalid.write(read_from_fifo.tvalid);
                     all_axis_master_signals[dest_device]->tlast.write(read_from_fifo.tlast);
                     all_axis_master_signals[dest_device]->tdest.write(read_from_fifo.tdest);
-		    all_axis_master_signals[dest_device]->tuser.write(read_from_fifo.tuser);
+                    all_axis_master_signals[dest_device]->tuser.write(read_from_fifo.tuser);
                     //std::cout << "inter_rad fifo free after READ is " << this->fifos[0]->num_free() << "/" << this->fifos[0]->num_available() << std::endl;
                 }
                 else {

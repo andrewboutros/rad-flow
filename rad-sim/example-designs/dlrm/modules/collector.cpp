@@ -1,10 +1,11 @@
 #include <collector.hpp>
 
-collector::collector(const sc_module_name &name)
-    : RADSimModule(name), rst("rst"), data_fifo_rdy("data_fifo_rdy"),
+collector::collector(const sc_module_name &name, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design), rst("rst"), data_fifo_rdy("data_fifo_rdy"),
       data_fifo_ren("data_fifo_ren"), data_fifo_rdata("data_fifo_rdata") {
 
   module_name = name;
+  this->radsim_design = radsim_design;
 
   char fifo_name[25];
   std::string fifo_name_str;
@@ -35,7 +36,7 @@ void collector::Assign() {
   if (rst.read()) {
     rx_interface.tready.write(false);
     data_fifo_rdy.write(false);
-  } else {
+  } else if (radsim_design->rad_id == 1) {
     rx_interface.tready.write(!data_fifo_almost_full_signal);
     data_fifo_wen_signal.write(rx_interface.tvalid.read() &&
                                rx_interface.tready.read());

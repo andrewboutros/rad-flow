@@ -39,8 +39,8 @@ bool ParseInstructions(std::vector<mvm_inst> &inst_mem,
 }
 
 mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
-         const std::string &inst_filename)
-    : RADSimModule(name), matrix_mem_rdata("matrix_mem_rdata", DOT_PRODUCTS),
+         const std::string &inst_filename, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design), matrix_mem_rdata("matrix_mem_rdata", DOT_PRODUCTS),
       matrix_mem_wen("matrix_mem_wen", DOT_PRODUCTS),
       ififo_pipeline("ififo_pipeline", RF_RD_LATENCY),
       reduce_pipeline("reduce_pipeline", RF_RD_LATENCY),
@@ -54,6 +54,7 @@ mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
       dest_mvm_pipeline("mvm_layer_pipeline", COMPUTE_LATENCY + RF_RD_LATENCY),
       tdata_vec(LANES), result(DOT_PRODUCTS), rst("rst") {
 
+  this->radsim_design = radsim_design;
   module_name = name;
   mvm_id = id_mvm;
   layer_id = id_layer;
@@ -201,6 +202,7 @@ int16_t dot(data_vector<int16_t> v1, data_vector<int16_t> v2) {
 }
 
 void mvm::Tick() {
+  if (radsim_design->rad_id == 1) {
   // Reset logic
   for (unsigned int lane_id = 0; lane_id < LANES; lane_id++) {
     tdata_vec[lane_id] = 0;
@@ -210,7 +212,7 @@ void mvm::Tick() {
   // next_inst.write(rst_inst);
   wait();
   // Sequential logic
-  while (true) {
+  while (true && (radsim_design->rad_id == 1)) {
     /*std::cout << this->name() << " iFIFO occ: " << ififo->occupancy()
               << " rFIFO occ: " << reduce_fifo->occupancy()
               << " oFIFO occ: " << ofifo->occupancy()
@@ -314,7 +316,16 @@ void mvm::Tick() {
 
     if (rx_input_interface.tvalid.read() && rx_input_interface.tready.read()) {
       sc_bv<AXIS_MAX_DATAW> tdata = rx_input_interface.tdata.read();
-
+      data_vector<int16_t> tdatavector(32);
+      unsigned int start_idx, end_idx;
+      for (unsigned int e = 0; e < 32; e++) {
+        start_idx = e * 16;
+        end_idx = (e + 1) * 16;
+        tdatavector[e] = tdata.range(end_idx - 1, start_idx).to_int();
+      }
+      //if (layer_id == 0) std::cout << "got tdatavector on rad " << radsim_design->rad_id << ": " << tdatavector << std::endl;
+      // sc_bv<7> testing_width = "1000110";
+      // std::cout << "testing_width.to_uint64(): " << testing_width.to_uint64() << std::endl;
       if (rx_input_interface.tuser.read().range(15, 13).to_uint() == 1) {
         unsigned int waddr =
             rx_input_interface.tuser.read().range(8, 0).to_uint();
@@ -398,6 +409,7 @@ void mvm::Tick() {
     }
     wait();
   }
+  }
 }
 
 void mvm::Assign() {
@@ -426,7 +438,7 @@ void mvm::Assign() {
     matrix_mem_raddr.write(0);
     dot_op.write(false);
     dot_reduce_op.write(false);
-  } else {
+  } else if (radsim_design->rad_id == 1) {
     if (rx_input_interface.tuser.read().range(15, 13).to_uint() ==
         1) { // Inst memory
       rx_input_interface.tready.write(true);
@@ -507,8 +519,14 @@ void mvm::Assign() {
       dest_name = "layer" + std::to_string(dest_layer_int - 1) + "_mvm" +
                   std::to_string(dest_mvm_int) + ".rx_interface";
     }
-    dest_id = radsim_design.GetPortDestinationID(dest_name);
-
+    dest_id = radsim_design->GetPortDestinationID(dest_name);
+    sc_bv<AXIS_DESTW> dest_id_concat;
+    DEST_LOCAL_NODE(dest_id_concat) = dest_id;
+    DEST_REMOTE_NODE(dest_id_concat) = dest_id;
+    // if (radsim_design->rad_id == 1){
+    //   std::cout << "mvm.cpp on RAD " << radsim_design->rad_id << "'s dest_id: " << dest_id << " and DEST_RAD(dest_id): " << DEST_RAD(dest_id_concat) << std::endl;
+    // }
+    DEST_RAD(dest_id_concat) = radsim_design->rad_id;
     unsigned int dest_interface;    // which FIFO
     unsigned int dest_interface_id; // added for separate ports
     // If destination is the same layer, send to reduce FIFO
@@ -537,7 +555,7 @@ void mvm::Assign() {
       tx_input_interface.tdata.write(tx_tdata_bv);
       tx_input_interface.tvalid.write(true);
       tx_input_interface.tuser.write(dest_interface);
-      tx_input_interface.tdest.write(dest_id);
+      tx_input_interface.tdest.write(dest_id_concat); //dest_id);
       tx_input_interface.tid.write(dest_interface_id);
       tx_reduce_interface.tvalid.write(false);
       // if (mvm_id == 1 && layer_id == 2 && !ofifo_empty_signal) {
@@ -555,7 +573,7 @@ void mvm::Assign() {
       tx_reduce_interface.tdata.write(tx_tdata_bv);
       tx_reduce_interface.tvalid.write(true);
       tx_reduce_interface.tuser.write(dest_interface);
-      tx_reduce_interface.tdest.write(dest_id);
+      tx_reduce_interface.tdest.write(dest_id_concat); //dest_id);
       tx_reduce_interface.tid.write(dest_interface_id);
       tx_input_interface.tvalid.write(false);
     } else {

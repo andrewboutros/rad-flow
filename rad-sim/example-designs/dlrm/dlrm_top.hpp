@@ -9,9 +9,13 @@
 #include <radsim_config.hpp>
 #include <systemc.h>
 #include <vector>
+#include <portal.hpp>
+#include <design_top.hpp>
+#include <axis_interface.hpp>
 
-class dlrm_top : public sc_module {
+class dlrm_top : public design_top { //sc_module {
 private:
+  portal *portal_inst;
   embedding_lookup *embedding_lookup_inst;
   custom_feature_interaction *feature_interaction_inst;
   std::vector<std::vector<mvm *>> mvms;
@@ -20,6 +24,7 @@ private:
 
   std::vector<axis_signal> axis_sig;
   std::vector<sc_clock *> mem_clks;
+  RADSimDesignContext* radsim_design; //AKB ADDED
 
 public:
   sc_in<bool> rst;
@@ -36,6 +41,6 @@ public:
   sc_in<bool> collector_fifo_ren;
   sc_out<data_vector<int16_t>> collector_fifo_rdata;
 
-  dlrm_top(const sc_module_name &name);
+  dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_design);
   ~dlrm_top();
 };

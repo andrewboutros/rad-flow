@@ -20,13 +20,14 @@ private:
       data_fifo_almost_empty_signal;
 
 public:
+  RADSimDesignContext* radsim_design;
   sc_in<bool> rst;
   sc_out<bool> data_fifo_rdy;
   sc_in<bool> data_fifo_ren;
   sc_out<data_vector<int16_t>> data_fifo_rdata;
   axis_slave_port rx_interface;
 
-  collector(const sc_module_name &name);
+  collector(const sc_module_name &name, RADSimDesignContext* radsim_design);
   ~collector();
 
   void Assign();
