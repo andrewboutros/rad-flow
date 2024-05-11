@@ -30,6 +30,8 @@ class RADSimConfig {
 
   RADSimConfig();
   ~RADSimConfig();
+  //AKB: added to support resizing instance of class based on # of RADs
+  void ResizeAll(int num_rads);
   //AKB: changed to be general parameters aka shared across all RADs
   void AddIntKnobShared(const std::string& key, int val);
   void AddDoubleKnobShared(const std::string& key, double val);
@@ -64,12 +66,20 @@ class RADSimConfig {
   std::vector<int>& GetIntVectorKnobPerRad(const std::string& key, int rad_id);
   std::vector<double>& GetDoubleVectorKnobPerRad(const std::string& key, int rad_id);
   std::vector<std::string>& GetStringVectorKnobPerRad(const std::string& key, int rad_id);
-  bool HasIntKnob(const std::string& key);
-  bool HasDoubleKnob(const std::string& key);
-  bool HasStringKnob(const std::string& key);
-  bool HasIntVectorKnob(const std::string& key);
-  bool HasDoubleVectorKnob(const std::string& key);
-  bool HasStringVectorKnob(const std::string& key);
+  //AKB: specify if shared knob
+  bool HasIntKnobShared(const std::string& key);
+  bool HasDoubleKnobShared(const std::string& key);
+  bool HasStringKnobShared(const std::string& key);
+  bool HasIntVectorKnobShared(const std::string& key);
+  bool HasDoubleVectorKnobShared(const std::string& key);
+  bool HasStringVectorKnobShared(const std::string& key);
+  //AKB: rad-specific knobs
+  bool HasIntKnobPerRad(const std::string& key, int rad_id);
+  bool HasDoubleKnobPerRad(const std::string& key, int rad_id);
+  bool HasStringKnobPerRad(const std::string& key, int rad_id);
+  bool HasIntVectorKnobPerRad(const std::string& key, int rad_id);
+  bool HasDoubleVectorKnobPerRad(const std::string& key, int rad_id);
+  bool HasStringVectorKnobPerRad(const std::string& key, int rad_id);
 };
 
 void ParseRADSimKnobs(const std::string& knobs_filename);

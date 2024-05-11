@@ -1,9 +1,9 @@
 #include <design_context.hpp>
 
 RADSimDesignContext::RADSimDesignContext(unsigned int rad_id_) {
-  std::string radsim_knobs_filename = "/sim/radsim_knobs";
-  std::string radsim_knobs_filepath = RADSIM_ROOT_DIR + radsim_knobs_filename;
-  ParseRADSimKnobs(radsim_knobs_filepath);
+  // std::string radsim_knobs_filename = "/sim/radsim_knobs";
+  // std::string radsim_knobs_filepath = RADSIM_ROOT_DIR + radsim_knobs_filename;
+  // ParseRADSimKnobs(radsim_knobs_filepath); //TODO: move this to main.cpp so it only gets called once, not per-RAD
 
   //assign its rad id
   rad_id = rad_id_;
@@ -11,7 +11,7 @@ RADSimDesignContext::RADSimDesignContext(unsigned int rad_id_) {
   // Create NoC clocks
   std::string clk_name;
   std::vector<double> noc_period =
-      radsim_config.GetDoubleVectorKnob("noc_clk_period");
+      radsim_config.GetDoubleVectorKnobPerRad("noc_clk_period", rad_id);
   _noc_clks.resize(noc_period.size());
   for (unsigned int clk_id = 0; clk_id < _noc_clks.size(); clk_id++) {
     clk_name = "noc_clk" + std::to_string(clk_id);
@@ -21,7 +21,7 @@ RADSimDesignContext::RADSimDesignContext(unsigned int rad_id_) {
 
   // Create adapter clocks
   std::vector<double> adapter_period =
-      radsim_config.GetDoubleVectorKnob("noc_adapters_clk_period");
+      radsim_config.GetDoubleVectorKnobPerRad("noc_adapters_clk_period", rad_id);
   _adapter_clks.resize(adapter_period.size());
   for (unsigned int clk_id = 0; clk_id < _adapter_clks.size(); clk_id++) {
     clk_name = "adapter_clk" + std::to_string(clk_id);
@@ -31,7 +31,7 @@ RADSimDesignContext::RADSimDesignContext(unsigned int rad_id_) {
 
   // Create module clocks
   std::vector<double> module_period =
-      radsim_config.GetDoubleVectorKnob("design_clk_periods");
+      radsim_config.GetDoubleVectorKnobPerRad("design_clk_periods", rad_id);
   _module_clks.resize(module_period.size());
   for (unsigned int clk_id = 0; clk_id < _module_clks.size(); clk_id++) {
     clk_name = "module_clk" + std::to_string(clk_id);
@@ -39,10 +39,10 @@ RADSimDesignContext::RADSimDesignContext(unsigned int rad_id_) {
         new sc_clock(clk_name.c_str(), module_period[clk_id], SC_NS);
   }
 
-  int num_nocs = radsim_config.GetIntKnob("noc_num_nocs");
+  int num_nocs = radsim_config.GetIntKnobPerRad("noc_num_nocs", rad_id);
   _node_module_names.resize(num_nocs);
   for (int noc_id = 0; noc_id < num_nocs; noc_id++) {
-    int num_nodes = radsim_config.GetIntVectorKnob("noc_num_nodes", noc_id);
+    int num_nodes = radsim_config.GetIntVectorKnobPerRad("noc_num_nodes", noc_id, rad_id);
     _node_module_names[noc_id].resize(num_nodes);
   }
   //AKB ADDED:
@@ -74,11 +74,11 @@ std::string GetModuleNameFromPortName(std::string &port_name) {
   return module_name;
 }
 
-uint64_t DeterminedBaseAddress(int noc_id, int node_id) {
-  int num_nocs = radsim_config.GetIntKnob("noc_num_nocs");
+uint64_t DeterminedBaseAddress(int noc_id, int node_id, int rad_id) {
+  int num_nocs = radsim_config.GetIntKnobPerRad("noc_num_nocs", rad_id);
   int max_num_nodes = 0;
   for (int noc_id = 0; noc_id < num_nocs; noc_id++) {
-    int num_nodes = radsim_config.GetIntVectorKnob("noc_num_nodes", noc_id);
+    int num_nodes = radsim_config.GetIntVectorKnobPerRad("noc_num_nodes", noc_id, rad_id);
     if (num_nodes > max_num_nodes) {
       max_num_nodes = num_nodes;
     }
@@ -94,8 +94,8 @@ uint64_t DeterminedBaseAddress(int noc_id, int node_id) {
 void RADSimDesignContext::ParseNoCPlacement(const std::string &design_path, //AKB ADDED first arg
     const std::string &placement_filename) {
   std::string placement_filepath =
-      //radsim_config.GetStringKnob("radsim_user_design_root_dir") + "/" +
-      design_path + "/" +
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", rad_id) + "/" +
+      //design_path + "/" + //AKB: had added this as workaround until config-file changes
       placement_filename;
   std::ifstream placement_file(placement_filepath);
 
@@ -159,7 +159,7 @@ void RADSimDesignContext::ParseNoCPlacement(const std::string &design_path, //AK
 
         // Set base address information
         _aximm_port_base_addresses[port_name] =
-            DeterminedBaseAddress(port_noc_placement, port_node_placement);
+            DeterminedBaseAddress(port_noc_placement, port_node_placement, rad_id);
       }
     } else {
       std::string module_name, port_name, port_noc_placement_str,
@@ -263,7 +263,7 @@ void RADSimDesignContext::ParseNoCPlacement(const std::string &design_path, //AK
           }
           // Set base address information
           _aximm_port_base_addresses[port_name] =
-              DeterminedBaseAddress(port_noc_placement, port_node_placement);
+              DeterminedBaseAddress(port_noc_placement, port_node_placement, rad_id);
         }
 
         for (unsigned int port_id = 0;
@@ -293,7 +293,7 @@ void RADSimDesignContext::ParseNoCPlacement(const std::string &design_path, //AK
           }
           // Set base address information
           _aximm_port_base_addresses[port_name] =
-              DeterminedBaseAddress(port_noc_placement, port_node_placement);
+              DeterminedBaseAddress(port_noc_placement, port_node_placement, rad_id);
         }
       }
       _node_module_names[port_noc_placement][port_node_placement].insert(
@@ -305,8 +305,8 @@ void RADSimDesignContext::ParseNoCPlacement(const std::string &design_path, //AK
 void RADSimDesignContext::ParseClockSettings(const std::string &design_path, //AKB ADDED first arg
   const std::string &clks_filename) {
   std::string clks_filepath =
-      //radsim_config.GetStringKnob("radsim_user_design_root_dir") + "/" +
-      design_path + "/" +
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", rad_id) + "/" +
+      //design_path + "/" + //AKB: had added this as workaround until config-file changes
       clks_filename;
   std::ifstream clks_file(clks_filepath);
 
@@ -337,7 +337,7 @@ void RADSimDesignContext::RegisterModule(std::string module_name,
 
 void RADSimDesignContext::BuildDesignContext(const std::string &design_path, //AKB ADDED first arg
     const std::string &placement_filename, const std::string &clks_filename) {
-  unsigned int num_nocs = radsim_config.GetIntKnob("noc_num_nocs");
+  unsigned int num_nocs = radsim_config.GetIntKnobPerRad("noc_num_nocs", rad_id);
   _node_id_is_aximm.resize(num_nocs);
   _node_id_ports_list.resize(num_nocs);
   _noc_axis_slave_adapter_info.resize(num_nocs);
@@ -472,7 +472,7 @@ void RADSimDesignContext::BuildDesignContext(const std::string &design_path, //A
 }
 
 void RADSimDesignContext::CreateSystemNoCs(sc_in<bool> &rst) {
-  unsigned int num_nocs = radsim_config.GetIntKnob("noc_num_nocs");
+  unsigned int num_nocs = radsim_config.GetIntKnobPerRad("noc_num_nocs", rad_id);
   for (unsigned int noc_id = 0; noc_id < num_nocs; noc_id++) {
     std::string noc_name_str = "radsim_noc_" + std::to_string(noc_id);
     const char *noc_name = noc_name_str.c_str();

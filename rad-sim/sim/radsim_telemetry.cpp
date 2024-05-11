@@ -64,13 +64,13 @@ void NoCTransactionTelemetry::DumpStatsToFile(const std::string& filename) {
 }
 
 std::vector<double> NoCTransactionTelemetry::DumpTrafficFlows(const std::string& filename, unsigned int cycle_count, 
-  std::vector<std::vector<std::set<std::string>>>& node_module_names) {
-  double sim_driver_period = radsim_config.GetDoubleKnob("sim_driver_period") / 1000000000.0;
-  unsigned int num_nocs = radsim_config.GetIntKnob("noc_num_nocs");
+  std::vector<std::vector<std::set<std::string>>>& node_module_names, int rad_id) { //AKB: require passing of rad_id
+  double sim_driver_period = radsim_config.GetDoubleKnobShared("sim_driver_period") / 1000000000.0;
+  unsigned int num_nocs = radsim_config.GetIntKnobPerRad("noc_num_nocs", rad_id);
   std::vector<std::vector<std::unordered_map<unsigned int, unsigned int>>> traffic_bits(num_nocs);
   std::vector<std::vector<std::unordered_map<unsigned int, unsigned int>>> traffic_num_hops(num_nocs);
   for (unsigned int noc_id = 0; noc_id < num_nocs; noc_id++) {
-    unsigned int num_nodes = radsim_config.GetIntVectorKnob("noc_num_nodes", noc_id);
+    unsigned int num_nodes = radsim_config.GetIntVectorKnobPerRad("noc_num_nodes", noc_id);
     traffic_bits[noc_id].resize(num_nodes);
     traffic_num_hops[noc_id].resize(num_nodes);
   }
@@ -90,7 +90,7 @@ std::vector<double> NoCTransactionTelemetry::DumpTrafficFlows(const std::string&
     double aggregate_bandwidth = 0.0;
     std::ofstream traffic_file(filename + "_noc" + std::to_string(noc_id) + ".xml", std::ofstream::out);
     traffic_file << "<traffic_flows>" << endl;
-    unsigned int num_nodes = radsim_config.GetIntVectorKnob("noc_num_nodes", noc_id);
+    unsigned int num_nodes = radsim_config.GetIntVectorKnobPerRad("noc_num_nodes", noc_id, rad_id);
     for (unsigned int src_id = 0; src_id < num_nodes; src_id++) {
       if (traffic_bits[noc_id][src_id].size() > 0) {
         for (auto& flow : traffic_bits[noc_id][src_id]) {

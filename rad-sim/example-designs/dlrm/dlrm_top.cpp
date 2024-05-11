@@ -8,7 +8,7 @@ dlrm_top::dlrm_top(const sc_module_name &name) : sc_module(name) {
   unsigned int embedding_lookup_fifos_depth = 16;
   unsigned int feature_interaction_fifos_depth = 64;
   unsigned int num_mem_controllers =
-      radsim_config.GetIntKnob("dram_num_controllers");
+      radsim_config.GetIntKnobPerRad("dram_num_controllers", -1); //TODO: merge with my other dlrm changes branch, then fix to use rad id
   assert(num_mem_controllers == mem_channels.size());
   unsigned int total_mem_channels = 0;
   for (auto &num_channels : mem_channels) {

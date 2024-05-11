@@ -97,7 +97,7 @@ void npu_driver::source() {
   // Trigger NPU start signal
   start.write(true);
   wait();
-  start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("max_period"));
+  start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period")); //"max_period")); //AKB: replaced with sim_driver_period
   start.write(false);
   wait();
 
