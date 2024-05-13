@@ -1,5 +1,23 @@
 #include <adder.hpp>
 
+//TODO
+/*
+constructor: define depth and initialize counter to 0. Assign only sensitive on FIFO variables
+
+assign: we probably don't need any assign signals, since we only write from this using axis. Maybe use this for fifo ren and wen
+
+tick: 
+  reset logic: 
+    all signals to NOT READY (axis)
+    clear all FIFO content, 
+    reset count, 
+    clear all registers
+  check if input ready and input valid, push to ififo
+  if counter is 4, and ofifo isn't full, push to ofifo.
+  check if counter is NOT 4, and input NOT empty, pop from ififo (ren) and into registers (which are shifted), increment counter by 1
+  axis interface write OFIFO content and ren ofifo. (to pop)
+*/
+
 adder::adder(const sc_module_name &name, unsigned int fifo_depth)
     : RADSimModule(name) {
 
