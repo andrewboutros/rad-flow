@@ -1,6 +1,6 @@
 #include <adder.hpp>
 
-requester::requester(const sc_module_name &name, unsigned int fifo_depth)
+adder::adder(const sc_module_name &name, unsigned int fifo_depth)
     : RADSimModule(name) {
 
   req_fifo_depth = fifo_depth;
@@ -18,9 +18,9 @@ requester::requester(const sc_module_name &name, unsigned int fifo_depth)
   this->RegisterModuleInfo();
 }
 
-requester::~requester() {}
+adder::~adder() {}
 
-void requester::Assign() {
+void adder::Assign() {
   if (rst) {
     req_ready.write(true);
     aximm_req_interface.bready.write(false);
@@ -35,7 +35,7 @@ void requester::Assign() {
   }
 }
 
-void requester::Tick() {
+void adder::Tick() {
   // Reset logic
   aximm_req_interface.arvalid.write(false);
   aximm_req_interface.awvalid.write(false);
@@ -68,10 +68,10 @@ void requester::Tick() {
     if (!req_wdata_fifo.empty()) {
       sc_bv<DATAW> wdata = req_wdata_fifo.front();
       bool type = req_type_fifo.front();
-      std::string dst_port_name = "responder_inst.aximm_resp_interface";
+      std::string dst_port_name = "multiplier_inst.axis_multiplier_interface";
       uint64_t dst_addr = radsim_design.GetPortBaseAddress(dst_port_name) +
                           req_addr_fifo.front();
-      std::string src_port_name = "requester_inst.aximm_req_interface";
+      std::string src_port_name = "adder_inst.axis_adder_interface";
       uint64_t src_addr = radsim_design.GetPortBaseAddress(src_port_name);
 
       if (type == 0) {
@@ -150,7 +150,7 @@ void requester::Tick() {
   }
 }
 
-void requester::RegisterModuleInfo() {
+void addder::RegisterModuleInfo() {
   std::string port_name;
   _num_noc_axis_slave_ports = 0;
   _num_noc_axis_master_ports = 0;

@@ -12,16 +12,16 @@ include_directories(
 )
 
 set(srcfiles
-  modules/responder.cpp
-  modules/requester.cpp
+  modules/multiplier.cpp
+  modules/adder.cpp
   accum_multiply_top.cpp
   accum_multiply_driver.cpp
   accum_multiply_system.cpp
 )
 
 set(hdrfiles
-  modules/responder.hpp
-  modules/requester.hpp
+  modules/multiplier.hpp
+  modules/adder.hpp
   accum_multiply_top.hpp
   accum_multiply_driver.hpp
   accum_multiply_system.hpp
