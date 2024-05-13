@@ -7,11 +7,14 @@
 #include <vector>
 
 // This code is copied from the dlrm example
+// Define the fifo as fifo<dtype> *fifo_name; where dtype is the storage type
+// one example would be fifo<uint64_t> *ififo;
 
 // This class defines a vector FIFO module. This is a "peek" FIFO where the read
 // data port always shows the top of the FIFO and the read enable signal is an
 // acknowledgement signal (equivalent to pop in a software queue)
-// Data is read by rdata.read() to a data_vector type
+// Data is read by rdata.read() to a data_vector type, if only need a single value, 
+// the datatype of rdata.read()[0] is <dtype>
 template <class dtype> class fifo : public sc_module {
 private:
   unsigned int capacity; // Depth of the FIFO
