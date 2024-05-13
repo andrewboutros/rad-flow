@@ -29,10 +29,13 @@ private:
 
   // FIFO status signals
   // These signals should've been modified in a system verilog equivalent of always_comb, but we just assign it in tick. 
-  sc_signal<bool> ififo_full;
-  sc_signal<bool> ififo_empty;
-  sc_signal<bool> ofifo_full;
-  sc_signal<bool> ofifo_empty;
+  // These signals are same as dlrm example mvm
+  sc_signal<data_vector<int16_t>> ififo_wdata_signal, ififo_rdata_signal;
+  sc_signal<bool> ififo_wen_signal, ififo_ren_signal, ififo_full_signal,
+      ififo_empty_signal, ififo_almost_full_signal, ififo_almost_empty_signal;
+  sc_signal<data_vector<int16_t>> ofifo_wdata_signal, ofifo_rdata_signal;
+  sc_signal<bool> ofifo_wen_signal, ofifo_ren_signal, ofifo_full_signal,
+      ofifo_empty_signal, ofifo_almost_full_signal, ofifo_almost_empty_signal;
 
   // Internal Variables
   unsigned int num_values_received; // Counter for informing when the accumulated sum is correct
