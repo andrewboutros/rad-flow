@@ -27,13 +27,47 @@ some specific coding considerations:
   }
 */
 
-adder::adder(const sc_module_name &name, unsigned int fifo_depth)
+adder::adder(const sc_module_name &name, unsigned int ififo_depth, unsigned int ofifo_depth)
     : RADSimModule(name) {
+  // Define key constants
+  this->ififo_depth = ififo_depth;
+  this->ofifo_depth = ofifo_depth;
 
-  req_fifo_depth = fifo_depth;
-  num_received_responses = 0;
+  // Initialize value to 0
+  num_values_received = 0;
 
-  // Combinational logic and its sensitivity list
+  // Initialize FIFO modules
+  char fifo_name[25];
+  std::string fifo_name_str;
+  fifo_name_str = "adder" + std::to_string(mvm_id) + "_ififo";
+  std::strcpy(fifo_name, fifo_name_str.c_str());
+  ififo = new fifo<int16_t>(fifo_name, ififo_depth, 16, ofifo_depth-1, 0); // width is 16 for int16, almost_full is 1 less
+  ififo->clk(clk);
+  ififo->rst(rst);
+  ififo->wen(ififo_wen_signal);
+  ififo->ren(ififo_ren_signal);
+  ififo->wdata(ififo_wdata_signal);
+  ififo->full(ififo_full_signal);
+  ififo->almost_full(ififo_almost_full_signal);
+  ififo->empty(ififo_empty_signal);
+  ififo->almost_empty(ififo_almost_empty_signal);
+  ififo->rdata(ififo_rdata_signal);
+
+  fifo_name_str = "adder" + std::to_string(mvm_id) + "_ofifo";
+  std::strcpy(fifo_name, fifo_name_str.c_str());
+  ofifo = new fifo<int16_t>(fifo_name, ofifo_depth, 16, ofifo_depth-1, 0); // width is 16 for int16, almost_full is 1 less
+  ofifo->clk(clk);
+  ofifo->rst(rst);
+  ofifo->wen(ofifo_wen_signal);
+  ofifo->ren(ofifo_ren_signal);
+  ofifo->wdata(ofifo_wdata_signal);
+  ofifo->full(ofifo_full_signal);
+  ofifo->almost_full(ofifo_almost_full_signal);
+  ofifo->empty(ofifo_empty_signal);
+  ofifo->almost_empty(ofifo_almost_empty_signal);
+  ofifo->rdata(ofifo_rdata_signal);
+
+  // Combinational logic and its sensitivity list TODO
   SC_METHOD(Assign);
   sensitive << rst << req_fifo_full;
   // Sequential logic and its clock/reset setup
@@ -48,6 +82,7 @@ adder::adder(const sc_module_name &name, unsigned int fifo_depth)
 adder::~adder() {}
 
 void adder::Assign() {
+  // TODO, might use for axis interface
   if (rst) {
     req_ready.write(true);
     aximm_req_interface.bready.write(false);
@@ -64,6 +99,11 @@ void adder::Assign() {
 
 void adder::Tick() {
   // Reset logic
+  // Set axis signals to default not ready
+  // Clear FIFO content, set signals to not ready
+  // Clear Registers
+  // Reset Count
+
   aximm_req_interface.arvalid.write(false);
   aximm_req_interface.awvalid.write(false);
   aximm_req_interface.wvalid.write(false);
