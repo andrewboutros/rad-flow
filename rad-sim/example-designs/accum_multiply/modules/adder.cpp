@@ -122,6 +122,12 @@ void adder::Tick() {
 
   // Always @ positive edge of the clock
   while (true) {
+    /*
+      check if input ready and input valid, push to ififo
+      if counter is 4, and ofifo isn't full, push to ofifo.
+      check if counter is NOT 4, and input NOT empty, pop from ififo (ren) and into registers (which are shifted), increment counter by 1
+      axis interface write OFIFO content and ren ofifo. (to pop)
+    */
     // Interface with testbench driver
     if (req_ready.read() && req_valid.read()) {
       req_addr_fifo.push(req_addr);
