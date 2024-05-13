@@ -27,13 +27,17 @@ private:
   sc_signal<bool> sum_valid; // Signal flagging if all 4 numbers are ready (triggered by an internal counter)
   fifo<int16_t> *ofifo; // Output FIFO (here we ignore edge case of overflow from adding 4 numbers)
 
+  // FIFO status signals
+  // These signals should've been modified in a system verilog equivalent of always_comb, but we just assign it in tick. 
+  sc_signal<bool> ififo_full;
+  sc_signal<bool> ififo_empty;
+  sc_signal<bool> ofifo_full;
+  sc_signal<bool> ofifo_empty;
+
   // Internal Variables
-  unsigned int num_values_received;
-
-  // TODO
-  // To write to ofifo:
-  // ofifo.read_signal.write(data_vector<int16_t>)
-
+  unsigned int num_values_received; // Counter for informing when the accumulated sum is correct
+  unsigned int ififo_depth; // Number of values that can be stored in ififo, assigned in constructor
+  unsigned int ofifo_depth; // Number of values that can be stored in ofifo, assigned in constructor
 
 public:
   // Signal accessible by external modules
@@ -52,7 +56,7 @@ public:
   // Interface to the NoC
   axis_master_port axis_adder_interface;
 
-  adder(const sc_module_name &name, unsigned int fifo_depth);
+  adder(const sc_module_name &name, unsigned int ififo_depth, unsigned int ofifo_depth);
   ~adder();
 
   void Assign(); // Combinational logic process
