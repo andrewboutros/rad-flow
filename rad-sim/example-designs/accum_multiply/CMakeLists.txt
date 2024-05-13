@@ -14,17 +14,17 @@ include_directories(
 set(srcfiles
   modules/responder.cpp
   modules/requester.cpp
-  aximm_hello_world_top.cpp
-  aximm_hello_world_driver.cpp
-  aximm_hello_world_system.cpp
+  accum_multiply_top.cpp
+  accum_multiply_driver.cpp
+  accum_multiply_system.cpp
 )
 
 set(hdrfiles
   modules/responder.hpp
   modules/requester.hpp
-  aximm_hello_world_top.hpp
-  aximm_hello_world_driver.hpp
-  aximm_hello_world_system.hpp
+  accum_multiply_top.hpp
+  accum_multiply_driver.hpp
+  accum_multiply_system.hpp
 )
 
 add_compile_options(-Wall -Wextra -pedantic)

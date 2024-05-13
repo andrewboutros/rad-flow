@@ -28,8 +28,8 @@ noc_adapters:
   vc_mapping: ['direct']
 
 design:
-  name: 'aximm_hello_world'
-  noc_placement: ['aximm_hello_world.place']
+  name: 'accum_multiply'
+  noc_placement: ['accum_multiply.place']
   clk_periods: [5.0]
 
 telemetry:
