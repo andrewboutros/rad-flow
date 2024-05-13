@@ -16,6 +16,15 @@ tick:
   if counter is 4, and ofifo isn't full, push to ofifo.
   check if counter is NOT 4, and input NOT empty, pop from ififo (ren) and into registers (which are shifted), increment counter by 1
   axis interface write OFIFO content and ren ofifo. (to pop)
+
+some specific coding considerations:
+  ren for ififo should be in an if else statement, default ren to false. 
+  if(count is right and i not empty){
+    read from ififo input signal
+    ren=true // this removes rdata on next clock edge, so next cycle if we should read it will be new data. 
+  }else{
+    ren=false
+  }
 */
 
 adder::adder(const sc_module_name &name, unsigned int fifo_depth)
