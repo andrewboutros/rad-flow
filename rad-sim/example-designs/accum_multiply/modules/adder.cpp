@@ -177,6 +177,11 @@ void adder::Tick() {
       // Always attempt to output values
       // AXIS code copied from mvm, assume LANES=1 for 1 single value here, bitwitdh=16 for int16_t
       // Problem that might occur: in mvm this was in assign block
+      std::string dest_name;
+      unsigned int dest_id;
+      dest_name = "layer" + std::to_string(dest_layer_int - 1) + "_mvm" +
+                  std::to_string(dest_mvm_int) + ".rx_interface";
+      dest_id = radsim_design.GetPortDestinationID(dest_name);
       data_vector<int16_t> tx_tdata = ofifo_rdata_signal.read();
       sc_bv<AXIS_MAX_DATAW> axis_adder_interface_tdata_bv;
       for (unsigned int lane_id = 0; lane_id < 1; lane_id++) {
