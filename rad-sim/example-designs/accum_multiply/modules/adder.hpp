@@ -10,6 +10,7 @@
 #include <vector>
 
 #define DATAW 512
+#define NUMSUM 4
 
 // This code is based on the requester from the aximm_hello_world example
 
@@ -23,7 +24,7 @@ class adder : public RADSimModule {
 private:
   // Modules and Signals Only (supposed to be) Internally Accessible
   fifo<int16_t> *ififo; // Input FIFO
-  sc_int<16> internal_registers[4]; // Storing 4 numbers that is to be summed and outputted
+  sc_int<16> internal_registers[NUMSUM]; // Storing 4 numbers that is to be summed and outputted
   sc_signal<bool> sum_valid; // Signal flagging if all 4 numbers are ready (triggered by an internal counter)
   fifo<int16_t> *ofifo; // Output FIFO (here we ignore edge case of overflow from adding 4 numbers)
 
@@ -50,11 +51,6 @@ public:
   sc_in<sc_int<16>> input;
   sc_in<bool> input_valid;
   sc_out<bool> input_ready;
-
-  // Output side signals
-  sc_out<sc_int<16>> output;
-  sc_in<bool> output_ready;
-  sc_out<bool> output_valid;
 
   // Interface to the NoC
   axis_master_port axis_adder_interface;
