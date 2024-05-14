@@ -34,6 +34,9 @@ adder::adder(const sc_module_name &name, unsigned int ififo_depth, unsigned int 
   this->ofifo_depth = ofifo_depth;
 
   // Initialize value to 0
+  for (int i = 0; i < NUMSUM; i++) {
+    internal_registers[i] = 0;
+  }
   num_values_received = 0;
   temp_sum = 0;
 
