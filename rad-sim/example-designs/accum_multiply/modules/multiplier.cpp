@@ -33,10 +33,6 @@ multiplier::multiplier(const sc_module_name &name, unsigned int ififo_depth, uns
   this->ififo_depth = ififo_depth;
   this->ofifo_depth = ofifo_depth;
 
-  // Initialize value to 0
-  num_values_received = 0;
-  temp_sum = 0;
-
   // Initialize FIFO modules
   char fifo_name[25];
   std::string fifo_name_str;
@@ -83,19 +79,6 @@ multiplier::multiplier(const sc_module_name &name, unsigned int ififo_depth, uns
 multiplier::~multiplier() {}
 
 void multiplier::Assign() {
-  // TODO, might use for axis interface
-  if (rst) {
-    req_ready.write(true);
-    aximm_req_interface.bready.write(false);
-    aximm_req_interface.rready.write(false);
-  } else {
-    // Ready to accept new request from driver testbench as long as the request
-    // FIFO is not full
-    req_ready.write(!req_fifo_full.read());
-    // Always ready to accept read/write response from the AXI-MM NoC interface
-    aximm_req_interface.bready.write(true);
-    aximm_req_interface.rready.write(true);
-  }
 }
 
 void multiplier::Tick() {
@@ -177,6 +160,10 @@ void multiplier::Tick() {
       // Always attempt to output values
       // AXIS code copied from mvm, assume LANES=1 for 1 single value here, bitwitdh=16 for int16_t
       // Problem that might occur: in mvm this was in assign block
+      std::string dest_name;
+      unsigned int dest_id;
+      dest_name = "multiplier_inst.axis_multiplier_interface";
+      dest_id = radsim_design.GetPortDestinationID(dest_name);
       data_vector<int16_t> tx_tdata = ofifo_rdata_signal.read();
       sc_bv<AXIS_MAX_DATAW> axis_multiplier_interface_tdata_bv;
       for (unsigned int lane_id = 0; lane_id < 1; lane_id++) {

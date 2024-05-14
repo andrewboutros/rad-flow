@@ -83,19 +83,6 @@ adder::adder(const sc_module_name &name, unsigned int ififo_depth, unsigned int 
 adder::~adder() {}
 
 void adder::Assign() {
-  // TODO, might use for axis interface
-  if (rst) {
-    req_ready.write(true);
-    aximm_req_interface.bready.write(false);
-    aximm_req_interface.rready.write(false);
-  } else {
-    // Ready to accept new request from driver testbench as long as the request
-    // FIFO is not full
-    req_ready.write(!req_fifo_full.read());
-    // Always ready to accept read/write response from the AXI-MM NoC interface
-    aximm_req_interface.bready.write(true);
-    aximm_req_interface.rready.write(true);
-  }
 }
 
 void adder::Tick() {
