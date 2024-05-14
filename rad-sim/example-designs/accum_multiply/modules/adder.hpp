@@ -48,7 +48,7 @@ public:
   sc_in<bool> rst; // Reset Signal
 
   // Input side signals
-  sc_in<sc_int<16>> input;
+  sc_in<int16_t> input;
   sc_in<bool> input_valid;
   sc_out<bool> input_ready;
 
