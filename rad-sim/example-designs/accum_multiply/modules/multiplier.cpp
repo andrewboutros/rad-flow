@@ -144,7 +144,7 @@ void multiplier::Tick() {
       ofifo_wen_signal.write(false);
     }
 
-    // Process output from OFIFO
+    // Process output from OFIFO - TODO: here we will just use regular hardcoded handshake with driver
     if (!ofifo_empty_signal.read()) {
       // Always attempt to output values
       // AXIS code copied from mvm, assume LANES=1 for 1 single value here, bitwitdh=16 for int16_t
