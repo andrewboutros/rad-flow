@@ -28,13 +28,14 @@ some specific coding considerations:
 */
 
 adder::adder(const sc_module_name &name, unsigned int ififo_depth, unsigned int ofifo_depth)
-    : RADSimModule(name) {
+    : RADSimModule(name), input_data_temp(1), output_data_temp(1), rst("rst") { // data_temp(1), I assume it means to init it with size 1
   // Define key constants
   this->ififo_depth = ififo_depth;
   this->ofifo_depth = ofifo_depth;
 
   // Initialize value to 0
   num_values_received = 0;
+  temp_sum = 0;
 
   // Initialize FIFO modules
   char fifo_name[25];
@@ -99,26 +100,32 @@ void adder::Assign() {
 
 void adder::Tick() {
   // Reset logic
-  // Set axis signals to default not ready
+  // Set axis signals to default not ready, following tx_input_interface in mvm.cpp
+  axis_adder_interface.tdata.write(0); // No data written
+  axis_adder_interface.tvalid.write(false); // Data isn't being written
+  axis_adder_interface.tstrb.write(0b11); // Strobe (we transfer 16 bit int)
+  axis_adder_interface.tkeep.write(0b11); // Keep (all bytes are valid)
+  axis_adder_interface.tlast.write(0); // We aren't sending data, default is 0
+  axis_adder_interface.tuser.write(0); // User defined signal, default 0
   // Clear FIFO content, set signals to not ready
-  // Clear Registers
-  // Reset Count
-
-  aximm_req_interface.arvalid.write(false);
-  aximm_req_interface.awvalid.write(false);
-  aximm_req_interface.wvalid.write(false);
-  while (!req_addr_fifo.empty()) {
-    req_addr_fifo.pop();
-    req_type_fifo.pop();
-    req_wdata_fifo.pop();
+    // FIFO is cleared already by their rst signal
+  ififo_wen_signal.write(0);
+  ififo_ren_signal.write(0);
+  ififo_wdata_signal.write(0);
+  ofifo_wen_signal.write(0);
+  ofifo_ren_signal.write(0);
+  ofifo_wdata_signal.write(0);
+  // Clear Registers -- actually not necessary because we only look at output when count is correct
+  for (int i = 0; i < NUMSUM; i++) {
+    internal_registers[i] = 0;
   }
-  req_fifo_full.write(false);
-  aw_accepted.write(false);
-  id_counter.write(0);
-  received_responses.write(0);
+  // Reset Count
+  num_values_received = 0;
+  // Reset input signals
+  input_ready.write(0);
   wait();
 
-  std::string port_name = module_name + ".aximm_req_interface";
+  std::string port_name = module_name + ".axis_adder_interface";
 
   // Always @ positive edge of the clock
   while (true) {
@@ -128,97 +135,65 @@ void adder::Tick() {
       check if counter is NOT 4, and input NOT empty, pop from ififo (ren) and into registers (which are shifted), increment counter by 1
       axis interface write OFIFO content and ren ofifo. (to pop)
     */
-    // Interface with testbench driver
-    if (req_ready.read() && req_valid.read()) {
-      req_addr_fifo.push(req_addr);
-      req_wdata_fifo.push(req_wdata);
-      req_type_fifo.push(req_type);
-      std::cout << module_name << ": Pushed request to FIFO" << std::endl;
-    }
-    req_fifo_full.write(req_addr_fifo.size() >= req_fifo_depth);
 
-    // Sending transactions to AXI-MM NoC
-    if (!req_wdata_fifo.empty()) {
-      sc_bv<DATAW> wdata = req_wdata_fifo.front();
-      bool type = req_type_fifo.front();
-      std::string dst_port_name = "multiplier_inst.axis_multiplier_interface";
-      uint64_t dst_addr = radsim_design.GetPortBaseAddress(dst_port_name) +
-                          req_addr_fifo.front();
-      std::string src_port_name = "adder_inst.axis_adder_interface";
-      uint64_t src_addr = radsim_design.GetPortBaseAddress(src_port_name);
-
-      if (type == 0) {
-        aximm_req_interface.araddr.write(dst_addr);
-        aximm_req_interface.arid.write(id_counter.read());
-        aximm_req_interface.arlen.write(0);
-        aximm_req_interface.arburst.write(0);
-        aximm_req_interface.arsize.write(DATAW / 8);
-        aximm_req_interface.aruser.write(src_addr);
-        aximm_req_interface.arvalid.write(true);
-
-        aximm_req_interface.awvalid.write(false);
-        aximm_req_interface.wvalid.write(false);
-      } else {
-        aximm_req_interface.awaddr.write(dst_addr);
-        aximm_req_interface.awid.write(id_counter.read());
-        aximm_req_interface.awlen.write(0);
-        aximm_req_interface.awburst.write(0);
-        aximm_req_interface.awsize.write(DATAW / 8);
-        aximm_req_interface.awuser.write(src_addr);
-        aximm_req_interface.awvalid.write(!aw_accepted.read());
-
-        aximm_req_interface.wid.write(id_counter.read());
-        aximm_req_interface.wdata.write(wdata);
-        aximm_req_interface.wlast.write(true);
-        aximm_req_interface.wuser.write(src_addr);
-        aximm_req_interface.wvalid.write(true);
-
-        aximm_req_interface.arvalid.write(false);
-      }
+    // Process Input
+    if (input_ready.read() && input_valid.read()) {
+      // When testbench can send input
+      ififo_wen_signal.write(true); // Write to IFIFO
+      input_data_temp[0] = input.read(); // Convert data type to a data_vector<>
+      ififo_wdata_signal.write(input_data_temp); // Data is input
     } else {
-      aximm_req_interface.arvalid.write(false);
-      aximm_req_interface.awvalid.write(false);
-      aximm_req_interface.wvalid.write(false);
+      ififo_wen_signal.write(false); // Else, don't read
     }
 
-    if (aximm_req_interface.awvalid.read() &&
-        aximm_req_interface.awready.read()) {
-      aw_accepted.write(true);
-      id_counter.write(id_counter.read() + 1);
-      std::cout << module_name << ": Sent AW Transaction!" << std::endl;
-    } else if (aximm_req_interface.wvalid.read() &&
-               aximm_req_interface.wready.read()) {
-      aw_accepted.write(false);
-      req_addr_fifo.pop();
-      req_type_fifo.pop();
-      req_wdata_fifo.pop();
-      id_counter.write(id_counter.read() + 1);
-      std::cout << module_name << ": Sent W Transaction!" << std::endl;
-    } else if (aximm_req_interface.arvalid.read() &&
-               aximm_req_interface.arready.read()) {
-      req_addr_fifo.pop();
-      req_type_fifo.pop();
-      req_wdata_fifo.pop();
-      id_counter.write(id_counter.read() + 1);
-      std::cout << module_name << ": Sent AR Transaction!" << std::endl;
+    // Process read to registers
+    if (num_values_received < NUMSUM && !ififo_empty_signal.read()) {
+      // If we have space to write values and we do have value to write
+      ififo_ren_signal.write(true); // Tell to read data
+      for (int i = NUMSUM-1; i > 0; i--) {
+        internal_registers[i] = internal_registers[i-1]; // Shift all value by 1
+      }
+      internal_registers[0] = ififo_rdata_signal.read()[0]; // rdata_signal returns a data_vector of int16_t
+      num_values_received++; // New value received, increment
+    } else {
+      ififo_ren_signal.write(false); // Else don't pop any values
     }
 
-    // Receiving transactions from AXI-MM NoC
-    if (aximm_req_interface.rvalid.read() &&
-        aximm_req_interface.rready.read()) {
-      std::cout << "Received READ RESPONSE: " << std::endl;
-      std::cout << "\trid: " << aximm_req_interface.rid.read() << std::endl;
-      std::cout << "\truser: " << aximm_req_interface.ruser.read() << std::endl;
-      std::cout << "\trdata: " << aximm_req_interface.rdata.read() << std::endl;
-      num_received_responses++;
-    } else if (aximm_req_interface.bvalid.read() &&
-               aximm_req_interface.bready.read()) {
-      std::cout << "Received WRITE RESPONSE: " << std::endl;
-      std::cout << "\tbid: " << aximm_req_interface.bid.read() << std::endl;
-      std::cout << "\tbuser: " << aximm_req_interface.buser.read() << std::endl;
-      num_received_responses++;
+    // Process compute to OFIFO
+    if (num_values_received == NUMSUM && !ofifo_almost_full_signal.read()) {
+      ofifo_wen_signal.write(true);
+      temp_sum = 0;
+      for (int i = 0; i < NUMSUM; i++){
+        temp_sum += internal_registers[i];
+      }
+      output_data_temp[0] = temp_sum; 
+      ofifo_wdata_signal.write(output_data_temp);
+    } else {
+      ofifo_wen_signal.write(false);
     }
-    received_responses.write(num_received_responses);
+
+    // Process output from OFIFO
+    if (!ofifo_empty_signal.read()) {
+      // Always attempt to output values
+      // AXIS code copied from mvm, assume LANES=1 for 1 single value here, bitwitdh=16 for int16_t
+      // Problem that might occur: in mvm this was in assign block
+      data_vector<int16_t> tx_tdata = ofifo_rdata_signal.read();
+      sc_bv<AXIS_MAX_DATAW> axis_adder_interface_tdata_bv;
+      for (unsigned int lane_id = 0; lane_id < 1; lane_id++) {
+        axis_adder_interface_tdata_bv.range((lane_id + 1) * 16 - 1, lane_id * 16) =
+            tx_tdata[lane_id];
+      }
+      axis_adder_interface.tdata.write(tx_tdata_bv);
+      axis_adder_interface.tvalid.write(true);
+      axis_adder_interface.tuser.write(dest_interface); // Need to confirm how to modify interface and id
+      axis_adder_interface.tdest.write(dest_id);
+      axis_adder_interface.tid.write(dest_interface_id);
+    } else {
+      // Don't write
+      axis_adder_interface.tvalid.write(false);
+    }
+    // Pop ofifo content when both valid and ready for interface
+    ofifo_ren_signal.write(axis_adder_interface.tvalid.read() && axis_adder_interface.tready.read());
     wait();
   }
 }
@@ -227,9 +202,7 @@ void addder::RegisterModuleInfo() {
   std::string port_name;
   _num_noc_axis_slave_ports = 0;
   _num_noc_axis_master_ports = 0;
-  _num_noc_aximm_slave_ports = 0;
-  _num_noc_aximm_master_ports = 0;
 
-  port_name = module_name + ".aximm_req_interface";
-  RegisterAximmMasterPort(port_name, &aximm_req_interface, DATAW);
+  port_name = module_name + ".axis_adder_interface";
+  RegisterAxisMasterPort(port_name, &axis_adder_interface, DATAW, 0);
 }
