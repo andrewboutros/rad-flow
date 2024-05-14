@@ -42,6 +42,7 @@ private:
   unsigned int num_values_received; // Counter for informing when the accumulated sum is correct
   unsigned int ififo_depth; // Number of values that can be stored in ififo, assigned in constructor
   unsigned int ofifo_depth; // Number of values that can be stored in ofifo, assigned in constructor
+  data_vector<int16_t> tdata_vec; // Temp data vector to convert values to data_vector
 
 public:
   // Signal accessible by external modules
