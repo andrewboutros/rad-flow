@@ -179,8 +179,7 @@ void adder::Tick() {
       // Problem that might occur: in mvm this was in assign block
       std::string dest_name;
       unsigned int dest_id;
-      dest_name = "layer" + std::to_string(dest_layer_int - 1) + "_mvm" +
-                  std::to_string(dest_mvm_int) + ".rx_interface";
+      dest_name = "multiplier_inst.axis_multiplier_interface";
       dest_id = radsim_design.GetPortDestinationID(dest_name);
       data_vector<int16_t> tx_tdata = ofifo_rdata_signal.read();
       sc_bv<AXIS_MAX_DATAW> axis_adder_interface_tdata_bv;
