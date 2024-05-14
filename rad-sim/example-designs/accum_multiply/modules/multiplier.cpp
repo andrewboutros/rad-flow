@@ -33,6 +33,9 @@ multiplier::multiplier(const sc_module_name &name, unsigned int ififo_depth, uns
   this->ififo_depth = ififo_depth;
   this->ofifo_depth = ofifo_depth;
 
+  // Set to 0
+  internal_register = 0;
+
   // Initialize FIFO modules
   char fifo_name[25];
   std::string fifo_name_str;
@@ -83,13 +86,8 @@ void multiplier::Assign() {
 
 void multiplier::Tick() {
   // Reset logic
-  // Set axis signals to default not ready, following tx_input_interface in mvm.cpp
-  axis_multiplier_interface.tdata.write(0); // No data written
-  axis_multiplier_interface.tvalid.write(false); // Data isn't being written
-  axis_multiplier_interface.tstrb.write(0b11); // Strobe (we transfer 16 bit int)
-  axis_multiplier_interface.tkeep.write(0b11); // Keep (all bytes are valid)
-  axis_multiplier_interface.tlast.write(0); // We aren't sending data, default is 0
-  axis_multiplier_interface.tuser.write(0); // User defined signal, default 0
+  // Set axis signals to default not ready, following rx_input_interface in mvm.cpp
+  axis_multiplier_interface.tready.write(false); // Initially not ready
   // Clear FIFO content, set signals to not ready
     // FIFO is cleared already by their rst signal
   ififo_wen_signal.write(0);
@@ -99,11 +97,7 @@ void multiplier::Tick() {
   ofifo_ren_signal.write(0);
   ofifo_wdata_signal.write(0);
   // Clear Registers -- actually not necessary because we only look at output when count is correct
-  for (int i = 0; i < NUMSUM; i++) {
-    internal_registers[i] = 0;
-  }
-  // Reset Count
-  num_values_received = 0;
+  internal_register = 0;
   // Reset input signals
   input_ready.write(0);
   wait();
@@ -119,39 +113,34 @@ void multiplier::Tick() {
       axis interface write OFIFO content and ren ofifo. (to pop)
     */
 
-    // Process Input
-    if (input_ready.read() && input_valid.read()) {
-      // When testbench can send input
-      ififo_wen_signal.write(true); // Write to IFIFO
-      input_data_temp[0] = input.read(); // Convert data type to a data_vector<>
-      ififo_wdata_signal.write(input_data_temp); // Data is input
-    } else {
-      ififo_wen_signal.write(false); // Else, don't read
+    // Process Input - use axis, similar code from mvm.cpp rx_input_interface
+    if (axis_multiplier_interface.tready.read() && axis_multiplier_interface.tvalid.read()) {
+      sc_bv<AXIS_MAX_DATAW> tdata = axis_multiplier_interface.tdata.read();
+      // convert bv to data vector
+      // store to ififo. (remember to set wen to true, and false in else)
+      // also remember to set tready based on ififo full or not
     }
 
-    // Process read to registers
-    if (num_values_received < NUMSUM && !ififo_empty_signal.read()) {
+    // TODO the following input code is no longer needed
+    // if (input_ready.read() && input_valid.read()) {
+    //   // When testbench can send input
+    //   ififo_wen_signal.write(true); // Write to IFIFO
+    //   input_data_temp[0] = input.read(); // Convert data type to a data_vector<>
+    //   ififo_wdata_signal.write(input_data_temp); // Data is input
+    // } else {
+    //   ififo_wen_signal.write(false); // Else, don't read
+    // }
+
+    // Process read to registers, and store directly to ofifo
+    if (!ofifo_almost_full_signal.read() && !ififo_empty_signal.read()) {
       // If we have space to write values and we do have value to write
+      ofifo_wen_signal.write(true);
+      output_data_temp[0] = internal_register * ififo_rdata_signal.read()[0]; 
+      ofifo_wdata_signal.write(output_data_temp);
       ififo_ren_signal.write(true); // Tell to read data
-      for (int i = NUMSUM-1; i > 0; i--) {
-        internal_registers[i] = internal_registers[i-1]; // Shift all value by 1
-      }
-      internal_registers[0] = ififo_rdata_signal.read()[0]; // rdata_signal returns a data_vector of int16_t
-      num_values_received++; // New value received, increment
+      internal_register = ififo_rdata_signal.read()[0]; // rdata_signal returns a data_vector of int16_t
     } else {
       ififo_ren_signal.write(false); // Else don't pop any values
-    }
-
-    // Process compute to OFIFO
-    if (num_values_received == NUMSUM && !ofifo_almost_full_signal.read()) {
-      ofifo_wen_signal.write(true);
-      temp_sum = 0;
-      for (int i = 0; i < NUMSUM; i++){
-        temp_sum += internal_registers[i];
-      }
-      output_data_temp[0] = temp_sum; 
-      ofifo_wdata_signal.write(output_data_temp);
-    } else {
       ofifo_wen_signal.write(false);
     }
 
