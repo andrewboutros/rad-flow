@@ -136,6 +136,9 @@ void adder::Tick() {
       ififo_wen_signal.write(false); // Else, don't read
     }
 
+    // Update input status
+    input_ready.write(!ififo_almost_full_signal.read());
+
     // Process read to registers
     if (num_values_received < NUMSUM && !ififo_empty_signal.read()) {
       // If we have space to write values and we do have value to write
