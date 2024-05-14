@@ -158,6 +158,7 @@ void adder::Tick() {
       }
       output_data_temp[0] = temp_sum; 
       ofifo_wdata_signal.write(output_data_temp);
+      num_values_received = 0;
     } else {
       ofifo_wen_signal.write(false);
     }
