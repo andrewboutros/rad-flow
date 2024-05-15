@@ -37,15 +37,11 @@ private:
   // Internal Variables
   unsigned int ififo_depth; // Number of values that can be stored in ififo, assigned in constructor
   unsigned int ofifo_depth; // Number of values that can be stored in ofifo, assigned in constructor
+  data_vector<int16_t> output_data_temp; // Temp data vector to convert values to data_vector
 
 public:
   // Signal accessible by external modules
   sc_in<bool> rst; // Reset Signal
-
-  // Input side signals
-  sc_in<sc_int<16>> input;
-  sc_in<bool> input_valid;
-  sc_out<bool> input_ready;
 
   // Output side signals
   sc_out<sc_int<16>> output;
