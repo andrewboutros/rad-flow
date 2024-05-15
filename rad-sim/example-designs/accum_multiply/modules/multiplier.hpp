@@ -37,6 +37,7 @@ private:
   // Internal Variables
   unsigned int ififo_depth; // Number of values that can be stored in ififo, assigned in constructor
   unsigned int ofifo_depth; // Number of values that can be stored in ofifo, assigned in constructor
+  data_vector<int16_t> input_data_temp; // Temp data vector to convert values to data_vector
   data_vector<int16_t> output_data_temp; // Temp data vector to convert values to data_vector
 
 public:
