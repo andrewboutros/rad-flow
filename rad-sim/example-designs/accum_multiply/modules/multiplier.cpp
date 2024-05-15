@@ -28,7 +28,7 @@ some specific coding considerations:
 */
 
 multiplier::multiplier(const sc_module_name &name, unsigned int ififo_depth, unsigned int ofifo_depth)
-    : RADSimModule(name), input_data_temp(1), output_data_temp(1), rst("rst") { // data_temp(1), I assume it means to init it with size 1
+    : RADSimModule(name), output_data_temp(1), rst("rst") { // data_temp(1), I assume it means to init it with size 1
   // Define key constants
   this->ififo_depth = ififo_depth;
   this->ofifo_depth = ofifo_depth;
@@ -145,31 +145,16 @@ void multiplier::Tick() {
     }
 
     // Process output from OFIFO - TODO: here we will just use regular hardcoded handshake with driver
-    if (!ofifo_empty_signal.read()) {
-      // Always attempt to output values
-      // AXIS code copied from mvm, assume LANES=1 for 1 single value here, bitwitdh=16 for int16_t
-      // Problem that might occur: in mvm this was in assign block
-      std::string dest_name;
-      unsigned int dest_id;
-      dest_name = "multiplier_inst.axis_multiplier_interface";
-      dest_id = radsim_design.GetPortDestinationID(dest_name);
-      data_vector<int16_t> tx_tdata = ofifo_rdata_signal.read();
-      sc_bv<AXIS_MAX_DATAW> axis_multiplier_interface_tdata_bv;
-      for (unsigned int lane_id = 0; lane_id < 1; lane_id++) {
-        axis_multiplier_interface_tdata_bv.range((lane_id + 1) * 16 - 1, lane_id * 16) =
-            tx_tdata[lane_id];
-      }
-      axis_multiplier_interface.tdata.write(tx_tdata_bv);
-      axis_multiplier_interface.tvalid.write(true);
-      axis_multiplier_interface.tuser.write(dest_interface); // Need to confirm how to modify interface and id
-      axis_multiplier_interface.tdest.write(dest_id);
-      axis_multiplier_interface.tid.write(dest_interface_id);
+    if (output_ready.read() && output_valid.read()) {
+      // Read from ofifo and convert data_vector to int16
+      ofifo_ren_signal.write(true);
+      output_data_temp[0] = ofifo_rdata_signal.read();
+      output.write(output_data_temp[0]);
     } else {
-      // Don't write
-      axis_multiplier_interface.tvalid.write(false);
+      ofifo_ren_signal.write(false);
     }
-    // Pop ofifo content when both valid and ready for interface
-    ofifo_ren_signal.write(axis_multiplier_interface.tvalid.read() && axis_multiplier_interface.tready.read());
+    output_valid.write(!ofifo_empty_signal.read()); // Output is valid when not empty
+    
     wait();
   }
 }
