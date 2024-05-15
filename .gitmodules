@@ -1,0 +1,3 @@
+[submodule "rad_gen"]
+	path = rad_gen
+	url = git@github.com:StephenMoreOSU/rad_gen.git
