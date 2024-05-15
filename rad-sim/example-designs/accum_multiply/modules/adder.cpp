@@ -28,7 +28,7 @@ some specific coding considerations:
 */
 
 adder::adder(const sc_module_name &name, unsigned int ififo_depth, unsigned int ofifo_depth)
-    : RADSimModule(name), input_data_temp(1), output_data_temp(1), rst("rst") { // data_temp(1), I assume it means to init it with size 1
+    : RADSimModule(name), input_data_temp(1), rst("rst") { // data_temp(1), I assume it means to init it with size 1
   // Define key constants
   this->ififo_depth = ififo_depth;
   this->ofifo_depth = ofifo_depth;
@@ -192,6 +192,7 @@ void adder::Tick() {
     }
     // Pop ofifo content when both valid and ready for interface
     ofifo_ren_signal.write(axis_adder_interface.tvalid.read() && axis_adder_interface.tready.read());
+    
     wait();
   }
 }
