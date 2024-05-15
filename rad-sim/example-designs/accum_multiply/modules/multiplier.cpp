@@ -144,7 +144,7 @@ void multiplier::Tick() {
       ofifo_wen_signal.write(false);
     }
 
-    // Process output from OFIFO - TODO: here we will just use regular hardcoded handshake with driver
+    // Process output from OFIFO
     if (output_ready.read() && output_valid.read()) {
       // Read from ofifo and convert data_vector to int16
       ofifo_ren_signal.write(true);
@@ -154,7 +154,7 @@ void multiplier::Tick() {
       ofifo_ren_signal.write(false);
     }
     output_valid.write(!ofifo_empty_signal.read()); // Output is valid when not empty
-    
+
     wait();
   }
 }
