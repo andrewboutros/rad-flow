@@ -115,21 +115,22 @@ void multiplier::Tick() {
 
     // Process Input - use axis, similar code from mvm.cpp rx_input_interface
     if (axis_multiplier_interface.tready.read() && axis_multiplier_interface.tvalid.read()) {
+      // mvm code converting axis bv to data_vector
       sc_bv<AXIS_MAX_DATAW> tdata = axis_multiplier_interface.tdata.read();
-      // convert bv to data vector
-      // store to ififo. (remember to set wen to true, and false in else)
-      // also remember to set tready based on ififo full or not
+      for (unsigned int lane_id = 0; lane_id < 1; lane_id++) {
+          tdata_vec[lane_id] =
+              tdata.range((lane_id + 1) * 16 - 1, lane_id * 16)
+                  .to_int();
+      }
+      // Store to ififo
+      ififo_wdata_signal.write(tdata_vec);
+      // Write enable
+      ififo_wen_signal.write(true);
+    } else {
+      // Disable write if not ready
+      ififo_wen_signal.write(false);
     }
-
-    // TODO the following input code is no longer needed
-    // if (input_ready.read() && input_valid.read()) {
-    //   // When testbench can send input
-    //   ififo_wen_signal.write(true); // Write to IFIFO
-    //   input_data_temp[0] = input.read(); // Convert data type to a data_vector<>
-    //   ififo_wdata_signal.write(input_data_temp); // Data is input
-    // } else {
-    //   ififo_wen_signal.write(false); // Else, don't read
-    // }
+    axis_multiplier_interface.tready.write(!ififo_almost_full_signal.read());
 
     // Process read to registers, and store directly to ofifo
     if (!ofifo_almost_full_signal.read() && !ififo_empty_signal.read()) {
