@@ -50,7 +50,7 @@ public:
   sc_out<bool> output_valid;
 
   // Interface to the NoC
-  axis_master_port axis_multiplier_interface;
+  axis_slave_port axis_multiplier_interface;
 
   multiplier(const sc_module_name &name, unsigned int ififo_depth, unsigned int ofifo_depth);
   ~multiplier();

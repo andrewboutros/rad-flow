@@ -39,7 +39,7 @@ multiplier::multiplier(const sc_module_name &name, unsigned int ififo_depth, uns
   // Initialize FIFO modules
   char fifo_name[25];
   std::string fifo_name_str;
-  fifo_name_str = "multiplier" + std::to_string(mvm_id) + "_ififo";
+  fifo_name_str = "multiplier_ififo";
   std::strcpy(fifo_name, fifo_name_str.c_str());
   ififo = new fifo<int16_t>(fifo_name, ififo_depth, 16, ofifo_depth-1, 0); // width is 16 for int16, almost_full is 1 less
   ififo->clk(clk);
@@ -53,7 +53,7 @@ multiplier::multiplier(const sc_module_name &name, unsigned int ififo_depth, uns
   ififo->almost_empty(ififo_almost_empty_signal);
   ififo->rdata(ififo_rdata_signal);
 
-  fifo_name_str = "multiplier" + std::to_string(mvm_id) + "_ofifo";
+  fifo_name_str = "multiplier_ofifo";
   std::strcpy(fifo_name, fifo_name_str.c_str());
   ofifo = new fifo<int16_t>(fifo_name, ofifo_depth, 16, ofifo_depth-1, 0); // width is 16 for int16, almost_full is 1 less
   ofifo->clk(clk);
