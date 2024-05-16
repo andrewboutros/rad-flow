@@ -26,7 +26,7 @@ accum_multiply_system::accum_multiply_system(const sc_module_name &name,
   dut_inst->output_valid(output_valid);
 }
 
-aximm_hello_world_system::~aximm_hello_world_system() {
+accum_multiply_system::~accum_multiply_system() {
   delete driver_inst;
   delete dut_inst;
   delete sysclk;

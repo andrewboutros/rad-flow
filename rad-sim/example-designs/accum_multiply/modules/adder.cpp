@@ -28,7 +28,7 @@ some specific coding considerations:
 */
 
 adder::adder(const sc_module_name &name, unsigned int ififo_depth, unsigned int ofifo_depth)
-    : RADSimModule(name), input_data_temp(1), rst("rst") { // data_temp(1), I assume it means to init it with size 1
+    : RADSimModule(name), input_data_temp(1), output_data_temp(1), rst("rst") { // data_temp(1), I assume it means to init it with size 1
   // Define key constants
   this->ififo_depth = ififo_depth;
   this->ofifo_depth = ofifo_depth;
@@ -43,7 +43,7 @@ adder::adder(const sc_module_name &name, unsigned int ififo_depth, unsigned int 
   // Initialize FIFO modules
   char fifo_name[25];
   std::string fifo_name_str;
-  fifo_name_str = "adder" + std::to_string(mvm_id) + "_ififo";
+  fifo_name_str = "adder_ififo";
   std::strcpy(fifo_name, fifo_name_str.c_str());
   ififo = new fifo<int16_t>(fifo_name, ififo_depth, 16, ofifo_depth-1, 0); // width is 16 for int16, almost_full is 1 less
   ififo->clk(clk);
@@ -57,7 +57,7 @@ adder::adder(const sc_module_name &name, unsigned int ififo_depth, unsigned int 
   ififo->almost_empty(ififo_almost_empty_signal);
   ififo->rdata(ififo_rdata_signal);
 
-  fifo_name_str = "adder" + std::to_string(mvm_id) + "_ofifo";
+  fifo_name_str = "adder_ofifo";
   std::strcpy(fifo_name, fifo_name_str.c_str());
   ofifo = new fifo<int16_t>(fifo_name, ofifo_depth, 16, ofifo_depth-1, 0); // width is 16 for int16, almost_full is 1 less
   ofifo->clk(clk);
@@ -73,7 +73,7 @@ adder::adder(const sc_module_name &name, unsigned int ififo_depth, unsigned int 
 
   // Combinational logic and its sensitivity list TODO
   SC_METHOD(Assign);
-  sensitive << rst << req_fifo_full;
+  sensitive << rst << ififo_full_signal;
   // Sequential logic and its clock/reset setup
   SC_CTHREAD(Tick, clk.pos());
   reset_signal_is(rst, true); // Reset is active high
@@ -146,7 +146,8 @@ void adder::Tick() {
       for (int i = NUMSUM-1; i > 0; i--) {
         internal_registers[i] = internal_registers[i-1]; // Shift all value by 1
       }
-      internal_registers[0] = ififo_rdata_signal.read()[0]; // rdata_signal returns a data_vector of int16_t
+      data_vector<int16_t> tdata = ififo_rdata_signal.read(); 
+      internal_registers[0] = tdata[0]; // rdata_signal returns a data_vector of int16_t
       num_values_received++; // New value received, increment
     } else {
       ififo_ren_signal.write(false); // Else don't pop any values
@@ -175,17 +176,15 @@ void adder::Tick() {
       unsigned int dest_id;
       dest_name = "multiplier_inst.axis_multiplier_interface";
       dest_id = radsim_design.GetPortDestinationID(dest_name);
-      data_vector<int16_t> tx_tdata = ofifo_rdata_signal.read();
+      data_vector<int16_t> tdata = ofifo_rdata_signal.read();
       sc_bv<AXIS_MAX_DATAW> axis_adder_interface_tdata_bv;
       for (unsigned int lane_id = 0; lane_id < 1; lane_id++) {
         axis_adder_interface_tdata_bv.range((lane_id + 1) * 16 - 1, lane_id * 16) =
-            tx_tdata[lane_id];
+            tdata[lane_id];
       }
-      axis_adder_interface.tdata.write(tx_tdata_bv);
+      axis_adder_interface.tdata.write(axis_adder_interface_tdata_bv);
       axis_adder_interface.tvalid.write(true);
-      axis_adder_interface.tuser.write(dest_interface); // Need to confirm how to modify interface and id
       axis_adder_interface.tdest.write(dest_id);
-      axis_adder_interface.tid.write(dest_interface_id);
     } else {
       // Don't write
       axis_adder_interface.tvalid.write(false);
@@ -197,7 +196,7 @@ void adder::Tick() {
   }
 }
 
-void addder::RegisterModuleInfo() {
+void adder::RegisterModuleInfo() {
   std::string port_name;
   _num_noc_axis_slave_ports = 0;
   _num_noc_axis_master_ports = 0;

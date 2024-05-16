@@ -1,4 +1,4 @@
-#include <aximm_hello_world_top.hpp>
+#include <accum_multiply_top.hpp>
 
 accum_multiply_top::accum_multiply_top(const sc_module_name &name)
     : sc_module(name) {
@@ -17,8 +17,8 @@ accum_multiply_top::accum_multiply_top(const sc_module_name &name)
 
   module_name_str = "multiplier_inst";
   std::strcpy(module_name, module_name_str.c_str());
-  multiplier_inst = new responder(module_name, 16, 16);
-  responder_inst->rst(rst);
+  multiplier_inst = new multiplier(module_name, 16, 16);
+  multiplier_inst->rst(rst);
   multiplier_inst->output(output);
   multiplier_inst->output_ready(output_ready);
   multiplier_inst->output_valid(output_valid);

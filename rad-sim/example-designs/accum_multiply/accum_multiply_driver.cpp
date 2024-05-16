@@ -49,7 +49,7 @@ void accum_multiply_driver::source() {
 
   unsigned int idx = 0;
   while (idx < accum_multiply_sim_trace.size()) {
-    source_wdata.write(accum_multiply_sim_trace[idx].input_value);
+    source_wdata.write(accum_multiply_sim_trace[idx].value);
     source_valid.write(true);
 
     wait();
@@ -73,7 +73,7 @@ void accum_multiply_driver::sink() {
     sink_ready.write(true);
     wait();
     if (sink_valid.read() && sink_ready.read()) {
-      std::cout << "rdata " << accum_multiply_sim_trace[i].cycle << " "
+      std::cout << "rdata " << accum_multiply_sim_trace[idx].cycle << " "
               << sink_rdata.read() << std::endl;
       idx++;
     }

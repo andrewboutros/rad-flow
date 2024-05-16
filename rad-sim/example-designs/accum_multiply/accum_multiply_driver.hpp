@@ -2,7 +2,8 @@
 
 #include <chrono>
 #include <radsim_config.hpp>
-#include <requester.hpp>
+#include <adder.hpp>
+#include <multiplier.hpp>
 #include <stdlib.h>
 #include <systemc.h>
 #include <time.h>
@@ -10,7 +11,7 @@
 
 struct Command {
   unsigned int cycle;
-  int16_t input_value;
+  int16_t value;
 };
 
 class accum_multiply_driver : public sc_module {

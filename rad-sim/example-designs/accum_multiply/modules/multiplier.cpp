@@ -1,34 +1,7 @@
 #include <multiplier.hpp>
 
-//TODO
-/*
-constructor: define depth and initialize counter to 0. Assign only sensitive on FIFO variables
-
-assign: we probably don't need any assign signals, since we only write from this using axis. Maybe use this for fifo ren and wen
-
-tick: 
-  reset logic: 
-    all signals to NOT READY (axis)
-    clear all FIFO content, 
-    reset count, 
-    clear all registers
-  check if input ready and input valid, push to ififo
-  if counter is 4, and ofifo isn't full, push to ofifo.
-  check if counter is NOT 4, and input NOT empty, pop from ififo (ren) and into registers (which are shifted), increment counter by 1
-  axis interface write OFIFO content and ren ofifo. (to pop)
-
-some specific coding considerations:
-  ren for ififo should be in an if else statement, default ren to false. 
-  if(count is right and i not empty){
-    read from ififo input signal
-    ren=true // this removes rdata on next clock edge, so next cycle if we should read it will be new data. 
-  }else{
-    ren=false
-  }
-*/
-
 multiplier::multiplier(const sc_module_name &name, unsigned int ififo_depth, unsigned int ofifo_depth)
-    : RADSimModule(name), output_data_temp(1), rst("rst") { // data_temp(1), I assume it means to init it with size 1
+    : RADSimModule(name), input_data_temp(1), output_data_temp(1), rst("rst") { // data_temp(1), I assume it means to init it with size 1
   // Define key constants
   this->ififo_depth = ififo_depth;
   this->ofifo_depth = ofifo_depth;
@@ -118,12 +91,12 @@ void multiplier::Tick() {
       // mvm code converting axis bv to data_vector
       sc_bv<AXIS_MAX_DATAW> tdata = axis_multiplier_interface.tdata.read();
       for (unsigned int lane_id = 0; lane_id < 1; lane_id++) {
-          output_data_temp[lane_id] =
+          input_data_temp[lane_id] =
               tdata.range((lane_id + 1) * 16 - 1, lane_id * 16)
                   .to_int();
       }
       // Store to ififo
-      ififo_wdata_signal.write(output_data_temp);
+      ififo_wdata_signal.write(input_data_temp);
       // Write enable
       ififo_wen_signal.write(true);
     } else {
@@ -161,11 +134,11 @@ void multiplier::Tick() {
   }
 }
 
-void addder::RegisterModuleInfo() {
+void multiplier::RegisterModuleInfo() {
   std::string port_name;
   _num_noc_axis_slave_ports = 0;
   _num_noc_axis_master_ports = 0;
 
   port_name = module_name + ".axis_multiplier_interface";
-  RegisterAxisMasterPort(port_name, &axis_multiplier_interface, DATAW, 0);
+  RegisterAxisSlavePort(port_name, &axis_multiplier_interface, DATAW, 0);
 }
