@@ -1,29 +1,29 @@
-#include <aximm_hello_world_system.hpp>
+#include <accum_multiply_system.hpp>
 
-aximm_hello_world_system::aximm_hello_world_system(const sc_module_name &name,
+accum_multiply_system::accum_multiply_system(const sc_module_name &name,
                                                    sc_clock *driver_clk_sig)
     : sc_module(name) {
 
   // Instantiate driver
-  driver_inst = new aximm_hello_world_driver("driver");
+  driver_inst = new accum_multiply_driver("driver");
   driver_inst->clk(*driver_clk_sig);
   driver_inst->rst(rst_sig);
-  driver_inst->req_addr(req_addr_sig);
-  driver_inst->req_type(req_type_sig);
-  driver_inst->req_wdata(req_wdata_sig);
-  driver_inst->req_valid(req_valid_sig);
-  driver_inst->req_ready(req_ready_sig);
-  driver_inst->received_responses(received_responses_sig);
+  driver_inst->source_wdata(input);
+  driver_inst->source_valid(input_valid);
+  driver_inst->source_ready(input_ready);
+  driver_inst->sink_rdata(output);
+  driver_inst->sink_valid(output_ready);
+  driver_inst->sink_ready(output_valid);
 
   // Instantiate design top-level
-  dut_inst = new aximm_hello_world_top("dut");
+  dut_inst = new accum_multiply_top("dut");
   dut_inst->rst(rst_sig);
-  dut_inst->req_addr(req_addr_sig);
-  dut_inst->req_type(req_type_sig);
-  dut_inst->req_wdata(req_wdata_sig);
-  dut_inst->req_valid(req_valid_sig);
-  dut_inst->req_ready(req_ready_sig);
-  dut_inst->received_responses(received_responses_sig);
+  dut_inst->input(input);
+  dut_inst->input_valid(input_valid);
+  dut_inst->input_ready(input_ready);
+  dut_inst->output(output);
+  dut_inst->output_ready(output_ready);
+  dut_inst->output_valid(output_valid);
 }
 
 aximm_hello_world_system::~aximm_hello_world_system() {
