@@ -23,7 +23,7 @@ public:
   sc_out<int16_t> source_wdata;
   sc_out<bool> source_valid;
   sc_in<bool> source_ready;
-  sc_in<int16_t> sink_wdata;
+  sc_in<int16_t> sink_rdata;
   sc_in<bool> sink_valid;
   sc_out<bool> sink_ready;
 

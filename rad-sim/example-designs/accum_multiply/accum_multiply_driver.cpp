@@ -40,34 +40,46 @@ accum_multiply_driver::~accum_multiply_driver() {}
 void accum_multiply_driver::source() {
   // Reset
   rst.write(true);
-  req_valid.write(false);
+  source_wdata.write(0);
+  source_valid.write(false);
+  sink_ready.write(false);
   wait();
   rst.write(false);
   wait();
 
   unsigned int idx = 0;
-  while (idx < hello_world_sim_trace.size()) {
-    req_addr.write(hello_world_sim_trace[idx].addr);
-    req_type.write(hello_world_sim_trace[idx].type);
-    req_wdata.write(hello_world_sim_trace[idx].data);
-    req_valid.write(true);
+  while (idx < accum_multiply_sim_trace.size()) {
+    source_wdata.write(accum_multiply_sim_trace[idx].input_value);
+    source_valid.write(true);
 
     wait();
 
-    if (req_valid.read() && req_ready.read()) {
+    if (source_valid.read() && source_ready.read()) {
       idx++;
     }
   }
-  req_valid.write(false);
+  source_valid.write(false);
   std::cout << "Finished sending all traces to requester module!" << std::endl;
   wait();
 }
 
 void accum_multiply_driver::sink() {
-  while (received_responses.read() < hello_world_sim_trace.size()) {
+  // Reset
+  sink_ready.write(false);
+  wait();
+
+  unsigned int idx = 0;
+  while (idx < accum_multiply_sim_trace.size()) {
+    sink_ready.write(true);
     wait();
+    if (sink_valid.read() && sink_ready.read()) {
+      std::cout << "rdata " << accum_multiply_sim_trace[i].cycle << " "
+              << sink_rdata.read() << std::endl;
+      idx++;
+    }
   }
-  std::cout << "Received all " << received_responses.read() << " responses!"
+  sink_ready.write(false);
+  std::cout << "Received responses!"
             << std::endl;
   sc_stop();
 }
