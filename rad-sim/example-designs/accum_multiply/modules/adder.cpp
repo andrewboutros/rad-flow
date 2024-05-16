@@ -185,12 +185,15 @@ void adder::Tick() {
       axis_adder_interface.tdata.write(axis_adder_interface_tdata_bv);
       axis_adder_interface.tvalid.write(true);
       axis_adder_interface.tdest.write(dest_id);
+      // Pop ofifo content when both valid and ready for interface
+      // TODO: this doesn't work. Need to use assign statement instead (the ofifo empty signal is updated in tick, so if we do this the signal to stop update will be 1 cycle late)
+      ofifo_ren_signal.write(axis_adder_interface.tready.read());
     } else {
       // Don't write
       axis_adder_interface.tvalid.write(false);
+      ofifo_ren_signal.write(false);
     }
-    // Pop ofifo content when both valid and ready for interface
-    ofifo_ren_signal.write(axis_adder_interface.tvalid.read() && axis_adder_interface.tready.read());
+    std::cout << ofifo_empty_signal.read() << " " << ofifo_ren_signal.read() << endl; // some debug code testing why ofifo is underflowing
     
     wait();
   }
