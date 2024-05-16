@@ -1,2 +1,2 @@
-multiplier_inst 0 0 axis
-adder_inst 0 3 axis
+multiplier_inst.axis_multiplier_interface 0 0 axis
+adder_inst.axis_adder_interface 0 3 axis
