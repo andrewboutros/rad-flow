@@ -69,7 +69,7 @@ multiplier::multiplier(const sc_module_name &name, unsigned int ififo_depth, uns
 
   // Combinational logic and its sensitivity list TODO
   SC_METHOD(Assign);
-  sensitive << rst << req_fifo_full;
+  sensitive << rst << ififo_full_signal;
   // Sequential logic and its clock/reset setup
   SC_CTHREAD(Tick, clk.pos());
   reset_signal_is(rst, true); // Reset is active high
@@ -98,8 +98,8 @@ void multiplier::Tick() {
   ofifo_wdata_signal.write(0);
   // Clear Registers -- actually not necessary because we only look at output when count is correct
   internal_register = 0;
-  // Reset input signals
-  input_ready.write(0);
+  // Reset output signals
+  output_valid.write(0);
   wait();
 
   std::string port_name = module_name + ".axis_multiplier_interface";
@@ -118,12 +118,12 @@ void multiplier::Tick() {
       // mvm code converting axis bv to data_vector
       sc_bv<AXIS_MAX_DATAW> tdata = axis_multiplier_interface.tdata.read();
       for (unsigned int lane_id = 0; lane_id < 1; lane_id++) {
-          tdata_vec[lane_id] =
+          output_data_temp[lane_id] =
               tdata.range((lane_id + 1) * 16 - 1, lane_id * 16)
                   .to_int();
       }
       // Store to ififo
-      ififo_wdata_signal.write(tdata_vec);
+      ififo_wdata_signal.write(output_data_temp);
       // Write enable
       ififo_wen_signal.write(true);
     } else {
@@ -136,10 +136,11 @@ void multiplier::Tick() {
     if (!ofifo_almost_full_signal.read() && !ififo_empty_signal.read()) {
       // If we have space to write values and we do have value to write
       ofifo_wen_signal.write(true);
-      output_data_temp[0] = internal_register * ififo_rdata_signal.read()[0]; 
+      data_vector<int16_t> tdata = ififo_rdata_signal.read(); 
+      output_data_temp[0] = internal_register * tdata[0];
       ofifo_wdata_signal.write(output_data_temp);
       ififo_ren_signal.write(true); // Tell to read data
-      internal_register = ififo_rdata_signal.read()[0]; // rdata_signal returns a data_vector of int16_t
+      internal_register = tdata[0]; // rdata_signal returns a data_vector of int16_t
     } else {
       ififo_ren_signal.write(false); // Else don't pop any values
       ofifo_wen_signal.write(false);
@@ -149,8 +150,8 @@ void multiplier::Tick() {
     if (output_ready.read() && output_valid.read()) {
       // Read from ofifo and convert data_vector to int16
       ofifo_ren_signal.write(true);
-      output_data_temp[0] = ofifo_rdata_signal.read();
-      output.write(output_data_temp[0]);
+      data_vector<int16_t> tdata = ofifo_rdata_signal.read();
+      output.write(tdata[0]);
     } else {
       ofifo_ren_signal.write(false);
     }
