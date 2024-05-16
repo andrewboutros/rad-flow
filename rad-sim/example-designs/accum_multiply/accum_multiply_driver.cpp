@@ -1,4 +1,4 @@
-#include <aximm_hello_world_driver.hpp>
+#include <accum_multiply_driver.hpp>
 
 bool ParseTrace(std::vector<Command> &sim_trace, std::string &io_filename) {
   std::ifstream io_file(io_filename);
@@ -10,20 +10,13 @@ bool ParseTrace(std::vector<Command> &sim_trace, std::string &io_filename) {
     std::stringstream line_stream(line);
     Command c;
     line_stream >> c.cycle;
-    line_stream >> cmd;
-    line_stream >> c.addr;
-    if (cmd == "WRITE") {
-      line_stream >> c.data;
-      c.type = true;
-    } else {
-      c.type = false;
-    }
+    line_stream >> c.value;
     sim_trace.push_back(c);
   }
   return true;
 }
 
-aximm_hello_world_driver::aximm_hello_world_driver(const sc_module_name &name)
+accum_multiply_driver::accum_multiply_driver(const sc_module_name &name)
     : sc_module(name) {
 
   // Parse design configuration (number of layers & number of MVM per layer)
@@ -31,22 +24,20 @@ aximm_hello_world_driver::aximm_hello_world_driver(const sc_module_name &name)
       radsim_config.GetStringKnob("radsim_user_design_root_dir");
 
   std::string sim_trace_filename = design_root_dir + "/sim_trace";
-  ParseTrace(hello_world_sim_trace, sim_trace_filename);
+  ParseTrace(accum_multiply_sim_trace, sim_trace_filename);
   std::cout << "Finished parsing simulation trace ..." << std::endl;
-  for (unsigned int i = 0; i < hello_world_sim_trace.size(); i++)
-    std::cout << hello_world_sim_trace[i].cycle << " "
-              << hello_world_sim_trace[i].type << " "
-              << hello_world_sim_trace[i].addr << " "
-              << hello_world_sim_trace[i].data << std::endl;
+  for (unsigned int i = 0; i < accum_multiply_sim_trace.size(); i++)
+    std::cout << accum_multiply_sim_trace[i].cycle << " "
+              << accum_multiply_sim_trace[i].value << std::endl;
   std::cout << "----------------------------------------" << std::endl;
 
   SC_CTHREAD(source, clk.pos());
   SC_CTHREAD(sink, clk.pos());
 }
 
-aximm_hello_world_driver::~aximm_hello_world_driver() {}
+accum_multiply_driver::~accum_multiply_driver() {}
 
-void aximm_hello_world_driver::source() {
+void accum_multiply_driver::source() {
   // Reset
   rst.write(true);
   req_valid.write(false);
@@ -72,7 +63,7 @@ void aximm_hello_world_driver::source() {
   wait();
 }
 
-void aximm_hello_world_driver::sink() {
+void accum_multiply_driver::sink() {
   while (received_responses.read() < hello_world_sim_trace.size()) {
     wait();
   }

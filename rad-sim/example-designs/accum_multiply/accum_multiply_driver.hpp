@@ -10,30 +10,28 @@
 
 struct Command {
   unsigned int cycle;
-  bool type;
-  uint64_t addr;
-  sc_bv<DATAW> data;
+  int16_t input_value;
 };
 
-class aximm_hello_world_driver : public sc_module {
+class accum_multiply_driver : public sc_module {
 private:
-  std::vector<Command> hello_world_sim_trace;
+  std::vector<Command> accum_multiply_sim_trace;
 
 public:
   sc_in<bool> clk;
   sc_out<bool> rst;
-  sc_out<uint64_t> req_addr;
-  sc_out<bool> req_type;
-  sc_out<sc_bv<DATAW>> req_wdata;
-  sc_out<bool> req_valid;
-  sc_in<bool> req_ready;
-  sc_in<unsigned int> received_responses;
+  sc_out<int16_t> source_wdata;
+  sc_out<bool> source_valid;
+  sc_in<bool> source_ready;
+  sc_in<int16_t> sink_wdata;
+  sc_in<bool> sink_valid;
+  sc_out<bool> sink_ready;
 
-  aximm_hello_world_driver(const sc_module_name &name);
-  ~aximm_hello_world_driver();
+  accum_multiply_driver(const sc_module_name &name);
+  ~accum_multiply_driver();
 
   void source();
   void sink();
 
-  SC_HAS_PROCESS(aximm_hello_world_driver);
+  SC_HAS_PROCESS(accum_multiply_driver);
 };
