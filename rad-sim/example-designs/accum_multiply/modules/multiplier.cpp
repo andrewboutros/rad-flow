@@ -139,6 +139,6 @@ void multiplier::RegisterModuleInfo() {
   _num_noc_axis_slave_ports = 0;
   _num_noc_axis_master_ports = 0;
 
-  port_name = module_name + ".axis_multiplier_interface";
+  port_name = module_name + ".axis_multipier_interface";
   RegisterAxisSlavePort(port_name, &axis_multiplier_interface, DATAW, 0);
 }

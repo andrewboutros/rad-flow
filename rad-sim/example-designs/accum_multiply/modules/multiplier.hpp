@@ -1,6 +1,6 @@
 #pragma once
 
-#include <aximm_interface.hpp>
+#include <axis_interface.hpp>
 #include <design_context.hpp>
 #include <fifo.hpp>
 #include <radsim_defines.hpp>

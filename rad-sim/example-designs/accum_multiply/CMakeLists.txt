@@ -17,6 +17,8 @@ set(srcfiles
   accum_multiply_top.cpp
   accum_multiply_driver.cpp
   accum_multiply_system.cpp
+  modules/sim_utils.cpp
+  modules/fifo.cpp
 )
 
 set(hdrfiles
@@ -25,6 +27,8 @@ set(hdrfiles
   accum_multiply_top.hpp
   accum_multiply_driver.hpp
   accum_multiply_system.hpp
+  modules/sim_utils.hpp
+  modules/fifo.cpp
 )
 
 add_compile_options(-Wall -Wextra -pedantic)

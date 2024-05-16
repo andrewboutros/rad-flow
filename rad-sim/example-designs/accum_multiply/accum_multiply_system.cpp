@@ -12,8 +12,8 @@ accum_multiply_system::accum_multiply_system(const sc_module_name &name,
   driver_inst->source_valid(input_valid);
   driver_inst->source_ready(input_ready);
   driver_inst->sink_rdata(output);
-  driver_inst->sink_valid(output_ready);
-  driver_inst->sink_ready(output_valid);
+  driver_inst->sink_valid(output_valid);
+  driver_inst->sink_ready(output_ready);
 
   // Instantiate design top-level
   dut_inst = new accum_multiply_top("dut");

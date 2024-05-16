@@ -42,7 +42,6 @@ void accum_multiply_driver::source() {
   rst.write(true);
   source_wdata.write(0);
   source_valid.write(false);
-  sink_ready.write(false);
   wait();
   rst.write(false);
   wait();
