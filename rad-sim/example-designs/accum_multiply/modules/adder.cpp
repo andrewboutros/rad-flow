@@ -71,9 +71,14 @@ adder::adder(const sc_module_name &name, unsigned int ififo_depth, unsigned int 
   ofifo->almost_empty(ofifo_almost_empty_signal);
   ofifo->rdata(ofifo_rdata_signal);
 
-  // Combinational logic and its sensitivity list TODO
+  // Combinational logic and its sensitivity list
   SC_METHOD(Assign);
-  sensitive << rst << ififo_full_signal;
+  sensitive << rst << ofifo_almost_full_signal << ofifo_rdata_signal
+            << axis_adder_interface.tvalid << axis_adder_interface.tready
+            << ififo_almost_full_signal
+            << ififo_empty_signal 
+            << ofifo_empty_signal;
+  
   // Sequential logic and its clock/reset setup
   SC_CTHREAD(Tick, clk.pos());
   reset_signal_is(rst, true); // Reset is active high
@@ -86,90 +91,49 @@ adder::adder(const sc_module_name &name, unsigned int ififo_depth, unsigned int 
 adder::~adder() {}
 
 void adder::Assign() {
-}
+  if (rst.read()) {
+    // Set axis signals to default not ready, following tx_input_interface in mvm.cpp
+    axis_adder_interface.tdata.write(0); // No data written
+    axis_adder_interface.tvalid.write(false); // Data isn't being written
+    axis_adder_interface.tstrb.write(0b11); // Strobe (we transfer 16 bit int)
+    axis_adder_interface.tkeep.write(0b11); // Keep (all bytes are valid)
+    axis_adder_interface.tlast.write(0); // We aren't sending data, default is 0
+    axis_adder_interface.tuser.write(0); // User defined signal, default 0
+    
+    // FIFO is controlled non-sequentially
+    ififo_wen_signal.write(0);
+    ififo_ren_signal.write(0);
+    ofifo_wen_signal.write(0);
+    ofifo_ren_signal.write(0);
 
-void adder::Tick() {
-  // Reset logic
-  // Set axis signals to default not ready, following tx_input_interface in mvm.cpp
-  axis_adder_interface.tdata.write(0); // No data written
-  axis_adder_interface.tvalid.write(false); // Data isn't being written
-  axis_adder_interface.tstrb.write(0b11); // Strobe (we transfer 16 bit int)
-  axis_adder_interface.tkeep.write(0b11); // Keep (all bytes are valid)
-  axis_adder_interface.tlast.write(0); // We aren't sending data, default is 0
-  axis_adder_interface.tuser.write(0); // User defined signal, default 0
-  // Clear FIFO content, set signals to not ready
-    // FIFO is cleared already by their rst signal
-  ififo_wen_signal.write(0);
-  ififo_ren_signal.write(0);
-  ififo_wdata_signal.write(0);
-  ofifo_wen_signal.write(0);
-  ofifo_ren_signal.write(0);
-  ofifo_wdata_signal.write(0);
-  // Clear Registers -- actually not necessary because we only look at output when count is correct
-  for (int i = 0; i < NUMSUM; i++) {
-    internal_registers[i] = 0;
-  }
-  // Reset Count
-  num_values_received = 0;
-  // Reset input signals
-  input_ready.write(0);
-  wait();
+    // Reset input signals
+    input_ready.write(0);
 
-  std::string port_name = module_name + ".axis_adder_interface";
-
-  // Always @ positive edge of the clock
-  while (true) {
-    /*
-      check if input ready and input valid, push to ififo
-      if counter is 4, and ofifo isn't full, push to ofifo.
-      check if counter is NOT 4, and input NOT empty, pop from ififo (ren) and into registers (which are shifted), increment counter by 1
-      axis interface write OFIFO content and ren ofifo. (to pop)
-    */
-
+    // FIFO wdata done in comb logic, always equal to input data
+    ififo_wdata_signal.write(0);
+    ofifo_wdata_signal.write(0);
+  } else {
     // Process Input
-    if (input_ready.read() && input_valid.read()) {
-      // When testbench can send input
-      ififo_wen_signal.write(true); // Write to IFIFO
-      input_data_temp[0] = input.read(); // Convert data type to a data_vector<>
-      ififo_wdata_signal.write(input_data_temp); // Data is input
-    } else {
-      ififo_wen_signal.write(false); // Else, don't read
+    input_data_temp[0] = input.read(); // Convert data type to a data_vector<>
+    ififo_wdata_signal.write(input_data_temp); // Data is input
+    input_ready.write(!ififo_almost_full_signal.read()); // input_ready only depend on ififo full or not
+    ififo_wen_signal.write(input_ready.read() && input_valid.read()); // ififo wen always true when both signals ready
+
+    // IFIFO to registers
+    // we read whenever it's ready
+    ififo_ren_signal.write(num_values_received < NUMSUM && !ififo_empty_signal.read());
+
+    // Registers to OFIFO
+    temp_sum = 0;
+    for (int i = 0; i < NUMSUM; i++){
+      temp_sum += internal_registers[i];
     }
+    output_data_temp[0] = temp_sum; 
+    ofifo_wdata_signal.write(output_data_temp);
+    ofifo_wen_signal.write(num_values_received == NUMSUM && !ofifo_almost_full_signal.read());
 
-    // Update input status
-    input_ready.write(!ififo_almost_full_signal.read());
-
-    // Process read to registers
-    if (num_values_received < NUMSUM && !ififo_empty_signal.read()) {
-      // If we have space to write values and we do have value to write
-      ififo_ren_signal.write(true); // Tell to read data
-      for (int i = NUMSUM-1; i > 0; i--) {
-        internal_registers[i] = internal_registers[i-1]; // Shift all value by 1
-      }
-      data_vector<int16_t> tdata = ififo_rdata_signal.read(); 
-      internal_registers[0] = tdata[0]; // rdata_signal returns a data_vector of int16_t
-      num_values_received++; // New value received, increment
-    } else {
-      ififo_ren_signal.write(false); // Else don't pop any values
-    }
-
-    // Process compute to OFIFO
-    if (num_values_received == NUMSUM && !ofifo_almost_full_signal.read()) {
-      ofifo_wen_signal.write(true);
-      temp_sum = 0;
-      for (int i = 0; i < NUMSUM; i++){
-        temp_sum += internal_registers[i];
-      }
-      output_data_temp[0] = temp_sum; 
-      ofifo_wdata_signal.write(output_data_temp);
-      num_values_received = 0;
-    } else {
-      ofifo_wen_signal.write(false);
-    }
-
-    // Process output from OFIFO
+    // OFIFO output
     if (!ofifo_empty_signal.read()) {
-      // Always attempt to output values
       // AXIS code copied from mvm, assume LANES=1 for 1 single value here, bitwitdh=16 for int16_t
       // Problem that might occur: in mvm this was in assign block
       std::string dest_name;
@@ -185,16 +149,46 @@ void adder::Tick() {
       axis_adder_interface.tdata.write(axis_adder_interface_tdata_bv);
       axis_adder_interface.tvalid.write(true);
       axis_adder_interface.tdest.write(dest_id);
-      // Pop ofifo content when both valid and ready for interface
-      // TODO: this doesn't work. Need to use assign statement instead (the ofifo empty signal is updated in tick, so if we do this the signal to stop update will be 1 cycle late)
-      ofifo_ren_signal.write(axis_adder_interface.tready.read());
     } else {
-      // Don't write
       axis_adder_interface.tvalid.write(false);
-      ofifo_ren_signal.write(false);
     }
-    std::cout << ofifo_empty_signal.read() << " " << ofifo_ren_signal.read() << endl; // some debug code testing why ofifo is underflowing
-    
+    ofifo_ren_signal.write(axis_adder_interface.tvalid.read() && axis_adder_interface.tready.read());
+  }
+
+}
+
+void adder::Tick() {
+  // Reset logic
+  // Reset Count
+  num_values_received = 0;
+  wait();
+
+  std::string port_name = module_name + ".axis_adder_interface";
+
+  // Always @ positive edge of the clock
+  while (true) {
+    /*
+      check if input ready and input valid, push to ififo
+      if counter is 4, and ofifo isn't full, push to ofifo.
+      check if counter is NOT 4, and input NOT empty, pop from ififo (ren) and into registers (which are shifted), increment counter by 1
+      axis interface write OFIFO content and ren ofifo. (to pop)
+    */
+
+    // Process read to registers
+    if (num_values_received < NUMSUM && !ififo_empty_signal.read()) {
+      // If we have space to write values and we do have value to write
+      for (int i = NUMSUM-1; i > 0; i--) {
+        internal_registers[i] = internal_registers[i-1]; // Shift all value by 1
+      }
+      data_vector<int16_t> tdata = ififo_rdata_signal.read(); 
+      internal_registers[0] = tdata[0]; // rdata_signal returns a data_vector of int16_t
+      num_values_received++; // New value received, increment
+    }
+
+    // Process compute to OFIFO
+    if (num_values_received == NUMSUM && !ofifo_almost_full_signal.read()) {
+      num_values_received = 0;
+    }
     wait();
   }
 }
