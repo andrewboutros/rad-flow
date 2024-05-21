@@ -115,15 +115,15 @@ void adder::Assign() {
   } else {
     // Process Input
     input_data_temp[0] = input.read(); // Convert data type to a data_vector<>
-    std:: cout << "input_data_temp[0]: " << (input_data_temp[0]) << endl;
+    // std:: cout << "input_data_temp[0]: " << (input_data_temp[0]) << endl;
     ififo_wdata_signal.write(input_data_temp); // Data is input
     input_ready.write(!ififo_almost_full_signal.read()); // input_ready only depend on ififo full or not
-    ififo_wen_signal.write(input_ready.read() && input_valid.read()); // ififo wen always true when both signals ready
+    ififo_wen_signal.write(!ififo_almost_full_signal.read() && input_valid.read()); // ififo wen always true when both signals ready
 
     // IFIFO to registers
-    // we read whenever it's ready
+    // we read whenever it's ready (ififo isn't empty and we have space in registers)
     ififo_ren_signal.write(num_values_received < NUMSUM && !ififo_empty_signal.read());
-    std::cout << "ififo empty?????" << ififo_empty_signal.read() << endl;
+    std::cout << "ififo empty signal read by adder: " << ififo_empty_signal.read() << " ififo pop en: " << (num_values_received < NUMSUM && !ififo_empty_signal.read()) << " num val rec: " << num_values_received << endl;
 
     // Registers to OFIFO
     temp_sum = 0;
@@ -133,7 +133,7 @@ void adder::Assign() {
     output_data_temp[0] = temp_sum; 
     ofifo_wdata_signal.write(output_data_temp);
     ofifo_wen_signal.write(num_values_received == NUMSUM && !ofifo_almost_full_signal.read());
-    std::cout << "num_values_rec == numsum: " << (num_values_received == NUMSUM) << " num values: " << num_values_received << endl;
+    // std::cout << "num_values_rec == numsum: " << (num_values_received == NUMSUM) << " num values: " << num_values_received << endl;
 
     // OFIFO output
     data_vector<int16_t> tdata = ofifo_rdata_signal.read();
@@ -146,10 +146,10 @@ void adder::Assign() {
       dest_id = radsim_design.GetPortDestinationID(dest_name);
       sc_bv<AXIS_MAX_DATAW> axis_adder_interface_tdata_bv;
       for (unsigned int lane_id = 0; lane_id < 1; lane_id++) {
-        std::cout << "lane id " << lane_id << endl;
-        std::cout << "ofifo empty" << ofifo_empty_signal.read() << endl;
-        std::cout << "ofifo empty" << ofifo_empty_signal << endl;
-        std::cout << tdata.size() << endl;
+        // std::cout << "lane id " << lane_id << endl;
+        // std::cout << "ofifo empty" << ofifo_empty_signal.read() << endl;
+        // std::cout << "ofifo empty" << ofifo_empty_signal << endl;
+        // std::cout << tdata.size() << endl;
         axis_adder_interface_tdata_bv.range((lane_id + 1) * 16 - 1, lane_id * 16) =
             tdata[lane_id];
       }
@@ -196,7 +196,7 @@ void adder::Tick() {
       data_vector<int16_t> tdata = ififo_rdata_signal.read(); 
       internal_registers[0] = tdata[0]; // rdata_signal returns a data_vector of int16_t
       num_values_received++; // New value received, increment
-      std::cout << "received " << num_values_received << " value: " << internal_registers[0] << "signal" << ififo_rdata_signal.read() << endl;
+      // std::cout << "received " << num_values_received << " value: " << internal_registers[0] << "signal" << ififo_rdata_signal.read() << endl;
       // if (num_values_received > 2)
       // exit(1);
     }

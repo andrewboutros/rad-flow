@@ -54,6 +54,9 @@ template <class dtype> void fifo<dtype>::Tick() {
     // Pop from queue if read enable signal is triggered and there is data in
     // the FIFO -- Data can always be read, but ren signals pop()
     if (ren.read()) {
+      // std::cout << "fifo is empty? " << empty.read() << endl;
+      // std::cout << "fifo mem size on read before pop: " << mem.size() << endl;
+      std::cout << "READ: mem_size: " << mem.size() << " fifo_empty: " << empty.read() << " fifo_almost_full: " << almost_full.read() << " full: " << full.read() << endl; 
       if (mem.size() == 0)
         sim_log.log(error, "FIFO is underflowing!", this->name());
       mem.pop();
@@ -61,14 +64,18 @@ template <class dtype> void fifo<dtype>::Tick() {
 
     // Push data into the FIFO if there is enough space
     if (wen.read()) {
+      std::cout << "WRITE: mem_size: " << mem.size() << " fifo_empty: " << empty.read() << " fifo_almost_full: " << almost_full.read() << " full: " << full.read() << endl; 
+
       if (mem.size() == capacity)
         sim_log.log(error, "FIFO is overflowing!", this->name());
+      
       data_vector<dtype> wdata_temp = wdata.read();
       std::vector<dtype> temp(wdata_temp.size());
       for (unsigned int element_id = 0; element_id < wdata_temp.size();
            element_id++){
         temp[element_id] = wdata_temp[element_id];
-        std::cout << "fifo received " << (wdata_temp[element_id]) << endl;}
+        // std::cout << "fifo received " << (wdata_temp[element_id]) << endl;
+      }
       mem.push(temp);
     }
 
