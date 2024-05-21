@@ -28,7 +28,7 @@ multiplier::multiplier(const sc_module_name &name, unsigned int ififo_depth, uns
 
   fifo_name_str = "multiplier_ofifo";
   std::strcpy(fifo_name, fifo_name_str.c_str());
-  ofifo = new fifo<int16_t>(fifo_name, ofifo_depth, 16, ofifo_depth-1, 0); // width is 16 for int16, almost_full is 1 less
+  ofifo = new fifo<int32_t>(fifo_name, ofifo_depth, 16, ofifo_depth-1, 0); // width is 16 for int16, almost_full is 1 less
   ofifo->clk(clk);
   ofifo->rst(rst);
   ofifo->wen(ofifo_wen_signal);
@@ -42,7 +42,11 @@ multiplier::multiplier(const sc_module_name &name, unsigned int ififo_depth, uns
 
   // Combinational logic and its sensitivity list TODO
   SC_METHOD(Assign);
-  sensitive << rst << ififo_full_signal;
+  sensitive << rst << ofifo_almost_full_signal << ofifo_rdata_signal 
+            << axis_multiplier_interface.tvalid
+            << ififo_almost_full_signal
+            << ififo_empty_signal 
+            << ofifo_empty_signal << output_ready << clk;
   // Sequential logic and its clock/reset setup
   SC_CTHREAD(Tick, clk.pos());
   reset_signal_is(rst, true); // Reset is active high
@@ -55,24 +59,42 @@ multiplier::multiplier(const sc_module_name &name, unsigned int ififo_depth, uns
 multiplier::~multiplier() {}
 
 void multiplier::Assign() {
+  // Data that needs to be comb: 
+  // ififo and ofifo ren
+  // wen (decided to put in Tick() along with data update)
+  // input tready
+  if (rst.read()) {
+    // Enable signals
+    ififo_ren_signal.write(0);
+    ofifo_ren_signal.write(0);
+
+    // Ready valid signals
+    axis_multiplier_interface.tready.write(false); 
+    output_valid.write(0);
+  } else {
+    // Input Signals
+    axis_multiplier_interface.tready.write(!ififo_almost_full_signal.read()); // Ready when ififo is not full
+    // ififo_wen_signal.write(axis_multiplier_interface.tready.read() && axis_multiplier_interface.tvalid.read()); // write data when both are ready and valid
+
+    // IFIFO ren:
+    ififo_ren_signal.write(!ofifo_almost_full_signal.read() && !ififo_empty_signal.read()); // Tell to read data
+
+
+    ofifo_ren_signal.write(output_ready.read() && !ofifo_empty_signal.read());
+    output_valid.write(!ofifo_empty_signal.read()); // Output is valid when not empty
+  }
 }
 
 void multiplier::Tick() {
   // Reset logic
-  // Set axis signals to default not ready, following rx_input_interface in mvm.cpp
-  axis_multiplier_interface.tready.write(false); // Initially not ready
   // Clear FIFO content, set signals to not ready
     // FIFO is cleared already by their rst signal
-  ififo_wen_signal.write(0);
-  ififo_ren_signal.write(0);
-  ififo_wdata_signal.write(0);
   ofifo_wen_signal.write(0);
-  ofifo_ren_signal.write(0);
+  ififo_wen_signal.write(0);
+  ififo_wdata_signal.write(0);
   ofifo_wdata_signal.write(0);
   // Clear Registers -- actually not necessary because we only look at output when count is correct
   internal_register = 0;
-  // Reset output signals
-  output_valid.write(0);
   wait();
 
   std::string port_name = module_name + ".axis_multiplier_interface";
@@ -97,13 +119,11 @@ void multiplier::Tick() {
       }
       // Store to ififo
       ififo_wdata_signal.write(input_data_temp);
-      // Write enable
       ififo_wen_signal.write(true);
-    } else {
-      // Disable write if not ready
+      std::cout << "     MULTIPLIER RECEIVING: " <<  input_data_temp << endl;
+    } else { 
       ififo_wen_signal.write(false);
     }
-    axis_multiplier_interface.tready.write(!ififo_almost_full_signal.read());
 
     // Process read to registers, and store directly to ofifo
     if (!ofifo_almost_full_signal.read() && !ififo_empty_signal.read()) {
@@ -111,24 +131,19 @@ void multiplier::Tick() {
       ofifo_wen_signal.write(true);
       data_vector<int16_t> tdata = ififo_rdata_signal.read(); 
       output_data_temp[0] = internal_register * tdata[0];
+      std::cout << "MULTIPLIER WRITING TO OFIFO: " << output_data_temp[0] << endl;
       ofifo_wdata_signal.write(output_data_temp);
-      ififo_ren_signal.write(true); // Tell to read data
       internal_register = tdata[0]; // rdata_signal returns a data_vector of int16_t
     } else {
-      ififo_ren_signal.write(false); // Else don't pop any values
       ofifo_wen_signal.write(false);
     }
 
     // Process output from OFIFO
     if (output_ready.read() && output_valid.read()) {
       // Read from ofifo and convert data_vector to int16
-      ofifo_ren_signal.write(true);
-      data_vector<int16_t> tdata = ofifo_rdata_signal.read();
+      data_vector<int32_t> tdata = ofifo_rdata_signal.read();
       output.write(tdata[0]);
-    } else {
-      ofifo_ren_signal.write(false);
-    }
-    output_valid.write(!ofifo_empty_signal.read()); // Output is valid when not empty
+    } 
 
     wait();
   }

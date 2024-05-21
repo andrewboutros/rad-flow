@@ -22,7 +22,7 @@ private:
   // Modules and Signals Only (supposed to be) Internally Accessible
   fifo<int16_t> *ififo; // Input FIFO
   sc_int<16> internal_register; // Storing the value to be multiplied with fifo head
-  fifo<int16_t> *ofifo; // Output FIFO (here we ignore edge case of overflow from adding 4 numbers)
+  fifo<int32_t> *ofifo; // Output FIFO (here we ignore edge case of overflow from adding 4 numbers)
 
   // FIFO status signals
   // These signals should've been modified in a system verilog equivalent of always_comb, but we just assign it in tick. 
@@ -30,21 +30,22 @@ private:
   sc_signal<data_vector<int16_t>> ififo_wdata_signal, ififo_rdata_signal;
   sc_signal<bool> ififo_wen_signal, ififo_ren_signal, ififo_full_signal,
       ififo_empty_signal, ififo_almost_full_signal, ififo_almost_empty_signal;
-  sc_signal<data_vector<int16_t>> ofifo_wdata_signal, ofifo_rdata_signal;
+  sc_signal<data_vector<int32_t>> ofifo_wdata_signal, ofifo_rdata_signal;
   sc_signal<bool> ofifo_wen_signal, ofifo_ren_signal, ofifo_full_signal,
       ofifo_empty_signal, ofifo_almost_full_signal, ofifo_almost_empty_signal;
 
   // Internal Variables
   unsigned int ififo_depth; // Number of values that can be stored in ififo, assigned in constructor
   unsigned int ofifo_depth; // Number of values that can be stored in ofifo, assigned in constructor
-  data_vector<int16_t> input_data_temp, output_data_temp; // Temp data vector to convert values to data_vector
+  data_vector<int16_t> input_data_temp;
+  data_vector<int32_t> output_data_temp; // Temp data vector to convert values to data_vector
 
 public:
   // Signal accessible by external modules
   sc_in<bool> rst; // Reset Signal
 
   // Output side signals
-  sc_out<int16_t> output;
+  sc_out<int32_t> output;
   sc_in<bool> output_ready;
   sc_out<bool> output_valid;
 
