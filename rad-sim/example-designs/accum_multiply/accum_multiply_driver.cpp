@@ -49,6 +49,7 @@ void accum_multiply_driver::source() {
   unsigned int idx = 0;
   while (idx < accum_multiply_sim_trace.size()) {
     source_wdata.write(accum_multiply_sim_trace[idx].value);
+    std::cout << "driver write " << accum_multiply_sim_trace[idx].value << endl;
     source_valid.write(true);
 
     wait();
@@ -59,6 +60,7 @@ void accum_multiply_driver::source() {
   }
   source_valid.write(false);
   std::cout << "Finished sending all traces to requester module!" << std::endl;
+  // exit(1);
   wait();
 }
 

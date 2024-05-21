@@ -73,11 +73,11 @@ adder::adder(const sc_module_name &name, unsigned int ififo_depth, unsigned int 
 
   // Combinational logic and its sensitivity list
   SC_METHOD(Assign);
-  sensitive << rst << ofifo_almost_full_signal << ofifo_rdata_signal
-            << axis_adder_interface.tvalid << axis_adder_interface.tready
+  sensitive << rst << ofifo_almost_full_signal << ofifo_rdata_signal 
+            << axis_adder_interface.tready
             << ififo_almost_full_signal
             << ififo_empty_signal 
-            << ofifo_empty_signal;
+            << ofifo_empty_signal << input << input_valid;
   
   // Sequential logic and its clock/reset setup
   SC_CTHREAD(Tick, clk.pos());
@@ -115,6 +115,7 @@ void adder::Assign() {
   } else {
     // Process Input
     input_data_temp[0] = input.read(); // Convert data type to a data_vector<>
+    std:: cout << "input_data_temp[0]: " << (input_data_temp[0]) << endl;
     ififo_wdata_signal.write(input_data_temp); // Data is input
     input_ready.write(!ififo_almost_full_signal.read()); // input_ready only depend on ififo full or not
     ififo_wen_signal.write(input_ready.read() && input_valid.read()); // ififo wen always true when both signals ready
@@ -122,6 +123,7 @@ void adder::Assign() {
     // IFIFO to registers
     // we read whenever it's ready
     ififo_ren_signal.write(num_values_received < NUMSUM && !ififo_empty_signal.read());
+    std::cout << "ififo empty?????" << ififo_empty_signal.read() << endl;
 
     // Registers to OFIFO
     temp_sum = 0;
@@ -131,18 +133,23 @@ void adder::Assign() {
     output_data_temp[0] = temp_sum; 
     ofifo_wdata_signal.write(output_data_temp);
     ofifo_wen_signal.write(num_values_received == NUMSUM && !ofifo_almost_full_signal.read());
+    std::cout << "num_values_rec == numsum: " << (num_values_received == NUMSUM) << " num values: " << num_values_received << endl;
 
     // OFIFO output
-    if (!ofifo_empty_signal.read()) {
+    data_vector<int16_t> tdata = ofifo_rdata_signal.read();
+    if (tdata.size() > 0 && !ofifo_empty_signal.read()) {
       // AXIS code copied from mvm, assume LANES=1 for 1 single value here, bitwitdh=16 for int16_t
       // Problem that might occur: in mvm this was in assign block
       std::string dest_name;
       unsigned int dest_id;
       dest_name = "multiplier_inst.axis_multiplier_interface";
       dest_id = radsim_design.GetPortDestinationID(dest_name);
-      data_vector<int16_t> tdata = ofifo_rdata_signal.read();
       sc_bv<AXIS_MAX_DATAW> axis_adder_interface_tdata_bv;
       for (unsigned int lane_id = 0; lane_id < 1; lane_id++) {
+        std::cout << "lane id " << lane_id << endl;
+        std::cout << "ofifo empty" << ofifo_empty_signal.read() << endl;
+        std::cout << "ofifo empty" << ofifo_empty_signal << endl;
+        std::cout << tdata.size() << endl;
         axis_adder_interface_tdata_bv.range((lane_id + 1) * 16 - 1, lane_id * 16) =
             tdata[lane_id];
       }
@@ -174,6 +181,12 @@ void adder::Tick() {
       axis interface write OFIFO content and ren ofifo. (to pop)
     */
 
+    // Process compute to OFIFO
+    // This is before updating num_values_received so value == numsum is possible
+    if (num_values_received == NUMSUM && !ofifo_almost_full_signal.read()) {
+      num_values_received = 0;
+    }
+
     // Process read to registers
     if (num_values_received < NUMSUM && !ififo_empty_signal.read()) {
       // If we have space to write values and we do have value to write
@@ -183,11 +196,9 @@ void adder::Tick() {
       data_vector<int16_t> tdata = ififo_rdata_signal.read(); 
       internal_registers[0] = tdata[0]; // rdata_signal returns a data_vector of int16_t
       num_values_received++; // New value received, increment
-    }
-
-    // Process compute to OFIFO
-    if (num_values_received == NUMSUM && !ofifo_almost_full_signal.read()) {
-      num_values_received = 0;
+      std::cout << "received " << num_values_received << " value: " << internal_registers[0] << "signal" << ififo_rdata_signal.read() << endl;
+      // if (num_values_received > 2)
+      // exit(1);
     }
     wait();
   }

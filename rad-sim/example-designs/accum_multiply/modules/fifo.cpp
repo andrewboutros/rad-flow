@@ -66,8 +66,9 @@ template <class dtype> void fifo<dtype>::Tick() {
       data_vector<dtype> wdata_temp = wdata.read();
       std::vector<dtype> temp(wdata_temp.size());
       for (unsigned int element_id = 0; element_id < wdata_temp.size();
-           element_id++)
+           element_id++){
         temp[element_id] = wdata_temp[element_id];
+        std::cout << "fifo received " << (wdata_temp[element_id]) << endl;}
       mem.push(temp);
     }
 
