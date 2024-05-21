@@ -56,7 +56,7 @@ template <class dtype> void fifo<dtype>::Tick() {
     if (ren.read()) {
       // std::cout << "fifo is empty? " << empty.read() << endl;
       // std::cout << "fifo mem size on read before pop: " << mem.size() << endl;
-      std::cout << "READ: mem_size: " << mem.size() << " fifo_empty: " << empty.read() << " fifo_almost_full: " << almost_full.read() << " full: " << full.read() << endl; 
+      // std::cout << "READ: mem_size: " << mem.size() << " fifo_empty: " << empty.read() << " fifo_almost_full: " << almost_full.read() << " full: " << full.read() << endl; 
       if (mem.size() == 0)
         sim_log.log(error, "FIFO is underflowing!", this->name());
       mem.pop();
@@ -64,7 +64,7 @@ template <class dtype> void fifo<dtype>::Tick() {
 
     // Push data into the FIFO if there is enough space
     if (wen.read()) {
-      std::cout << "WRITE: mem_size: " << mem.size() << " fifo_empty: " << empty.read() << " fifo_almost_full: " << almost_full.read() << " full: " << full.read() << endl; 
+      // std::cout << "WRITE: mem_size: " << mem.size() << " fifo_empty: " << empty.read() << " fifo_almost_full: " << almost_full.read() << " full: " << full.read() << endl; 
 
       if (mem.size() == capacity)
         sim_log.log(error, "FIFO is overflowing!", this->name());

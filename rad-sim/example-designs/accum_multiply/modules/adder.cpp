@@ -1,31 +1,7 @@
 #include <adder.hpp>
-
-//TODO
 /*
-constructor: define depth and initialize counter to 0. Assign only sensitive on FIFO variables
-
-assign: we probably don't need any assign signals, since we only write from this using axis. Maybe use this for fifo ren and wen
-
-tick: 
-  reset logic: 
-    all signals to NOT READY (axis)
-    clear all FIFO content, 
-    reset count, 
-    clear all registers
-  check if input ready and input valid, push to ififo
-  if counter is 4, and ofifo isn't full, push to ofifo.
-  check if counter is NOT 4, and input NOT empty, pop from ififo (ren) and into registers (which are shifted), increment counter by 1
-  axis interface write OFIFO content and ren ofifo. (to pop)
-
-some specific coding considerations:
-  ren for ififo should be in an if else statement, default ren to false. 
-  if(count is right and i not empty){
-    read from ififo input signal
-    ren=true // this removes rdata on next clock edge, so next cycle if we should read it will be new data. 
-  }else{
-    ren=false
-  }
-*/
+ * Addition block, receives a sequence of values from input, pools 4 values and output the sum of every 4 values.
+ */
 
 adder::adder(const sc_module_name &name, unsigned int ififo_depth, unsigned int ofifo_depth)
     : RADSimModule(name), input_data_temp(1), output_data_temp(1), rst("rst") { // data_temp(1), I assume it means to init it with size 1
@@ -77,7 +53,7 @@ adder::adder(const sc_module_name &name, unsigned int ififo_depth, unsigned int 
             << axis_adder_interface.tready
             << ififo_almost_full_signal
             << ififo_empty_signal 
-            << ofifo_empty_signal << input << input_valid;
+            << ofifo_empty_signal << input << input_valid << clk;
   
   // Sequential logic and its clock/reset setup
   SC_CTHREAD(Tick, clk.pos());
@@ -91,6 +67,11 @@ adder::adder(const sc_module_name &name, unsigned int ififo_depth, unsigned int 
 adder::~adder() {}
 
 void adder::Assign() {
+  /*
+    Comb logic stores: IO enables and also assigns IO values based on comb logic
+    Reason: the FIFO updates its full/empty status only once per cycle, so writing any signals regarding read / write in Tick will be too late
+            writing happening in between clock edges will expect data to also be ready (one option is to only have write enable be in Tick)
+  */
   if (rst.read()) {
     // Set axis signals to default not ready, following tx_input_interface in mvm.cpp
     axis_adder_interface.tdata.write(0); // No data written
@@ -123,13 +104,15 @@ void adder::Assign() {
     // IFIFO to registers
     // we read whenever it's ready (ififo isn't empty and we have space in registers)
     ififo_ren_signal.write(num_values_received < NUMSUM && !ififo_empty_signal.read());
-    std::cout << "ififo empty signal read by adder: " << ififo_empty_signal.read() << " ififo pop en: " << (num_values_received < NUMSUM && !ififo_empty_signal.read()) << " num val rec: " << num_values_received << endl;
+    // std::cout << "ififo empty signal read by adder: " << ififo_empty_signal.read() << " ififo pop en: " << (num_values_received < NUMSUM && !ififo_empty_signal.read()) << " num val rec: " << num_values_received << endl;
 
     // Registers to OFIFO
     temp_sum = 0;
     for (int i = 0; i < NUMSUM; i++){
       temp_sum += internal_registers[i];
+      // std::cout << internal_registers[i] << " ";
     }
+    // std::cout << "temp sum" << temp_sum << endl;
     output_data_temp[0] = temp_sum; 
     ofifo_wdata_signal.write(output_data_temp);
     ofifo_wen_signal.write(num_values_received == NUMSUM && !ofifo_almost_full_signal.read());
@@ -146,12 +129,13 @@ void adder::Assign() {
       dest_id = radsim_design.GetPortDestinationID(dest_name);
       sc_bv<AXIS_MAX_DATAW> axis_adder_interface_tdata_bv;
       for (unsigned int lane_id = 0; lane_id < 1; lane_id++) {
-        // std::cout << "lane id " << lane_id << endl;
-        // std::cout << "ofifo empty" << ofifo_empty_signal.read() << endl;
-        // std::cout << "ofifo empty" << ofifo_empty_signal << endl;
-        // std::cout << tdata.size() << endl;
         axis_adder_interface_tdata_bv.range((lane_id + 1) * 16 - 1, lane_id * 16) =
             tdata[lane_id];
+        // std::cout << "ADDER sending: " << tdata[lane_id] << endl << "Registers: ";
+        for(int i = 0; i < NUMSUM; i++){
+          // std::cout << internal_registers[i] << " ";
+        }
+        // std::cout << endl;
       }
       axis_adder_interface.tdata.write(axis_adder_interface_tdata_bv);
       axis_adder_interface.tvalid.write(true);
@@ -175,20 +159,15 @@ void adder::Tick() {
   // Always @ positive edge of the clock
   while (true) {
     /*
-      check if input ready and input valid, push to ififo
-      if counter is 4, and ofifo isn't full, push to ofifo.
-      check if counter is NOT 4, and input NOT empty, pop from ififo (ren) and into registers (which are shifted), increment counter by 1
-      axis interface write OFIFO content and ren ofifo. (to pop)
+      when num values is equal to max, we reset to 0 and perform no more action this cycle (this cycle is reserved for push to OFIFO)
+      else, we take values from IFIFO and increment count
     */
 
     // Process compute to OFIFO
     // This is before updating num_values_received so value == numsum is possible
     if (num_values_received == NUMSUM && !ofifo_almost_full_signal.read()) {
       num_values_received = 0;
-    }
-
-    // Process read to registers
-    if (num_values_received < NUMSUM && !ififo_empty_signal.read()) {
+    } else if (num_values_received < NUMSUM && !ififo_empty_signal.read()) {
       // If we have space to write values and we do have value to write
       for (int i = NUMSUM-1; i > 0; i--) {
         internal_registers[i] = internal_registers[i-1]; // Shift all value by 1
@@ -197,8 +176,6 @@ void adder::Tick() {
       internal_registers[0] = tdata[0]; // rdata_signal returns a data_vector of int16_t
       num_values_received++; // New value received, increment
       // std::cout << "received " << num_values_received << " value: " << internal_registers[0] << "signal" << ififo_rdata_signal.read() << endl;
-      // if (num_values_received > 2)
-      // exit(1);
     }
     wait();
   }

@@ -70,11 +70,11 @@ void accum_multiply_driver::sink() {
   wait();
 
   unsigned int idx = 0;
-  while (idx < accum_multiply_sim_trace.size()) {
+  while (idx < accum_multiply_sim_trace.size()/4) {
     sink_ready.write(true);
     wait();
     if (sink_valid.read() && sink_ready.read()) {
-      std::cout << "rdata " << accum_multiply_sim_trace[idx].cycle << " "
+      std::cout << "rdata id:" << accum_multiply_sim_trace[idx].cycle << " value: "
               << sink_rdata.read() << std::endl;
       idx++;
     }

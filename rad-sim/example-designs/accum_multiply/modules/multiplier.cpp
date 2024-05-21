@@ -28,7 +28,7 @@ multiplier::multiplier(const sc_module_name &name, unsigned int ififo_depth, uns
 
   fifo_name_str = "multiplier_ofifo";
   std::strcpy(fifo_name, fifo_name_str.c_str());
-  ofifo = new fifo<int32_t>(fifo_name, ofifo_depth, 16, ofifo_depth-1, 0); // width is 16 for int16, almost_full is 1 less
+  ofifo = new fifo<int16_t>(fifo_name, ofifo_depth, 16, ofifo_depth-1, 0); // width is 16 for int16, almost_full is 1 less
   ofifo->clk(clk);
   ofifo->rst(rst);
   ofifo->wen(ofifo_wen_signal);
@@ -60,9 +60,6 @@ multiplier::~multiplier() {}
 
 void multiplier::Assign() {
   // Data that needs to be comb: 
-  // ififo and ofifo ren
-  // wen (decided to put in Tick() along with data update)
-  // input tready
   if (rst.read()) {
     // Enable signals
     ififo_ren_signal.write(0);
@@ -71,6 +68,9 @@ void multiplier::Assign() {
     // Ready valid signals
     axis_multiplier_interface.tready.write(false); 
     output_valid.write(0);
+
+    // Output data
+    output.write(0);
   } else {
     // Input Signals
     axis_multiplier_interface.tready.write(!ififo_almost_full_signal.read()); // Ready when ififo is not full
@@ -79,9 +79,17 @@ void multiplier::Assign() {
     // IFIFO ren:
     ififo_ren_signal.write(!ofifo_almost_full_signal.read() && !ififo_empty_signal.read()); // Tell to read data
 
-
+    // Output fifo's read enable determined by if ready and if itself is empty
+    // In comb logic 
     ofifo_ren_signal.write(output_ready.read() && !ofifo_empty_signal.read());
     output_valid.write(!ofifo_empty_signal.read()); // Output is valid when not empty
+
+    // Output value, in comb to prevent data not ready on a clock edge where all 2 signals are set
+    if (output_ready.read() && !ofifo_empty_signal.read()) {
+      data_vector<int16_t> tdata = ofifo_rdata_signal.read();
+      // std::cout << "OFIFO reading: " << ofifo_rdata_signal.read() << endl;
+      output.write(tdata[0]);
+    }
   }
 }
 
@@ -101,14 +109,8 @@ void multiplier::Tick() {
 
   // Always @ positive edge of the clock
   while (true) {
-    /*
-      check if input ready and input valid, push to ififo
-      if counter is 4, and ofifo isn't full, push to ofifo.
-      check if counter is NOT 4, and input NOT empty, pop from ififo (ren) and into registers (which are shifted), increment counter by 1
-      axis interface write OFIFO content and ren ofifo. (to pop)
-    */
-
     // Process Input - use axis, similar code from mvm.cpp rx_input_interface
+    // Here we can use wen because the tready is written via comb logic.
     if (axis_multiplier_interface.tready.read() && axis_multiplier_interface.tvalid.read()) {
       // mvm code converting axis bv to data_vector
       sc_bv<AXIS_MAX_DATAW> tdata = axis_multiplier_interface.tdata.read();
@@ -120,31 +122,25 @@ void multiplier::Tick() {
       // Store to ififo
       ififo_wdata_signal.write(input_data_temp);
       ififo_wen_signal.write(true);
-      std::cout << "     MULTIPLIER RECEIVING: " <<  input_data_temp << endl;
+      // std::cout << "     MULTIPLIER RECEIVING: " <<  input_data_temp << endl;
     } else { 
       ififo_wen_signal.write(false);
     }
 
     // Process read to registers, and store directly to ofifo
+    // Here wen can be written because we use almost_full signal, which gives some buffer zone to prevent the "lag by 1" issue
     if (!ofifo_almost_full_signal.read() && !ififo_empty_signal.read()) {
       // If we have space to write values and we do have value to write
       ofifo_wen_signal.write(true);
       data_vector<int16_t> tdata = ififo_rdata_signal.read(); 
       output_data_temp[0] = internal_register * tdata[0];
-      std::cout << "MULTIPLIER WRITING TO OFIFO: " << output_data_temp[0] << endl;
+      // std::cout << "MULTIPLIER WRITING TO OFIFO: " << output_data_temp[0] << endl;
       ofifo_wdata_signal.write(output_data_temp);
       internal_register = tdata[0]; // rdata_signal returns a data_vector of int16_t
     } else {
       ofifo_wen_signal.write(false);
     }
-
-    // Process output from OFIFO
-    if (output_ready.read() && output_valid.read()) {
-      // Read from ofifo and convert data_vector to int16
-      data_vector<int32_t> tdata = ofifo_rdata_signal.read();
-      output.write(tdata[0]);
-    } 
-
+    
     wait();
   }
 }
