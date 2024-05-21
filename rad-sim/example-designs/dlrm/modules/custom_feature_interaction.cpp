@@ -68,7 +68,7 @@ custom_feature_interaction::custom_feature_interaction(
   _ofifo_empty.init(_num_output_channels);
 
   std::string resp_filename =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir") +
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id) +
       "/compiler/embedding_indecies.in";
   ParseFeatureInteractionInstructions(instructions_file, _instructions,
                                       resp_filename, _num_expected_responses);
@@ -242,7 +242,7 @@ void custom_feature_interaction::Tick() {
     for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
       if (axis_interface[ch_id].tready.read() &&
           axis_interface[ch_id].tvalid.read()) {
-        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
         data_vector<int16_t> tx_tdata = _output_fifos[ch_id].front();
         //std::cout << "custom_feature_interaction @ cycle " << curr_cycle << ": tx_tdata sent " << tx_tdata << " from RAD " << radsim_design->rad_id << " with tdest field " << axis_interface[ch_id].tdest.read() << std::endl;
         _output_fifos[ch_id].pop();

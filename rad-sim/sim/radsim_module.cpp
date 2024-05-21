@@ -42,6 +42,7 @@ void RADSimModule::RegisterAxisMasterPort(std::string &port_name,
 void RADSimModule::RegisterAximmSlavePort(std::string &port_name,
                                            aximm_slave_port *port_ptr,
                                            unsigned int port_dataw) {
+  std::cout << "radsim_module.cpp RegisterAximmSlavePort() port_name: " << port_name << std::endl;
   _ordered_aximm_slave_ports.push_back(port_name);
   _aximm_slave_ports[port_name] = port_ptr;
   _ports_dataw[port_name] = port_dataw;
@@ -53,6 +54,7 @@ void RADSimModule::RegisterAximmSlavePort(std::string &port_name,
 void RADSimModule::RegisterAximmMasterPort(std::string &port_name,
                                             aximm_master_port *port_ptr,
                                             unsigned int port_dataw) {
+  std::cout << "radsim_module.cpp RegisterAximmMasterPort() port_name: " << port_name << std::endl;
   _ordered_aximm_master_ports.push_back(port_name);
   _aximm_master_ports[port_name] = port_ptr;
   _ports_dataw[port_name] = port_dataw;

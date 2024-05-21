@@ -72,7 +72,7 @@ mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
   std::string mem_name_str;
   matrix_memory.resize(DOT_PRODUCTS);
   std::string mvm_dir =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir");
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
   std::string mem_init_file;
   for (unsigned int dot_id = 0; dot_id < DOT_PRODUCTS; dot_id++) {
     mem_init_file = mvm_dir + "/compiler/mvm_weights/layer" +

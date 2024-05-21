@@ -90,7 +90,7 @@ RADSimInterRad::writeFifo() {
     wait();
     while (true) {
         //get current cycle for experiments
-        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
 
         //iterate thru all RADs
         for (int i = 0; i < num_rads; i++) {
@@ -166,7 +166,7 @@ RADSimInterRad::readFifo() {
         //std::cout << "inter_rad fifo free before READ is " << this->fifos[0]->num_free() << "/" << this->fifos[0]->num_available() << std::endl;
         
         //get current cycle for experiments
-        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
 
         //sc_bv<DATAW> val = this->fifos[0]->read();
         for (int i = 0; i < num_rads; i++) { //iterate through all rad's fifos

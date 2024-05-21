@@ -19,9 +19,10 @@ SimTraceRecording sim_trace_probe;
 
 int sc_main(int argc, char *argv[]) {
 	//AKB: moved from RADSimDesignContext constructor to here
-	std::string radsim_knobs_filename = "/sim/radsim_knobs";
+	std::string radsim_knobs_filename = "/sim/radsim_knobs_akb";
 	std::string radsim_knobs_filepath = RADSIM_ROOT_DIR + radsim_knobs_filename;
-	ParseRADSimKnobs(radsim_knobs_filepath); //TODO: move this to main.cpp so it only gets called once, not per-RAD
+	radsim_config.ResizeAll(2); //bc two RADs
+	ParseRADSimKnobs(radsim_knobs_filepath); //AKB moved this to main.cpp so it only gets called once, not per-RAD
 
 	//AKB: using RADSimCluster class instead of creating new above
 	//RADSimCluster* cluster = new RADSimCluster(3); //2);

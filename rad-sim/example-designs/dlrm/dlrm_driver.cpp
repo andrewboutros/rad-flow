@@ -76,7 +76,7 @@ dlrm_driver::dlrm_driver(const sc_module_name &name, RADSimDesignContext* radsim
 
   // Parse design configuration (number of layers & number of MVM per layer)
   std::string design_root_dir =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir");
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
 
   std::string inputs_filename =
       design_root_dir + "/compiler/embedding_indecies.in";
@@ -113,7 +113,7 @@ void dlrm_driver::source() {
 
   unsigned int idx = 0;
   _start_cycle =
-      GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+      GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
   while (idx < _lookup_indecies.size()) {
     lookup_indecies_data.write(_lookup_indecies[idx]);
     lookup_indecies_target_channels.write(_target_channels[idx]);
@@ -214,7 +214,7 @@ void dlrm_driver::sink() {
     radsim_design->ReportDesignFailure();
   }
   _end_cycle =
-      GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+      GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
   std::cout << "Simulated " << (_end_cycle - _start_cycle) << " cycle(s)"
             << std::endl;
 

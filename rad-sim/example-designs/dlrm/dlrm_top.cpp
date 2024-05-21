@@ -8,7 +8,7 @@ dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
   unsigned int embedding_lookup_fifos_depth = 16;
   unsigned int feature_interaction_fifos_depth = 64;
   unsigned int num_mem_controllers =
-      radsim_config.GetIntKnobPerRad("dram_num_controllers", -1); //TODO: merge with my other dlrm changes branch, then fix to use rad id
+      radsim_config.GetIntKnobPerRad("dram_num_controllers", radsim_design->rad_id);
   assert(num_mem_controllers == mem_channels.size());
   unsigned int total_mem_channels = 0;
   for (auto &num_channels : mem_channels) {
@@ -20,7 +20,7 @@ dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
 
   // Parse MVM configuration
   std::string design_root_dir =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir");
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
   std::string design_config_filename =
       design_root_dir + "/compiler/mvms.config";
 
@@ -59,7 +59,7 @@ dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
   module_name_str = "feature_interaction_inst";
   std::strcpy(module_name, module_name_str.c_str());
   std::string feature_interaction_inst_file =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir") +
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id) +
       "/compiler/instructions/feature_interaction.inst";
   feature_interaction_inst = new custom_feature_interaction(
       module_name, line_bitwidth, element_bitwidth, total_mem_channels,
@@ -116,11 +116,11 @@ dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
   mem_clks.resize(num_mem_controllers);
   unsigned int ch_id = 0;
   std::string mem_content_init_prefix =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir") +
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id) +
       "/compiler/embedding_tables/channel_";
   for (unsigned int ctrl_id = 0; ctrl_id < num_mem_controllers; ctrl_id++) {
     double mem_clk_period =
-        radsim_config.GetDoubleVectorKnob("dram_clk_periods", ctrl_id);
+        radsim_config.GetDoubleVectorKnobPerRad("dram_clk_periods", ctrl_id, radsim_design->rad_id);
     module_name_str = "ext_mem_" + to_string(ctrl_id) + "_clk";
     std::strcpy(module_name, module_name_str.c_str());
     mem_clks[ctrl_id] = new sc_clock(module_name, mem_clk_period, SC_NS);

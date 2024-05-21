@@ -1,0 +1,42 @@
+radsim_root_dir /home/bassiabn/rad-sim/rad-flow/rad-sim
+design_name 0 dlrm
+design_name 1 dlrm
+noc_num_nocs 0 1
+noc_clk_period 0 1.0
+noc_vcs 0 5
+noc_payload_width 0 82
+noc_num_nodes 0 100
+design_noc_placement 0 dlrm.place
+noc_adapters_clk_period 0 1.25
+noc_adapters_fifo_size 0 16
+noc_adapters_obuff_size 0 2
+noc_adapters_in_arbiter 0 fixed_rr
+noc_adapters_out_arbiter 0 priority_rr
+noc_adapters_vc_mapping 0 direct 
+design_clk_periods 0 5.0 2.0 3.32 1.5
+noc_num_nocs 1 1
+noc_clk_period 1 1.0
+noc_vcs 1 5
+noc_payload_width 1 82
+noc_num_nodes 1 100
+design_noc_placement 1 dlrm.place
+noc_adapters_clk_period 1 1.25
+noc_adapters_fifo_size 1 16
+noc_adapters_obuff_size 1 2
+noc_adapters_in_arbiter 1 fixed_rr
+noc_adapters_out_arbiter 1 priority_rr
+noc_adapters_vc_mapping 1 direct 
+design_clk_periods 1 5.0 2.0 3.32 1.5
+sim_driver_period 5.0
+telemetry_log_verbosity 2
+telemetry_traces Embedding LU Mem0 Mem1 Mem2 Mem3 Feature Inter. MVM first MVM last
+dram_num_controllers 0 4
+dram_clk_periods 0 3.32 3.32 2.0 2.0
+dram_queue_sizes 0 64 64 64 64
+dram_config_files 0 DDR4_8Gb_x16_2400 DDR4_8Gb_x16_2400 HBM2_8Gb_x128 HBM2_8Gb_x128
+dram_num_controllers 1 4
+dram_clk_periods 1 3.32 3.32 2.0 2.0
+dram_queue_sizes 1 64 64 64 64
+dram_config_files 1 DDR4_8Gb_x16_2400 DDR4_8Gb_x16_2400 HBM2_8Gb_x128 HBM2_8Gb_x128
+radsim_user_design_root_dir 0 /home/bassiabn/rad-sim/rad-flow/rad-sim/example-designs/dlrm
+radsim_user_design_root_dir 1 /home/bassiabn/rad-sim/rad-flow/rad-sim/example-designs/dlrm

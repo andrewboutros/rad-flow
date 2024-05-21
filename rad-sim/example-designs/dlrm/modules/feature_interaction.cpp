@@ -80,7 +80,7 @@ feature_interaction::feature_interaction(const sc_module_name &name,
   _ofifo_empty.init(_num_output_channels);
 
   std::string resp_filename =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir") +
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id) +
       "/compiler/embedding_indecies.in";
   ParseFeatureInteractionInstructions(instructions_file, _instructions,
                                       resp_filename, _num_expected_responses);

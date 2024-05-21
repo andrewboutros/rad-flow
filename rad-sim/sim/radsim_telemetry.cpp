@@ -70,7 +70,7 @@ std::vector<double> NoCTransactionTelemetry::DumpTrafficFlows(const std::string&
   std::vector<std::vector<std::unordered_map<unsigned int, unsigned int>>> traffic_bits(num_nocs);
   std::vector<std::vector<std::unordered_map<unsigned int, unsigned int>>> traffic_num_hops(num_nocs);
   for (unsigned int noc_id = 0; noc_id < num_nocs; noc_id++) {
-    unsigned int num_nodes = radsim_config.GetIntVectorKnobPerRad("noc_num_nodes", noc_id);
+    unsigned int num_nodes = radsim_config.GetIntVectorKnobPerRad("noc_num_nodes", noc_id, rad_id);
     traffic_bits[noc_id].resize(num_nodes);
     traffic_num_hops[noc_id].resize(num_nodes);
   }

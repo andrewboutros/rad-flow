@@ -61,6 +61,7 @@ bool IsSlavePort(std::string &port_name, RADSimModule *module_ptr) {
                           module_ptr->_axis_master_ports.end();
     bool is_aximm_master = module_ptr->_aximm_master_ports.find(port_name) !=
                            module_ptr->_aximm_master_ports.end();
+    std::cout << "design_context.cpp: port_name and is_aximm_master and is_axis_master " << port_name << " " << is_aximm_master << " " << is_axis_master << std::endl;
     assert(is_aximm_master || is_axis_master);
   }
   return (is_axis_slave || is_aximm_slave);
@@ -98,6 +99,7 @@ void RADSimDesignContext::ParseNoCPlacement(const std::string &design_path, //AK
       //design_path + "/" + //AKB: had added this as workaround until config-file changes
       placement_filename;
   std::ifstream placement_file(placement_filepath);
+  std::cout << "placement_filepath: " << placement_filepath << std::endl;
 
   std::string line;
   while (std::getline(placement_file, line)) {
@@ -338,6 +340,7 @@ void RADSimDesignContext::RegisterModule(std::string module_name,
 void RADSimDesignContext::BuildDesignContext(const std::string &design_path, //AKB ADDED first arg
     const std::string &placement_filename, const std::string &clks_filename) {
   unsigned int num_nocs = radsim_config.GetIntKnobPerRad("noc_num_nocs", rad_id);
+  std::cout << "rad_id " << rad_id << " has num_nocs " << num_nocs << std::endl;
   _node_id_is_aximm.resize(num_nocs);
   _node_id_ports_list.resize(num_nocs);
   _noc_axis_slave_adapter_info.resize(num_nocs);

@@ -56,7 +56,7 @@ void portal::Tick() { //sequential logic
     //Always @ positive edge of clock
     while (true) {
 
-        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
 
         //Accepting incoming NoC transaction
         if (axis_portal_slave_interface.tvalid.read() &&
@@ -91,7 +91,7 @@ void portal::Tick() { //sequential logic
             //pop out of fifo
             if (!portal_axis_fifo_noc_incoming.empty()) {
                 //test_ready_toggle = false;
-                int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+                int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
                 sc_bv<DATAW> tx_tdata_bv = portal_axis_fifo_noc_incoming.front().tdata;
                 data_vector<int16_t> tx_tdata(32);
                 bv_to_data_vector(tx_tdata_bv, tx_tdata, 32);
@@ -190,7 +190,7 @@ void portal::Tick() { //sequential logic
             //pop out of fifo
             if (!portal_axis_fifo_noc_outgoing.empty()) {
                 //test_ready_toggle = false;
-                int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+                int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
                 sc_bv<DATAW> tx_tdata_bv = portal_axis_fifo_noc_outgoing.front().tdata;
                 data_vector<int16_t> tx_tdata(32);
                 bv_to_data_vector(tx_tdata_bv, tx_tdata, 32);

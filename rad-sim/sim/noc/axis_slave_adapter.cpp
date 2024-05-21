@@ -17,7 +17,7 @@ axis_slave_adapter::axis_slave_adapter(
   _network_id = network_id;
   _node_period = node_period;
   _adapter_period = adapter_period;
-  _noc_period = radsim_config.GetDoubleVectorKnob("noc_clk_period", _network_id);
+  _noc_period = radsim_config.GetDoubleVectorKnobPerRad("noc_clk_period", _network_id, _rad_id);
   _num_axis_interfaces = interface_types.size();
   _interface_types = interface_types;
   _interface_dataw = interface_dataw;
@@ -51,7 +51,7 @@ axis_slave_adapter::axis_slave_adapter(
   _input_axis_transactions_afifo_depth = 2;
 
   _injection_afifo_depth =
-      radsim_config.GetIntVectorKnob("noc_adapters_fifo_size", _network_id);
+      radsim_config.GetIntVectorKnobPerRad("noc_adapters_fifo_size", _network_id, _rad_id);
   _injection_flit_ready = false;
 
   SC_METHOD(InputReady);
