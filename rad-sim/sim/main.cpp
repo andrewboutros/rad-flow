@@ -24,9 +24,11 @@ int sc_main(int argc, char *argv[]) {
 	radsim_config.ResizeAll(2); //bc two RADs
 	ParseRADSimKnobs(radsim_knobs_filepath); //AKB moved this to main.cpp so it only gets called once, not per-RAD
 
+	int num_rads_parsed = radsim_config.GetIntKnobShared("num_rads");
+	std::cout << "num_rads_parsed: " << num_rads_parsed << std::endl;
 	//AKB: using RADSimCluster class instead of creating new above
 	//RADSimCluster* cluster = new RADSimCluster(3); //2);
-	RADSimCluster* cluster = new RADSimCluster(2);
+	RADSimCluster* cluster = new RADSimCluster(num_rads_parsed);
 
 	gWatchOut = &cout;
 	int log_verbosity = radsim_config.GetIntKnobShared("telemetry_log_verbosity");

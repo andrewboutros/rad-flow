@@ -92,11 +92,9 @@ uint64_t DeterminedBaseAddress(int noc_id, int node_id, int rad_id) {
   return base_addr;
 }
 
-void RADSimDesignContext::ParseNoCPlacement(const std::string &design_path, //AKB ADDED first arg
-    const std::string &placement_filename) {
+void RADSimDesignContext::ParseNoCPlacement(const std::string &placement_filename) {
   std::string placement_filepath =
       radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", rad_id) + "/" +
-      //design_path + "/" + //AKB: had added this as workaround until config-file changes
       placement_filename;
   std::ifstream placement_file(placement_filepath);
   std::cout << "placement_filepath: " << placement_filepath << std::endl;
@@ -304,11 +302,9 @@ void RADSimDesignContext::ParseNoCPlacement(const std::string &design_path, //AK
   }
 }
 
-void RADSimDesignContext::ParseClockSettings(const std::string &design_path, //AKB ADDED first arg
-  const std::string &clks_filename) {
+void RADSimDesignContext::ParseClockSettings(const std::string &clks_filename) {
   std::string clks_filepath =
       radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", rad_id) + "/" +
-      //design_path + "/" + //AKB: had added this as workaround until config-file changes
       clks_filename;
   std::ifstream clks_file(clks_filepath);
 
@@ -337,8 +333,7 @@ void RADSimDesignContext::RegisterModule(std::string module_name,
   _design_modules[module_name] = module_ptr;
 }
 
-void RADSimDesignContext::BuildDesignContext(const std::string &design_path, //AKB ADDED first arg
-    const std::string &placement_filename, const std::string &clks_filename) {
+void RADSimDesignContext::BuildDesignContext(const std::string &placement_filename, const std::string &clks_filename) {
   unsigned int num_nocs = radsim_config.GetIntKnobPerRad("noc_num_nocs", rad_id);
   std::cout << "rad_id " << rad_id << " has num_nocs " << num_nocs << std::endl;
   _node_id_is_aximm.resize(num_nocs);
@@ -356,8 +351,8 @@ void RADSimDesignContext::BuildDesignContext(const std::string &design_path, //A
   _num_noc_aximm_slave_ports.resize(num_nocs);
   _num_noc_aximm_master_ports.resize(num_nocs);
 
-  ParseNoCPlacement(design_path, placement_filename); //AKB ADDED first arg
-  ParseClockSettings(design_path, clks_filename);
+  ParseNoCPlacement(placement_filename);
+  ParseClockSettings(clks_filename);
 
   for (unsigned int noc_id = 0; noc_id < num_nocs; noc_id++) {
     for (auto node_it = _node_id_ports_list[noc_id].begin();

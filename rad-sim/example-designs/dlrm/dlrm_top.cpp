@@ -145,7 +145,7 @@ dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
   portal_inst->portal_axis_master.ConnectToPort(this->design_top_portal_axis_master);
   portal_inst->portal_axis_slave.ConnectToPort(this->design_top_portal_axis_slave); //top drives portal bc top receives slave inputs
 
-  radsim_design->BuildDesignContext("/home/bassiabn/rad-sim/rad-flow/rad-sim/example-designs/dlrm", "dlrm.place", "dlrm.clks");
+  radsim_design->BuildDesignContext("dlrm.place", "dlrm.clks");
   radsim_design->CreateSystemNoCs(rst);
   radsim_design->ConnectModulesToNoC();
 }

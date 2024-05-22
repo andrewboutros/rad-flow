@@ -33,8 +33,7 @@ add_top::add_top(const sc_module_name &name, RADSimDesignContext* radsim_design)
   portal_inst->portal_axis_master.ConnectToPort(this->design_top_portal_axis_master);
   portal_inst->portal_axis_slave.ConnectToPort(this->design_top_portal_axis_slave); //top drives portal bc top receives slave inputs
 
-  radsim_design->BuildDesignContext("/home/bassiabn/rad-sim/rad-flow/rad-sim/example-designs/add", "add.place",
-                                   "add.clks");
+  radsim_design->BuildDesignContext("add.place", "add.clks");
   radsim_design->CreateSystemNoCs(rst);
   radsim_design->ConnectModulesToNoC();
 }
