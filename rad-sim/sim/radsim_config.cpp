@@ -356,7 +356,7 @@ void ParseRADSimKnobs(const std::string &knobs_filename) {
 
     // Based on parameter name, parse a single or a vector of values of int,
     // double or string data types
-    if (param == "radsim_root_dir") {
+    if ( (param == "radsim_root_dir") || (param == "cluster_topology") ){ //TODO: support other topologies, for now this param does not do anything actively
       std::string value;
       std::getline(ss, value, ' ');
       radsim_config.AddStringKnobShared(param, value);
@@ -367,7 +367,7 @@ void ParseRADSimKnobs(const std::string &knobs_filename) {
       std::string value;
       std::getline(ss, value, ' ');
       radsim_config.AddStringKnobPerRad(param, value, rad_id);
-    } else if (param == "telemetry_log_verbosity") {
+    } else if ( (param == "telemetry_log_verbosity") || (param == "num_rads") ) {
       std::string value_str;
       std::getline(ss, value_str, ' ');
       int value = std::stoi(value_str);
@@ -451,7 +451,10 @@ void ParseRADSimKnobs(const std::string &knobs_filename) {
         value.push_back(value_element);
       }
       radsim_config.AddStringVectorKnobPerRad(param, value, rad_id);
-    } else {
+    } else if (param == "cluster_configs") {
+      continue; //go to next iteration, not using this knob for anything currently. was used to generate the radsim_knobs file.
+    }
+    else {
       std::cerr << "Undefined RADSim knob \"" << param << "\"" << std::endl;
       exit(1);
     }

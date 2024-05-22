@@ -3,29 +3,36 @@ import math
 import yaml
 import sys
 import shutil
+from itertools import repeat
+from copy import deepcopy
 
-def parse_config_file(config_filename, booksim_params, radsim_header_params, radsim_knobs):
+def parse_config_file(config_filename, booksim_params, radsim_header_params, radsim_knobs, cluster_knobs):
     with open(config_filename, 'r') as yaml_config:
         config = yaml.safe_load(yaml_config)
     
+    config_counter = 0
     for config_section in config:
-        #print(config_section + ':')
+        print(config_section + ':')
         for param_category, param in config[config_section].items():
-            if (isinstance(param, dict)):
-                #print('     ' + param_category + ':')
+            if 'config' in config_section and (isinstance(param, dict)):
+                print('     ' + param_category + ':')
                 for param, param_value in param.items():
-                    #print('         ' + param, param_value)
+                    print('         ' + param, param_value)
                     param_name = param_category + '_' + param
                     invalid_param = True
-                    if param_name in booksim_params:
-                        booksim_params[param_name] = param_value
+                    if param_name in booksim_params[config_counter]:
+                        booksim_params[config_counter][param_name] = param_value
                         invalid_param = False
-                    if param_name in radsim_header_params:
-                        radsim_header_params[param_name] = param_value
+                    if param_name in radsim_header_params[config_counter]:
+                        radsim_header_params[config_counter][param_name] = param_value
                         invalid_param = False
-                    if param_name in radsim_knobs:
-                        radsim_knobs[param_name] = param_value
+                    if param_name in radsim_knobs[config_counter]:
+                        radsim_knobs[config_counter][param_name] = param_value
                         invalid_param = False
+                    if param_name == "dram_config_files":
+                        print('param_value')
+                        print(config_counter)
+                        print(param_value)
 
                     if invalid_param:
                         print("Config Error: Parameter " + param_name + " is invalid!")
@@ -33,37 +40,40 @@ def parse_config_file(config_filename, booksim_params, radsim_header_params, rad
             elif config_section == "cluster":
                 param_value = param #bc no subsection, so correction
                 param = param_category #bc no subsection, so correction
-                #print('     ' + param, param_value)
-                param_name = 'cluster_' + param
+                print('     ' + param, param_value)
+                if 'topology' in param or 'configs' in param:
+                    param_name = 'cluster_' + param
+                else:
+                    param_name = param
                 #print(param_name)
+                #TODO: below doesnt rlly make sense for cluster-level params, fix up
                 invalid_param = True
-                if param_name in booksim_params:
-                    booksim_params[param_name] = param_value
+                if param_name in cluster_knobs:
+                    cluster_knobs[param_name] = param_value
                     invalid_param = False
-                if param_name in radsim_header_params:
-                    radsim_header_params[param_name] = param_value
-                    invalid_param = False
-                if param_name in radsim_knobs:
-                    radsim_knobs[param_name] = param_value
-                    invalid_param = False
-
+                # if param_name in booksim_params[config_counter]:
+                #     booksim_params[config_counter][param_name] = param_value
+                #     invalid_param = False
+                # if param_name in radsim_header_params[config_counter]:
+                #     radsim_header_params[config_counter][param_name] = param_value
+                #     invalid_param = False
+                # if param_name in radsim_knobs[config_counter]:
+                #     radsim_knobs[config_counter][param_name] = param_value
+                #     invalid_param = False
                 if invalid_param:
                     print("Config Error: Parameter " + param_name + " is invalid!")
                     exit(1)
+        config_counter += 1
 
-    '''noc_num_nodes = []
-    for n in range(radsim_knobs["noc_num_nocs"]):
-        noc_num_nodes.append(0)
-    radsim_knobs["noc_num_nodes"] = noc_num_nodes
-    radsim_header_params["noc_num_nodes"] = noc_num_nodes
-    
-    radsim_knobs["radsim_user_design_root_dir"] = radsim_knobs["radsim_root_dir"] + "/example-designs/" + radsim_knobs["design_name"]
+    for i in range(0, num_configs):
+        radsim_knobs[i]["radsim_user_design_root_dir"] = cluster_knobs["radsim_root_dir"] + "/example-designs/" + radsim_knobs[i]["design_name"]
 
-    longest_clk_period = radsim_knobs["design_clk_periods"][0]
-    for p in radsim_knobs["design_clk_periods"]:
-        if p > longest_clk_period:
-            longest_clk_period = p
-    radsim_knobs["sim_driver_period"] = longest_clk_period'''
+    #commented out below bc yaml file now explicitly sets sim_driver_perid
+    # longest_clk_period = radsim_knobs["design_clk_periods"][0]
+    # for p in radsim_knobs["design_clk_periods"]:
+    #     if p > longest_clk_period:
+    #         longest_clk_period = p
+    # radsim_knobs["sim_driver_period"] = longest_clk_period
     
 
 def print_config(booksim_params, radsim_header_params, radsim_knobs):
@@ -78,98 +88,105 @@ def print_config(booksim_params, radsim_header_params, radsim_knobs):
         print(param + " : " + str(radsim_knobs[param]))
 
 
-def generate_booksim_config_files(booksim_params, radsim_header_params, radsim_knobs):
-    for i in range(booksim_params["noc_num_nocs"]):
-        booksim_config_file = open(booksim_params["radsim_root_dir"] + "/sim/noc/noc" + str(i) + "_config_akb_test", "w") #AKB created temp file to test
+def generate_booksim_config_files(booksim_params, radsim_header_params, radsim_knobs, cluster_knobs):
+    for curr_config_num in range(num_configs):
+        for i in range(booksim_params[curr_config_num]["noc_num_nocs"]):
+            booksim_config_file = open(booksim_params[curr_config_num]["radsim_root_dir"] + "/sim/noc/noc" + str(i) + "_config"+ str(curr_config_num) + "_config_akb_test", "w") #AKB created temp file to test
 
-        # Booksim topology configuration
-        booksim_config_file.write("// Topology\n")
-        noc_topology = booksim_params["noc_topology"][i]
-        noc_type = booksim_params["noc_type"][i]
-        if noc_topology == "mesh" or noc_topology == "torus":
-            # A 3D RAD instance is modeled as a concenterated mesh NoC
-            if noc_type == "2d":
-                booksim_config_file.write("topology = " + noc_topology + ";\n")
-            elif noc_type == "3d" and noc_topology == "mesh":
-                booksim_config_file.write("topology = cmesh;\n")
+            # Booksim topology configuration
+            booksim_config_file.write("// Topology\n")
+            noc_topology = booksim_params[curr_config_num]["noc_topology"][i]
+            noc_type = booksim_params[curr_config_num]["noc_type"][i]
+            if noc_topology == "mesh" or noc_topology == "torus":
+                # A 3D RAD instance is modeled as a concenterated mesh NoC
+                if noc_type == "2d":
+                    booksim_config_file.write("topology = " + noc_topology + ";\n")
+                elif noc_type == "3d" and noc_topology == "mesh":
+                    booksim_config_file.write("topology = cmesh;\n")
+                else:
+                    print("Config Error: noc_type parameter value has to be 2d or 3d")
+                    exit(1)
+
+                # Booksim does not support assymetric meshes so it is simplified as a square mesh assuming that a simple dim
+                # order routing will never use the links/routers outside the specified grid
+                noc_dim_x = booksim_params[curr_config_num]["noc_dim_x"][i]
+                noc_dim_y = booksim_params[curr_config_num]["noc_dim_y"][i]
+                larger_noc_dim = noc_dim_x
+                if noc_dim_y > noc_dim_x:
+                    larger_noc_dim = noc_dim_y
+                booksim_config_file.write("k = " + str(larger_noc_dim) + ";\n")
+                booksim_config_file.write("n = 2;\n")
+
+                # Booksim supports concentrated meshes of 4 nodes per router only -- RAD-Sim works around that by modeling 
+                # 3D RAD instances as a concentrated mesh of FPGA node, base die node, and two "empty" nodes by adjusting 
+                # their IDs
+                if noc_type == "3d":
+                    radsim_header_params[curr_config_num]["noc_num_nodes"][i] = (larger_noc_dim * larger_noc_dim * 4)
+                    #TODO: make changes to have per-RAD booksim config too. for now, just hacky workaround to get radsim_knobs set
+                    #for j in range(cluster_knobs["num_rads"]):
+                        #radsim_knobs[j]["noc_num_nodes"][i] = larger_noc_dim * larger_noc_dim * 4
+                    radsim_knobs[curr_config_num]["noc_num_nodes"][i] = larger_noc_dim * larger_noc_dim * 4
+                    booksim_config_file.write("c = 4;\n")
+                    booksim_config_file.write("xr = 2;\n")
+                    booksim_config_file.write("yr = 2;\n")
+                else:
+                    radsim_header_params[curr_config_num]["noc_num_nodes"][i] = (larger_noc_dim * larger_noc_dim)
+                    #TODO: make changes to have per-RAD booksim config AND radsim_header_params too. for now, just hacky workaround to get radsim_knobs set
+                    # for j in range(cluster_knobs["num_rads"]):
+                    #     radsim_knobs[j]["noc_num_nodes"][i] = larger_noc_dim * larger_noc_dim
+                    radsim_knobs[curr_config_num]["noc_num_nodes"][i] = larger_noc_dim * larger_noc_dim
+
+            elif noc_topology == "anynet":
+                booksim_config_file.write("topology = anynet;\n")
+                booksim_config_file.write("network_file = " + booksim_params[curr_config_num]["noc_anynet_file"][i] + ";\n")
+                if radsim_header_params[curr_config_num]["noc_num_nodes"][i] == 0:
+                    print("Config Error: Number of nodes parameter missing for anynet NoC topologies!")
+                    exit(1)
+
             else:
-                print("Config Error: noc_type parameter value has to be 2d or 3d")
+                print("Config Error: This NoC topology is not supported by RAD-Sim!")
                 exit(1)
+            booksim_config_file.write("\n")
 
-            # Booksim does not support assymetric meshes so it is simplified as a square mesh assuming that a simple dim
-            # order routing will never use the links/routers outside the specified grid
-            noc_dim_x = booksim_params["noc_dim_x"][i]
-            noc_dim_y = booksim_params["noc_dim_y"][i]
-            larger_noc_dim = noc_dim_x
-            if noc_dim_y > noc_dim_x:
-                larger_noc_dim = noc_dim_y
-            booksim_config_file.write("k = " + str(larger_noc_dim) + ";\n")
-            booksim_config_file.write("n = 2;\n")
+            # Booksim routing function configuration
+            booksim_config_file.write("// Routing\n")
+            booksim_config_file.write("routing_function = " + booksim_params[curr_config_num]["noc_routing_func"][i] + ";\n")
+            booksim_config_file.write("\n")
 
-            # Booksim supports concentrated meshes of 4 nodes per router only -- RAD-Sim works around that by modeling 
-            # 3D RAD instances as a concentrated mesh of FPGA node, base die node, and two "empty" nodes by adjusting 
-            # their IDs
-            if noc_type == "3d":
-                radsim_header_params["noc_num_nodes"][i] = (larger_noc_dim * larger_noc_dim * 4)
-                radsim_knobs["noc_num_nodes"][i] = larger_noc_dim * larger_noc_dim * 4
-                booksim_config_file.write("c = 4;\n")
-                booksim_config_file.write("xr = 2;\n")
-                booksim_config_file.write("yr = 2;\n")
-            else:
-                radsim_header_params["noc_num_nodes"][i] = (larger_noc_dim * larger_noc_dim)
-                radsim_knobs["noc_num_nodes"][i] = larger_noc_dim * larger_noc_dim
-
-        elif noc_topology == "anynet":
-            booksim_config_file.write("topology = anynet;\n")
-            booksim_config_file.write("network_file = " + booksim_params["noc_anynet_file"][i] + ";\n")
-            if radsim_header_params["noc_num_nodes"][i] == 0:
-                print("Config Error: Number of nodes parameter missing for anynet NoC topologies!")
+            # Booksim flow control configuration
+            booksim_config_file.write("// Flow control\n")
+            noc_vcs = booksim_params[curr_config_num]["noc_vcs"][i]
+            noc_num_packet_types = booksim_params[curr_config_num]["noc_num_packet_types"][i]
+            if noc_vcs % noc_num_packet_types != 0:
+                print("Config Error: Number of virtual channels has to be a multiple of the number of packet types!")
                 exit(1)
+            if noc_num_packet_types > 5:
+                print("Config Error: RAD-Sim supports up to 5 packet types")
+                exit(1)
+            noc_num_vcs_per_packet_type = int(noc_vcs / noc_num_packet_types)
+            booksim_config_file.write("num_vcs = " + str(noc_vcs) + ";\n")
+            booksim_config_file.write("vc_buf_size = " + str(booksim_params[curr_config_num]["noc_vc_buffer_size"][i]) + ";\n")
+            booksim_config_file.write("output_buffer_size = "+ str(booksim_params[curr_config_num]["noc_output_buffer_size"][i])+ ";\n")
+            booksim_flit_types = ["read_request", "write_request", "write_data", "read_reply", "write_reply"]
+            vc_count = 0
+            for t in range(noc_num_packet_types):
+                booksim_config_file.write(booksim_flit_types[t] + "_begin_vc = " + str(vc_count) + ";\n")
+                vc_count = vc_count + noc_num_vcs_per_packet_type
+                booksim_config_file.write(booksim_flit_types[t] + "_end_vc = " + str(vc_count - 1) + ";\n")
+            booksim_config_file.write("\n")
 
-        else:
-            print("Config Error: This NoC topology is not supported by RAD-Sim!")
-            exit(1)
-        booksim_config_file.write("\n")
-
-        # Booksim routing function configuration
-        booksim_config_file.write("// Routing\n")
-        booksim_config_file.write("routing_function = " + booksim_params["noc_routing_func"][i] + ";\n")
-        booksim_config_file.write("\n")
-
-        # Booksim flow control configuration
-        booksim_config_file.write("// Flow control\n")
-        noc_vcs = booksim_params["noc_vcs"][i]
-        noc_num_packet_types = booksim_params["noc_num_packet_types"][i]
-        if noc_vcs % noc_num_packet_types != 0:
-            print("Config Error: Number of virtual channels has to be a multiple of the number of packet types!")
-            exit(1)
-        if noc_num_packet_types > 5:
-            print("Config Error: RAD-Sim supports up to 5 packet types")
-            exit(1)
-        noc_num_vcs_per_packet_type = int(noc_vcs / noc_num_packet_types)
-        booksim_config_file.write("num_vcs = " + str(noc_vcs) + ";\n")
-        booksim_config_file.write("vc_buf_size = " + str(booksim_params["noc_vc_buffer_size"][i]) + ";\n")
-        booksim_config_file.write("output_buffer_size = "+ str(booksim_params["noc_output_buffer_size"][i])+ ";\n")
-        booksim_flit_types = ["read_request", "write_request", "write_data", "read_reply", "write_reply"]
-        vc_count = 0
-        for t in range(noc_num_packet_types):
-            booksim_config_file.write(booksim_flit_types[t] + "_begin_vc = " + str(vc_count) + ";\n")
-            vc_count = vc_count + noc_num_vcs_per_packet_type
-            booksim_config_file.write(booksim_flit_types[t] + "_end_vc = " + str(vc_count - 1) + ";\n")
-        booksim_config_file.write("\n")
-
-        # Booksim router architecture and delays configuration
-        booksim_config_file.write("// Router architecture & delays\n")
-        booksim_config_file.write("router = " + booksim_params["noc_router_uarch"][i] + ";\n")
-        booksim_config_file.write("vc_allocator = " + booksim_params["noc_vc_allocator"][i] + ";\n")
-        booksim_config_file.write("sw_allocator = " + booksim_params["noc_sw_allocator"][i] + ";\n")
-        booksim_config_file.write("alloc_iters = 1;\n")
-        booksim_config_file.write("wait_for_tail_credit = 0;\n")
-        booksim_config_file.write("credit_delay = " + str(booksim_params["noc_credit_delay"][i]) + ";\n")
-        booksim_config_file.write("routing_delay = " + str(booksim_params["noc_routing_delay"][i]) + ";\n")
-        booksim_config_file.write("vc_alloc_delay = " + str(booksim_params["noc_vc_alloc_delay"][i]) + ";\n")
-        booksim_config_file.write("sw_alloc_delay = " + str(booksim_params["noc_sw_alloc_delay"][i]) + ";\n")
-        booksim_config_file.close()
+            # Booksim router architecture and delays configuration
+            booksim_config_file.write("// Router architecture & delays\n")
+            booksim_config_file.write("router = " + booksim_params[curr_config_num]["noc_router_uarch"][i] + ";\n")
+            booksim_config_file.write("vc_allocator = " + booksim_params[curr_config_num]["noc_vc_allocator"][i] + ";\n")
+            booksim_config_file.write("sw_allocator = " + booksim_params[curr_config_num]["noc_sw_allocator"][i] + ";\n")
+            booksim_config_file.write("alloc_iters = 1;\n")
+            booksim_config_file.write("wait_for_tail_credit = 0;\n")
+            booksim_config_file.write("credit_delay = " + str(booksim_params[curr_config_num]["noc_credit_delay"][i]) + ";\n")
+            booksim_config_file.write("routing_delay = " + str(booksim_params[curr_config_num]["noc_routing_delay"][i]) + ";\n")
+            booksim_config_file.write("vc_alloc_delay = " + str(booksim_params[curr_config_num]["noc_vc_alloc_delay"][i]) + ";\n")
+            booksim_config_file.write("sw_alloc_delay = " + str(booksim_params[curr_config_num]["noc_sw_alloc_delay"][i]) + ";\n")
+            booksim_config_file.close()
 
 
 def generate_radsim_params_header(radsim_header_params):
@@ -284,16 +301,30 @@ def generate_radsim_params_header(radsim_header_params):
     radsim_params_header_file.close()
 
 
-def generate_radsim_config_file(radsim_knobs):
+def generate_radsim_config_file(radsim_knobs, cluster_knobs):
     radsim_config_file = open(radsim_header_params["radsim_root_dir"] + "/sim/radsim_knobs_akb_test", "w") #AKB created temp file to test
-    for param in radsim_knobs:
-        radsim_config_file.write(param + " ")
-        if isinstance(radsim_knobs[param], list):
-            for value in radsim_knobs[param]:
+    for i in range(len(cluster_knobs["cluster_configs"])):
+        curr_config_num = cluster_knobs["cluster_configs"][i] #bc config # for a certain RAD may or may not match RAD ID
+        for param in radsim_knobs[i]:
+            radsim_config_file.write(param + " " + str(i) + " ") # second element is RAD ID
+            if isinstance(radsim_knobs[curr_config_num][param], list):
+                for value in radsim_knobs[curr_config_num][param]:
+                    radsim_config_file.write(str(value) + " ")
+                radsim_config_file.write("\n")
+            else:
+                radsim_config_file.write(str(radsim_knobs[curr_config_num][param]) + "\n")
+    for param in cluster_knobs: #for params shared across cluster
+        if param == 'configs':
+            continue
+        else:
+            radsim_config_file.write(param + " " )
+        
+        if isinstance(cluster_knobs[param], list):
+            for value in cluster_knobs[param]:
                 radsim_config_file.write(str(value) + " ")
             radsim_config_file.write("\n")
         else:
-            radsim_config_file.write(str(radsim_knobs[param]) + "\n")
+            radsim_config_file.write(str(cluster_knobs[param]) + "\n")
     radsim_config_file.close()
 
 def generate_radsim_main(design_name):
@@ -354,13 +385,19 @@ def prepare_build_dir(design_names):
     #os.system("cd ..;")
 
 # Get design name from command line argument
-if len(sys.argv) < 2:
-    print("Invalid arguments: python config.py <design_name>")
+if len(sys.argv) < 3:
+    print("Invalid arguments: python config.py <number_of_configs> <design_name> <[optional] other_design_names>")
     exit(1)
+num_configs = int(sys.argv[1])
 design_names = set() #No duplicating design include statements and cmake commands
-for i in range(1, len(sys.argv)): #skip 0th argument (that is current program name)
+for i in range(2, len(sys.argv)): #skip 0th argument (that is current program name), and 1st (number_of_configs)
     design_names.add(sys.argv[i])
     print(sys.argv[i])
+
+config_indices = []
+for n in range(0, num_configs):
+    config_indices.append(n)
+print(config_indices)
 
 # Check if design directory exists
 for design_name in design_names:
@@ -373,7 +410,7 @@ for design_name in design_names:
 config_filename = "uni_config.yml"
 
 # List default parameter values
-'''booksim_params = {
+booksim_params = {
     "radsim_root_dir": os.getcwd(),
     "noc_type": "2d",
     "noc_num_nocs": 1,
@@ -411,7 +448,7 @@ radsim_header_params = {
     "interfaces_max_axi_data_width": 512,
 }
 radsim_knobs = { #includes cluster config
-    "radsim_root_dir": os.getcwd(),
+    #"radsim_root_dir": os.getcwd(),
     "design_name": design_name,
     "noc_num_nocs": 1,
     "noc_clk_period": [0.571],
@@ -426,29 +463,43 @@ radsim_knobs = { #includes cluster config
     "noc_adapters_out_arbiter": ["priority_rr"],
     "noc_adapters_vc_mapping": ["direct"],
     "design_clk_periods": [5.0],
-    "sim_driver_period": 5.0,
-    "telemetry_log_verbosity": 0,
-    "telemetry_traces": ["trace0", "trace1"],
+    # "sim_driver_period": 5.0,
+    # "telemetry_log_verbosity": 0,
+    # "telemetry_traces": ["trace0", "trace1"],
     "dram_num_controllers": 0,
     "dram_clk_periods": [2.0],
     "dram_queue_sizes": [64],
-    "dram_config_files": ["HBM2_8Gb_x128"],
-    "cluster_num_rads":[1],
-    "cluster_configs":["config_0"],
-    "cluster_topology":["all-to-all"],
-    "cluster_connection_model":["wire"]
+    "dram_config_files": ["HBM2_8Gb_x128"]
+}
 
-}'''
+cluster_knobs = { #shared among all RADs
+    "radsim_root_dir": os.getcwd(),
+    "sim_driver_period": 5.0,
+    "telemetry_log_verbosity": 0,
+    "telemetry_traces": ["trace0", "trace1"],
+    "num_rads": 1,
+    "cluster_configs": [0],
+    "cluster_topology": 'all-to-all'
+}
+
+#deep copy (to allow changes to each dict)
+radsim_knobs_per_rad = list(deepcopy(radsim_knobs) for i in range(num_configs))
+#print(radsim_knobs_cluster)
+radsim_header_params_per_rad = list(deepcopy(radsim_header_params) for i in range(num_configs))
+booksim_params_per_rad = list(deepcopy(booksim_params) for i in range(num_configs))
 
 # Parse configuration file
-#parse_config_file(config_filename, booksim_params, radsim_header_params, radsim_knobs)
+parse_config_file(config_filename, booksim_params_per_rad, radsim_header_params_per_rad, radsim_knobs_per_rad, cluster_knobs)
+print(radsim_knobs_per_rad)
+print(cluster_knobs)
 #print_config(booksim_params, radsim_header_params, radsim_knobs)
 
 # Generate RAD-Sim input files
-#generate_booksim_config_files(booksim_params, radsim_header_params, radsim_knobs)
+generate_booksim_config_files(booksim_params_per_rad, radsim_header_params_per_rad, radsim_knobs_per_rad, cluster_knobs)
 #generate_radsim_params_header(radsim_header_params)
-#generate_radsim_config_file(radsim_knobs)
+generate_radsim_config_file(radsim_knobs_per_rad, cluster_knobs)
 #generate_radsim_main(design_name)
-prepare_build_dir(design_names)
+
+#prepare_build_dir(design_names) #THIS WORKS -- commenting out for testing multi-rad config files
 
 print("RAD-Sim was configured successfully!")

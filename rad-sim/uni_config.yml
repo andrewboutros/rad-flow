@@ -3,13 +3,13 @@ config0:
     type: ['2d']
     num_nocs: 1
     clk_period: [1.0]
-    payload_width: [166]
+    payload_width: [82]
     topology: ['mesh']
-    dim_x: [4]
-    dim_y: [4] 
+    dim_x: [10]
+    dim_y: [10] 
     routing_func: ['dim_order']
     vcs: [5]
-    vc_buffer_size: [8]
+    vc_buffer_size: [16]
     output_buffer_size: [8]
     num_packet_types: [5]
     router_uarch: ['iq']
@@ -28,27 +28,29 @@ config0:
     out_arbiter: ['priority_rr']
     vc_mapping: ['direct']
 
+  dram:
+    num_controllers: 4
+    clk_periods: [3.32, 3.32, 2.0, 2.0]
+    queue_sizes: [64, 64, 64, 64]
+    config_files: ['DDR4_8Gb_x16_2400', 'DDR4_8Gb_x16_2400', 'HBM2_8Gb_x128', 'HBM2_8Gb_x128']
+    
   design:
-    name: 'add'
-    noc_placement: ['add.place']
-    clk_periods: [5.0]
-
-  telemetry:
-    log_verbosity: 2
-    traces: []
+    name: 'dlrm'
+    noc_placement: ['dlrm.place']
+    clk_periods: [5.0, 2.0, 3.32, 1.5]
 
 config1:
   noc:
     type: ['2d']
     num_nocs: 1
     clk_period: [1.0]
-    payload_width: [166]
+    payload_width: [82]
     topology: ['mesh']
-    dim_x: [4]
-    dim_y: [4] 
+    dim_x: [10]
+    dim_y: [10] 
     routing_func: ['dim_order']
     vcs: [5]
-    vc_buffer_size: [8]
+    vc_buffer_size: [16]
     output_buffer_size: [8]
     num_packet_types: [5]
     router_uarch: ['iq']
@@ -67,17 +69,21 @@ config1:
     out_arbiter: ['priority_rr']
     vc_mapping: ['direct']
 
+  dram:
+    num_controllers: 4
+    clk_periods: [3.32, 3.32, 2.0, 2.0]
+    queue_sizes: [64, 64, 64, 64]
+    config_files: ['DDR4_8Gb_x16_2400', 'DDR4_8Gb_x16_2400', 'HBM2_8Gb_x128', 'HBM2_8Gb_x128']
+    
   design:
-    name: 'mult'
-    noc_placement: ['mult.place']
-    clk_periods: [5.0]
+    name: 'dlrm'
+    noc_placement: ['dlrm.place']
+    clk_periods: [5.0, 2.0, 3.32, 1.5]
 
-  telemetry:
-    log_verbosity: 2
-    traces: []
-  
 cluster:
+  sim_driver_period: 5.0
+  telemetry_log_verbosity: 2
+  telemetry_traces: ['Embedding LU', 'Mem0', 'Mem1', 'Mem2', 'Mem3', 'Feature Inter.', 'MVM first', 'MVM last']
   num_rads: 2
-  configs: ["config_0", "config_1"]
-  topology: "all-to-all"
-  connection_model: "wire"
+  configs: [0, 1]
+  topology: 'all-to-all'
