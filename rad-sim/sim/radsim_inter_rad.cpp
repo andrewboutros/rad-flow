@@ -71,6 +71,7 @@ RADSimInterRad::ConnectRadAxi(int i) {
 }
 
 bool wrote_yet = false;
+int write_fifo_packet_drop_count = 0;
 void
 RADSimInterRad::writeFifo() {
     /*
@@ -128,6 +129,10 @@ RADSimInterRad::writeFifo() {
                     //std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << rx_tdata << std::endl;
                     //std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << curr_transaction.tdata.to_uint64() << std::endl;
                     fifos_latency_counters[dest_rad].push_back(0); //for latency counters
+                }
+                else {
+                    std::cout << "WRITE FIFO FULL: packet dropped at inter_rad: could not write into internal fifo. Packets dropped count: " << write_fifo_packet_drop_count << std::endl;
+                    write_fifo_packet_drop_count++;
                 }
                 //all_axis_slave_ports[i]->tready.write(false);
             }
