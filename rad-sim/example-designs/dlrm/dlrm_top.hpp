@@ -15,7 +15,7 @@
 
 class dlrm_top : public design_top { //sc_module {
 private:
-  portal *portal_inst;
+  //portal *portal_inst;
   embedding_lookup *embedding_lookup_inst;
   custom_feature_interaction *feature_interaction_inst;
   std::vector<std::vector<mvm *>> mvms;

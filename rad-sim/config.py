@@ -89,9 +89,10 @@ def print_config(booksim_params, radsim_header_params, radsim_knobs):
 
 
 def generate_booksim_config_files(booksim_params, radsim_header_params, radsim_knobs, cluster_knobs):
-    for curr_config_num in range(num_configs):
+    for curr_rad_id in range(len(cluster_knobs["cluster_configs"])): #curr_config_num in range(num_configs):
+        curr_config_num = cluster_knobs["cluster_configs"][curr_rad_id] #retrieve the config num by rad ID
         for i in range(booksim_params[curr_config_num]["noc_num_nocs"]):
-            booksim_config_file = open(booksim_params[curr_config_num]["radsim_root_dir"] + "/sim/noc/noc" + str(i) + "_config"+ str(curr_config_num) + "_config_akb_test", "w") #AKB created temp file to test
+            booksim_config_file = open(booksim_params[curr_config_num]["radsim_root_dir"] + "/sim/noc/noc" + str(i) + "_rad" + str(curr_config_num) + "_config", "w") #AKB created temp file to test
 
             # Booksim topology configuration
             booksim_config_file.write("// Topology\n")
@@ -490,8 +491,6 @@ booksim_params_per_rad = list(deepcopy(booksim_params) for i in range(num_config
 
 # Parse configuration file
 parse_config_file(config_filename, booksim_params_per_rad, radsim_header_params_per_rad, radsim_knobs_per_rad, cluster_knobs)
-print(radsim_knobs_per_rad)
-print(cluster_knobs)
 #print_config(booksim_params, radsim_header_params, radsim_knobs)
 
 # Generate RAD-Sim input files

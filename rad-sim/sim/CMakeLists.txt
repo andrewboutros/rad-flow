@@ -35,6 +35,7 @@ set(srcfiles
   radsim_utils.cpp
   radsim_cluster.cpp
   radsim_inter_rad.cpp
+  portal.cpp
 )
 
 set(hdrfiles
@@ -48,11 +49,12 @@ set(hdrfiles
   radsim_inter_rad.hpp
   design_top.hpp
   design_system.hpp
+  portal.hpp
 )
 
 add_compile_options(-Wall -Wextra -pedantic)
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g")
 
 add_library(radsim STATIC ${srcfiles} ${hdrfiles})
 target_link_libraries(radsim PUBLIC SystemC::systemc booksim noc dram design_dlrm)

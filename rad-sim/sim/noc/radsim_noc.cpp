@@ -19,6 +19,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, std::str
   // NoC
   std::string config_filename = radsim_config.GetStringKnobShared("radsim_root_dir") +
                                 "/sim/noc/noc" + std::to_string(noc_id) +
+                                "_rad" + std::to_string(rad_id) + 
                                 "_config";
   _config.ParseFile(config_filename);
   InitializeRoutingMap(_config);
