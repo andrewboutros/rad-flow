@@ -41,5 +41,5 @@ sim_driver_period 5.0
 telemetry_log_verbosity 2
 telemetry_traces Embedding LU Mem0 Mem1 Mem2 Mem3 Feature Inter. MVM first MVM last 
 num_rads 2
-cluster_configs 0 1 
+cluster_configs rad1 anotherconfig 
 cluster_topology all-to-all

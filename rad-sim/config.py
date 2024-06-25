@@ -13,6 +13,9 @@ def parse_config_file(config_filename, booksim_params, radsim_header_params, rad
     config_counter = 0
     for config_section in config:
         print(config_section + ':')
+        if 'config' in config_section:
+            print('NAME OF CONFIG: ' + str(config_section.split()[1]))
+            config_names.append(str(config_section.split()[1]))
         for param_category, param in config[config_section].items():
             if 'config' in config_section and (isinstance(param, dict)):
                 print('     ' + param_category + ':')
@@ -29,41 +32,49 @@ def parse_config_file(config_filename, booksim_params, radsim_header_params, rad
                     if param_name in radsim_knobs[config_counter]:
                         radsim_knobs[config_counter][param_name] = param_value
                         invalid_param = False
-                    if param_name == "dram_config_files":
-                        print('param_value')
-                        print(config_counter)
-                        print(param_value)
+                    # if param_name == "dram_config_files": #TODO: double check dram_config_files correct, had error earlier but I think I fixed earlier
+                    #     print('param_value')
+                    #     print(config_counter)
+                    #     print(param_value)
 
                     if invalid_param:
                         print("Config Error: Parameter " + param_name + " is invalid!")
                         exit(1)
+            
+            elif config_section == "noc" or config_section == "noc_adapters":
+                param_value = param #bc no subsection, so correction
+                param = param_category #bc no subsection, so correction
+                print('     ' + param, param_value)
+                param_name = config_section + '_' + param
+                invalid_param = True
+                for i in range(0, num_configs): #use num_configs from command line in case NoC sections are earlier in yaml file
+                    if param_name in booksim_params[i]:
+                        booksim_params[i][param_name] = param_value
+                        invalid_param = False
+                    if param_name in radsim_header_params[i]:
+                        radsim_header_params[i][param_name] = param_value
+                        invalid_param = False
+                    if param_name in radsim_knobs[i]:
+                        radsim_knobs[i][param_name] = param_value
+                        invalid_param = False
+                    if invalid_param:
+                        print("Config Error: Parameter " + param_name + " is invalid!")
+                        exit(1)
+                
             elif config_section == "cluster":
                 param_value = param #bc no subsection, so correction
                 param = param_category #bc no subsection, so correction
                 print('     ' + param, param_value)
-                if 'topology' in param or 'configs' in param:
-                    param_name = 'cluster_' + param
-                else:
-                    param_name = param
+                param_name = param
                 #print(param_name)
                 #TODO: below doesnt rlly make sense for cluster-level params, fix up
-                invalid_param = True
                 if param_name in cluster_knobs:
                     cluster_knobs[param_name] = param_value
-                    invalid_param = False
-                # if param_name in booksim_params[config_counter]:
-                #     booksim_params[config_counter][param_name] = param_value
-                #     invalid_param = False
-                # if param_name in radsim_header_params[config_counter]:
-                #     radsim_header_params[config_counter][param_name] = param_value
-                #     invalid_param = False
-                # if param_name in radsim_knobs[config_counter]:
-                #     radsim_knobs[config_counter][param_name] = param_value
-                #     invalid_param = False
-                if invalid_param:
+                else:
                     print("Config Error: Parameter " + param_name + " is invalid!")
                     exit(1)
-        config_counter += 1
+        if 'config' in config_section:
+            config_counter += 1
 
     for i in range(0, num_configs):
         radsim_knobs[i]["radsim_user_design_root_dir"] = cluster_knobs["radsim_root_dir"] + "/example-designs/" + radsim_knobs[i]["design_name"]
@@ -74,6 +85,10 @@ def parse_config_file(config_filename, booksim_params, radsim_header_params, rad
     #     if p > longest_clk_period:
     #         longest_clk_period = p
     # radsim_knobs["sim_driver_period"] = longest_clk_period
+
+    if config_counter != num_configs:
+        print('number of unique config sections in config YAML file does not match commandline argument')
+        exit(-1)
     
 
 def print_config(booksim_params, radsim_header_params, radsim_knobs):
@@ -89,10 +104,12 @@ def print_config(booksim_params, radsim_header_params, radsim_knobs):
 
 
 def generate_booksim_config_files(booksim_params, radsim_header_params, radsim_knobs, cluster_knobs):
-    for curr_rad_id in range(len(cluster_knobs["cluster_configs"])): #curr_config_num in range(num_configs):
-        curr_config_num = cluster_knobs["cluster_configs"][curr_rad_id] #retrieve the config num by rad ID
+    for j in range(len(cluster_knobs["cluster_configs"])): #curr_config_num in range(num_configs):
+        curr_config_name = cluster_knobs["cluster_configs"][j] #retrieve the config num by rad ID
+        curr_config_num = config_names.index(curr_config_name)
+        print('generate_booksim_config_files fn ' + curr_config_name + ' ' + str(curr_config_num))
         for i in range(booksim_params[curr_config_num]["noc_num_nocs"]):
-            booksim_config_file = open(booksim_params[curr_config_num]["radsim_root_dir"] + "/sim/noc/noc" + str(i) + "_rad" + str(curr_config_num) + "_config", "w") #AKB created temp file to test
+            booksim_config_file = open(booksim_params[curr_config_num]["radsim_root_dir"] + "/sim/noc/noc" + str(i) + "_rad" + str(curr_config_num) + "_config", "w")
 
             # Booksim topology configuration
             booksim_config_file.write("// Topology\n")
@@ -305,7 +322,8 @@ def generate_radsim_params_header(radsim_header_params):
 def generate_radsim_config_file(radsim_knobs, cluster_knobs):
     radsim_config_file = open(radsim_header_params["radsim_root_dir"] + "/sim/radsim_knobs_akb_test", "w") #AKB created temp file to test
     for i in range(len(cluster_knobs["cluster_configs"])):
-        curr_config_num = cluster_knobs["cluster_configs"][i] #bc config # for a certain RAD may or may not match RAD ID
+        curr_config_name = cluster_knobs["cluster_configs"][i] #retrieve the config num by rad ID
+        curr_config_num = config_names.index(curr_config_name)
         for param in radsim_knobs[i]:
             radsim_config_file.write(param + " " + str(i) + " ") # second element is RAD ID
             if isinstance(radsim_knobs[curr_config_num][param], list):
@@ -409,6 +427,7 @@ for design_name in design_names:
 # Point to YAML configuration file
 #config_filename = "example-designs/" + design_name + "/config.yml"
 config_filename = "uni_config.yml"
+config_names = []
 
 # List default parameter values
 booksim_params = {
@@ -479,7 +498,7 @@ cluster_knobs = { #shared among all RADs
     "telemetry_log_verbosity": 0,
     "telemetry_traces": ["trace0", "trace1"],
     "num_rads": 1,
-    "cluster_configs": [0],
+    "cluster_configs": [],
     "cluster_topology": 'all-to-all'
 }
 
