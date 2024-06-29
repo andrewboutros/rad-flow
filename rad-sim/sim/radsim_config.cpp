@@ -367,7 +367,8 @@ void ParseRADSimKnobs(const std::string &knobs_filename) {
       std::string value;
       std::getline(ss, value, ' ');
       radsim_config.AddStringKnobPerRad(param, value, rad_id);
-    } else if ( (param == "telemetry_log_verbosity") || (param == "num_rads") ) {
+    } else if ( (param == "telemetry_log_verbosity") || (param == "num_rads") || (param == "inter_rad_latency_cycles") || (param == "inter_rad_fifo_num_slots") 
+      || (param == "inter_rad_bw_accept_cycles") || (param == "inter_rad_bw_total_cycles") ) {
       std::string value_str;
       std::getline(ss, value_str, ' ');
       int value = std::stoi(value_str);

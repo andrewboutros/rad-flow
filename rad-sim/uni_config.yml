@@ -58,3 +58,6 @@ cluster:
   num_rads: 2
   cluster_configs: ['rad1', 'anotherconfig']
   cluster_topology: 'all-to-all'
+  inter_rad_latency: 2100
+  inter_rad_bw: 102.4
+  inter_rad_fifo_num_slots: 1000

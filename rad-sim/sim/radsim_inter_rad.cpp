@@ -7,6 +7,7 @@ std::ostream& operator<<(std::ostream& os, const axis_fields& I) {
 }
 
 RADSimInterRad::RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_clk, RADSimCluster* cluster) : sc_module(name) {
+    std::cout << "RADSimInterRad DATAW " << DATAW << std::endl;
     this->cluster = cluster;
     this->clk(*inter_rad_clk);
     num_rads = cluster->num_rads;
@@ -15,9 +16,9 @@ RADSimInterRad::RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_c
 
     fifos_latency_counters.resize(num_rads);
     //std::cout << "fifos_latency_counters[0].size() " << fifos_latency_counters[0].size() << std::endl;
-
+    int inter_rad_fifo_num_slots = radsim_config.GetIntKnobShared("inter_rad_fifo_num_slots"); //1000;
     for (int v = 0; v < num_rads; v++) { //width of vector = num of rads bc want fifo per rad
-        sc_fifo<axis_fields>* new_fifo_ptr = new sc_fifo<axis_fields>(NUM_SLOTS);
+        sc_fifo<axis_fields>* new_fifo_ptr = new sc_fifo<axis_fields>(inter_rad_fifo_num_slots);
         fifos.push_back(new_fifo_ptr);
         //adding to axi vectors
         axis_signal* new_axis_signal = new axis_signal;
@@ -29,8 +30,6 @@ RADSimInterRad::RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_c
         all_axis_slave_ports.push_back(new_axis_slave_port);
         axis_master_port* new_axis_master_port = new axis_master_port;
         all_axis_master_ports.push_back(new_axis_master_port);
-        //for rising edge detection
-        prev_valid.push_back(0);
     }
     SC_CTHREAD(writeFifo, clk.pos());
     SC_CTHREAD(readFifo, clk.pos());
@@ -95,7 +94,7 @@ RADSimInterRad::writeFifo() {
 
         //iterate thru all RADs
         for (int i = 0; i < num_rads; i++) {
-            if (bw_counter >= bw_limit) {
+            if (bw_counter < radsim_config.GetIntKnobShared("inter_rad_bw_accept_cycles")) { //>= bw_limit) {
                 all_axis_slave_ports[i]->tready.write(true);
             }
             else {
@@ -119,7 +118,7 @@ RADSimInterRad::writeFifo() {
             /*if (all_axis_slave_ports[i]->tready.read()) {
                 //std::cout << "valid" << std::endl;
             }*/
-            if (curr_transaction.tvalid && all_axis_slave_ports[i]->tready.read()) { //&& !prev_valid[i]) { //detect rising edge bc operating at higher clk freq than modules
+            if (curr_transaction.tvalid && all_axis_slave_ports[i]->tready.read()) {
                 unsigned int dest_rad = DEST_RAD(curr_transaction.tdest).to_uint64();
                 //std::cout << "radsim_inter_rad.cpp dest_rad is: "<< dest_rad << std::endl;
                 if (this->fifos[dest_rad]->nb_write(curr_transaction) != false) { //there was an available slot to write to
@@ -134,21 +133,18 @@ RADSimInterRad::writeFifo() {
                     std::cout << "WRITE FIFO FULL: packet dropped at inter_rad: could not write into internal fifo. Packets dropped count: " << write_fifo_packet_drop_count << std::endl;
                     write_fifo_packet_drop_count++;
                 }
-                //all_axis_slave_ports[i]->tready.write(false);
             }
-            /*else if (!all_axis_slave_ports[i]->tready.read()) {
-                if (bw_counter >= bw_limit) {
-                    all_axis_slave_ports[i]->tready.write(true);
-                    bw_counter = 0;
-                }
-                else {
-                    bw_counter++;
-                }
-            }*/
-            prev_valid[i] = curr_transaction.tvalid;
+
+            // if (all_axis_slave_ports[i]->tready.read()) {
+            //     std::cout << "June-27: inter_rad fifo is ready with counter " << bw_counter << std::endl;
+            // }
+            // else { //will see the ready signal one cycle after the counter var val changes bc is systemc signal 
+            //     std::cout << "June-27: inter_rad fifo NOT ready with counter " << bw_counter << std::endl;
+            // }
+
         }
         //wait(num_wait, SC_NS); //SC_NS); //eventually change to 1.3, SC_US -- assuming 2.6 us / 2 latency for one piece of data
-        if (bw_counter >= bw_limit) {
+        if (bw_counter >= (radsim_config.GetIntKnobShared("inter_rad_bw_total_cycles") - 1)) { //bw_limit) {
             bw_counter = 0;
         }
         else {
@@ -167,6 +163,7 @@ RADSimInterRad::readFifo() {
         Matches the dest index of fifo to the dest rad
         DONE: use tdest instead of tuser
     */
+    int target_delay = radsim_config.GetIntKnobShared("inter_rad_latency_cycles");
     while (true) {
         //std::cout << "inter_rad fifo free before READ is " << this->fifos[0]->num_free() << "/" << this->fifos[0]->num_available() << std::endl;
         

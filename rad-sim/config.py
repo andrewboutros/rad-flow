@@ -5,6 +5,7 @@ import sys
 import shutil
 from itertools import repeat
 from copy import deepcopy
+from math import ceil
 
 def parse_config_file(config_filename, booksim_params, radsim_header_params, radsim_knobs, cluster_knobs):
     with open(config_filename, 'r') as yaml_config:
@@ -318,6 +319,20 @@ def generate_radsim_params_header(radsim_header_params):
 
     radsim_params_header_file.close()
 
+def get_fraction(input_val):
+    '''Returns tuple, where first value is numerator and second is denom'''
+    remainder = float('{:,.3f}'.format(input_val % 1)) #choosing to keep only 3 dec places. need to do this bc python stores floats as binary fraction
+    if remainder == 0: #whole number
+        return (input_val, 1)
+    else:
+        count = 0
+        while (remainder % 1 != 0):
+            remainder *= 10
+            count += 1
+        b = count * 10
+        a = int (( ( input_val-(input_val%1) ) * b) + remainder)
+        return (a, b)
+
 
 def generate_radsim_config_file(radsim_knobs, cluster_knobs):
     radsim_config_file = open(radsim_header_params["radsim_root_dir"] + "/sim/radsim_knobs_akb_test", "w") #AKB created temp file to test
@@ -335,9 +350,23 @@ def generate_radsim_config_file(radsim_knobs, cluster_knobs):
     for param in cluster_knobs: #for params shared across cluster
         if param == 'configs':
             continue
+        elif param == 'inter_rad_latency':
+            radsim_config_file.write("inter_rad_latency_cycles " + str(ceil(cluster_knobs[param]/cluster_knobs["sim_driver_period"])) + "\n")
+            continue
+        elif param == 'inter_rad_bw':
+            (inter_rad_bw_accept_cycles, inter_rad_bw_total_cycles) = get_fraction(cluster_knobs[param] * cluster_knobs["sim_driver_period"] / radsim_header_params["interfaces_max_axis_tdata_width"])
+            if (inter_rad_bw_accept_cycles <= inter_rad_bw_total_cycles):
+                radsim_config_file.write("inter_rad_bw_accept_cycles " + str(inter_rad_bw_accept_cycles) + "\n")
+                radsim_config_file.write("inter_rad_bw_total_cycles " + str(inter_rad_bw_total_cycles) + "\n")
+            else:
+                print('generate_radsim_config_file error: invalid inter_rad_bw')
+                exit(-1)
+            continue
         else:
             radsim_config_file.write(param + " " )
         
+        # if param == 'inter_rad_latency':
+        #     radsim_config_file.write(str(ceil(cluster_knobs[param]/cluster_knobs["sim_driver_period"])) + "\n")
         if isinstance(cluster_knobs[param], list):
             for value in cluster_knobs[param]:
                 radsim_config_file.write(str(value) + " ")
@@ -499,7 +528,11 @@ cluster_knobs = { #shared among all RADs
     "telemetry_traces": ["trace0", "trace1"],
     "num_rads": 1,
     "cluster_configs": [],
-    "cluster_topology": 'all-to-all'
+    "cluster_topology": 'all-to-all',
+    "inter_rad_latency": 5.0, #ns
+    "inter_rad_bw": 25.6, #bits per ns
+    "inter_rad_fifo_num_slots": 1000
+
 }
 
 #deep copy (to allow changes to each dict)
@@ -521,3 +554,6 @@ generate_radsim_config_file(radsim_knobs_per_rad, cluster_knobs)
 #prepare_build_dir(design_names) #THIS WORKS -- commenting out for testing multi-rad config files
 
 print("RAD-Sim was configured successfully!")
+
+test_val = get_fraction(25.6)
+print(str(test_val))
