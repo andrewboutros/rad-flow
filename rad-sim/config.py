@@ -321,21 +321,22 @@ def generate_radsim_params_header(radsim_header_params):
 
 def get_fraction(input_val):
     '''Returns tuple, where first value is numerator and second is denom'''
+    print(input_val)
     remainder = float('{:,.3f}'.format(input_val % 1)) #choosing to keep only 3 dec places. need to do this bc python stores floats as binary fraction
     if remainder == 0: #whole number
-        return (input_val, 1)
+        return (int(input_val), 1)
     else:
         count = 0
         while (remainder % 1 != 0):
             remainder *= 10
             count += 1
         b = count * 10
-        a = int (( ( input_val-(input_val%1) ) * b) + remainder)
-        return (a, b)
+        a = (( input_val-(input_val%1) ) * b) + remainder
+        return (int(a), b)
 
 
 def generate_radsim_config_file(radsim_knobs, cluster_knobs):
-    radsim_config_file = open(radsim_header_params["radsim_root_dir"] + "/sim/radsim_knobs_akb_test", "w") #AKB created temp file to test
+    radsim_config_file = open(radsim_header_params["radsim_root_dir"] + "/sim/radsim_knobs", "w")
     for i in range(len(cluster_knobs["cluster_configs"])):
         curr_config_name = cluster_knobs["cluster_configs"][i] #retrieve the config num by rad ID
         curr_config_num = config_names.index(curr_config_name)
@@ -549,11 +550,8 @@ parse_config_file(config_filename, booksim_params_per_rad, radsim_header_params_
 generate_booksim_config_files(booksim_params_per_rad, radsim_header_params_per_rad, radsim_knobs_per_rad, cluster_knobs)
 #generate_radsim_params_header(radsim_header_params)
 generate_radsim_config_file(radsim_knobs_per_rad, cluster_knobs)
-#generate_radsim_main(design_name)
+#generate_radsim_main(design_name) #TODO: fix
 
-#prepare_build_dir(design_names) #THIS WORKS -- commenting out for testing multi-rad config files
+prepare_build_dir(design_names)
 
 print("RAD-Sim was configured successfully!")
-
-test_val = get_fraction(25.6)
-print(str(test_val))
