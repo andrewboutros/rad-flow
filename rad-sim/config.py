@@ -27,8 +27,8 @@ def parse_config_file(config_filename, booksim_params, radsim_header_params, rad
                     if param_name in booksim_params[config_counter]:
                         booksim_params[config_counter][param_name] = param_value
                         invalid_param = False
-                    if param_name in radsim_header_params[config_counter]:
-                        radsim_header_params[config_counter][param_name] = param_value
+                    if config_counter == 0 and param_name in radsim_header_params: #all header params are shared across RADs, so only need to store one time
+                        radsim_header_params[param_name] = param_value
                         invalid_param = False
                     if param_name in radsim_knobs[config_counter]:
                         radsim_knobs[config_counter][param_name] = param_value
@@ -52,8 +52,8 @@ def parse_config_file(config_filename, booksim_params, radsim_header_params, rad
                     if param_name in booksim_params[i]:
                         booksim_params[i][param_name] = param_value
                         invalid_param = False
-                    if param_name in radsim_header_params[i]:
-                        radsim_header_params[i][param_name] = param_value
+                    if param_name in radsim_header_params: #all header params are shared across RADs, so only need to store one time
+                        radsim_header_params[param_name] = param_value
                         invalid_param = False
                     if param_name in radsim_knobs[i]:
                         radsim_knobs[i][param_name] = param_value
@@ -96,12 +96,13 @@ def print_config(booksim_params, radsim_header_params, radsim_knobs):
     print("*****************************")
     print("**  RAD-FLOW CONFIGURATION **")
     print("*****************************")
-    for param in booksim_params:
-        print(param + " : " + str(booksim_params[param]))
+    for config_count in range(num_configs):
+        for param in booksim_params[config_count].keys():
+            print("config " + str(config_count) + " : " + param + " : " + str(booksim_params[config_count][param]))
+        for param in radsim_knobs[config_count].keys():
+            print("config " + str(config_count) + " : " + param + " : " + str(radsim_knobs[config_count][param]))
     for param in radsim_header_params:
         print(param + " : " + str(radsim_header_params[param]))
-    for param in radsim_knobs:
-        print(param + " : " + str(radsim_knobs[param]))
 
 
 def generate_booksim_config_files(booksim_params, radsim_header_params, radsim_knobs, cluster_knobs):
@@ -140,7 +141,7 @@ def generate_booksim_config_files(booksim_params, radsim_header_params, radsim_k
                 # 3D RAD instances as a concentrated mesh of FPGA node, base die node, and two "empty" nodes by adjusting 
                 # their IDs
                 if noc_type == "3d":
-                    radsim_header_params[curr_config_num]["noc_num_nodes"][i] = (larger_noc_dim * larger_noc_dim * 4)
+                    radsim_header_params["noc_num_nodes"][i] = (larger_noc_dim * larger_noc_dim * 4)
                     #TODO: make changes to have per-RAD booksim config too. for now, just hacky workaround to get radsim_knobs set
                     #for j in range(cluster_knobs["num_rads"]):
                         #radsim_knobs[j]["noc_num_nodes"][i] = larger_noc_dim * larger_noc_dim * 4
@@ -149,7 +150,7 @@ def generate_booksim_config_files(booksim_params, radsim_header_params, radsim_k
                     booksim_config_file.write("xr = 2;\n")
                     booksim_config_file.write("yr = 2;\n")
                 else:
-                    radsim_header_params[curr_config_num]["noc_num_nodes"][i] = (larger_noc_dim * larger_noc_dim)
+                    radsim_header_params["noc_num_nodes"][i] = (larger_noc_dim * larger_noc_dim)
                     #TODO: make changes to have per-RAD booksim config AND radsim_header_params too. for now, just hacky workaround to get radsim_knobs set
                     # for j in range(cluster_knobs["num_rads"]):
                     #     radsim_knobs[j]["noc_num_nodes"][i] = larger_noc_dim * larger_noc_dim
@@ -209,7 +210,7 @@ def generate_booksim_config_files(booksim_params, radsim_header_params, radsim_k
 
 
 def generate_radsim_params_header(radsim_header_params):
-    radsim_params_header_file = open(radsim_header_params["radsim_root_dir"] + "/sim/radsim_defines_akb_test.hpp", "w") #AKB created temp file to test
+    radsim_params_header_file = open(radsim_header_params["radsim_root_dir"] + "/sim/radsim_defines.hpp", "w") #AKB created temp file to test
     radsim_params_header_file.write("#pragma once\n\n")
     radsim_params_header_file.write("// clang-format off\n")
     radsim_params_header_file.write('#define RADSIM_ROOT_DIR "' + radsim_header_params["radsim_root_dir"] + '"\n\n')
@@ -270,6 +271,7 @@ def generate_radsim_params_header(radsim_header_params):
         str(radsim_header_params["interfaces_axi_user_width"]) + "\n")
 
     radsim_params_header_file.write("// (Almost always) Constant AXI Parameters\n")
+    radsim_params_header_file.write("// NOTE: AXIS_DEST_FIELDW must be NOC_LINKS_DEST_WIDTH/3 to fit RAD_DEST_ID, REMOTE_NODE_ID, and LOCAL_NODE_ID\n")
     radsim_params_header_file.write("#define AXIS_STRBW  " + str(radsim_header_params["interfaces_axis_tstrb_width"]) + "\n")
     radsim_params_header_file.write("#define AXIS_KEEPW  " + str(radsim_header_params["interfaces_axis_tkeep_width"]) + "\n")
     radsim_params_header_file.write("#define AXIS_IDW    NOC_LINKS_PACKETID_WIDTH\n")
@@ -481,7 +483,7 @@ booksim_params = {
     "noc_vc_alloc_delay": [1],
     "noc_sw_alloc_delay": [1],
 }
-radsim_header_params = {
+radsim_header_params = { #shared across all RADs
     "radsim_root_dir": os.getcwd(),
     "noc_payload_width": [166],
     "noc_packet_id_width": 32,
@@ -539,16 +541,16 @@ cluster_knobs = { #shared among all RADs
 #deep copy (to allow changes to each dict)
 radsim_knobs_per_rad = list(deepcopy(radsim_knobs) for i in range(num_configs))
 #print(radsim_knobs_cluster)
-radsim_header_params_per_rad = list(deepcopy(radsim_header_params) for i in range(num_configs))
+#radsim_header_params_per_rad = list(deepcopy(radsim_header_params) for i in range(num_configs))
 booksim_params_per_rad = list(deepcopy(booksim_params) for i in range(num_configs))
 
 # Parse configuration file
-parse_config_file(config_filename, booksim_params_per_rad, radsim_header_params_per_rad, radsim_knobs_per_rad, cluster_knobs)
-#print_config(booksim_params, radsim_header_params, radsim_knobs)
+parse_config_file(config_filename, booksim_params_per_rad, radsim_header_params, radsim_knobs_per_rad, cluster_knobs)
+print_config(booksim_params_per_rad, radsim_header_params, radsim_knobs_per_rad)
 
 # Generate RAD-Sim input files
-generate_booksim_config_files(booksim_params_per_rad, radsim_header_params_per_rad, radsim_knobs_per_rad, cluster_knobs)
-#generate_radsim_params_header(radsim_header_params)
+generate_booksim_config_files(booksim_params_per_rad, radsim_header_params, radsim_knobs_per_rad, cluster_knobs)
+generate_radsim_params_header(radsim_header_params)
 generate_radsim_config_file(radsim_knobs_per_rad, cluster_knobs)
 #generate_radsim_main(design_name) #TODO: fix
 
