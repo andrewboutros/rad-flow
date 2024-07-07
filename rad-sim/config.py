@@ -379,7 +379,7 @@ def generate_radsim_config_file(radsim_knobs, cluster_knobs):
     radsim_config_file.close()
 
 def generate_radsim_main(design_names, num_rads, radsim_knobs):
-    main_cpp_file = open(radsim_header_params["radsim_root_dir"] + "/sim/main_akb_test.cpp", "w") #AKB created temp file to test
+    main_cpp_file = open(radsim_header_params["radsim_root_dir"] + "/sim/main.cpp", "w")
     main_cpp_file.write("#include <design_context.hpp>\n")
     main_cpp_file.write("#include <fstream>\n")
     main_cpp_file.write("#include <iostream>\n")
@@ -406,18 +406,19 @@ def generate_radsim_main(design_names, num_rads, radsim_knobs):
     main_cpp_file.write("\tsim_log.SetLogSettings(log_verbosity, \"sim.log\");\n\n")
     main_cpp_file.write("\tint num_traces = radsim_config.GetIntKnobShared(\"telemetry_num_traces\");\n")
     main_cpp_file.write("\tsim_trace_probe.SetTraceRecordingSettings(\"sim.trace\", num_traces);\n\n")
-    main_cpp_file.write("\tsc_clock *inter_rad_clk_sig = new sc_clock(\n")
-    main_cpp_file.write("\t\t\"node_clk0\", radsim_config.GetDoubleKnobShared(\"sim_driver_period\"), SC_NS);\n")
-    main_cpp_file.write("\tRADSimInterRad* blackbox = new RADSimInterRad(\"inter_rad_box\", inter_rad_clk_sig, cluster);\n\n")
     for i in range(num_rads):
         design_name = radsim_knobs[i]["design_name"]
         main_cpp_file.write("\tsc_clock *driver_clk_sig" + str(i) + " = new sc_clock(\n")
         main_cpp_file.write("\t\t\"node_clk0\", radsim_config.GetDoubleKnobShared(\"sim_driver_period\"), SC_NS);\n")
-        main_cpp_file.write("\t" + design_name + "_system" + str(i) + " *system = new " + design_name + "_system(\"" 
+        main_cpp_file.write("\t" + design_name + "_system *system" + str(i) + " = new " + design_name + "_system(\"" 
                             + design_name + "_system\", driver_clk_sig" + str(i) 
                             + ", cluster->all_rads[" + str(i) + "]);\n")
         main_cpp_file.write("\tcluster->StoreSystem(system" + str(i) + ");\n")
-        main_cpp_file.write("\tblackbox->ConnectRadAxi(" + str(i) +");\n\n")
+    main_cpp_file.write("\n\tsc_clock *inter_rad_clk_sig = new sc_clock(\n")
+    main_cpp_file.write("\t\t\"node_clk0\", radsim_config.GetDoubleKnobShared(\"sim_driver_period\"), SC_NS);\n")
+    main_cpp_file.write("\tRADSimInterRad* blackbox = new RADSimInterRad(\"inter_rad_box\", inter_rad_clk_sig, cluster);\n\n")
+    for i in range(num_rads):
+        main_cpp_file.write("\tblackbox->ConnectRadAxi(" + str(i) +");\n")
     #main_cpp_file.write("\tsc_start();\n\n")
     main_cpp_file.write("\n\tint start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared(\"sim_driver_period\"));\n")
     main_cpp_file.write("\twhile (cluster->AllRADsNotDone()) {\n")
