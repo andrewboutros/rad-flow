@@ -378,32 +378,59 @@ def generate_radsim_config_file(radsim_knobs, cluster_knobs):
             radsim_config_file.write(str(cluster_knobs[param]) + "\n")
     radsim_config_file.close()
 
-def generate_radsim_main(design_name):
+def generate_radsim_main(design_names, num_rads, radsim_knobs):
     main_cpp_file = open(radsim_header_params["radsim_root_dir"] + "/sim/main_akb_test.cpp", "w") #AKB created temp file to test
     main_cpp_file.write("#include <design_context.hpp>\n")
     main_cpp_file.write("#include <fstream>\n")
     main_cpp_file.write("#include <iostream>\n")
     main_cpp_file.write("#include <radsim_config.hpp>\n")
     main_cpp_file.write("#include <sstream>\n")
-    main_cpp_file.write("#include <systemc.h>\n\n")
-    main_cpp_file.write("#include <" + design_name + "_system.hpp>\n\n")
-    main_cpp_file.write("RADSimConfig radsim_config;\n")
-    main_cpp_file.write("RADSimDesignContext radsim_design;\n")
+    main_cpp_file.write("#include <systemc.h>\n")
+    main_cpp_file.write("#include <radsim_cluster.hpp>\n")
+    main_cpp_file.write("#include <radsim_inter_rad.hpp>\n\n")
+    for design_name in design_names: #iterate thru set of design names
+        main_cpp_file.write("#include <" + design_name + "_system.hpp>\n")
+    main_cpp_file.write("\nRADSimConfig radsim_config;\n")
+    #main_cpp_file.write("RADSimDesignContext radsim_design;\n")
     main_cpp_file.write("std::ostream *gWatchOut;\n")
     main_cpp_file.write("SimLog sim_log;\n")
     main_cpp_file.write("SimTraceRecording sim_trace_probe;\n\n")
     main_cpp_file.write("int sc_main(int argc, char *argv[]) {\n")
+    main_cpp_file.write("\tstd::string radsim_knobs_filename = \"/sim/radsim_knobs\";\n")
+    main_cpp_file.write("\tstd::string radsim_knobs_filepath = RADSIM_ROOT_DIR + radsim_knobs_filename;\n")
+    main_cpp_file.write("\tradsim_config.ResizeAll(" + str(num_rads) + ");\n")
+    main_cpp_file.write("\tParseRADSimKnobs(radsim_knobs_filepath);\n\n")
+    main_cpp_file.write("\tRADSimCluster* cluster = new RADSimCluster(" + str(num_rads) + ");\n\n")
     main_cpp_file.write("\tgWatchOut = &cout;\n")
-    main_cpp_file.write("\tint log_verbosity = radsim_config.GetIntKnob(\"telemetry_log_verbosity\");\n")
+    main_cpp_file.write("\tint log_verbosity = radsim_config.GetIntKnobShared(\"telemetry_log_verbosity\");\n")
     main_cpp_file.write("\tsim_log.SetLogSettings(log_verbosity, \"sim.log\");\n\n")
-    main_cpp_file.write("\tint num_traces = radsim_config.GetIntKnob(\"telemetry_num_traces\");\n")
+    main_cpp_file.write("\tint num_traces = radsim_config.GetIntKnobShared(\"telemetry_num_traces\");\n")
     main_cpp_file.write("\tsim_trace_probe.SetTraceRecordingSettings(\"sim.trace\", num_traces);\n\n")
-    main_cpp_file.write("\tsc_clock *driver_clk_sig = new sc_clock(\n")
-    main_cpp_file.write("\t\t\"node_clk0\", radsim_config.GetDoubleKnob(\"sim_driver_period\"), SC_NS);\n\n")
-    main_cpp_file.write("\t" + design_name + "_system *system = new " + design_name + "_system(\"" + design_name + "_system\", driver_clk_sig);\n")
-    main_cpp_file.write("\tsc_start();\n\n")
-    main_cpp_file.write("\tdelete system;\n")
-    main_cpp_file.write("\tdelete driver_clk_sig;\n")
+    main_cpp_file.write("\tsc_clock *inter_rad_clk_sig = new sc_clock(\n")
+    main_cpp_file.write("\t\t\"node_clk0\", radsim_config.GetDoubleKnobShared(\"sim_driver_period\"), SC_NS);\n")
+    main_cpp_file.write("\tRADSimInterRad* blackbox = new RADSimInterRad(\"inter_rad_box\", inter_rad_clk_sig, cluster);\n\n")
+    for i in range(num_rads):
+        design_name = radsim_knobs[i]["design_name"]
+        main_cpp_file.write("\tsc_clock *driver_clk_sig" + str(i) + " = new sc_clock(\n")
+        main_cpp_file.write("\t\t\"node_clk0\", radsim_config.GetDoubleKnobShared(\"sim_driver_period\"), SC_NS);\n")
+        main_cpp_file.write("\t" + design_name + "_system" + str(i) + " *system = new " + design_name + "_system(\"" 
+                            + design_name + "_system\", driver_clk_sig" + str(i) 
+                            + ", cluster->all_rads[" + str(i) + "]);\n")
+        main_cpp_file.write("\tcluster->StoreSystem(system" + str(i) + ");\n")
+        main_cpp_file.write("\tblackbox->ConnectRadAxi(" + str(i) +");\n\n")
+    #main_cpp_file.write("\tsc_start();\n\n")
+    main_cpp_file.write("\n\tint start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared(\"sim_driver_period\"));\n")
+    main_cpp_file.write("\twhile (cluster->AllRADsNotDone()) {\n")
+    main_cpp_file.write("\t\tsc_start(1, SC_NS);\n")
+    main_cpp_file.write("\t}\n")
+    main_cpp_file.write("\tint end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared(\"sim_driver_period\"));\n")
+    main_cpp_file.write("\tsc_stop();\n")
+    main_cpp_file.write("\tstd::cout << \"Simulation Cycles from main.cpp = \" << end_cycle - start_cycle << std::endl;\n\n")
+    for i in range(num_rads):
+        main_cpp_file.write("\tdelete system" + str(i) + ";\n")
+        main_cpp_file.write("\tdelete driver_clk_sig" + str(i) + ";\n")
+    main_cpp_file.write("\tdelete blackbox;\n") #AKB added only to script
+    main_cpp_file.write("\tdelete inter_rad_clk_sig;\n\n") #AKB added only to script
     main_cpp_file.write("\tsc_flit scf;\n")
     main_cpp_file.write("\tscf.FreeAllFlits();\n")
     main_cpp_file.write("\tFlit *f = Flit::New();\n")
@@ -413,7 +440,7 @@ def generate_radsim_main(design_name):
     main_cpp_file.write("\tsim_trace_probe.dump_traces();\n")
     main_cpp_file.write("\t(void)argc;\n")
     main_cpp_file.write("\t(void)argv;\n")
-    main_cpp_file.write("\treturn radsim_design.GetSimExitCode();\n")
+    main_cpp_file.write("\treturn cluster->all_rads[0]->GetSimExitCode();\n")
     main_cpp_file.write("}\n")
 
 def prepare_build_dir(design_names):
@@ -437,7 +464,7 @@ def prepare_build_dir(design_names):
 
 # Get design name from command line argument
 if len(sys.argv) < 3:
-    print("Invalid arguments: python config.py <number_of_configs> <design_name> <[optional] other_design_names>")
+    print("Invalid arguments: python config.py <number_of_configs> <unique_design_name> <[optional] other_unique_design_names>")
     exit(1)
 num_configs = int(sys.argv[1])
 design_names = set() #No duplicating design include statements and cmake commands
@@ -552,7 +579,7 @@ print_config(booksim_params_per_rad, radsim_header_params, radsim_knobs_per_rad)
 generate_booksim_config_files(booksim_params_per_rad, radsim_header_params, radsim_knobs_per_rad, cluster_knobs)
 generate_radsim_params_header(radsim_header_params)
 generate_radsim_config_file(radsim_knobs_per_rad, cluster_knobs)
-#generate_radsim_main(design_name) #TODO: fix
+generate_radsim_main(design_names, cluster_knobs["num_rads"], radsim_knobs_per_rad) #TODO: fix
 
 prepare_build_dir(design_names)
 
