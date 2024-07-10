@@ -1,6 +1,8 @@
 RAD-Sim Developers
 ===================
 
+WARNING/TODO: this guide has not been updated or tested with multi-RAD RADSim. This is functional for single-RAD RADSim.
+
 RAD-Sim Testing Infrastructure
 -------------------------------
 
