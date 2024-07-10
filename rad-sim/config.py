@@ -463,125 +463,135 @@ def prepare_build_dir(design_names):
     #os.system("cd build; cmake -DDESIGN:STRING=\"" + 'add' + "\" ..; cd .;")
     #os.system("cd ..;")
 
-# Get design name from command line argument
-if len(sys.argv) < 3:
-    print("Invalid arguments: python config.py <number_of_configs> <unique_design_name> <[optional] other_unique_design_names>")
-    exit(1)
-num_configs = int(sys.argv[1])
-design_names = set() #No duplicating design include statements and cmake commands
-for i in range(2, len(sys.argv)): #skip 0th argument (that is current program name), and 1st (number_of_configs)
-    design_names.add(sys.argv[i])
-    print(sys.argv[i])
+def find_num_configs(config_filename):
+    with open(config_filename, 'r') as yaml_config:
+        config = yaml.safe_load(yaml_config)
+    config_counter = 0
+    for config_section in config:
+        if 'config' in config_section:
+            config_counter += 1
+    return config_counter
 
-config_indices = []
-for n in range(0, num_configs):
-    config_indices.append(n)
-print(config_indices)
-
-# Check if design directory exists
-for design_name in design_names:
-    if not(os.path.isdir(os.getcwd() + "/example-designs/" + design_name)):
-        print("Cannot find design directory under rad-sim/example-designs/")
+if __name__ == "__main__":
+    # Get design name from command line argument
+    if len(sys.argv) < 2:
+        print("Invalid arguments: python config.py <unique_design_name> <[optional] other_unique_design_names>")
         exit(1)
 
-# Point to YAML configuration file
-#config_filename = "example-designs/" + design_name + "/config.yml"
-config_filename = "uni_config.yml"
-config_names = []
+    design_names = set() #No duplicating design include statements and cmake commands
+    for i in range(1, len(sys.argv)): #skip 0th argument (that is current program name)
+        design_names.add(sys.argv[i])
+        print(sys.argv[i])
 
-# List default parameter values
-booksim_params = {
-    "radsim_root_dir": os.getcwd(),
-    "noc_type": "2d",
-    "noc_num_nocs": 1,
-    "noc_topology": ["mesh"],
-    "noc_anynet_file": [os.getcwd() + "/sim/noc/anynet_file"],
-    "noc_dim_x": [8],
-    "noc_dim_y": [8],
-    "noc_routing_func": ["dim_order"],
-    "noc_vcs": [5],
-    "noc_vc_buffer_size": [8],
-    "noc_output_buffer_size": [8],
-    "noc_num_packet_types": [3],
-    "noc_router_uarch": ["iq"],
-    "noc_vc_allocator": ["islip"],
-    "noc_sw_allocator": ["islip"],
-    "noc_credit_delay": [1],
-    "noc_routing_delay": [1],
-    "noc_vc_alloc_delay": [1],
-    "noc_sw_alloc_delay": [1],
-}
-radsim_header_params = { #shared across all RADs
-    "radsim_root_dir": os.getcwd(),
-    "noc_payload_width": [166],
-    "noc_packet_id_width": 32,
-    "noc_vcs": [3],
-    "noc_num_packet_types": [3],
-    "noc_num_nodes": [0],
-    "noc_max_num_router_dest_interfaces": 32,
-    "interfaces_max_axis_tdata_width": 512,
-    "interfaces_axis_tkeep_width": 8,
-    "interfaces_axis_tstrb_width": 8,
-    "interfaces_axis_tuser_width": 75,
-    "interfaces_axi_id_width": 8,
-    "interfaces_axi_user_width": 64,
-    "interfaces_max_axi_data_width": 512,
-}
-radsim_knobs = { #includes cluster config
-    #"radsim_root_dir": os.getcwd(),
-    "design_name": design_name,
-    "noc_num_nocs": 1,
-    "noc_clk_period": [0.571],
-    "noc_vcs": [3],
-    "noc_payload_width": [146],
-    "noc_num_nodes": [0],
-    "design_noc_placement": ["noc.place"],
-    "noc_adapters_clk_period": [1.25],
-    "noc_adapters_fifo_size": [16],
-    "noc_adapters_obuff_size": [2],
-    "noc_adapters_in_arbiter": ["fixed_rr"],
-    "noc_adapters_out_arbiter": ["priority_rr"],
-    "noc_adapters_vc_mapping": ["direct"],
-    "design_clk_periods": [5.0],
-    # "sim_driver_period": 5.0,
-    # "telemetry_log_verbosity": 0,
-    # "telemetry_traces": ["trace0", "trace1"],
-    "dram_num_controllers": 0,
-    "dram_clk_periods": [2.0],
-    "dram_queue_sizes": [64],
-    "dram_config_files": ["HBM2_8Gb_x128"]
-}
+    # Check if design directory exists
+    for design_name in design_names:
+        if not(os.path.isdir(os.getcwd() + "/example-designs/" + design_name)):
+            print("Cannot find design directory under rad-sim/example-designs/")
+            exit(1)
 
-cluster_knobs = { #shared among all RADs
-    "radsim_root_dir": os.getcwd(),
-    "sim_driver_period": 5.0,
-    "telemetry_log_verbosity": 0,
-    "telemetry_traces": ["trace0", "trace1"],
-    "num_rads": 1,
-    "cluster_configs": [],
-    "cluster_topology": 'all-to-all',
-    "inter_rad_latency": 5.0, #ns
-    "inter_rad_bw": 25.6, #bits per ns
-    "inter_rad_fifo_num_slots": 1000
+    # Point to YAML configuration file
+    #config_filename = "example-designs/" + design_name + "/config.yml"
+    config_filename = "uni_config.yml"
+    config_names = []
 
-}
+    # List default parameter values
+    booksim_params = {
+        "radsim_root_dir": os.getcwd(),
+        "noc_type": "2d",
+        "noc_num_nocs": 1,
+        "noc_topology": ["mesh"],
+        "noc_anynet_file": [os.getcwd() + "/sim/noc/anynet_file"],
+        "noc_dim_x": [8],
+        "noc_dim_y": [8],
+        "noc_routing_func": ["dim_order"],
+        "noc_vcs": [5],
+        "noc_vc_buffer_size": [8],
+        "noc_output_buffer_size": [8],
+        "noc_num_packet_types": [3],
+        "noc_router_uarch": ["iq"],
+        "noc_vc_allocator": ["islip"],
+        "noc_sw_allocator": ["islip"],
+        "noc_credit_delay": [1],
+        "noc_routing_delay": [1],
+        "noc_vc_alloc_delay": [1],
+        "noc_sw_alloc_delay": [1],
+    }
+    radsim_header_params = { #shared across all RADs
+        "radsim_root_dir": os.getcwd(),
+        "noc_payload_width": [166],
+        "noc_packet_id_width": 32,
+        "noc_vcs": [3],
+        "noc_num_packet_types": [3],
+        "noc_num_nodes": [0],
+        "noc_max_num_router_dest_interfaces": 32,
+        "interfaces_max_axis_tdata_width": 512,
+        "interfaces_axis_tkeep_width": 8,
+        "interfaces_axis_tstrb_width": 8,
+        "interfaces_axis_tuser_width": 75,
+        "interfaces_axi_id_width": 8,
+        "interfaces_axi_user_width": 64,
+        "interfaces_max_axi_data_width": 512,
+    }
+    radsim_knobs = { #includes cluster config
+        #"radsim_root_dir": os.getcwd(),
+        "design_name": design_name,
+        "noc_num_nocs": 1,
+        "noc_clk_period": [0.571],
+        "noc_vcs": [3],
+        "noc_payload_width": [146],
+        "noc_num_nodes": [0],
+        "design_noc_placement": ["noc.place"],
+        "noc_adapters_clk_period": [1.25],
+        "noc_adapters_fifo_size": [16],
+        "noc_adapters_obuff_size": [2],
+        "noc_adapters_in_arbiter": ["fixed_rr"],
+        "noc_adapters_out_arbiter": ["priority_rr"],
+        "noc_adapters_vc_mapping": ["direct"],
+        "design_clk_periods": [5.0],
+        # "sim_driver_period": 5.0,
+        # "telemetry_log_verbosity": 0,
+        # "telemetry_traces": ["trace0", "trace1"],
+        "dram_num_controllers": 0,
+        "dram_clk_periods": [2.0],
+        "dram_queue_sizes": [64],
+        "dram_config_files": ["HBM2_8Gb_x128"]
+    }
 
-#deep copy (to allow changes to each dict)
-radsim_knobs_per_rad = list(deepcopy(radsim_knobs) for i in range(num_configs))
-#print(radsim_knobs_cluster)
-#radsim_header_params_per_rad = list(deepcopy(radsim_header_params) for i in range(num_configs))
-booksim_params_per_rad = list(deepcopy(booksim_params) for i in range(num_configs))
+    cluster_knobs = { #shared among all RADs
+        "radsim_root_dir": os.getcwd(),
+        "sim_driver_period": 5.0,
+        "telemetry_log_verbosity": 0,
+        "telemetry_traces": ["trace0", "trace1"],
+        "num_rads": 1,
+        "cluster_configs": [],
+        "cluster_topology": 'all-to-all',
+        "inter_rad_latency": 5.0, #ns
+        "inter_rad_bw": 25.6, #bits per ns
+        "inter_rad_fifo_num_slots": 1000
 
-# Parse configuration file
-parse_config_file(config_filename, booksim_params_per_rad, radsim_header_params, radsim_knobs_per_rad, cluster_knobs)
-print_config(booksim_params_per_rad, radsim_header_params, radsim_knobs_per_rad)
+    }
 
-# Generate RAD-Sim input files
-generate_booksim_config_files(booksim_params_per_rad, radsim_header_params, radsim_knobs_per_rad, cluster_knobs)
-generate_radsim_params_header(radsim_header_params)
-generate_radsim_config_file(radsim_knobs_per_rad, cluster_knobs)
-generate_radsim_main(design_names, cluster_knobs["num_rads"], radsim_knobs_per_rad) #TODO: fix
+    num_configs = find_num_configs(config_filename)
+    #print('num_configs: ' + str(num_configs))
+    config_indices = []
+    for n in range(0, num_configs):
+        config_indices.append(n)
+    print(config_indices)
 
-prepare_build_dir(design_names)
+    #deep copy (to allow changes to each dict)
+    radsim_knobs_per_rad = list(deepcopy(radsim_knobs) for i in range(num_configs))
+    booksim_params_per_rad = list(deepcopy(booksim_params) for i in range(num_configs))
 
-print("RAD-Sim was configured successfully!")
+    # Parse configuration file
+    parse_config_file(config_filename, booksim_params_per_rad, radsim_header_params, radsim_knobs_per_rad, cluster_knobs)
+    #print_config(booksim_params_per_rad, radsim_header_params, radsim_knobs_per_rad)
+
+    # Generate RAD-Sim input files
+    generate_booksim_config_files(booksim_params_per_rad, radsim_header_params, radsim_knobs_per_rad, cluster_knobs)
+    generate_radsim_params_header(radsim_header_params)
+    generate_radsim_config_file(radsim_knobs_per_rad, cluster_knobs)
+    generate_radsim_main(design_names, cluster_knobs["num_rads"], radsim_knobs_per_rad)
+
+    prepare_build_dir(design_names)
+
+    print("RAD-Sim was configured successfully!")

@@ -12,7 +12,7 @@ You can configure RAD-Sim for the two-RAD DLRM design simulation using the follo
 .. code-block:: bash
 
     $ cd <rad_flow_root_dir>/rad-sim
-    $ python config.py 2 dlrm
+    $ python config.py dlrm #dlrm is name of design directory within example-designs parent directory
 
 Running RAD-Sim
 ----------------
