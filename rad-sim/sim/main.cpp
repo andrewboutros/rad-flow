@@ -7,7 +7,7 @@
 #include <radsim_cluster.hpp>
 #include <radsim_inter_rad.hpp>
 
-#include <dlrm_system.hpp>
+#include <mlp_system.hpp>
 
 RADSimConfig radsim_config;
 std::ostream *gWatchOut;
@@ -17,10 +17,10 @@ SimTraceRecording sim_trace_probe;
 int sc_main(int argc, char *argv[]) {
 	std::string radsim_knobs_filename = "/sim/radsim_knobs";
 	std::string radsim_knobs_filepath = RADSIM_ROOT_DIR + radsim_knobs_filename;
-	radsim_config.ResizeAll(2);
+	radsim_config.ResizeAll(1);
 	ParseRADSimKnobs(radsim_knobs_filepath);
 
-	RADSimCluster* cluster = new RADSimCluster(2);
+	RADSimCluster* cluster = new RADSimCluster(1);
 
 	gWatchOut = &cout;
 	int log_verbosity = radsim_config.GetIntKnobShared("telemetry_log_verbosity");
@@ -31,19 +31,14 @@ int sc_main(int argc, char *argv[]) {
 
 	sc_clock *driver_clk_sig0 = new sc_clock(
 		"node_clk0", radsim_config.GetDoubleKnobShared("sim_driver_period"), SC_NS);
-	dlrm_system *system0 = new dlrm_system("dlrm_system", driver_clk_sig0, cluster->all_rads[0]);
+	mlp_system *system0 = new mlp_system("mlp_system", driver_clk_sig0, cluster->all_rads[0]);
 	cluster->StoreSystem(system0);
-	sc_clock *driver_clk_sig1 = new sc_clock(
-		"node_clk0", radsim_config.GetDoubleKnobShared("sim_driver_period"), SC_NS);
-	dlrm_system *system1 = new dlrm_system("dlrm_system", driver_clk_sig1, cluster->all_rads[1]);
-	cluster->StoreSystem(system1);
 
 	sc_clock *inter_rad_clk_sig = new sc_clock(
 		"node_clk0", radsim_config.GetDoubleKnobShared("sim_driver_period"), SC_NS);
 	RADSimInterRad* blackbox = new RADSimInterRad("inter_rad_box", inter_rad_clk_sig, cluster);
 
 	blackbox->ConnectRadAxi(0);
-	blackbox->ConnectRadAxi(1);
 
 	int start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
 	while (cluster->AllRADsNotDone()) {
@@ -55,8 +50,6 @@ int sc_main(int argc, char *argv[]) {
 
 	delete system0;
 	delete driver_clk_sig0;
-	delete system1;
-	delete driver_clk_sig1;
 	delete blackbox;
 	delete inter_rad_clk_sig;
 

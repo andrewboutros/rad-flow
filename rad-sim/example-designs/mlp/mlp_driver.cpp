@@ -19,12 +19,13 @@ bool ParseIO(std::vector<std::vector<int>>& data_vec, std::string& io_filename) 
   return true;
 }
 
-mlp_driver::mlp_driver(const sc_module_name& name) : sc_module(name) {
+mlp_driver::mlp_driver(const sc_module_name& name, RADSimDesignContext* radsim_design_) : sc_module(name) {
+  this->radsim_design = radsim_design_; //AKB ADDED
   start_cycle = 0;
   end_cycle = 0;
 
   // Parse design configuration (number of layers & number of MVM per layer)
-  std::string design_root_dir = radsim_config.GetStringKnob("radsim_user_design_root_dir");
+  std::string design_root_dir = radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
   std::string design_config_filename = design_root_dir + "/compiler/layer_mvm_config";
   std::ifstream design_config_file(design_config_filename);
   if(!design_config_file) {
@@ -82,7 +83,7 @@ void mlp_driver::source() {
     dispatcher_fifo_wen[dispatcher_id].write(false);
   wait();
   rst.write(false);
-  start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+  start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
   wait();
 
   std::vector<unsigned int> written_inputs(num_mvms[0], 0);
@@ -128,20 +129,22 @@ void mlp_driver::sink() {
   }
   if (mistake) {
     std::cout << "FAILURE - Some outputs NOT matching!" << std::endl;
-    radsim_design.ReportDesignFailure();
+    radsim_design->ReportDesignFailure();
   }
   else std::cout << "SUCCESS - All outputs are matching!" << std::endl;
 
-  end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+  end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
   std::cout << "Simulation Cycles = " << end_cycle - start_cycle << std::endl;
   NoCTransactionTelemetry::DumpStatsToFile("stats.csv");
   NoCFlitTelemetry::DumpNoCFlitTracesToFile("flit_traces.csv");
 
   std::vector<double> aggregate_bandwidths = NoCTransactionTelemetry::DumpTrafficFlows("traffic_flows", 
-    end_cycle - start_cycle, radsim_design.GetNodeModuleNames());
+    end_cycle - start_cycle, radsim_design->GetNodeModuleNames(), radsim_design->rad_id);
   std::cout << "Aggregate NoC BW = " << aggregate_bandwidths[0] / 1000000000 << " Gbps" << std::endl;
 
-  sc_stop();
+  //sc_stop();
+  this->radsim_design->set_rad_done(); //flag to replace sc_stop calls
+  return;
 }
 
 void mlp_driver::assign() {

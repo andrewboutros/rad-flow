@@ -1,9 +1,10 @@
 #include "collector.hpp"
 
-collector::collector(const sc_module_name &name)
-    : RADSimModule(name), rst("rst"), data_fifo_rdy("data_fifo_rdy"),
+collector::collector(const sc_module_name &name, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design), rst("rst"), data_fifo_rdy("data_fifo_rdy"),
       data_fifo_ren("data_fifo_ren"), data_fifo_rdata("data_fifo_rdata") {
 
+  this->radsim_design = radsim_design;
   module_name = name;
 
   char fifo_name[25];

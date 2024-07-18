@@ -9,13 +9,13 @@
 #include <systemc.h>
 #include <vector>
 #include <radsim_utils.hpp>
-#include <dlrm_defines.hpp>
-#include <sim_utils.hpp> //AKB: added for data_vector template class
+//#include <dlrm_defines.hpp>
+//#include <sim_utils.hpp> //AKB: added for data_vector template class
 
 struct portal_axis_fields {
             bool tvalid;
             bool tready;
-            sc_bv<DATAW> tdata;
+            sc_bv<AXIS_MAX_DATAW> tdata;
             sc_bv<AXIS_STRBW> tstrb;
             sc_bv<AXIS_KEEPW> tkeep;
             bool tlast;
@@ -51,6 +51,10 @@ class portal : public RADSimModule {
         void RegisterModuleInfo(); //even tho did not add AXI Interface, need because is virtual fn in derived class
 };
 
-void bv_to_data_vector(
-    sc_bv<AXI4_MAX_DATAW> &bitvector, data_vector<int16_t> &datavector,
-    unsigned int num_elements);
+/* START FOR DEBUG 
+Note: need correct data_vector datatype matching the design's sim_utils.hpp
+*/
+// void bv_to_data_vector(
+//     sc_bv<AXI4_MAX_DATAW> &bitvector, data_vector<int16_t> &datavector,
+//     unsigned int num_elements);
+/* END FOR DEBUG */

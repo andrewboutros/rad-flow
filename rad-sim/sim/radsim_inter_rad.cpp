@@ -30,6 +30,7 @@ RADSimInterRad::RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_c
         all_axis_slave_ports.push_back(new_axis_slave_port);
         axis_master_port* new_axis_master_port = new axis_master_port;
         all_axis_master_ports.push_back(new_axis_master_port);
+        std::cout << "RADSimInterRad: " << v << std::endl;
     }
     SC_CTHREAD(writeFifo, clk.pos());
     SC_CTHREAD(readFifo, clk.pos());
@@ -122,11 +123,13 @@ RADSimInterRad::writeFifo() {
                 unsigned int dest_rad = DEST_RAD(curr_transaction.tdest).to_uint64();
                 //std::cout << "radsim_inter_rad.cpp dest_rad is: "<< dest_rad << std::endl;
                 if (this->fifos[dest_rad]->nb_write(curr_transaction) != false) { //there was an available slot to write to
-                    sc_bv<DATAW> rx_tdata_bv = curr_transaction.tdata;
-                    data_vector<int16_t> rx_tdata(32);
-                    bv_to_data_vector(rx_tdata_bv, rx_tdata, 32);
-                    //std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << rx_tdata << std::endl;
-                    //std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << curr_transaction.tdata.to_uint64() << std::endl;
+                    /* START FOR DEBUG */
+                    // sc_bv<DATAW> rx_tdata_bv = curr_transaction.tdata;
+                    // data_vector<int16_t> rx_tdata(32); //NOTE (AKB): type needs to match what is supported in example-designs/{design}/modules/sim_utils.hpp
+                    // bv_to_data_vector(rx_tdata_bv, rx_tdata, 32);
+                    // std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << rx_tdata << std::endl;
+                    // std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << curr_transaction.tdata.to_uint64() << std::endl;
+                    /* END FOR DEBUG */
                     fifos_latency_counters[dest_rad].push_back(0); //for latency counters
                 }
                 else {

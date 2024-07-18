@@ -1,9 +1,9 @@
 #include <mlp_top.hpp>
 
-mlp_top::mlp_top(const sc_module_name &name) : sc_module(name) {
-
+mlp_top::mlp_top(const sc_module_name &name, RADSimDesignContext* radsim_design) : design_top(radsim_design) {
+  this->radsim_design = radsim_design;
   std::string design_root_dir =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir");
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
   std::string design_config_filename =
       design_root_dir + "/compiler/layer_mvm_config";
 
@@ -42,13 +42,13 @@ mlp_top::mlp_top(const sc_module_name &name) : sc_module(name) {
           design_root_dir + "/compiler/inst_mifs/" + module_name_str + ".mif";
       std::strcpy(module_name, module_name_str.c_str());
       matrix_vector_engines[layer_id][mvm_id] =
-          new mvm(module_name, mvm_id, layer_id, inst_filename);
+          new mvm(module_name, mvm_id, layer_id, inst_filename, radsim_design);
       matrix_vector_engines[layer_id][mvm_id]->rst(rst);
 
       if (layer_id == 0) {
         module_name_str = "input_dispatcher" + std::to_string(mvm_id);
         std::strcpy(module_name, module_name_str.c_str());
-        input_dispatchers[mvm_id] = new dispatcher(module_name, mvm_id);
+        input_dispatchers[mvm_id] = new dispatcher(module_name, mvm_id, radsim_design);
         input_dispatchers[mvm_id]->rst(rst);
         input_dispatchers[mvm_id]->data_fifo_rdy(dispatcher_fifo_rdy[mvm_id]);
         input_dispatchers[mvm_id]->data_fifo_wen(dispatcher_fifo_wen[mvm_id]);
@@ -60,15 +60,16 @@ mlp_top::mlp_top(const sc_module_name &name) : sc_module(name) {
 
   module_name_str = "output_collector";
   std::strcpy(module_name, module_name_str.c_str());
-  output_collector = new collector(module_name);
+  output_collector = new collector(module_name, radsim_design);
   output_collector->rst(rst);
   output_collector->data_fifo_rdy(collector_fifo_rdy);
   output_collector->data_fifo_ren(collector_fifo_ren);
   output_collector->data_fifo_rdata(collector_fifo_rdata);
 
-  radsim_design.BuildDesignContext("mlp.place", "mlp.clks");
-  radsim_design.CreateSystemNoCs(rst);
-  radsim_design.ConnectModulesToNoC();
+  this->portal_inst->rst(rst);
+  radsim_design->BuildDesignContext("mlp.place", "mlp.clks");
+  radsim_design->CreateSystemNoCs(rst);
+  radsim_design->ConnectModulesToNoC();
 }
 
 mlp_top::~mlp_top() {
