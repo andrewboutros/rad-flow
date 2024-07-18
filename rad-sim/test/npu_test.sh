@@ -22,6 +22,8 @@ done
 test_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 cd $test_path
 
+cp -f ../example-designs/npu/config.yml ../uni_config.yml
+
 (cd ../; python config.py npu)
 
 (cd ../example-designs/npu/compiler; chmod 777 perf_sim.sh)
