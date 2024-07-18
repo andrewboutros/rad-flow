@@ -1,9 +1,10 @@
 #include "dispatcher.hpp"
 
-dispatcher::dispatcher(const sc_module_name &name, unsigned int id)
-    : RADSimModule(name), rst("rst"), data_fifo_rdy("data_fifo_rdy"),
+dispatcher::dispatcher(const sc_module_name &name, unsigned int id, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design), rst("rst"), data_fifo_rdy("data_fifo_rdy"),
       data_fifo_wen("data_fifo_wen"), data_fifo_wdata("data_fifo_wdata") {
 
+  this->radsim_design = radsim_design;
   module_name = name;
   dispatcher_id = id;
 
@@ -52,7 +53,7 @@ void dispatcher::Assign() {
       tx_interface.tid.write(0);
       std::string dest_name =
           "layer0_mvm" + std::to_string(dispatcher_id) + ".rx_interface";
-      tx_interface.tdest.write(radsim_design.GetPortDestinationID(dest_name));
+      tx_interface.tdest.write(radsim_design->GetPortDestinationID(dest_name));
       // std::cout << "Dispatcher " << dispatcher_id << " pushed data into the
       // NoC with dest "
       //   << radsim_design.GetPortDestinationID(dest_name) << "!" << std::endl;

@@ -206,6 +206,7 @@ for m in range(num_mvms[0]):
 placement_file.write('output_collector 0 ' + str(router_ids[idx]) + ' axis\n')
 idx = idx + 1
 clocks_file.write('output_collector 0 0\n')
+placement_file.write('portal_inst 0 16 axis\n')
 placement_file.close()
 clocks_file.close()
 

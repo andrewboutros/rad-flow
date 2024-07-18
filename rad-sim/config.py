@@ -42,7 +42,7 @@ def parse_config_file(config_filename, booksim_params, radsim_header_params, rad
                         print("Config Error: Parameter " + param_name + " is invalid!")
                         exit(1)
             
-            elif config_section == "noc" or config_section == "noc_adapters":
+            elif config_section == "noc" or config_section == "noc_adapters" or config_section == "interfaces":
                 param_value = param #bc no subsection, so correction
                 param = param_category #bc no subsection, so correction
                 print('     ' + param, param_value)
@@ -362,8 +362,9 @@ def generate_radsim_config_file(radsim_knobs, cluster_knobs):
                 radsim_config_file.write("inter_rad_bw_accept_cycles " + str(inter_rad_bw_accept_cycles) + "\n")
                 radsim_config_file.write("inter_rad_bw_total_cycles " + str(inter_rad_bw_total_cycles) + "\n")
             else:
-                print('generate_radsim_config_file error: invalid inter_rad_bw')
-                exit(-1)
+                print('generate_radsim_config_file error: Invalid inter_rad_bw. Proceeding with default bandwidth of AXIS_DATAW per cycle.')
+                radsim_config_file.write("inter_rad_bw_accept_cycles " + str(1) + "\n")
+                radsim_config_file.write("inter_rad_bw_total_cycles " + str(1) + "\n")
             continue
         else:
             radsim_config_file.write(param + " " )
@@ -459,7 +460,7 @@ def prepare_build_dir(design_names):
             semicol_sep_design_names += ';' 
         count = count+1
     #print("cmake -DDESIGN_NAMES=\"" + semicol_sep_design_names + "\" ..;")
-    os.system("cd build; cmake -DDESIGN_NAMES=\"" + semicol_sep_design_names + "\" ..; cd .;")
+    os.system("cd build; cmake -DCMAKE_BUILD_TYPE=Debug -DDESIGN_NAMES=\"" + semicol_sep_design_names + "\" ..; cd .;")
     #os.system("cd build; cmake -DDESIGN:STRING=\"" + 'add' + "\" ..; cd .;")
     #os.system("cd ..;")
 

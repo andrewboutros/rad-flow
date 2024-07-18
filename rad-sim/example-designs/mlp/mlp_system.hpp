@@ -6,8 +6,9 @@
 #include <mlp_top.hpp>
 #include <sim_utils.hpp>
 #include <vector>
+#include <design_system.hpp>
 
-class mlp_system : public sc_module {
+class mlp_system : public design_system {
  private:
   sc_vector<sc_signal<bool>> dispatcher_fifo_rdy_signal;
   sc_vector<sc_signal<bool>> dispatcher_fifo_wen_signal;
@@ -22,6 +23,6 @@ class mlp_system : public sc_module {
   mlp_driver* mlp_driver_inst;
   mlp_top* mlp_inst;
 
-  mlp_system(const sc_module_name& name, sc_clock* driver_clk_sig);
+  mlp_system(const sc_module_name& name, sc_clock* driver_clk_sig, RADSimDesignContext* radsim_design);
   ~mlp_system();
 };
