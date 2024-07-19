@@ -10,7 +10,7 @@ NoCTransactionTelemetry::~NoCTransactionTelemetry() {}
 int NoCTransactionTelemetry::RecordTransactionInitiation(int src, int dest, int type, int dataw, int network_id) {
   NoCTransactionTrace entry;
   entry.src_node = src;
-  entry.dest_node = dest;
+  entry.dest_node = (~(0xff << AXIS_DEST_FIELDW)) & dest; //extract only local NoC node. ignore any remote NoC node set for inter-rad network.
   entry.transaction_type = type;
   entry.dataw = dataw;
   entry.network_id = network_id;
@@ -64,7 +64,7 @@ void NoCTransactionTelemetry::DumpStatsToFile(const std::string& filename) {
 }
 
 std::vector<double> NoCTransactionTelemetry::DumpTrafficFlows(const std::string& filename, unsigned int cycle_count, 
-  std::vector<std::vector<std::set<std::string>>>& node_module_names, int rad_id) { //AKB: require passing of rad_id
+  std::vector<std::vector<std::set<std::string>>> node_module_names, unsigned int rad_id) { //AKB: require passing of rad_id
   double sim_driver_period = radsim_config.GetDoubleKnobShared("sim_driver_period") / 1000000000.0;
   unsigned int num_nocs = radsim_config.GetIntKnobPerRad("noc_num_nocs", rad_id);
   std::vector<std::vector<std::unordered_map<unsigned int, unsigned int>>> traffic_bits(num_nocs);
@@ -95,8 +95,8 @@ std::vector<double> NoCTransactionTelemetry::DumpTrafficFlows(const std::string&
       if (traffic_bits[noc_id][src_id].size() > 0) {
         for (auto& flow : traffic_bits[noc_id][src_id]) {
           traffic_file << "\t<single_flow src=\".*";
-          std::string src_name = *node_module_names[noc_id][src_id].begin();
-          std::string dst_name = *node_module_names[noc_id][flow.first].begin();
+          std::string src_name = *(node_module_names[noc_id][src_id].begin());
+          std::string dst_name = *(node_module_names[noc_id][flow.first].begin());
           traffic_file << "noc_router_" << src_name << ".*\" dst=\".*";
           traffic_file << "noc_router_" << dst_name << ".*\" bandwidth=\"";
           double bandwidth = flow.second / (cycle_count * sim_driver_period);

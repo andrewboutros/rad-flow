@@ -2,6 +2,7 @@
 
 #include <systemc.h>
 #include <radsim_utils.hpp>
+#include <radsim_defines.hpp>
 
 #include <iostream>
 #include <string>
@@ -58,7 +59,7 @@ class NoCTransactionTelemetry {
   static void UpdateHops(int id, int num_hops);
   static void DumpStatsToFile(const std::string& filename);
   static std::vector<double> DumpTrafficFlows(const std::string& filename, unsigned int cycle_count,
-    std::vector<std::vector<std::set<std::string>>>& node_module_names, int rad_id);
+    std::vector<std::vector<std::set<std::string>>> node_module_names, unsigned int rad_id);
 };
 
 // Class for recording and storing flit traces

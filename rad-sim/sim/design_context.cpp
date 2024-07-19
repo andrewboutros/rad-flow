@@ -691,9 +691,9 @@ void RADSimDesignContext::DumpDesignContext() {
   cin.get();
 }
 
-std::vector<std::vector<std::set<std::string>>> &
+std::vector<std::vector<std::set<std::string>>>
 RADSimDesignContext::GetNodeModuleNames() {
-  return _node_module_names;
+  return std::ref(_node_module_names);
 }
 
 uint64_t RADSimDesignContext::GetPortBaseAddress(std::string &port_name) {

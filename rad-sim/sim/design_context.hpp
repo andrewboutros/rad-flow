@@ -102,7 +102,7 @@ public:
   unsigned int GetPortDestinationID(std::string &port_name);
   unsigned int GetPortInterfaceID(std::string &port_name);
   void DumpDesignContext();
-  std::vector<std::vector<std::set<std::string>>> &GetNodeModuleNames();
+  std::vector<std::vector<std::set<std::string>>> GetNodeModuleNames();
   uint64_t GetPortBaseAddress(std::string &port_name);
 
   int GetSimExitCode();

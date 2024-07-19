@@ -234,14 +234,14 @@ void axis_slave_adapter::InputInjection() {
         if (DEST_RAD(_to_be_injected_flit._dest) == _rad_id) { //not crossing to other RAD
           sc_bv<AXIS_DESTW> booksim_flit_dest = DEST_LOCAL_NODE(_to_be_injected_flit._dest);
           booksim_flit->dest = GetInputDestinationNode(booksim_flit_dest);
-          booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_uint();
-          booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_uint();
+          booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_int();
+          booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_int();
         } else {
           //std::cout << "(TO-DO-MR) _portal_id in axis_slave_adapter.cpp: " << _portal_id << std::endl;
           sc_bv<AXIS_DESTW> booksim_flit_dest = _portal_id; // TO-DO-MR-DONE: set to portal node ID
           booksim_flit->dest = GetInputDestinationNode(booksim_flit_dest);
-          booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_uint();
-          booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_uint();
+          booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_int();
+          booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_int();//to_uint();
         }
         // TO-DO-MR END
 

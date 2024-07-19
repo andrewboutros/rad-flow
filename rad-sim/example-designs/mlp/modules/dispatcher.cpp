@@ -55,9 +55,11 @@ void dispatcher::Assign() {
       std::string dest_name =
           "layer0_mvm" + std::to_string(dispatcher_id) + ".rx_interface";
       unsigned int dest_id = radsim_design->GetPortDestinationID(dest_name);
-      //DEST_RAD(dest_id_concat) = radsim_design->rad_id;
+      DEST_REMOTE_NODE(dest_id_concat) = 0; //bc staying on same RAD
       DEST_LOCAL_NODE(dest_id_concat) = dest_id;
-      //DEST_REMOTE_NODE(dest_id_concat) = dest_id;
+      //std::cout << "dispatcher.cpp dest_id: " << dest_id << std::endl;
+      DEST_RAD(dest_id_concat) = radsim_design->rad_id;
+      std::cout << "dispatcher.cpp dest_id_concat: " << dest_id_concat << std::endl;
       tx_interface.tdest.write(dest_id_concat); //radsim_design->GetPortDestinationID(dest_name));
       // std::cout << "Dispatcher " << dispatcher_id << " pushed data into the
       // NoC with dest "

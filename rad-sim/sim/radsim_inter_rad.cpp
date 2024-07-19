@@ -1,13 +1,11 @@
 #include <radsim_inter_rad.hpp>
 
-int num_wait = 1; //7;
-
 std::ostream& operator<<(std::ostream& os, const axis_fields& I) {
     return os; //needed to create sc_fifo of custom struct type
 }
 
 RADSimInterRad::RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_clk, RADSimCluster* cluster) : sc_module(name) {
-    std::cout << "RADSimInterRad DATAW " << DATAW << std::endl;
+    std::cout << "RADSimInterRad AXIS_MAX_DATAW " << AXIS_MAX_DATAW << std::endl;
     this->cluster = cluster;
     this->clk(*inter_rad_clk);
     num_rads = cluster->num_rads;
@@ -124,7 +122,7 @@ RADSimInterRad::writeFifo() {
                 //std::cout << "radsim_inter_rad.cpp dest_rad is: "<< dest_rad << std::endl;
                 if (this->fifos[dest_rad]->nb_write(curr_transaction) != false) { //there was an available slot to write to
                     /* START FOR DEBUG */
-                    // sc_bv<DATAW> rx_tdata_bv = curr_transaction.tdata;
+                    // sc_bv<AXIS_MAX_DATAW> rx_tdata_bv = curr_transaction.tdata;
                     // data_vector<int16_t> rx_tdata(32); //NOTE (AKB): type needs to match what is supported in example-designs/{design}/modules/sim_utils.hpp
                     // bv_to_data_vector(rx_tdata_bv, rx_tdata, 32);
                     // std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << rx_tdata << std::endl;
@@ -146,7 +144,7 @@ RADSimInterRad::writeFifo() {
             // }
 
         }
-        //wait(num_wait, SC_NS); //SC_NS); //eventually change to 1.3, SC_US -- assuming 2.6 us / 2 latency for one piece of data
+
         if (bw_counter >= (radsim_config.GetIntKnobShared("inter_rad_bw_total_cycles") - 1)) { //bw_limit) {
             bw_counter = 0;
         }
@@ -173,7 +171,7 @@ RADSimInterRad::readFifo() {
         //get current cycle for experiments
         int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
 
-        //sc_bv<DATAW> val = this->fifos[0]->read();
+        //sc_bv<AXIS_MAX_DATAW> val = this->fifos[0]->read();
         for (int i = 0; i < num_rads; i++) { //iterate through all rad's fifos
             //increment delay on all counters
             for (int j = 0; j < fifos_latency_counters[i].size(); j++) {
@@ -186,11 +184,10 @@ RADSimInterRad::readFifo() {
             //TODO: replace sc_fifo with something else std::queue that can support peeks
             //IMPORTANT: currently does not accept backpressure. Portal module must create a buffer for backpressure on the RAD's NoC
             if ( (this->fifos[i]->num_available() != 0) && (fifos_latency_counters[i][0] >= target_delay) ){ //check that fifo is not empty
-                //counter_delay = 0; //reset counter
                 fifos_latency_counters[i].erase(fifos_latency_counters[i].begin()); //to reset counter, remove first elem
                 struct axis_fields read_from_fifo;
                 this->fifos[i]->nb_read(read_from_fifo);
-                sc_bv<DATAW> val = read_from_fifo.tdata;
+                sc_bv<AXIS_MAX_DATAW> val = read_from_fifo.tdata;
                 int dest_device = (DEST_RAD(read_from_fifo.tdest)).to_uint64(); //#define AXIS_USERW     66
                 
                 //std::cout << "inter_rad fifo data READ is " << this->fifos[0]->read() << std::endl;
@@ -198,7 +195,6 @@ RADSimInterRad::readFifo() {
                     //std::cout << "inter_rad fifo data READ is " << val.to_uint64() << " on cycle " << curr_cycle << std::endl;
                     //std::cout << "dest_device: " << dest_device << std::endl;
                     //all_signals[1].write(val); //works but replacing with axi
-                    //all_axis_master_ports[1]->tdata.write(val); //1 bc sending to mult design
                     all_axis_master_signals[dest_device]->tdata.write(val); //works if write to either this or line above
                     all_axis_master_signals[dest_device]->tvalid.write(read_from_fifo.tvalid);
                     all_axis_master_signals[dest_device]->tlast.write(read_from_fifo.tlast);
@@ -208,21 +204,18 @@ RADSimInterRad::readFifo() {
                 }
                 else {
                     //no data to be written to any RAD's portal module
-                    //all_axis_master_signals[0]->tvalid.write(false);
                     all_axis_master_signals[i]->tvalid.write(false);
                 }
             
             }
             else {
                 //no data to be written to any RAD's portal module
-                //all_axis_master_signals[0]->tvalid.write(false);
                 all_axis_master_signals[i]->tvalid.write(false);
             }
             
         }
 
-        //wait(num_wait, SC_NS); //eventually change to 1.3, SC_US -- assuming 2.6 us / 2 latency for one piece of data
         wait();
-        //wait(2);
+
     }
 }
