@@ -496,7 +496,11 @@ void mvm::Assign() {
       tx_interface.tdata.write(tx_tdata_bv);
       tx_interface.tvalid.write(!ofifo_empty_signal);
       tx_interface.tuser.write(dest_interface);
-      tx_interface.tdest.write(dest_id);
+      sc_bv<AXIS_DESTW> dest_id_concat;
+      DEST_REMOTE_NODE(dest_id_concat) = 0; //bc staying on same RAD
+      DEST_LOCAL_NODE(dest_id_concat) = dest_id;
+      DEST_RAD(dest_id_concat) = radsim_design->rad_id;
+      tx_interface.tdest.write(dest_id_concat); //dest_id);
       /*if (dest_interface == 2 << 13 && !ofifo_empty_signal) {
         std::cout << "Sending to reduce FIFO" << std::endl;
         std::cout << tx_tdata << std::endl;

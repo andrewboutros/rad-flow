@@ -36,7 +36,6 @@ dispatcher::dispatcher(const sc_module_name &name, unsigned int id, RADSimDesign
 dispatcher::~dispatcher() { delete data_fifo; }
 
 void dispatcher::Assign() {
-  sc_bv<AXIS_DESTW> dest_id_concat;
   if (rst.read()) {
     tx_interface.tvalid.write(false);
     data_fifo_rdy.write(false);
@@ -55,11 +54,10 @@ void dispatcher::Assign() {
       std::string dest_name =
           "layer0_mvm" + std::to_string(dispatcher_id) + ".rx_interface";
       unsigned int dest_id = radsim_design->GetPortDestinationID(dest_name);
+      sc_bv<AXIS_DESTW> dest_id_concat;
       DEST_REMOTE_NODE(dest_id_concat) = 0; //bc staying on same RAD
       DEST_LOCAL_NODE(dest_id_concat) = dest_id;
-      //std::cout << "dispatcher.cpp dest_id: " << dest_id << std::endl;
       DEST_RAD(dest_id_concat) = radsim_design->rad_id;
-      std::cout << "dispatcher.cpp dest_id_concat: " << dest_id_concat << std::endl;
       tx_interface.tdest.write(dest_id_concat); //radsim_design->GetPortDestinationID(dest_name));
       // std::cout << "Dispatcher " << dispatcher_id << " pushed data into the
       // NoC with dest "
