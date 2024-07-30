@@ -28,7 +28,7 @@ class dispatcher : public RADSimModule {
   sc_in<data_vector<sc_int<IPRECISION>>> data_fifo_wdata;
   axis_master_port tx_interface;
 
-  dispatcher(const sc_module_name& name, unsigned int id);
+  dispatcher(const sc_module_name& name, unsigned int id, RADSimDesignContext* radsim_design);
   ~dispatcher();
 
   void Assign();

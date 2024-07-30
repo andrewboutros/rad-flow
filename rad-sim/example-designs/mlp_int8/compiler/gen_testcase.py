@@ -76,6 +76,9 @@ placement_dict['inst_loader'] = router_ids[idx]
 idx = idx + 1
 clocks_file.write('inst_loader 0 0\n')
 
+placement_file.write('portal_inst 0 16 axis\n')
+clocks_file.write('portal_inst 0 0\n')
+
 placement_file.close()
 clocks_file.close()
 

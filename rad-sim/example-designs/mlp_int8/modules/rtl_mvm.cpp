@@ -1,6 +1,7 @@
 #include <rtl_mvm.hpp>
 
-rtl_mvm::rtl_mvm(const sc_module_name &name) : RADSimModule(name) {
+rtl_mvm::rtl_mvm(const sc_module_name &name, RADSimDesignContext* radsim_design) : RADSimModule(name, radsim_design) {
+	this->radsim_design = radsim_design;
 	char vrtl_mvm_name[25];
 	std::string vrtl_mvm_name_str = std::string(name);
 	std::strcpy(vrtl_mvm_name, vrtl_mvm_name_str.c_str());

@@ -29,6 +29,7 @@ class inst_loader : public RADSimModule {
   sc_signal<bool> mvm_id_fifo_pop, mvm_id_fifo_full, mvm_id_fifo_empty, mvm_id_fifo_almost_full;
 
  public:
+  RADSimDesignContext* radsim_design;
   sc_in<bool> rst;
   sc_out<bool> inst_fifo_rdy;
   sc_in<bool> inst_fifo_wen;
@@ -41,7 +42,7 @@ class inst_loader : public RADSimModule {
   sc_in<uint8_t> mvm_id_fifo_wdata;
   axis_master_port tx_interface;
 
-  inst_loader(const sc_module_name& name);
+  inst_loader(const sc_module_name& name, RADSimDesignContext* radsim_design);
   ~inst_loader();
 
   void Assign();

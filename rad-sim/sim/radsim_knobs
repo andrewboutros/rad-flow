@@ -1,8 +1,8 @@
-design_name 0 mlp
+design_name 0 mlp_int8
 noc_num_nocs 0 1
 noc_clk_period 0 1.0 
-noc_vcs 0 1 
-noc_payload_width 0 145 
+noc_vcs 0 5 
+noc_payload_width 0 166 
 noc_num_nodes 0 25 
 design_noc_placement 0 mlp.place 
 noc_adapters_clk_period 0 1.25 
@@ -16,7 +16,7 @@ dram_num_controllers 0 0
 dram_clk_periods 0 2.0 
 dram_queue_sizes 0 64 
 dram_config_files 0 HBM2_8Gb_x128 
-radsim_user_design_root_dir 0 /home/bassiabn/rad-sim/rad-flow/rad-sim/example-designs/mlp
+radsim_user_design_root_dir 0 /home/bassiabn/rad-sim/rad-flow/rad-sim/example-designs/mlp_int8
 radsim_root_dir /home/bassiabn/rad-sim/rad-flow/rad-sim
 sim_driver_period 5.0
 telemetry_log_verbosity 2

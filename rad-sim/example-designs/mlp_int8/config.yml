@@ -4,7 +4,7 @@ noc:
   clk_period: [1.0]
   payload_width: [166]
   topology: ['mesh']
-  dim_x: [4]
+  dim_x: [5]
   dim_y: [4] 
   routing_func: ['dim_order']
   vcs: [5]
@@ -27,11 +27,15 @@ noc_adapters:
   out_arbiter: ['priority_rr']
   vc_mapping: ['direct']
 
-design:
-  name: 'mlp_int8'
-  noc_placement: ['mlp.place']
-  clk_periods: [5.0]
+config rad1:
+  design:
+    name: 'mlp_int8'
+    noc_placement: ['mlp.place']
+    clk_periods: [5.0]
 
-telemetry:
-  log_verbosity: 2
-  traces: []
+cluster:
+  sim_driver_period: 5.0
+  telemetry_log_verbosity: 2
+  telemetry_traces: []
+  num_rads: 1
+  cluster_configs: ['rad1']

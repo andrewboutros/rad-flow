@@ -2,15 +2,15 @@ noc:
   type: ['2d']
   num_nocs: 1
   clk_period: [1.0]
-  payload_width: [145]
+  payload_width: [166]
   topology: ['mesh']
   dim_x: [5]
   dim_y: [4] 
   routing_func: ['dim_order']
-  vcs: [1]
+  vcs: [5]
   vc_buffer_size: [8]
   output_buffer_size: [8]
-  num_packet_types: [1]
+  num_packet_types: [5]
   router_uarch: ['iq']
   vc_allocator: ['islip']
   sw_allocator:  ['islip']
@@ -28,18 +28,14 @@ noc_adapters:
   vc_mapping: ['direct']
 
 config rad1:
-        design:
-                name: 'mlp'
-                noc_placement: ['mlp.place']
-                clk_periods: [5.0]
+  design:
+    name: 'mlp_int8'
+    noc_placement: ['mlp.place']
+    clk_periods: [5.0]
 
 cluster:
-        sim_driver_period: 5.0
-        telemetry_log_verbosity: 2
-        telemetry_traces: []
-        num_rads: 1
-        cluster_configs: ['rad1']
-
-interfaces:
-  max_axis_tdata_width: 512
-  axis_tuser_width: 75
+  sim_driver_period: 5.0
+  telemetry_log_verbosity: 2
+  telemetry_traces: []
+  num_rads: 1
+  cluster_configs: ['rad1']
