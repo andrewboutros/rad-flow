@@ -148,7 +148,7 @@ axis_vector_elementwise::axis_vector_elementwise(const sc_module_name& name, uns
     std::strcpy(module_name, module_name_str.c_str());
     evrf_ififo_axis_interfaces[sector_id] =
         new axis_slave_fifo_adapter<data_vector<tb_output_precision>, sc_bv<FEEDFORWARD_DATA_WIDTH>>(
-            module_name, FEEDFORWARD_INTERFACE, VEW_FEEDFORWARD_INTERFACE_DATAW, CORES, HIGH_PRECISION, DPES_PER_SECTOR);
+            module_name, FEEDFORWARD_INTERFACE, VEW_FEEDFORWARD_INTERFACE_DATAW, CORES, HIGH_PRECISION, DPES_PER_SECTOR, radsim_design);
     evrf_ififo_axis_interfaces[sector_id]->clk(clk);
     evrf_ififo_axis_interfaces[sector_id]->rst(rst);
     evrf_ififo_axis_interfaces[sector_id]->fifo_rdy(evrf_ififo_rdy_signal[sector_id]);

@@ -7,7 +7,7 @@
 #include <radsim_cluster.hpp>
 #include <radsim_inter_rad.hpp>
 
-#include <mlp_int8_system.hpp>
+#include <npu_system.hpp>
 
 RADSimConfig radsim_config;
 std::ostream *gWatchOut;
@@ -31,7 +31,7 @@ int sc_main(int argc, char *argv[]) {
 
 	sc_clock *driver_clk_sig0 = new sc_clock(
 		"node_clk0", radsim_config.GetDoubleKnobShared("sim_driver_period"), SC_NS);
-	mlp_int8_system *system0 = new mlp_int8_system("mlp_int8_system", driver_clk_sig0, cluster->all_rads[0]);
+	npu_system *system0 = new npu_system("npu_system", driver_clk_sig0, cluster->all_rads[0]);
 	cluster->StoreSystem(system0);
 
 	sc_clock *inter_rad_clk_sig = new sc_clock(

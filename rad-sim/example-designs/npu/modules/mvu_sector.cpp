@@ -1,6 +1,6 @@
 #include "mvu_sector.hpp"
 
-mvu_sector::mvu_sector(const sc_module_name& name, unsigned int id)
+mvu_sector::mvu_sector(const sc_module_name& name, unsigned int id, RADSimDesignContext* radsim_design)
     : sc_module(name),
       inst_valid_pipeline("inst_valid_pipeline", SECTOR_INST_TO_DPES_PIPELINE),
       inst_pipeline("inst_pipeline", SECTOR_INST_PIPELINE),
@@ -173,7 +173,7 @@ mvu_sector::mvu_sector(const sc_module_name& name, unsigned int id)
 
   mrfs.resize(DPES_PER_SECTOR);
   std::string mrf_filename, mrf_path;
-  std::string npu_dir = radsim_config.GetStringKnob("radsim_user_design_root_dir");
+  std::string npu_dir = radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
   for (unsigned int dpe_id = 0; dpe_id < DPES_PER_SECTOR; dpe_id++) {
     mrfs[dpe_id].resize(TILES);
     for (unsigned int tile_id = 0; tile_id < TILES; tile_id++) {

@@ -11,6 +11,7 @@
 #include <piso_register_file.hpp>
 #include <register_file.hpp>
 #include <dpe.hpp>
+#include <design_context.hpp>
 
 class mvu_sector : public sc_module {
  private:
@@ -92,7 +93,7 @@ class mvu_sector : public sc_module {
   sc_vector<sc_vector<sc_in<bool>>> sector_ofifo_ren;
   sc_vector<sc_vector<sc_out<data_vector<tb_output_precision>>>> sector_ofifo_rdata;
 
-  mvu_sector(const sc_module_name& name, unsigned int id);
+  mvu_sector(const sc_module_name& name, unsigned int id, RADSimDesignContext* radsim_design);
   ~mvu_sector();
 
   void Tick();

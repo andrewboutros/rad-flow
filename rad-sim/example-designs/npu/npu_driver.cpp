@@ -43,7 +43,7 @@ npu_driver::~npu_driver() {}
 
 void npu_driver::source() {
   bool parse_flag;
-  std::string npu_dir = radsim_config.GetStringKnob("radsim_user_design_root_dir");
+  std::string npu_dir = radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
 
   // Parse NPU instructions
   std::string inst_filename = "/register_files/instructions.txt";
@@ -181,7 +181,7 @@ void npu_driver::sink() {
   end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
 
   std::ofstream report;
-  std::string npu_dir = radsim_config.GetStringKnob("radsim_user_design_root_dir");
+  std::string npu_dir = radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
   std::string report_filename = "/sim_done";
   std::string report_path = npu_dir + report_filename;
   report.open(report_path);
