@@ -1,7 +1,7 @@
 #include "sysc_mvm.hpp"
 
-sysc_mvm::sysc_mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer)
-    : RADSimModule(name),
+sysc_mvm::sysc_mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design),
       rf_rdata("rf_rdata", DPES),
       rf_wdata("rf_wdata"),
       rf_wen("rf_wen", DPES),
@@ -27,7 +27,7 @@ sysc_mvm::sysc_mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int
   std::string datapath_name_str;
   rf.resize(DPES);
   datapath_inst.resize(DPES);
-  std::string mvm_dir = radsim_config.GetStringKnob("radsim_user_design_root_dir");
+  std::string mvm_dir = radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
   std::string mem_init_file;
 
   // STAGE 1: Instruction FIFO, Input FIFO, and Reduction FIFO

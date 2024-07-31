@@ -5,7 +5,7 @@ bool ParseWeights(std::vector<std::vector<int>>& weights,
   std::vector<unsigned int>& layer_ids, std::vector<unsigned int>& mvm_ids,
   unsigned int num_layers, std::vector<unsigned int>& num_mvms, unsigned int _rad_id) { 
   
-  std::string design_root_dir = radsim_config.GetStringKnobShared("radsim_user_design_root_dir", _rad_id);
+  std::string design_root_dir = radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", _rad_id);
   for (unsigned int l = 0; l < num_layers; l++) {
     for (unsigned int m = 0; m < num_mvms[l]; m++) {
       for (unsigned int d = 0; d < DPES; d++) {
@@ -44,7 +44,7 @@ bool ParseInstructions(std::vector<mvm_inst> &insts,
   std::vector<unsigned int>& layer_ids,
   std::vector<unsigned int>& mvm_ids, 
   unsigned int num_layers, std::vector<unsigned int>& num_mvms, unsigned int _rad_id) {
-  std::string design_root_dir = radsim_config.GetStringKnob("radsim_user_design_root_dir", _rad_id);
+  std::string design_root_dir = radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", _rad_id);
   
   for (unsigned int l = 0; l < num_layers; l++) {
     for (unsigned int m = 0; m < num_mvms[l]; m++) {

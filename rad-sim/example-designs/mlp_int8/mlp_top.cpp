@@ -51,7 +51,7 @@ mlp_top::mlp_top(const sc_module_name &name, RADSimDesignContext* radsim_design)
           "layer" + std::to_string(layer_id) + "_mvm" + std::to_string(mvm_id);
       std::strcpy(module_name, module_name_str.c_str());
       sysc_matrix_vector_engines[layer_id][mvm_id] =
-          new sysc_mvm(module_name, mvm_id, layer_id);
+          new sysc_mvm(module_name, mvm_id, layer_id, radsim_design);
       sysc_matrix_vector_engines[layer_id][mvm_id]->rst(rst);
     }
     for (unsigned int mvm_id = 0; mvm_id < num_mvms_rtl[layer_id]; mvm_id++) {
@@ -59,7 +59,7 @@ mlp_top::mlp_top(const sc_module_name &name, RADSimDesignContext* radsim_design)
           "layer" + std::to_string(layer_id) + "_mvm" + std::to_string(mvm_id + num_mvms_sysc[layer_id]);
       std::strcpy(module_name, module_name_str.c_str());
       rtl_matrix_vector_engines[layer_id][mvm_id] =
-          new rtl_mvm(module_name);
+          new rtl_mvm(module_name, radsim_design);
       rtl_matrix_vector_engines[layer_id][mvm_id]->rst(rst);
     }
   }

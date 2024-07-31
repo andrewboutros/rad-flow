@@ -78,7 +78,7 @@ class sysc_mvm : public RADSimModule {
   axis_slave_port rx_interface;
   axis_master_port tx_interface;
 
-  sysc_mvm(const sc_module_name& name, unsigned int id_mvm, unsigned int id_layer);
+  sysc_mvm(const sc_module_name& name, unsigned int id_mvm, unsigned int id_layer, RADSimDesignContext* radsim_design);
   ~sysc_mvm();
 
   void Assign();
