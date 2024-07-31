@@ -1,7 +1,7 @@
 #include <axis_inst_dispatch.hpp>
 
-axis_inst_dispatch::axis_inst_dispatch(const sc_module_name& name, unsigned int thread_id)
-    : RADSimModule(name) {
+axis_inst_dispatch::axis_inst_dispatch(const sc_module_name& name, unsigned int thread_id, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design) {
   // Create SystemC vectors with the required sizes -- macro-op interfaces are vectors of size 1 to match the template
   // definition used with data FIFOs which works with multiple cores
   init_vector<axis_master_port>::init_sc_vector(sector_mop_interface, SECTORS);

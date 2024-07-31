@@ -4,6 +4,8 @@ dispatcher::dispatcher(const sc_module_name &name, unsigned int id, RADSimDesign
     : RADSimModule(name, radsim_design), rst("rst"), data_fifo_rdy("data_fifo_rdy"),
       data_fifo_wen("data_fifo_wen"), data_fifo_wdata("data_fifo_wdata") {
 
+  this->radsim_design = radsim_design;
+  
   module_name = name;
   dispatcher_id = id;
 

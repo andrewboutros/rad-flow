@@ -1,7 +1,7 @@
 #include <axis_vector_elementwise.hpp>
 
-axis_vector_elementwise::axis_vector_elementwise(const sc_module_name& name, unsigned int thread_id)
-    : RADSimModule(name),
+axis_vector_elementwise::axis_vector_elementwise(const sc_module_name& name, unsigned int thread_id, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design),
       evrf_ififo_rdy_signal("evrf_ififo_rdy_signal"),
       evrf_ififo_ren_signal("evrf_ififo_ren_signal"),
       evrf_ififo_rdata_signal("evrf_ififo_rdata_signal"),
@@ -136,7 +136,7 @@ axis_vector_elementwise::axis_vector_elementwise(const sc_module_name& name, uns
     module_name_str = "evrf_inst_axis_interface_" + std::to_string(sector_id);
     std::strcpy(module_name, module_name_str.c_str());
     evrf_inst_axis_interfaces[sector_id] = new axis_slave_fifo_adapter<evrf_mop, sc_bv<EVRF_MOP_BITWIDTH>>(
-        module_name, INSTRUCTION_INTERFACE, VEW_INSTRUCTION_INTERFACE_DATAW, 1, EVRF_MOP_BITWIDTH, 1);
+        module_name, INSTRUCTION_INTERFACE, VEW_INSTRUCTION_INTERFACE_DATAW, 1, EVRF_MOP_BITWIDTH, 1, radsim_design);
     evrf_inst_axis_interfaces[sector_id]->clk(clk);
     evrf_inst_axis_interfaces[sector_id]->rst(rst);
     evrf_inst_axis_interfaces[sector_id]->fifo_rdy(evrf_mop_rdy_signal[sector_id]);
@@ -189,7 +189,7 @@ axis_vector_elementwise::axis_vector_elementwise(const sc_module_name& name, uns
     module_name_str = "mfu0_inst_interface_" + std::to_string(sector_id);
     std::strcpy(module_name, module_name_str.c_str());
     mfu0_inst_axis_interfaces[sector_id] = new axis_slave_fifo_adapter<mfu_mop, sc_bv<MFU_MOP_BITWIDTH>>(
-        module_name, INSTRUCTION_INTERFACE, VEW_INSTRUCTION_INTERFACE_DATAW, 1, MFU_MOP_BITWIDTH, 1);
+        module_name, INSTRUCTION_INTERFACE, VEW_INSTRUCTION_INTERFACE_DATAW, 1, MFU_MOP_BITWIDTH, 1, radsim_design);
     mfu0_inst_axis_interfaces[sector_id]->clk(clk);
     mfu0_inst_axis_interfaces[sector_id]->rst(rst);
     mfu0_inst_axis_interfaces[sector_id]->fifo_rdy(mfu0_mop_rdy_signal[sector_id]);
@@ -230,7 +230,7 @@ axis_vector_elementwise::axis_vector_elementwise(const sc_module_name& name, uns
     module_name_str = "mfu1_inst_interface_" + std::to_string(sector_id);
     std::strcpy(module_name, module_name_str.c_str());
     mfu1_inst_axis_interfaces[sector_id] = new axis_slave_fifo_adapter<mfu_mop, sc_bv<MFU_MOP_BITWIDTH>>(
-        module_name, INSTRUCTION_INTERFACE, VEW_INSTRUCTION_INTERFACE_DATAW, 1, MFU_MOP_BITWIDTH, 1);
+        module_name, INSTRUCTION_INTERFACE, VEW_INSTRUCTION_INTERFACE_DATAW, 1, MFU_MOP_BITWIDTH, 1, radsim_design);
     mfu1_inst_axis_interfaces[sector_id]->clk(clk);
     mfu1_inst_axis_interfaces[sector_id]->rst(rst);
     mfu1_inst_axis_interfaces[sector_id]->fifo_rdy(mfu1_mop_rdy_signal[sector_id]);
@@ -272,7 +272,7 @@ axis_vector_elementwise::axis_vector_elementwise(const sc_module_name& name, uns
   ld_module->ext_output_fifo_rdata(ext_output_fifo_rdata);
 
   ld_inst_axis_interface = new axis_slave_fifo_adapter<ld_mop, sc_bv<LD_MOP_BITWIDTH>>(
-      "ld_inst_axis_interface", INSTRUCTION_INTERFACE, VEW_INSTRUCTION_INTERFACE_DATAW, 1, LD_MOP_BITWIDTH, 1);
+      "ld_inst_axis_interface", INSTRUCTION_INTERFACE, VEW_INSTRUCTION_INTERFACE_DATAW, 1, LD_MOP_BITWIDTH, 1, radsim_design);
   ld_inst_axis_interface->clk(clk);
   ld_inst_axis_interface->rst(rst);
   ld_inst_axis_interface->fifo_rdy(ld_mop_rdy_signal);
@@ -283,7 +283,7 @@ axis_vector_elementwise::axis_vector_elementwise(const sc_module_name& name, uns
   // Create two write-back master AXI-streaming interfaces (send write-back data to different NPU modules)
   std::string dest_name = "axis_mvu_sector_0.sector_wb_interface_" + std::to_string(_thread_id);
   ld_wb0_axis_interface = new axis_master_fifo_adapter<data_vector<tb_input_precision>, sc_bv<WIDE_WRITEBACK_BV_WIDTH>>(
-      "ld_wb0_axis_interface", MVU_WRITEBACK_INTERFACE, VEW_WB0_INTERFACE_DATAW, CORES, LOW_PRECISION, dest_name);
+      "ld_wb0_axis_interface", MVU_WRITEBACK_INTERFACE, VEW_WB0_INTERFACE_DATAW, CORES, LOW_PRECISION, dest_name, radsim_design);
   ld_wb0_axis_interface->clk(clk);
   ld_wb0_axis_interface->rst(rst);
   ld_wb0_axis_interface->fifo_rdy(ld_wb0_rdy_signal);

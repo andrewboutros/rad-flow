@@ -22,6 +22,7 @@ class dispatcher : public RADSimModule {
     data_fifo_almost_full_signal;
 
  public:
+  RADSimDesignContext* radsim_design;
   sc_in<bool> rst;
   sc_out<bool> data_fifo_rdy;
   sc_in<bool> data_fifo_wen;

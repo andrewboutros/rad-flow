@@ -31,6 +31,7 @@ class axis_master_fifo_adapter : public sc_module {
   sc_signal<unsigned int> buffer_occupancy;          // Current occupancy of adapter buffer
 
  public:
+  RADSimDesignContext* radsim_design;
   sc_in<bool> clk;
   sc_in<bool> rst;
   sc_vector<sc_in<bool>> fifo_rdy;
@@ -39,7 +40,8 @@ class axis_master_fifo_adapter : public sc_module {
   axis_master_port axis_port;
 
   axis_master_fifo_adapter(const sc_module_name& _name, unsigned int _interface_type, unsigned int _interface_dataw,
-                           unsigned int _num_fifo, unsigned int _element_bitwidth, std::string& _destination_port);
+                           unsigned int _num_fifo, unsigned int _element_bitwidth, std::string& _destination_port, 
+                           RADSimDesignContext* radsim_design);
   ~axis_master_fifo_adapter();
 
   bool buffer_full();                 // Checks if adapter buffer is full
@@ -73,6 +75,7 @@ class axis_slave_fifo_adapter : public sc_module {
   sc_signal<unsigned int> transfer_count;    // Count of received-so-far transfers (for a specific payload)
 
  public:
+  RADSimDesignContext* radsim_design;
   sc_in<bool> clk;
   sc_in<bool> rst;
   sc_vector<sc_out<bool>> fifo_rdy;
@@ -81,7 +84,8 @@ class axis_slave_fifo_adapter : public sc_module {
   axis_slave_port axis_port;
 
   axis_slave_fifo_adapter(const sc_module_name& _name, unsigned int _interface_type, unsigned int _interface_dataw,
-                          unsigned int _num_fifo, unsigned int _element_bitwidth, unsigned int _num_element);
+                          unsigned int _num_fifo, unsigned int _element_bitwidth, unsigned int _num_element,
+                          RADSimDesignContext* radsim_design);
   ~axis_slave_fifo_adapter();
 
   void sc_bitvector_to_data_fifo();  // Converts a SystemC bitvector to a data FIFO entry
