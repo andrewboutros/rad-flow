@@ -323,7 +323,7 @@ void mlp_driver::sink() {
   NoCFlitTelemetry::DumpNoCFlitTracesToFile("flit_traces.csv");
 
   std::vector<double> aggregate_bandwidths = NoCTransactionTelemetry::DumpTrafficFlows("traffic_flows", 
-    end_cycle - start_cycle, radsim_design.GetNodeModuleNames(), radsim_design->rad_id);
+    end_cycle - start_cycle, radsim_design->GetNodeModuleNames(), radsim_design->rad_id);
   std::cout << "Aggregate NoC BW = " << aggregate_bandwidths[0] / 1000000000 << " Gbps" << std::endl;
 
   //sc_stop();
