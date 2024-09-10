@@ -72,7 +72,7 @@ This directory includes all the RAD-Sim simulation infrastructure and utilities:
 
 * The ``RADSimDesignContext`` class in ``design_context.{cpp/hpp}`` stores all the details of a RAD-Sim design such as NoCs and modules of the design, their clocks, module NoC placement, and connections between modules and NoC adapters. For each device in the RAD-Sim simulation, there is a variable of this class type (``radsim_design``) that stores these information to be used from any part of the simulator.
 
-* The ``radsim_cluster`` class in ``radsim_cluster.{cpp/hpp}`` stores details for the cluster of multiple RADs for the RADSim simulation. This is the top-level of the hierarchy for multiple device simulation.
+* The ``RADSimCluster`` class in ``radsim_cluster.{cpp/hpp}`` stores details for the cluster of RADs for the RADSim simulation. This is the top-level of the hierarchy for simulation. Single-RAD simulation is implemented as a cluster of one RAD.
 
 * The ``design_system`` class in ``design_system.hpp`` is a generalized parent class used per design. The design_system wraps around the device-under-test (DUT) and testbench. Each design in the example-designs directory has its own system class that should inherit from this class. This class has ``sc_module`` as its virtual parent class.
     

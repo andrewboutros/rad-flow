@@ -12,10 +12,8 @@ class RADSimCluster {
     public:
         int num_rads;
         std::vector<RADSimDesignContext*> all_rads;
-        std::vector<design_system*> all_systems; //added support for this, ignore commented lines below
-        //std::vector<sc_module*> all_systems; //nth system should be on the nth RAD. also tried std::any, auto
-        //std::vector<sc_in<bool>> all_systems_in; //nth system should be on the nth RAD
-        //std::vector<sc_out<bool>> all_systems_out; //nth system should be on the nth RAD
+        std::vector<design_system*> all_systems;
+
         enum inter_rad_topo_type { 
             ALL_TO_ALL = 0,
             SWITCH = 1,

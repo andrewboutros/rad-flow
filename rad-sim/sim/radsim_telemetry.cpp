@@ -64,7 +64,7 @@ void NoCTransactionTelemetry::DumpStatsToFile(const std::string& filename) {
 }
 
 std::vector<double> NoCTransactionTelemetry::DumpTrafficFlows(const std::string& filename, unsigned int cycle_count, 
-  std::vector<std::vector<std::set<std::string>>> node_module_names, unsigned int rad_id) { //AKB: require passing of rad_id
+  std::vector<std::vector<std::set<std::string>>> node_module_names, unsigned int rad_id) {
   double sim_driver_period = radsim_config.GetDoubleKnobShared("sim_driver_period") / 1000000000.0;
   unsigned int num_nocs = radsim_config.GetIntKnobPerRad("noc_num_nocs", rad_id);
   std::vector<std::vector<std::unordered_map<unsigned int, unsigned int>>> traffic_bits(num_nocs);

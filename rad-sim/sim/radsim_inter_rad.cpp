@@ -123,7 +123,7 @@ RADSimInterRad::writeFifo() {
                 if (this->fifos[dest_rad]->nb_write(curr_transaction) != false) { //there was an available slot to write to
                     /* START FOR DEBUG */
                     // sc_bv<AXIS_MAX_DATAW> rx_tdata_bv = curr_transaction.tdata;
-                    // data_vector<int16_t> rx_tdata(32); //NOTE (AKB): type needs to match what is supported in example-designs/{design}/modules/sim_utils.hpp
+                    // data_vector<int16_t> rx_tdata(32); //NOTE: type needs to match what is supported in example-designs/{design}/modules/sim_utils.hpp
                     // bv_to_data_vector(rx_tdata_bv, rx_tdata, 32);
                     // std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << rx_tdata << std::endl;
                     // std::cout << "inter_rad fifo data WRITTEN on cycle " << curr_cycle << " is " << curr_transaction.tdata.to_uint64() << std::endl;
