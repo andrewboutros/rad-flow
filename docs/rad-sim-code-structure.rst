@@ -74,7 +74,7 @@ This directory includes all the RAD-Sim simulation infrastructure and utilities:
 
 * The ``RADSimCluster`` class in ``radsim_cluster.{cpp/hpp}`` stores details for the cluster of RADs for the RADSim simulation. This is the top-level of the hierarchy for simulation. Single-RAD simulation is implemented as a cluster of one RAD.
 
-* The ``design_system`` class in ``design_system.hpp`` is a generalized parent class used per design. The design_system wraps around the device-under-test (DUT) and testbench. Each design in the example-designs directory has its own system class that should inherit from this class. This class has ``sc_module`` as its virtual parent class.
+* The ``design_system`` class in ``design_system.hpp`` is a generalized parent class used per design. The design_system wraps around the device-under-test (DUT) and testbench. Each design in the ``example-designs`` directory has its own system class that should inherit from this class. This class has ``sc_module`` as its virtual parent class.
     
 * The ``RADSimDesignTop`` class in ``design_top.hpp`` is a parent class for the DUT (top) class used within any design. It contains the creation of a portal module which is used to interface with the inter-RAD network. This class has ``sc_module`` as its virtual parent class.
 
