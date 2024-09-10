@@ -86,7 +86,7 @@ public:
 
   mem_controller(const sc_module_name &name, unsigned int dram_id,
                 RADSimDesignContext* radsim_design,
-                 std::string init_filename = ""); //AKB: added radsim_design, note that argument(s) with defaults must be at end
+                 std::string init_filename = "");
   ~mem_controller();
 
   void MemReadCallback(uint64_t addr);

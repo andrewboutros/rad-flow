@@ -92,7 +92,7 @@ This directory includes all the RAD-Sim simulation infrastructure and utilities:
     * The ``SimLog`` class is for logging simulator messages. 
     * The ``SimTraceRecording`` class is for recording timestamps at any time during the simulation and dumping them as simulation traces at the end of the simulation.
 
-* Utility functions functions and struct definitions are in ``radsim_utils.{cpp/hpp}``.
+* Utility functions and struct definitions are in ``radsim_utils.{cpp/hpp}``.
 
 * The ``main.cpp`` file declares all the global variables, instantiates the system to be simulated, and starts the SystemC simulation.
 
@@ -139,11 +139,11 @@ It has two SystemC threads (``SC_CTHREAD``): a ``source`` thread that sends inpu
 and a ``sink`` thread that listens on the design top-level output ports to receive outputs. A common scenario is that 
 this driver module performs the following steps:
 
-1. Parse test inputs and golden outputs from files
-2. Use the ``source`` thread to send inputs to design top-level when ready
-3. Use ``sink`` thread to listen for outputs from the design top-level when available
-4. Compare received outputs to golden outputs to verify functionality
-5. Raise per-RAD flag to stop simulation when all outputs are received across all devices under simulation
+1. Parse test inputs and golden outputs from files.
+2. Use the ``source`` thread to send inputs to design top-level when ready.
+3. Use ``sink`` thread to listen for outputs from the design top-level when available.
+4. Compare received outputs to golden outputs to verify functionality.
+5. Raise per-RAD done flag when all testbench outputs are received. When all testbenches (for all RADs in the simulation raise their done flags, simulation stops.
 
 Design System (``<design_name>_system.{cpp/hpp}``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -334,7 +334,7 @@ An example configuration file is shown below, followed by an explanation for eac
 
 :menuselection:`vc_mapping`
 
-**Config Configuration Parameters**
+**Configuration Parameters**
 
 **Config subsection: DRAM Configuration Parameters**
 
@@ -342,7 +342,7 @@ An example configuration file is shown below, followed by an explanation for eac
 
 :menuselection:`clk_periods` are the clock periods per DRAM
 
-:menuselection:`queue_sizes` are the sizes for the queue used for each
+:menuselection:`queue_sizes` are the names of the ``DRAMSim3`` configuration file for each DRAM. For a complete list of configuration options, check the ``rad-flow/rad-sim/sim/dram/DRAMsim3/configs/`` directory.
 
 :menuselection:`config_files` are the filenames of the files specifying the memory configuration per DRAM
 
@@ -352,7 +352,7 @@ An example configuration file is shown below, followed by an explanation for eac
 
 :menuselection:`noc_placement` is the NoC placement file to use
 
-:menuselection:`clk_periods` are the clock periods for the configuration
+:menuselection:`clk_periods` is a list of all clock periods used in this design
 
 **Cluster Configuration Parameters**
 

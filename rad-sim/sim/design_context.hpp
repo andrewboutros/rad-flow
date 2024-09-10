@@ -54,7 +54,7 @@ private:
       _noc_aximm_master_ports;
   std::vector<aximm_signal> _aximm_signals;
 
-  //AKB ADDED: flag to indicate if this device done
+  //flag to indicate if this device done
   bool rad_done;
 
 public:
@@ -107,11 +107,8 @@ public:
 
   int GetSimExitCode();
   void ReportDesignFailure();
-  //AKB ADDED:
   bool is_rad_done();
   void set_rad_done();
   void AssignPortalSlaveName(std::string name);
   unsigned int GetPortalSlaveID ();
 };
-
-//extern RADSimDesignContext radsim_design; //AKB: commented out

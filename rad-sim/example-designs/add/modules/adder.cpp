@@ -3,7 +3,7 @@
 int which_rad = 1;
 int TOTAL_RADS = 5;
 
-adder::adder(const sc_module_name &name, RADSimDesignContext* radsim_design) //AKB added last arg
+adder::adder(const sc_module_name &name, RADSimDesignContext* radsim_design)
     : RADSimModule(name, radsim_design) {
 
   this->radsim_design = radsim_design;
@@ -17,10 +17,6 @@ adder::adder(const sc_module_name &name, RADSimDesignContext* radsim_design) //A
   adder_tdata_fifo->rst(rst);
   adder_tdata_fifo->wen(adder_tdata_fifo_wen_signal);
   adder_tdata_fifo->ren(adder_tdata_fifo_ren_signal);
-  //sc_in<sc_bv<128>> my_subset;
-  //my_subset = axis_adder_interface.tdata.read().range(DATAW-1, 0);
-  //adder_tdata_fifo->wdata(my_subset);
-  //adder_tdata_fifo->wdata(axis_adder_interface.tdata.read().range(DATAW-1, 0));
   adder_tdata_fifo->wdata(adder_tdata);
   adder_tdata_fifo->full(adder_tdata_fifo_full_signal);
   adder_tdata_fifo->almost_full(adder_tdata_fifo_almost_full_signal);
@@ -48,7 +44,7 @@ adder::adder(const sc_module_name &name, RADSimDesignContext* radsim_design) //A
     << axis_adder_interface.tvalid << adder_tdata_fifo_almost_full_signal
     << adder_tdata_fifo_empty_signal << axis_adder_master_interface.tready 
     << axis_adder_master_interface.tvalid << adder_tdata_fifo_rdata_signal 
-    << adder_tlast_fifo_rdata_signal << clk; //AKB: must be sensitive to clk or get occasional unexpected behaviour where rdata stagnates
+    << adder_tlast_fifo_rdata_signal << clk; //must be sensitive to clk or get occasional unexpected behaviour where rdata stagnates
   // Sequential logic and its clock/reset setup
   SC_CTHREAD(Tick, clk.pos());
   reset_signal_is(rst, true); // Reset is active high
@@ -77,14 +73,14 @@ void adder::Assign() {
       bool tlast = adder_tlast_fifo_rdata_signal.read();
       std::string src_port_name = module_name + ".axis_adder_master_interface";
       std::string dst_port_name = "portal_inst.axis_portal_slave_interface";
-      uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
-      uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
+      uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); 
+      uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); 
       //std::cout << "adder.cpp portal dest is: " << dst_addr << std::endl;
       sc_bv<AXIS_DESTW> concat_dest;
       DEST_RAD(concat_dest) = which_rad; //1;
       DEST_LOCAL_NODE(concat_dest) = dst_addr;
-      DEST_REMOTE_NODE(concat_dest) = 0; //for mult module on RAD 2 -- I know this, but designer would not... -- for proof of concept tho
-      axis_adder_master_interface.tdest.write(concat_dest); //dst_addr);
+      DEST_REMOTE_NODE(concat_dest) = 0; //for mult module on RAD 2 -- I know this, but designer would not... TODO code this flexibly
+      axis_adder_master_interface.tdest.write(concat_dest);
       axis_adder_master_interface.tid.write(0);
       axis_adder_master_interface.tstrb.write(0);
       axis_adder_master_interface.tkeep.write(0);
@@ -143,11 +139,7 @@ void adder::Tick() {
         //           << axis_adder_interface.tdata.read().to_uint64() << ")!"
         //           << std::endl;
         count_in_addends++;
-        //which_rad = 2; //can send to other RAD next time
       }
-      // else {
-      //   which_rad = 1;
-      // }
 
       if (which_rad < (TOTAL_RADS-1)) {
         which_rad++;
@@ -156,33 +148,11 @@ void adder::Tick() {
         which_rad = 1; //rollback
       }
         
-        //adder_tdata_tlast_fifo.push(std::make_tuple(axis_adder_interface.tdata.read(), axis_adder_interface.tlast.read()));
     }
-
-    /*if (adder_tdata_tlast_fifo.size() > 0) { //fifo not empty
-        //TODO: restrict fifo size, not doing so for now
-        std::string src_port_name = module_name + ".axis_adder_master_interface";
-        std::string dst_port_name = "portal_inst.axis_portal_slave_interface";
-        cout << axis_adder_interface.tdata.read().to_uint64() << endl;
-        uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
-        uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
-        axis_adder_master_interface.tdest.write(dst_addr);
-        axis_adder_master_interface.tid.write(0);
-        axis_adder_master_interface.tstrb.write(0);
-        axis_adder_master_interface.tkeep.write(0);
-        axis_adder_master_interface.tuser.write(src_addr);
-        axis_adder_master_interface.tlast.write(std::get<1>(adder_tdata_tlast_fifo.front())); //true only for last addend
-        axis_adder_master_interface.tdata.write(std::get<0>(adder_tdata_tlast_fifo.front()));
-        axis_adder_master_interface.tvalid.write(true);
-    }
-    else {
-      axis_adder_master_interface.tvalid.write(false);
-    } */
 
     //sent to portal module
     if (axis_adder_master_interface.tvalid.read() && axis_adder_master_interface.tready.read()) {
         //std::cout << "Sent the " << count_out_addends << "th addend " << axis_adder_master_interface.tdata.read().to_uint64() << " over NoC to portal module on cycle " << curr_cycle << std::endl;
-        //adder_tdata_tlast_fifo.pop();
         count_out_addends++;
     }
 

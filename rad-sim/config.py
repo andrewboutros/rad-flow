@@ -80,13 +80,6 @@ def parse_config_file(config_filename, booksim_params, radsim_header_params, rad
     for i in range(0, num_configs):
         radsim_knobs[i]["radsim_user_design_root_dir"] = cluster_knobs["radsim_root_dir"] + "/example-designs/" + radsim_knobs[i]["design_name"]
 
-    #commented out below bc yaml file now explicitly sets sim_driver_perid
-    # longest_clk_period = radsim_knobs["design_clk_periods"][0]
-    # for p in radsim_knobs["design_clk_periods"]:
-    #     if p > longest_clk_period:
-    #         longest_clk_period = p
-    # radsim_knobs["sim_driver_period"] = longest_clk_period
-
     if config_counter != num_configs:
         print('number of unique config sections in config YAML file does not match commandline argument')
         exit(-1)
@@ -210,7 +203,7 @@ def generate_booksim_config_files(booksim_params, radsim_header_params, radsim_k
 
 
 def generate_radsim_params_header(radsim_header_params):
-    radsim_params_header_file = open(radsim_header_params["radsim_root_dir"] + "/sim/radsim_defines.hpp", "w") #AKB created temp file to test
+    radsim_params_header_file = open(radsim_header_params["radsim_root_dir"] + "/sim/radsim_defines.hpp", "w")
     radsim_params_header_file.write("#pragma once\n\n")
     radsim_params_header_file.write("// clang-format off\n")
     radsim_params_header_file.write('#define RADSIM_ROOT_DIR "' + radsim_header_params["radsim_root_dir"] + '"\n\n')
@@ -369,8 +362,6 @@ def generate_radsim_config_file(radsim_knobs, cluster_knobs):
         else:
             radsim_config_file.write(param + " " )
         
-        # if param == 'inter_rad_latency':
-        #     radsim_config_file.write(str(ceil(cluster_knobs[param]/cluster_knobs["sim_driver_period"])) + "\n")
         if isinstance(cluster_knobs[param], list):
             for value in cluster_knobs[param]:
                 radsim_config_file.write(str(value) + " ")
@@ -431,8 +422,8 @@ def generate_radsim_main(design_names, num_rads, radsim_knobs):
     for i in range(num_rads):
         main_cpp_file.write("\tdelete system" + str(i) + ";\n")
         main_cpp_file.write("\tdelete driver_clk_sig" + str(i) + ";\n")
-    main_cpp_file.write("\tdelete blackbox;\n") #AKB added only to script
-    main_cpp_file.write("\tdelete inter_rad_clk_sig;\n\n") #AKB added only to script
+    main_cpp_file.write("\tdelete blackbox;\n")
+    main_cpp_file.write("\tdelete inter_rad_clk_sig;\n\n")
     main_cpp_file.write("\tsc_flit scf;\n")
     main_cpp_file.write("\tscf.FreeAllFlits();\n")
     main_cpp_file.write("\tFlit *f = Flit::New();\n")
@@ -449,8 +440,6 @@ def prepare_build_dir(design_names):
     if os.path.isdir("build"):
         shutil.rmtree("build", ignore_errors=True)
     os.makedirs("build")
-    #os.system("cd build; cmake -DDESIGN:STRING=" + design_name + " ..; cd ..;")
-    #os.system("cd build;")
     semicol_sep_design_names = ''
     count = 0
     count_max = len(design_names)
@@ -459,10 +448,7 @@ def prepare_build_dir(design_names):
         if count < count_max-1:
             semicol_sep_design_names += ';' 
         count = count+1
-    #print("cmake -DDESIGN_NAMES=\"" + semicol_sep_design_names + "\" ..;")
     os.system("cd build; cmake -DCMAKE_BUILD_TYPE=Debug -DDESIGN_NAMES=\"" + semicol_sep_design_names + "\" ..; cd .;")
-    #os.system("cd build; cmake -DDESIGN:STRING=\"" + 'add' + "\" ..; cd .;")
-    #os.system("cd ..;")
 
 def find_num_configs(config_filename):
     with open(config_filename, 'r') as yaml_config:
@@ -491,7 +477,6 @@ if __name__ == "__main__":
             exit(1)
 
     # Point to YAML configuration file
-    #config_filename = "example-designs/" + design_name + "/config.yml"
     config_filename = "config.yml"
     config_names = []
 
@@ -534,7 +519,6 @@ if __name__ == "__main__":
         "interfaces_max_axi_data_width": 512,
     }
     radsim_knobs = { #includes cluster config
-        #"radsim_root_dir": os.getcwd(),
         "design_name": design_name,
         "noc_num_nocs": 1,
         "noc_clk_period": [0.571],
@@ -549,9 +533,6 @@ if __name__ == "__main__":
         "noc_adapters_out_arbiter": ["priority_rr"],
         "noc_adapters_vc_mapping": ["direct"],
         "design_clk_periods": [5.0],
-        # "sim_driver_period": 5.0,
-        # "telemetry_log_verbosity": 0,
-        # "telemetry_traces": ["trace0", "trace1"],
         "dram_num_controllers": 0,
         "dram_clk_periods": [2.0],
         "dram_queue_sizes": [64],

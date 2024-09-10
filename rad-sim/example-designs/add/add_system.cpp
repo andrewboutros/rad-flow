@@ -1,6 +1,6 @@
 #include <add_system.hpp>
 
-add_system::add_system(const sc_module_name &name, sc_clock *driver_clk_sig, RADSimDesignContext* radsim_design) // AKB: added last 3 args
+add_system::add_system(const sc_module_name &name, sc_clock *driver_clk_sig, RADSimDesignContext* radsim_design) 
     : sc_module(name) {
 
   // Instantiate driver

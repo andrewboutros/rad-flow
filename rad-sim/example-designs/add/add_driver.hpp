@@ -14,7 +14,7 @@ private:
   std::queue<int> numbers_to_send;
   int actual_sum;
   std::chrono::steady_clock::time_point start_time, end_time;
-  RADSimDesignContext* radsim_design; //AKB ADDED: store ptr passed into constructor for use in source() and sink()
+  RADSimDesignContext* radsim_design;
   
 public:
   sc_in<bool> clk;
@@ -27,7 +27,7 @@ public:
   sc_in<bool> response_valid;
   sc_in<bool> portal_recvd;
 
-  add_driver(const sc_module_name &name, RADSimDesignContext* radsim_design_); //AKB ADDED last arg
+  add_driver(const sc_module_name &name, RADSimDesignContext* radsim_design_);
   ~add_driver();
 
   void source();

@@ -1,9 +1,6 @@
 #include <design_context.hpp>
 
 RADSimDesignContext::RADSimDesignContext(unsigned int rad_id_) {
-  // std::string radsim_knobs_filename = "/sim/radsim_knobs";
-  // std::string radsim_knobs_filepath = RADSIM_ROOT_DIR + radsim_knobs_filename;
-  // ParseRADSimKnobs(radsim_knobs_filepath); //TODO: move this to main.cpp so it only gets called once, not per-RAD
 
   //assign its rad id
   rad_id = rad_id_;
@@ -45,7 +42,6 @@ RADSimDesignContext::RADSimDesignContext(unsigned int rad_id_) {
     int num_nodes = radsim_config.GetIntVectorKnobPerRad("noc_num_nodes", noc_id, rad_id);
     _node_module_names[noc_id].resize(num_nodes);
   }
-  //AKB ADDED:
   rad_done = false; //initially this RAD is not done its simulation design
 }
 
@@ -61,7 +57,6 @@ bool IsSlavePort(std::string &port_name, RADSimModule *module_ptr) {
                           module_ptr->_axis_master_ports.end();
     bool is_aximm_master = module_ptr->_aximm_master_ports.find(port_name) !=
                            module_ptr->_aximm_master_ports.end();
-    std::cout << "design_context.cpp: port_name and is_aximm_master and is_axis_master " << port_name << " " << is_aximm_master << " " << is_axis_master << std::endl;
     assert(is_aximm_master || is_axis_master);
   }
   return (is_axis_slave || is_aximm_slave);
@@ -335,7 +330,6 @@ void RADSimDesignContext::RegisterModule(std::string module_name,
 
 void RADSimDesignContext::BuildDesignContext(const std::string &placement_filename, const std::string &clks_filename) {
   unsigned int num_nocs = radsim_config.GetIntKnobPerRad("noc_num_nocs", rad_id);
-  std::cout << "rad_id " << rad_id << " has num_nocs " << num_nocs << std::endl;
   _node_id_is_aximm.resize(num_nocs);
   _node_id_ports_list.resize(num_nocs);
   _noc_axis_slave_adapter_info.resize(num_nocs);
@@ -480,7 +474,7 @@ void RADSimDesignContext::CreateSystemNoCs(sc_in<bool> &rst) {
                        _noc_axis_slave_adapter_info[noc_id],
                        _noc_aximm_master_adapter_info[noc_id],
                        _noc_aximm_slave_adapter_info[noc_id],
-                        this); //AKB ADDED to pass in an instance of this class
+                        this);
     noc_inst->noc_clk(*_noc_clks[noc_id]);
     noc_inst->rst(rst);
 
@@ -710,7 +704,7 @@ void RADSimDesignContext::ReportDesignFailure() {
   _sim_exit_code = 1;
 }
 
-//AKB ADDED: returns info (because private member) of if the RAD is done simulation
+//returns whether the rad is done simulation. needed because rad_done is private member.
 bool
 RADSimDesignContext::is_rad_done() {
   return this->rad_done;
