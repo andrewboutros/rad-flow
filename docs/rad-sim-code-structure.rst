@@ -76,7 +76,7 @@ This directory includes all the RAD-Sim simulation infrastructure and utilities:
 
 * The ``design_system`` class in ``design_system.hpp`` is a generalized parent class used per design. The design_system wraps around the device-under-test (DUT) and testbench. Each design in the example-designs directory has its own system class that should inherit from this class. This class has ``sc_module`` as its virtual parent class.
     
-* The ``design_top`` class in ``design_top.hpp`` is a parent class for the DUT (top) class used within any design. It contains the creation of a portal module which is used to interface with the inter-RAD network. This class has ``sc_module`` as its virtual parent class.
+* The ``RADSimDesignTop`` class in ``design_top.hpp`` is a parent class for the DUT (top) class used within any design. It contains the creation of a portal module which is used to interface with the inter-RAD network. This class has ``sc_module`` as its virtual parent class.
 
 * The ``RADSimConfig`` class in ``radsim_config.{cpp/hpp}`` stores all the RAD-Sim configuration parameters.
 
@@ -110,7 +110,7 @@ ports which are defined in the ``sim/{aximm|axi_s}_interface.hpp`` files.
 
 Design Top-level (``<design_name>_top.{cpp/hpp}``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-These files define a design_top class which in turn defines a SystemC module (``sc_module``) that instantiates all the modules in the design and connects any 
+These files define a RADSimDesignTop class which in turn defines a SystemC module (``sc_module``) that instantiates all the modules in the design and connects any 
 non-NoC signals between the modules in its constructor using conventional SystemC syntax. At the end of its constructor, 
 it must include the following lines of code to build the design context, create the system NoCs, and automatically 
 connect the ports of NoC-attached modules to the NoC based on the NoC placement file:
@@ -118,7 +118,7 @@ connect the ports of NoC-attached modules to the NoC based on the NoC placement 
 .. code-block:: c++
 
     // mydesign_top Constructor
-    mydesign_top::mydesign_top(const sc_module_name &name, RADSimDesignContext* radsim_design) : design_top(radsim_design) { 
+    mydesign_top::mydesign_top(const sc_module_name &name, RADSimDesignContext* radsim_design) : RADSimDesignTop(radsim_design) { 
         this->radsim_design = radsim_design; //to use within design
         // Module Instantiations and Connections Start Here
         // ...

@@ -15,7 +15,7 @@
 #include <design_top.hpp>
 
 
-class npu_top : public design_top {
+class npu_top : public RADSimDesignTop {
  private:
   sc_vector<sc_vector<sc_vector<sc_signal<bool>>>> sector_chain_fifo_rdy_signals;
   sc_vector<sc_vector<sc_vector<sc_signal<bool>>>> sector_chain_fifo_ren_signals;

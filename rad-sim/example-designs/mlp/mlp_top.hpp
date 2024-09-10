@@ -10,7 +10,7 @@
 #include <radsim_config.hpp>
 #include <design_top.hpp>
 
-class mlp_top : public design_top {
+class mlp_top : public RADSimDesignTop {
  private:
   std::vector<std::vector<mvm*>> matrix_vector_engines;
   std::vector<dispatcher*> input_dispatchers;

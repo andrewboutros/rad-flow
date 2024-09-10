@@ -13,7 +13,7 @@
 #include <design_top.hpp>
 #include <axis_interface.hpp>
 
-class dlrm_top : public design_top { //sc_module {
+class dlrm_top : public RADSimDesignTop {
 private:
   //portal *portal_inst;
   embedding_lookup *embedding_lookup_inst;

@@ -14,7 +14,7 @@
 #include <design_top.hpp>
 
 
-class mlp_top : public design_top {
+class mlp_top : public RADSimDesignTop {
  private:
   std::vector<std::vector<rtl_mvm*>> rtl_matrix_vector_engines;
   std::vector<std::vector<sysc_mvm*>> sysc_matrix_vector_engines;

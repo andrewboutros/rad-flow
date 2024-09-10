@@ -1,6 +1,6 @@
 #include <npu_top.hpp>
 
-npu_top::npu_top(const sc_module_name &name, RADSimDesignContext* radsim_design) : design_top(radsim_design),
+npu_top::npu_top(const sc_module_name &name, RADSimDesignContext* radsim_design) : RADSimDesignTop(radsim_design),
       sector_chain_fifo_rdy_signals("sector_chain_fifo_rdy_signals"),
       sector_chain_fifo_ren_signals("sector_chain_fifo_ren_signals"),
       sector_chain_fifo_rdata_signals("sector_chain_fifo_rdata_signals"),

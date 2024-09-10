@@ -1,6 +1,6 @@
 #include <mlp_top.hpp>
 
-mlp_top::mlp_top(const sc_module_name &name, RADSimDesignContext* radsim_design) : design_top(radsim_design) {
+mlp_top::mlp_top(const sc_module_name &name, RADSimDesignContext* radsim_design) : RADSimDesignTop(radsim_design) {
   this->radsim_design = radsim_design;
   std::string design_root_dir =
       radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);

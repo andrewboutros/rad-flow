@@ -9,7 +9,7 @@
 #include <design_top.hpp>
 #include <axis_interface.hpp>
 
-class add_top : public design_top {
+class add_top : public RADSimDesignTop {
 private:
   adder *adder_inst;
   client *client_inst;

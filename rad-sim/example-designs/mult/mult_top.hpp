@@ -9,7 +9,7 @@
 #include <design_top.hpp>
 #include <radsim_module.hpp>
 
-class mult_top : public design_top {
+class mult_top : public RADSimDesignTop {
 private:
   mult *mult_inst;
   client_mult *client_inst;

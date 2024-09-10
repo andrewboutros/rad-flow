@@ -5,5 +5,5 @@
 
 class design_system : virtual public sc_module {
     public:
-        design_top* design_dut_inst;
+        RADSimDesignTop* design_dut_inst;
 };
