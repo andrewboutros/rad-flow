@@ -492,7 +492,7 @@ if __name__ == "__main__":
 
     # Point to YAML configuration file
     #config_filename = "example-designs/" + design_name + "/config.yml"
-    config_filename = "uni_config.yml"
+    config_filename = "config.yml"
     config_names = []
 
     # List default parameter values

@@ -22,7 +22,7 @@ done
 test_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 cd $test_path
 
-cp -f ../example-designs/npu/config.yml ../uni_config.yml
+cp -f ../example-designs/npu/config.yml ../config.yml
 
 (cd ../; python config.py npu)
 

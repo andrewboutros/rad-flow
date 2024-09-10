@@ -38,7 +38,7 @@ The code structure of RAD-Sim is summarized as follows:
     |- example-designs/
     |  |- mydesign/
     |  |  |- modules/
-    |  |  |- uni_config.yml
+    |  |  |- config.yml
     |  |  |- mydesign_driver.{cpp/hpp}
     |  |  |- mydesign_system.{cpp/hpp}
     |  |  |- mydesign_top.{cpp/hpp}
@@ -163,7 +163,7 @@ space-separated) as shown in the example below.
     module_b 0 0
 
 The two integers in each line represent the indecies to the NoC adapters and design clock period values listed in the 
-design's ``uni_config.yml`` file. For example, if the ``uni_config.yml`` file, had the following values, it means that the NoC 
+design's ``config.yml`` file. For example, if the ``config.yml`` file, had the following values, it means that the NoC 
 adapters of both modules are operating at 1.25 ns clock period (800 MHz), while ``module_a`` has a clock period of 
 2.5 ns (400 MHz) and ``module_b`` has a clock period of 5.0 ns (200 MHz).
 
@@ -207,7 +207,7 @@ for CMake to compile correctly when you build RAD-Sim for the application design
 recommended that you copy the ``CMakeLists.txt`` file from one of the provided example design directories and edit the 
 ``hdrfiles`` and ``srcfiles`` variables to include all your design ``.hpp`` and ``.cpp`` files. 
 
-RAD-Sim Configuration File (``uni_config.yml``)
+RAD-Sim Configuration File (``config.yml``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 This YAML file configures all the RAD-Sim parameters for the simulation of the application design under 4 main tags: 
 ``noc``, ``noc_adapters``, ``config <configname>``, and ``cluster``. The ``noc`` and ``noc_adapters`` parameters are shared across all RADs. 
