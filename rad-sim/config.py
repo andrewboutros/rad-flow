@@ -406,11 +406,12 @@ def generate_radsim_main(design_names, num_rads, radsim_knobs):
                             + design_name + "_system\", driver_clk_sig" + str(i) 
                             + ", cluster->all_rads[" + str(i) + "]);\n")
         main_cpp_file.write("\tcluster->StoreSystem(system" + str(i) + ");\n")
-    main_cpp_file.write("\n\tsc_clock *inter_rad_clk_sig = new sc_clock(\n")
-    main_cpp_file.write("\t\t\"node_clk0\", radsim_config.GetDoubleKnobShared(\"sim_driver_period\"), SC_NS);\n")
-    main_cpp_file.write("\tRADSimInterRad* blackbox = new RADSimInterRad(\"inter_rad_box\", inter_rad_clk_sig, cluster);\n\n")
-    for i in range(num_rads):
-        main_cpp_file.write("\tblackbox->ConnectRadAxi(" + str(i) +");\n")
+    if (num_rads > 1):
+        main_cpp_file.write("\n\tsc_clock *inter_rad_clk_sig = new sc_clock(\n")
+        main_cpp_file.write("\t\t\"node_clk0\", radsim_config.GetDoubleKnobShared(\"sim_driver_period\"), SC_NS);\n")
+        main_cpp_file.write("\tRADSimInterRad* blackbox = new RADSimInterRad(\"inter_rad_box\", inter_rad_clk_sig, cluster);\n\n")
+        for i in range(num_rads):
+            main_cpp_file.write("\tblackbox->ConnectRadAxi(" + str(i) +");\n")
     #main_cpp_file.write("\tsc_start();\n\n")
     main_cpp_file.write("\n\tint start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared(\"sim_driver_period\"));\n")
     main_cpp_file.write("\twhile (cluster->AllRADsNotDone()) {\n")
@@ -422,8 +423,9 @@ def generate_radsim_main(design_names, num_rads, radsim_knobs):
     for i in range(num_rads):
         main_cpp_file.write("\tdelete system" + str(i) + ";\n")
         main_cpp_file.write("\tdelete driver_clk_sig" + str(i) + ";\n")
-    main_cpp_file.write("\tdelete blackbox;\n")
-    main_cpp_file.write("\tdelete inter_rad_clk_sig;\n\n")
+    if (num_rads > 1):
+        main_cpp_file.write("\tdelete blackbox;\n")
+        main_cpp_file.write("\tdelete inter_rad_clk_sig;\n\n")
     main_cpp_file.write("\tsc_flit scf;\n")
     main_cpp_file.write("\tscf.FreeAllFlits();\n")
     main_cpp_file.write("\tFlit *f = Flit::New();\n")

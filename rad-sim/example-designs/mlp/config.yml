@@ -4,7 +4,7 @@ noc:
   clk_period: [1.0]
   payload_width: [145]
   topology: ['mesh']
-  dim_x: [5]
+  dim_x: [4]
   dim_y: [4] 
   routing_func: ['dim_order']
   vcs: [1]

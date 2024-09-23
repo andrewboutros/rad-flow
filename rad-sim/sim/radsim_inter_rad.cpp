@@ -64,8 +64,11 @@ RADSimInterRad::ConnectRadPair(int i, int j) {
 
 void
 RADSimInterRad::ConnectRadAxi(int i) {
+    //Connect the axi slave interface of each portal module to its corresponding RADSimInterRad axi master interface, and vice versa
+    #ifndef SINGLE_RAD
     all_axis_master_signals[i]->Connect(*(all_axis_master_ports[i]), cluster->all_systems[i]->design_dut_inst->design_top_portal_axis_slave); //Connect(axis_master_port &m, axis_slave_port &s)
     all_axis_slave_signals[i]->Connect(cluster->all_systems[i]->design_dut_inst->design_top_portal_axis_master, *(all_axis_slave_ports[i])); //Connect(axis_master_port &m, axis_slave_port &s)
+    #endif
 }
 
 bool wrote_yet = false;

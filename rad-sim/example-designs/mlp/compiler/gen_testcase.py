@@ -207,8 +207,10 @@ placement_file.write('output_collector 0 ' + str(router_ids[idx]) + ' axis\n')
 idx = idx + 1
 clocks_file.write('output_collector 0 0\n')
 
-placement_file.write('portal_inst 0 16 axis\n')
-clocks_file.write('portal_inst 0 0\n')
+#WARNING: uncomment out if multi-rad design
+print('WARNING: if multi-rad mlp design, uncomment out lines 212-213 of gen_testcase.py')
+# placement_file.write('portal_inst 0 16 axis\n')
+# clocks_file.write('portal_inst 0 0\n')
 
 placement_file.close()
 clocks_file.close()
