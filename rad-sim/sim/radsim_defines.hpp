@@ -1,16 +1,16 @@
 #pragma once
 
-#define SINGLE_RAD 1
-
 // clang-format off
 #define RADSIM_ROOT_DIR "/home/bassiabn/rad-sim/rad-flow/rad-sim"
+
+#define SINGLE_RAD 1
 
 // NoC-related Parameters
 #define NOC_LINKS_PAYLOAD_WIDTH   145
 #define NOC_LINKS_VCID_WIDTH      1
 #define NOC_LINKS_PACKETID_WIDTH  32
 #define NOC_LINKS_TYPEID_WIDTH    1
-#define NOC_LINKS_DEST_WIDTH      15
+#define NOC_LINKS_DEST_WIDTH      12
 #define NOC_LINKS_DEST_INTERFACE_WIDTH 5
 #define NOC_LINKS_WIDTH           (NOC_LINKS_PAYLOAD_WIDTH + NOC_LINKS_VCID_WIDTH         + NOC_LINKS_PACKETID_WIDTH + NOC_LINKS_DEST_WIDTH + NOC_LINKS_DEST_INTERFACE_WIDTH)
 
@@ -25,14 +25,14 @@
 #define AXIS_KEEPW  8
 #define AXIS_IDW    NOC_LINKS_PACKETID_WIDTH
 #define AXIS_DESTW  NOC_LINKS_DEST_WIDTH
-#define AXIS_DEST_FIELDW  5
+#define AXIS_DEST_FIELDW  4
 #define AXI4_IDW    8
 #define AXI4_ADDRW  64
 #define AXI4_LENW   8
 #define AXI4_SIZEW  3
 #define AXI4_BURSTW 2
 #define AXI4_RESPW  2
-#define AXI4_NODE_ADDRW 5
+#define AXI4_NODE_ADDRW 4
 #define AXI4_CTRLW  (AXI4_LENW + AXI4_SIZEW + AXI4_BURSTW)
 
 // AXI Packetization Defines

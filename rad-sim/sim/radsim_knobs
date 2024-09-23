@@ -3,7 +3,7 @@ noc_num_nocs 0 1
 noc_clk_period 0 1.0 
 noc_vcs 0 1 
 noc_payload_width 0 145 
-noc_num_nodes 0 25 
+noc_num_nodes 0 16 
 design_noc_placement 0 mlp.place 
 noc_adapters_clk_period 0 1.25 
 noc_adapters_fifo_size 0 16 

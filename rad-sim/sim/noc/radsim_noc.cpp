@@ -243,7 +243,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, std::str
   }
 
     #ifndef SINGLE_RAD
-    set portal ID to use in axis_slave_adapter for NoC versus inter_rad
+    //set portal ID to use in axis_slave_adapter for NoC versus inter_rad
     unsigned int PortalSlaveID = radsim_design->GetPortalSlaveID();
     std::cout << "Set portal slave ids in radsim_noc.cpp to: " << PortalSlaveID << std::endl;
     for (int i = 0; i < _axis_slave_adapters.size(); i++) {

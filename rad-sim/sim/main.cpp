@@ -34,12 +34,6 @@ int sc_main(int argc, char *argv[]) {
 	mlp_system *system0 = new mlp_system("mlp_system", driver_clk_sig0, cluster->all_rads[0]);
 	cluster->StoreSystem(system0);
 
-	// sc_clock *inter_rad_clk_sig = new sc_clock(
-	// 	"node_clk0", radsim_config.GetDoubleKnobShared("sim_driver_period"), SC_NS);
-	// RADSimInterRad* blackbox = new RADSimInterRad("inter_rad_box", inter_rad_clk_sig, cluster);
-
-	// blackbox->ConnectRadAxi(0);
-
 	int start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
 	while (cluster->AllRADsNotDone()) {
 		sc_start(1, SC_NS);
@@ -50,9 +44,6 @@ int sc_main(int argc, char *argv[]) {
 
 	delete system0;
 	delete driver_clk_sig0;
-	// delete blackbox;
-	// delete inter_rad_clk_sig;
-
 	sc_flit scf;
 	scf.FreeAllFlits();
 	Flit *f = Flit::New();

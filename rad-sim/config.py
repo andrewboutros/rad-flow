@@ -208,6 +208,9 @@ def generate_radsim_params_header(radsim_header_params):
     radsim_params_header_file.write("// clang-format off\n")
     radsim_params_header_file.write('#define RADSIM_ROOT_DIR "' + radsim_header_params["radsim_root_dir"] + '"\n\n')
 
+    if (cluster_knobs["num_rads"] <= 1):
+        radsim_params_header_file.write('#define SINGLE_RAD 1\n\n')
+
     radsim_params_header_file.write("// NoC-related Parameters\n")
     # Finding maximum NoC payload width and setting its definition
     max_noc_payload_width = 0
@@ -370,7 +373,7 @@ def generate_radsim_config_file(radsim_knobs, cluster_knobs):
             radsim_config_file.write(str(cluster_knobs[param]) + "\n")
     radsim_config_file.close()
 
-def generate_radsim_main(design_names, num_rads, radsim_knobs):
+def generate_radsim_main(design_names, radsim_knobs):
     main_cpp_file = open(radsim_header_params["radsim_root_dir"] + "/sim/main.cpp", "w")
     main_cpp_file.write("#include <design_context.hpp>\n")
     main_cpp_file.write("#include <fstream>\n")
@@ -390,15 +393,15 @@ def generate_radsim_main(design_names, num_rads, radsim_knobs):
     main_cpp_file.write("int sc_main(int argc, char *argv[]) {\n")
     main_cpp_file.write("\tstd::string radsim_knobs_filename = \"/sim/radsim_knobs\";\n")
     main_cpp_file.write("\tstd::string radsim_knobs_filepath = RADSIM_ROOT_DIR + radsim_knobs_filename;\n")
-    main_cpp_file.write("\tradsim_config.ResizeAll(" + str(num_rads) + ");\n")
+    main_cpp_file.write("\tradsim_config.ResizeAll(" + str(cluster_knobs["num_rads"]) + ");\n")
     main_cpp_file.write("\tParseRADSimKnobs(radsim_knobs_filepath);\n\n")
-    main_cpp_file.write("\tRADSimCluster* cluster = new RADSimCluster(" + str(num_rads) + ");\n\n")
+    main_cpp_file.write("\tRADSimCluster* cluster = new RADSimCluster(" + str(cluster_knobs["num_rads"]) + ");\n\n")
     main_cpp_file.write("\tgWatchOut = &cout;\n")
     main_cpp_file.write("\tint log_verbosity = radsim_config.GetIntKnobShared(\"telemetry_log_verbosity\");\n")
     main_cpp_file.write("\tsim_log.SetLogSettings(log_verbosity, \"sim.log\");\n\n")
     main_cpp_file.write("\tint num_traces = radsim_config.GetIntKnobShared(\"telemetry_num_traces\");\n")
     main_cpp_file.write("\tsim_trace_probe.SetTraceRecordingSettings(\"sim.trace\", num_traces);\n\n")
-    for i in range(num_rads):
+    for i in range(cluster_knobs["num_rads"]):
         design_name = radsim_knobs[i]["design_name"]
         main_cpp_file.write("\tsc_clock *driver_clk_sig" + str(i) + " = new sc_clock(\n")
         main_cpp_file.write("\t\t\"node_clk0\", radsim_config.GetDoubleKnobShared(\"sim_driver_period\"), SC_NS);\n")
@@ -406,11 +409,11 @@ def generate_radsim_main(design_names, num_rads, radsim_knobs):
                             + design_name + "_system\", driver_clk_sig" + str(i) 
                             + ", cluster->all_rads[" + str(i) + "]);\n")
         main_cpp_file.write("\tcluster->StoreSystem(system" + str(i) + ");\n")
-    if (num_rads > 1):
+    if (cluster_knobs["num_rads"] > 1):
         main_cpp_file.write("\n\tsc_clock *inter_rad_clk_sig = new sc_clock(\n")
         main_cpp_file.write("\t\t\"node_clk0\", radsim_config.GetDoubleKnobShared(\"sim_driver_period\"), SC_NS);\n")
         main_cpp_file.write("\tRADSimInterRad* blackbox = new RADSimInterRad(\"inter_rad_box\", inter_rad_clk_sig, cluster);\n\n")
-        for i in range(num_rads):
+        for i in range(cluster_knobs["num_rads"]):
             main_cpp_file.write("\tblackbox->ConnectRadAxi(" + str(i) +");\n")
     #main_cpp_file.write("\tsc_start();\n\n")
     main_cpp_file.write("\n\tint start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared(\"sim_driver_period\"));\n")
@@ -420,10 +423,10 @@ def generate_radsim_main(design_names, num_rads, radsim_knobs):
     main_cpp_file.write("\tint end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared(\"sim_driver_period\"));\n")
     main_cpp_file.write("\tsc_stop();\n")
     main_cpp_file.write("\tstd::cout << \"Simulation Cycles from main.cpp = \" << end_cycle - start_cycle << std::endl;\n\n")
-    for i in range(num_rads):
+    for i in range(cluster_knobs["num_rads"]):
         main_cpp_file.write("\tdelete system" + str(i) + ";\n")
         main_cpp_file.write("\tdelete driver_clk_sig" + str(i) + ";\n")
-    if (num_rads > 1):
+    if (cluster_knobs["num_rads"] > 1):
         main_cpp_file.write("\tdelete blackbox;\n")
         main_cpp_file.write("\tdelete inter_rad_clk_sig;\n\n")
     main_cpp_file.write("\tsc_flit scf;\n")
@@ -574,7 +577,7 @@ if __name__ == "__main__":
     generate_booksim_config_files(booksim_params_per_rad, radsim_header_params, radsim_knobs_per_rad, cluster_knobs)
     generate_radsim_params_header(radsim_header_params)
     generate_radsim_config_file(radsim_knobs_per_rad, cluster_knobs)
-    generate_radsim_main(design_names, cluster_knobs["num_rads"], radsim_knobs_per_rad)
+    generate_radsim_main(design_names, radsim_knobs_per_rad)
 
     prepare_build_dir(design_names)
 
