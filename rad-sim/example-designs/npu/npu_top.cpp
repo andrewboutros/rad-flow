@@ -80,7 +80,9 @@ npu_top::npu_top(const sc_module_name &name, RADSimDesignContext* radsim_design)
     vector_elementwise_blocks[thread_id]->ext_output_fifo_rdata(ofifo_rdata[thread_id]);
   }                                                             
 
+  #ifndef SINGLE_RAD
   this->portal_inst->rst(rst);
+  #endif
   radsim_design->BuildDesignContext("npu.place", "npu.clks");
   radsim_design->CreateSystemNoCs(rst);
   radsim_design->ConnectModulesToNoC();
