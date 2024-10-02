@@ -28,7 +28,7 @@ Bibtex:
 
 **Graduate Students:** Andrew Boutros
 
-**Summer Students:**
+**Undergraduate Students:**
 
 **Companies:** Intel, VMWare
 
