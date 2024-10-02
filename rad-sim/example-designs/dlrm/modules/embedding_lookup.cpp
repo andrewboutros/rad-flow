@@ -3,8 +3,10 @@
 embedding_lookup::embedding_lookup(
     const sc_module_name &name, unsigned int dataw,
     std::vector<unsigned int> &num_mem_channels_per_controller,
-    unsigned int fifo_depth)
-    : RADSimModule(name) {
+    unsigned int fifo_depth, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design) {
+
+  this->radsim_design = radsim_design;
 
   _total_num_channels = 0;
   unsigned int ctrl_id = 0;
@@ -53,7 +55,7 @@ void embedding_lookup::Assign() {
       aximm_req_interface[ch_id].bready.write(false);
       aximm_req_interface[ch_id].rready.write(false);
     }
-  } else {
+  } else if ((radsim_design->rad_id == 0)) {
     bool all_fifos_not_full = true;
 
     // Always ready to accept read/write response from the AXI-MM NoC
@@ -71,6 +73,7 @@ void embedding_lookup::Assign() {
 }
 
 void embedding_lookup::Tick() {
+  if (radsim_design->rad_id == 0) {
   // Reset logic
   for (unsigned int ch_id = 0; ch_id < _total_num_channels; ch_id++) {
     aximm_req_interface[ch_id].arvalid.write(false);
@@ -88,8 +91,7 @@ void embedding_lookup::Tick() {
   wait();
 
   // Always @ positive edge of the clock
-  while (true) {
-    // Interface with testbench driver
+  while (true) { //&& (radsim_design->rad_id == 0)) {
     if (lookup_indecies_ready.read() && lookup_indecies_valid.read()) {
       data_vector<uint64_t> lookup_indecies = lookup_indecies_data.read();
       data_vector<unsigned int> target_channels =
@@ -119,12 +121,12 @@ void embedding_lookup::Tick() {
           uint64_t table_base_addr = _base_addresses_fifo[ch_id].front();
 
           std::string dst_port_name = _dst_port_names[ch_id];
-          uint64_t dst_addr = radsim_design.GetPortBaseAddress(dst_port_name) +
+          uint64_t dst_addr = radsim_design->GetPortBaseAddress(dst_port_name) +
                               table_base_addr + lookup_index;
           std::string src_port_name =
               "feature_interaction_inst.aximm_interface_" +
               std::to_string(ch_id);
-          uint64_t src_addr = radsim_design.GetPortBaseAddress(src_port_name);
+          uint64_t src_addr = radsim_design->GetPortBaseAddress(src_port_name);
 
           /*if (ctrl_id == 0) {
             std::cout << "Base address: " << table_base_addr << std::endl;
@@ -182,6 +184,7 @@ void embedding_lookup::Tick() {
       }
     }
     wait();
+  }
   }
 }
 

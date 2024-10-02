@@ -11,9 +11,10 @@
 #include <sim_utils.hpp>
 #include <design_context.hpp>
 #include <radsim_config.hpp>
+#include <design_top.hpp>
 
 
-class mlp_top : public sc_module {
+class mlp_top : public RADSimDesignTop {
  private:
   std::vector<std::vector<rtl_mvm*>> rtl_matrix_vector_engines;
   std::vector<std::vector<sysc_mvm*>> sysc_matrix_vector_engines;
@@ -24,6 +25,7 @@ class mlp_top : public sc_module {
   collector* output_collector;
   weight_loader* wloader;
   inst_loader* iloader;
+  RADSimDesignContext* radsim_design;
 
  public:
   sc_in<bool> rst;
@@ -62,7 +64,7 @@ class mlp_top : public sc_module {
   sc_in<bool> collector_fifo_ren;
   sc_out<data_vector<sc_int<IPRECISION>>> collector_fifo_rdata;
 
-  mlp_top(const sc_module_name& name);
+  mlp_top(const sc_module_name& name, RADSimDesignContext* radsim_design);
   ~mlp_top();
   void prepare_adapters_info();
 };

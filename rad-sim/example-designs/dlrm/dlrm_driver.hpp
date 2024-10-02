@@ -19,6 +19,7 @@ private:
   unsigned int _num_feature_interaction_outputs;
   unsigned int _num_mlp_outputs;
   unsigned int _start_cycle, _end_cycle;
+  RADSimDesignContext* radsim_design; //AKB ADDED
 
 public:
   sc_in<bool> clk;
@@ -35,7 +36,7 @@ public:
   sc_out<bool> collector_fifo_ren;
   sc_in<data_vector<int16_t>> collector_fifo_rdata;
 
-  dlrm_driver(const sc_module_name &name);
+  dlrm_driver(const sc_module_name &name, RADSimDesignContext* radsim_design_);
   ~dlrm_driver();
 
   void assign();

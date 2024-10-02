@@ -28,6 +28,7 @@ private:
   unsigned int _debug_sent_request_counter;
 
 public:
+  RADSimDesignContext* radsim_design;
   sc_in<bool> rst;
   // Interface to driver logic
   sc_in<data_vector<uint64_t>> lookup_indecies_data;
@@ -40,7 +41,7 @@ public:
 
   embedding_lookup(const sc_module_name &name, unsigned int dataw,
                    std::vector<unsigned int> &num_mem_channels_per_controller,
-                   unsigned int fifo_depth);
+                   unsigned int fifo_depth, RADSimDesignContext* radsim_design);
   ~embedding_lookup();
 
   void Assign(); // Combinational logic process

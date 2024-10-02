@@ -4,9 +4,10 @@
 template <typename fifo_type, typename bv_type>
 axis_master_fifo_adapter<fifo_type, bv_type>::axis_master_fifo_adapter(
     const sc_module_name& _name, unsigned int _interface_type, unsigned int _interface_dataw, unsigned int _num_fifo,
-    unsigned int _element_bitwidth, std::string& _destination_port)
+    unsigned int _element_bitwidth, std::string& _destination_port, RADSimDesignContext* radsim_design)
     : sc_module(_name), fifo_rdy("fifo_rdy"), fifo_ren("fifo_ren"), fifo_rdata("fifo_rdata") {
   // Initialize member variables
+  this->radsim_design = radsim_design;
   interface_type = _interface_type;
   if (_interface_dataw > AXIS_MAX_DATAW)
     sim_log.log(error, "AXI-S datawidth exceeds maximum value!", this->name());
@@ -139,7 +140,7 @@ void axis_master_fifo_adapter<fifo_type, bv_type>::insert_payload_into_buffer() 
       TUSER_FLAG(buffer_wdata) = payload_bitvector.get_bit(flag_idx);
       TUSER_ADDR(buffer_wdata) = payload_bitvector.range(addr_start_idx + VRF_ADDRW - 1, addr_start_idx);
       TUSER_VRFID(buffer_wdata) = payload_bitvector.range(vrf_id_start_idx + VRF_WB_SELW - 1, vrf_id_start_idx);
-      TDEST(buffer_wdata) = radsim_design.GetPortDestinationID(destination_port);
+      TDEST(buffer_wdata) = this->radsim_design->GetPortDestinationID(destination_port);
     } else if (interface_type == VEW_WRITEBACK_INTERFACE) {
       TUSER_FLAG(buffer_wdata) = payload_bitvector.get_bit(flag_idx);
       TUSER_ADDR(buffer_wdata) = payload_bitvector.range(addr_start_idx + VRF_ADDRW - 1, addr_start_idx);
@@ -148,13 +149,13 @@ void axis_master_fifo_adapter<fifo_type, bv_type>::insert_payload_into_buffer() 
     } else {
       TUSER_FLAG(buffer_wdata) = 0;
       TUSER_ADDR(buffer_wdata) = 0;
-      TDEST(buffer_wdata) = radsim_design.GetPortDestinationID(destination_port);
+      TDEST(buffer_wdata) = this->radsim_design->GetPortDestinationID(destination_port);
     }
-    TID(buffer_wdata) = radsim_design.GetPortInterfaceID(destination_port);
+    TID(buffer_wdata) = this->radsim_design->GetPortInterfaceID(destination_port);
     TLAST(buffer_wdata) = (transfer_id == transfers_per_axis_packet - 1);
     buffer.push(buffer_wdata);
     assert(buffer.size() <= buffer_capacity);
-    //std::cout << "Destination Port " << destination_port << " is at node " << radsim_design.GetPortDestinationID(destination_port) << " interface " << radsim_design.GetPortInterfaceID(destination_port) << std::endl;
+    //std::cout << "Destination Port " << destination_port << " is at node " << this->radsim_design->GetPortDestinationID(destination_port) << " interface " << this->radsim_design->GetPortInterfaceID(destination_port) << std::endl;
   }
 }
 
@@ -258,9 +259,11 @@ axis_slave_fifo_adapter<fifo_type, bv_type>::axis_slave_fifo_adapter(const sc_mo
                                                                      unsigned int _interface_dataw,
                                                                      unsigned int _num_fifo,
                                                                      unsigned int _element_bitwidth,
-                                                                     unsigned int _num_element)
+                                                                     unsigned int _num_element,
+                                                                     RADSimDesignContext* radsim_design)
     : sc_module(_name), fifo_rdy("fifo_rdy"), fifo_ren("fifo_ren"), fifo_rdata("fifo_rdata") {
   // Initialize member variables
+  this->radsim_design = radsim_design;
   interface_type = _interface_type;
   if (_interface_dataw > AXIS_MAX_DATAW)
     sim_log.log(error, "AXI-S datawidth exceeds maximum value!", this->name());

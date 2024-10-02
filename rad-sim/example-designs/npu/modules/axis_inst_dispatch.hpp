@@ -49,7 +49,7 @@ class axis_inst_dispatch : public RADSimModule {
   sc_vector<axis_master_port> mfu1_mop_interface;
   axis_master_port ld_mop_interface;
 
-  axis_inst_dispatch(const sc_module_name& name, unsigned int thread_id);
+  axis_inst_dispatch(const sc_module_name& name, unsigned int thread_id, RADSimDesignContext* radsim_design);
   ~axis_inst_dispatch();
   void RegisterModuleInfo();
 };

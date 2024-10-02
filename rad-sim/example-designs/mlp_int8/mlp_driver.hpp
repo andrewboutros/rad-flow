@@ -72,7 +72,9 @@ class mlp_driver : public sc_module {
   sc_out<bool> collector_fifo_ren;
   sc_in<data_vector<sc_int<IPRECISION>>> collector_fifo_rdata;
 
-  mlp_driver(const sc_module_name& name);
+  RADSimDesignContext* radsim_design;
+
+  mlp_driver(const sc_module_name& name, RADSimDesignContext* radsim_design_);
   ~mlp_driver();
 
   void source();

@@ -12,9 +12,10 @@
 #include <params.hpp>
 #include <sim_utils.hpp>
 #include <design_context.hpp>
+#include <design_top.hpp>
 
 
-class npu_top : public sc_module {
+class npu_top : public RADSimDesignTop {
  private:
   sc_vector<sc_vector<sc_vector<sc_signal<bool>>>> sector_chain_fifo_rdy_signals;
   sc_vector<sc_vector<sc_vector<sc_signal<bool>>>> sector_chain_fifo_ren_signals;
@@ -46,7 +47,7 @@ class npu_top : public sc_module {
   sc_vector<sc_vector<sc_in<bool>>> ofifo_ren;
   sc_vector<sc_vector<sc_out<data_vector<tb_output_precision>>>> ofifo_rdata;
 
-  npu_top(const sc_module_name& name);
+  npu_top(const sc_module_name& name, RADSimDesignContext* radsim_design);
   ~npu_top();
   void prepare_adapters_info();
 };

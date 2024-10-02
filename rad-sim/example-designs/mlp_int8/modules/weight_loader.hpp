@@ -36,6 +36,7 @@ class weight_loader : public RADSimModule {
   sc_signal<bool> mvm_id_fifo_pop, mvm_id_fifo_full, mvm_id_fifo_empty, mvm_id_fifo_almost_full;
 
  public:
+  RADSimDesignContext* radsim_design;
   sc_in<bool> rst;
   sc_out<bool> weight_fifo_rdy;
   sc_in<bool> weight_fifo_wen;
@@ -54,7 +55,7 @@ class weight_loader : public RADSimModule {
   sc_in<uint8_t> mvm_id_fifo_wdata;
   axis_master_port tx_interface;
 
-  weight_loader(const sc_module_name& name);
+  weight_loader(const sc_module_name& name, RADSimDesignContext* radsim_design);
   ~weight_loader();
 
   void Assign();

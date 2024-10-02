@@ -8,6 +8,7 @@
 #include <string>
 #include <systemc.h>
 #include <vector>
+#include <radsim_utils.hpp>
 #include <fifo.hpp>
 
 #define FIFO_DEPTH 16
@@ -47,8 +48,10 @@ public:
   sc_out<bool> client_ready;
   // Interface to the NoC
   axis_master_port axis_client_interface;
+  //AKB added bc used in functions outside of constructor:
+  RADSimDesignContext* radsim_design;
 
-  client(const sc_module_name &name);
+  client(const sc_module_name &name, unsigned int fifo_depth, RADSimDesignContext* radsim_design); //AKB added last arg
   ~client();
 
   void Assign(); // Combinational logic process

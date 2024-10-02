@@ -16,6 +16,7 @@
 class aximm_master_adapter : public sc_module {
 private:
   // The ID and reconfigurable width of the node this adapter is connected to
+  unsigned int _rad_id;
   int _node_id;
   int _network_id;
   int _interface_dataw;
@@ -84,7 +85,7 @@ public:
   sc_in<bool> rst;
   aximm_master_port aximm_interface;
 
-  aximm_master_adapter(const sc_module_name &name, int node_id, int network_id,
+  aximm_master_adapter(const sc_module_name &name, unsigned int rad_id, int node_id, int network_id,
                        BookSimConfig *noc_config, Network *noc,
                        BufferState *buffer_state, tRoutingFunction routing_func,
                        bool lookahead_routing, bool wait_for_tail_credit,

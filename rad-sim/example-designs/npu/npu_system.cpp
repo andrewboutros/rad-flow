@@ -1,6 +1,6 @@
 #include <npu_system.hpp>
 
-npu_system::npu_system(const sc_module_name &name, sc_clock* driver_clk_sig)
+npu_system::npu_system(const sc_module_name &name, sc_clock* driver_clk_sig, RADSimDesignContext* radsim_design)
     : sc_module(name),
       inst_wdata("inst_wdata"),
       inst_waddr("inst_waddr"),
@@ -26,7 +26,7 @@ npu_system::npu_system(const sc_module_name &name, sc_clock* driver_clk_sig)
   init_vector<sc_signal<bool>>::init_sc_vector(ofifo_ren, THREADS, CORES);
   init_vector<sc_signal<data_vector<tb_output_precision>>>::init_sc_vector(ofifo_rdata, THREADS, CORES);
 
-  npu_driver_inst = new npu_driver("npu_driver_inst");
+  npu_driver_inst = new npu_driver("npu_driver_inst", radsim_design);
   npu_driver_inst->clk(*driver_clk_sig);
   npu_driver_inst->rst(rst_sig);
   npu_driver_inst->inst_wdata(inst_wdata);
@@ -45,7 +45,7 @@ npu_system::npu_system(const sc_module_name &name, sc_clock* driver_clk_sig)
   npu_driver_inst->ofifo_ren(ofifo_ren);
   npu_driver_inst->ofifo_rdata(ofifo_rdata);
 
-  npu_inst = new npu_top("npu_inst");
+  npu_inst = new npu_top("npu_inst", radsim_design);
   npu_inst->rst(rst_sig);
   npu_inst->inst_wdata(inst_wdata);
   npu_inst->inst_waddr(inst_waddr);
@@ -62,6 +62,9 @@ npu_system::npu_system(const sc_module_name &name, sc_clock* driver_clk_sig)
   npu_inst->ofifo_rdy(ofifo_rdy);
   npu_inst->ofifo_ren(ofifo_ren);
   npu_inst->ofifo_rdata(ofifo_rdata);
+
+  //add _top as dut instance for parent class design_system
+  this->design_dut_inst = npu_inst;
 }
 
 npu_system::~npu_system() {

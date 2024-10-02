@@ -73,6 +73,7 @@ private:
   sc_signal<bool> dot_op, dot_reduce_op;
 
 public:
+  RADSimDesignContext* radsim_design;
   sc_in<bool> rst;
   axis_slave_port rx_input_interface;
   axis_slave_port rx_reduce_interface;
@@ -80,7 +81,7 @@ public:
   axis_master_port tx_reduce_interface;
 
   mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
-      const std::string &inst_filename);
+      const std::string &inst_filename, RADSimDesignContext* radsim_design);
   ~mvm();
 
   void Assign();

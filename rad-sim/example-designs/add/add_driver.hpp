@@ -10,10 +10,11 @@
 
 class add_driver : public sc_module {
 private:
+  int start_cycle, end_cycle;
   std::queue<int> numbers_to_send;
   int actual_sum;
-  int start_cycle, end_cycle;
   std::chrono::steady_clock::time_point start_time, end_time;
+  RADSimDesignContext* radsim_design;
   
 public:
   sc_in<bool> clk;
@@ -24,8 +25,9 @@ public:
   sc_in<bool> client_ready;
   sc_in<sc_bv<DATAW>> response;
   sc_in<bool> response_valid;
+  sc_in<bool> portal_recvd;
 
-  add_driver(const sc_module_name &name);
+  add_driver(const sc_module_name &name, RADSimDesignContext* radsim_design_);
   ~add_driver();
 
   void source();

@@ -1,6 +1,6 @@
 #include <npu_driver.hpp>
 
-npu_driver::npu_driver(const sc_module_name &name)
+npu_driver::npu_driver(const sc_module_name &name, RADSimDesignContext* radsim_design_)
     : sc_module(name),
       rst("rst"),
       inst_wdata("inst_wdata"),
@@ -18,6 +18,8 @@ npu_driver::npu_driver(const sc_module_name &name)
       ofifo_rdy("ofifo_rdy"),
       ofifo_ren("ofifo_ren"),
       ofifo_rdata("ofifo_rdata") {
+
+  this->radsim_design = radsim_design_;
 
   init_vector<sc_in<bool>>::init_sc_vector(ififo_rdy, THREADS, CORES);
   init_vector<sc_out<bool>>::init_sc_vector(ififo_wen, THREADS, CORES);
@@ -41,7 +43,7 @@ npu_driver::~npu_driver() {}
 
 void npu_driver::source() {
   bool parse_flag;
-  std::string npu_dir = radsim_config.GetStringKnob("radsim_user_design_root_dir");
+  std::string npu_dir = radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
 
   // Parse NPU instructions
   std::string inst_filename = "/register_files/instructions.txt";
@@ -97,7 +99,7 @@ void npu_driver::source() {
   // Trigger NPU start signal
   start.write(true);
   wait();
-  start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("max_period"));
+  start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
   start.write(false);
   wait();
 
@@ -176,10 +178,10 @@ void npu_driver::sink() {
     }
     wait();
   }
-  end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("max_period"));
+  end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
 
   std::ofstream report;
-  std::string npu_dir = radsim_config.GetStringKnob("radsim_user_design_root_dir");
+  std::string npu_dir = radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
   std::string report_filename = "/sim_done";
   std::string report_path = npu_dir + report_filename;
   report.open(report_path);
@@ -196,7 +198,9 @@ void npu_driver::sink() {
 
   sim_trace_probe.dump_traces();
 
-  sc_stop();
+  //sc_stop();
+  this->radsim_design->set_rad_done(); //flag to replace sc_stop calls
+  return;
 
   //NoCTransactionTelemetry::DumpStatsToFile("/Users/andrew/PhD/dev/rad-sim-opt-npu-multithread-hard-c2/stats.csv");
 }

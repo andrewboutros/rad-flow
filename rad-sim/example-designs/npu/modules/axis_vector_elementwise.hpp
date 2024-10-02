@@ -88,7 +88,7 @@ class axis_vector_elementwise : public RADSimModule {
   sc_vector<sc_in<bool>> ext_output_fifo_ren;
   sc_vector<sc_out<data_vector<tb_output_precision>>> ext_output_fifo_rdata;
 
-  axis_vector_elementwise(const sc_module_name& name, unsigned int thread_id);
+  axis_vector_elementwise(const sc_module_name& name, unsigned int thread_id, RADSimDesignContext* radsim_design);
   ~axis_vector_elementwise();
   void RegisterModuleInfo();
 

@@ -14,12 +14,13 @@ private:
 	Vrtl_mvm* vrtl_mvm;
 
 public:
+	RADSimDesignContext* radsim_design;
 	sc_in<bool> rst;
 
 	axis_slave_port axis_rx;
 	axis_master_port axis_tx;
 
-	rtl_mvm(const sc_module_name &name);
+	rtl_mvm(const sc_module_name &name, RADSimDesignContext* radsim_design);
 	~rtl_mvm();
 
 	SC_HAS_PROCESS(rtl_mvm);

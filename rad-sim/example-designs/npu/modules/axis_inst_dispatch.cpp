@@ -1,7 +1,7 @@
 #include <axis_inst_dispatch.hpp>
 
-axis_inst_dispatch::axis_inst_dispatch(const sc_module_name& name, unsigned int thread_id)
-    : RADSimModule(name) {
+axis_inst_dispatch::axis_inst_dispatch(const sc_module_name& name, unsigned int thread_id, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design) {
   // Create SystemC vectors with the required sizes -- macro-op interfaces are vectors of size 1 to match the template
   // definition used with data FIFOs which works with multiple cores
   init_vector<axis_master_port>::init_sc_vector(sector_mop_interface, SECTORS);
@@ -69,7 +69,7 @@ axis_inst_dispatch::axis_inst_dispatch(const sc_module_name& name, unsigned int 
     module_name_str = "sector_" + std::to_string(sector_id) + "_mop_axis_interface_" + std::to_string(_thread_id);
     std::strcpy(module_name, module_name_str.c_str());
     sector_mop_axis_interface[sector_id] = new axis_master_fifo_adapter<mvu_mop, sc_bv<MVU_MOP_BITWIDTH>>(
-        module_name, INSTRUCTION_INTERFACE, DEC_INSTRUCTION_INTERFACE_DATAW, 1, MVU_MOP_BITWIDTH, dest_name);
+        module_name, INSTRUCTION_INTERFACE, DEC_INSTRUCTION_INTERFACE_DATAW, 1, MVU_MOP_BITWIDTH, dest_name, radsim_design);
     sector_mop_axis_interface[sector_id]->clk(clk);
     sector_mop_axis_interface[sector_id]->rst(rst);
     sector_mop_axis_interface[sector_id]->fifo_rdy(sector_mop_rdy_signal[sector_id]);
@@ -83,7 +83,7 @@ axis_inst_dispatch::axis_inst_dispatch(const sc_module_name& name, unsigned int 
     module_name_str = "evrf_" + std::to_string(sector_id) + "_mop_axis_interface_" + std::to_string(_thread_id);
     std::strcpy(module_name, module_name_str.c_str());
     evrf_mop_axis_interface[sector_id] = new axis_master_fifo_adapter<evrf_mop, sc_bv<EVRF_MOP_BITWIDTH>>(
-        module_name, INSTRUCTION_INTERFACE, DEC_INSTRUCTION_INTERFACE_DATAW, 1, EVRF_MOP_BITWIDTH, dest_name);
+        module_name, INSTRUCTION_INTERFACE, DEC_INSTRUCTION_INTERFACE_DATAW, 1, EVRF_MOP_BITWIDTH, dest_name, radsim_design);
     evrf_mop_axis_interface[sector_id]->clk(clk);
     evrf_mop_axis_interface[sector_id]->rst(rst);
     evrf_mop_axis_interface[sector_id]->fifo_rdy(evrf_mop_rdy_signal[sector_id]);
@@ -97,7 +97,7 @@ axis_inst_dispatch::axis_inst_dispatch(const sc_module_name& name, unsigned int 
     module_name_str = "mfu0_" + std::to_string(sector_id) + "_mop_axis_interface_" + std::to_string(_thread_id);
     std::strcpy(module_name, module_name_str.c_str());
     mfu0_mop_axis_interface[sector_id] = new axis_master_fifo_adapter<mfu_mop, sc_bv<MFU_MOP_BITWIDTH>>(
-        module_name, INSTRUCTION_INTERFACE, DEC_INSTRUCTION_INTERFACE_DATAW, 1, MFU_MOP_BITWIDTH, dest_name);
+        module_name, INSTRUCTION_INTERFACE, DEC_INSTRUCTION_INTERFACE_DATAW, 1, MFU_MOP_BITWIDTH, dest_name, radsim_design);
     mfu0_mop_axis_interface[sector_id]->clk(clk);
     mfu0_mop_axis_interface[sector_id]->rst(rst);
     mfu0_mop_axis_interface[sector_id]->fifo_rdy(mfu0_mop_rdy_signal[sector_id]);
@@ -111,7 +111,7 @@ axis_inst_dispatch::axis_inst_dispatch(const sc_module_name& name, unsigned int 
     module_name_str = "mfu1_" + std::to_string(sector_id) + "_mop_axis_interface_" + std::to_string(_thread_id);
     std::strcpy(module_name, module_name_str.c_str());
     mfu1_mop_axis_interface[sector_id] = new axis_master_fifo_adapter<mfu_mop, sc_bv<MFU_MOP_BITWIDTH>>(
-        module_name, INSTRUCTION_INTERFACE, DEC_INSTRUCTION_INTERFACE_DATAW, 1, MFU_MOP_BITWIDTH, dest_name);
+        module_name, INSTRUCTION_INTERFACE, DEC_INSTRUCTION_INTERFACE_DATAW, 1, MFU_MOP_BITWIDTH, dest_name, radsim_design);
     mfu1_mop_axis_interface[sector_id]->clk(clk);
     mfu1_mop_axis_interface[sector_id]->rst(rst);
     mfu1_mop_axis_interface[sector_id]->fifo_rdy(mfu1_mop_rdy_signal[sector_id]);
@@ -125,7 +125,7 @@ axis_inst_dispatch::axis_inst_dispatch(const sc_module_name& name, unsigned int 
   module_name_str = "ld_mop_axis_interface_" + std::to_string(_thread_id);
   std::strcpy(module_name, module_name_str.c_str());
   ld_mop_axis_interface = new axis_master_fifo_adapter<ld_mop, sc_bv<LD_MOP_BITWIDTH>>(
-      module_name, INSTRUCTION_INTERFACE, DEC_INSTRUCTION_INTERFACE_DATAW, 1, LD_MOP_BITWIDTH, dest_name);
+      module_name, INSTRUCTION_INTERFACE, DEC_INSTRUCTION_INTERFACE_DATAW, 1, LD_MOP_BITWIDTH, dest_name, radsim_design);
   ld_mop_axis_interface->clk(clk);
   ld_mop_axis_interface->rst(rst);
   ld_mop_axis_interface->fifo_rdy(ld_mop_rdy_signal);

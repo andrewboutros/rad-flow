@@ -27,11 +27,15 @@ noc_adapters:
   out_arbiter: ['priority_rr']
   vc_mapping: ['direct']
 
-design:
-  name: 'npu'
-  noc_placement: ['npu.place']
-  clk_periods: [5.0, 2.5]
+config rad1:
+  design:
+    name: 'npu'
+    noc_placement: ['npu.place']
+    clk_periods: [5.0, 2.5]
 
-telemetry:
-  log_verbosity: 2
-  traces: []
+cluster:
+  sim_driver_period: 5.0
+  telemetry_log_verbosity: 2
+  telemetry_traces: []
+  num_rads: 1
+  cluster_configs: ['rad1']

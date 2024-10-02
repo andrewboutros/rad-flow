@@ -18,6 +18,7 @@ class npu_driver : public sc_module {
   std::vector<std::vector<tb_output_precision>> npu_outputs;
 
  public:
+  RADSimDesignContext* radsim_design;
   sc_in<bool> clk;
   sc_out<bool> rst;
   sc_out<vliw_inst> inst_wdata;
@@ -36,7 +37,7 @@ class npu_driver : public sc_module {
   sc_vector<sc_vector<sc_out<bool>>> ofifo_ren;
   sc_vector<sc_vector<sc_in<data_vector<tb_output_precision>>>> ofifo_rdata;
 
-  npu_driver(const sc_module_name& name);
+  npu_driver(const sc_module_name& name, RADSimDesignContext* radsim_design_);
   ~npu_driver();
 
   void source();

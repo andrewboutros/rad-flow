@@ -1,10 +1,10 @@
 #include "mlp_int8_system.hpp"
 
-mlp_int8_system::mlp_int8_system(const sc_module_name& name, sc_clock* driver_clk_sig) :
+mlp_int8_system::mlp_int8_system(const sc_module_name& name, sc_clock* driver_clk_sig, RADSimDesignContext* radsim_design) :
   sc_module(name) {
   
   // Parse design configuration (number of layers and number of MVMs per layer)
-  std::string design_root_dir = radsim_config.GetStringKnob("radsim_user_design_root_dir");
+  std::string design_root_dir = radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
   std::string design_config_filename = design_root_dir + "/compiler/layer_mvm_config";
   std::ifstream design_config_file(design_config_filename);
   if (!design_config_file) {
@@ -37,7 +37,7 @@ mlp_int8_system::mlp_int8_system(const sc_module_name& name, sc_clock* driver_cl
   init_vector<sc_signal<data_vector<sc_int<IPRECISION>>>>::init_sc_vector(dispatcher_fifo_wdata_signal, num_mvms_total[0]);
 
   // Instantiate driver
-  mlp_driver_inst = new mlp_driver("mlp_driver");
+  mlp_driver_inst = new mlp_driver("mlp_driver", radsim_design);
   mlp_driver_inst->clk(*driver_clk_sig);
   mlp_driver_inst->rst(rst_sig);
   mlp_driver_inst->weight_loader_weight_fifo_rdy(weight_loader_weight_fifo_rdy_signal);
@@ -72,7 +72,7 @@ mlp_int8_system::mlp_int8_system(const sc_module_name& name, sc_clock* driver_cl
   mlp_driver_inst->collector_fifo_rdata(collector_fifo_rdata_signal);
 
   // Instantiate design top-level
-  mlp_inst = new mlp_top("mlp_top");
+  mlp_inst = new mlp_top("mlp_top", radsim_design);
   mlp_inst->rst(rst_sig);
   mlp_inst->weight_loader_weight_fifo_rdy(weight_loader_weight_fifo_rdy_signal);
   mlp_inst->weight_loader_weight_fifo_wen(weight_loader_weight_fifo_wen_signal);
@@ -104,6 +104,9 @@ mlp_int8_system::mlp_int8_system(const sc_module_name& name, sc_clock* driver_cl
   mlp_inst->collector_fifo_rdy(collector_fifo_rdy_signal);
   mlp_inst->collector_fifo_ren(collector_fifo_ren_signal);
   mlp_inst->collector_fifo_rdata(collector_fifo_rdata_signal);
+
+  //add _top as dut instance for parent class design_system
+  this->design_dut_inst = mlp_inst;
 }
 
 mlp_int8_system::~mlp_int8_system() {

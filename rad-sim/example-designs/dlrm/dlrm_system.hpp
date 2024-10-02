@@ -4,8 +4,9 @@
 #include <dlrm_driver.hpp>
 #include <dlrm_top.hpp>
 #include <vector>
+#include <design_system.hpp>
 
-class dlrm_system : public sc_module {
+class dlrm_system : public design_system { //sc_module {
 private:
   sc_signal<data_vector<uint64_t>> lookup_indecies_data_sig;
   sc_signal<data_vector<unsigned int>> lookup_indecies_target_channels_sig;
@@ -24,6 +25,6 @@ public:
   dlrm_driver *driver_inst;
   dlrm_top *dut_inst;
 
-  dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig);
+  dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig, RADSimDesignContext* radsim_design);
   ~dlrm_system();
 };

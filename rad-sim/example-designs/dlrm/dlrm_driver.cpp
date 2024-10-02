@@ -71,11 +71,12 @@ bool ParseOutputs(std::vector<std::vector<int16_t>> &fi_outputs,
   return true;
 }
 
-dlrm_driver::dlrm_driver(const sc_module_name &name) : sc_module(name) {
+dlrm_driver::dlrm_driver(const sc_module_name &name, RADSimDesignContext* radsim_design_) : sc_module(name) {
+  this->radsim_design = radsim_design_; //AKB ADDED
 
   // Parse design configuration (number of layers & number of MVM per layer)
   std::string design_root_dir =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir");
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
 
   std::string inputs_filename =
       design_root_dir + "/compiler/embedding_indecies.in";
@@ -112,7 +113,7 @@ void dlrm_driver::source() {
 
   unsigned int idx = 0;
   _start_cycle =
-      GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+      GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
   while (idx < _lookup_indecies.size()) {
     lookup_indecies_data.write(_lookup_indecies[idx]);
     lookup_indecies_target_channels.write(_target_channels[idx]);
@@ -167,7 +168,7 @@ void dlrm_driver::sink() {
         matching = (dut_output[e] == _mlp_outputs[outputs_count][e]);
       }
       if (!matching) {
-        std::cout << "Output " << outputs_count << " does not match!\n";
+        std::cout << "Output " << outputs_count << " on rad " << radsim_design->rad_id << " does not match!\n";
         std::cout << "TRUE: [ ";
         for (unsigned int e = 0; e < _mlp_outputs[outputs_count].size(); e++) {
           std::cout << _mlp_outputs[outputs_count][e] << " ";
@@ -180,10 +181,25 @@ void dlrm_driver::sink() {
         std::cout << "]\n";
         std::cout << "-------------------------------\n";
       }
+      // else {
+      //   std::cout << "Output " << outputs_count << " on rad " << radsim_design->rad_id << " does match :)\n";
+      //   std::cout << "TRUE: [ ";
+      //   for (unsigned int e = 0; e < _mlp_outputs[outputs_count].size(); e++) {
+      //     std::cout << _mlp_outputs[outputs_count][e] << " ";
+      //   }
+      //   std::cout << "]\n";
+      //   std::cout << "DUT : [ ";
+      //   for (unsigned int e = 0; e < dut_output.size(); e++) {
+      //     std::cout << dut_output[e] << " ";
+      //   }
+      //   std::cout << "]\n";
+      //   std::cout << "-------------------------------\n";
+      // }
       outputs_count++;
       all_outputs_matching &= matching;
 
       print_progress_bar(outputs_count, _num_mlp_outputs);
+      //std::cout << "outputs_count " << outputs_count << " and _num_mlp_outputs " << _num_mlp_outputs << std::endl;
     }
     wait();
   }
@@ -195,15 +211,17 @@ void dlrm_driver::sink() {
     std::cout << "Simulation PASSED! All outputs matching!" << std::endl;
   } else {
     std::cout << "Simulation FAILED! Some outputs are NOT matching!" << std::endl;
-    radsim_design.ReportDesignFailure();
+    radsim_design->ReportDesignFailure();
   }
   _end_cycle =
-      GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+      GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
   std::cout << "Simulated " << (_end_cycle - _start_cycle) << " cycle(s)"
             << std::endl;
 
   for (unsigned int i = 0; i < 10; i++) {
     wait();
   }
-  sc_stop();
+  //sc_stop();
+  this->radsim_design->set_rad_done(); //flag to replace sc_stop calls
+  return;
 }

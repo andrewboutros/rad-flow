@@ -1,7 +1,9 @@
 #include <client.hpp>
 
-client::client(const sc_module_name &name)
-    : RADSimModule(name) {
+client::client(const sc_module_name &name, unsigned int fifo_depth, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design) {
+
+  this->radsim_design = radsim_design;
 
   char fifo_name[25];
   std::string fifo_name_str;
@@ -57,15 +59,15 @@ void client::Tick() {
   wait();
   while (true) {
     if (client_ready.read() && client_valid.read()) {
-      std::cout << this->name() << " @ cycle " 
-        << GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period")) << ": "
-        << " Pushed request to FIFO!" << std::endl;
+      // std::cout << this->name() << " @ cycle " 
+      //   << GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period")) << ": "
+      //   << " Pushed request to FIFO!" << std::endl;
     }
 
     if (axis_client_interface.tvalid.read() && axis_client_interface.tready.read()) {
-      std::cout << this->name() << " @ cycle " 
-        << GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period")) << ": "
-        << " Sent Transaction!" << std::endl;
+      // std::cout << this->name() << " @ cycle " 
+      //   << GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period")) << ": "
+      //   << " Sent Transaction!" << std::endl;
     }
     wait();
   }
@@ -83,8 +85,9 @@ void client::Assign() {
       bool tlast = client_tlast_fifo_rdata_signal.read();
       std::string src_port_name = module_name + ".axis_client_interface";
       std::string dst_port_name = "adder_inst.axis_adder_interface";
-      uint64_t dst_addr = radsim_design.GetPortDestinationID(dst_port_name);
-      uint64_t src_addr = radsim_design.GetPortDestinationID(src_port_name);
+      //cout << dst_port_name << endl;
+      uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
+      uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
 
       axis_client_interface.tdest.write(dst_addr);
       axis_client_interface.tid.write(0);

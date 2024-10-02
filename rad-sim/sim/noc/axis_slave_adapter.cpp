@@ -1,7 +1,7 @@
 #include <axis_slave_adapter.hpp>
 
 axis_slave_adapter::axis_slave_adapter(
-    const sc_module_name &name, int node_id, int network_id,
+    const sc_module_name &name, unsigned int rad_id, int node_id, int network_id,
     std::vector<Flit::FlitType> &interface_types,
     std::vector<unsigned int> &interface_dataw, double node_period,
     double adapter_period, BookSimConfig *noc_config, Network *noc,
@@ -11,12 +11,13 @@ axis_slave_adapter::axis_slave_adapter(
   axis_interfaces.init(interface_types.size());
 
   // Node properties
-  _rad_id = 0; // TO-DO-MR: set appropriate RAD ID through constructor
+  _rad_id = rad_id; // TO-DO-MR-DONE: set appropriate RAD ID through constructor
+  //std::cout << "set rad_id in axis_slave_adapter " << name << " to: " << _rad_id << std::endl;
   _node_id = node_id;
   _network_id = network_id;
   _node_period = node_period;
   _adapter_period = adapter_period;
-  _noc_period = radsim_config.GetDoubleVectorKnob("noc_clk_period", _network_id);
+  _noc_period = radsim_config.GetDoubleVectorKnobPerRad("noc_clk_period", _network_id, _rad_id);
   _num_axis_interfaces = interface_types.size();
   _interface_types = interface_types;
   _interface_dataw = interface_dataw;
@@ -50,7 +51,7 @@ axis_slave_adapter::axis_slave_adapter(
   _input_axis_transactions_afifo_depth = 2;
 
   _injection_afifo_depth =
-      radsim_config.GetIntVectorKnob("noc_adapters_fifo_size", _network_id);
+      radsim_config.GetIntVectorKnobPerRad("noc_adapters_fifo_size", _network_id, _rad_id);
   _injection_flit_ready = false;
 
   SC_METHOD(InputReady);
@@ -230,16 +231,17 @@ void axis_slave_adapter::InputInjection() {
         booksim_flit->type = _to_be_injected_flit._type;
 
         // TO-DO-MR BEGIN
-        if (DEST_RAD(_to_be_injected_flit._dest) == _rad_id) {
+        if (DEST_RAD(_to_be_injected_flit._dest) == _rad_id) { //not crossing to other RAD
           sc_bv<AXIS_DESTW> booksim_flit_dest = DEST_LOCAL_NODE(_to_be_injected_flit._dest);
           booksim_flit->dest = GetInputDestinationNode(booksim_flit_dest);
-          booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_uint();
-          booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_uint();
+          booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_int();
+          booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_int();
         } else {
-          sc_bv<AXIS_DESTW> booksim_flit_dest = 0; // TO-DO-MR: set to portal node ID
+          //std::cout << "(TO-DO-MR) _portal_id in axis_slave_adapter.cpp: " << _portal_id << std::endl;
+          sc_bv<AXIS_DESTW> booksim_flit_dest = _portal_id; // TO-DO-MR-DONE: set to portal node ID
           booksim_flit->dest = GetInputDestinationNode(booksim_flit_dest);
-          booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_uint();
-          booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_uint();
+          booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_int();
+          booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_int();//to_uint();
         }
         // TO-DO-MR END
 
@@ -277,4 +279,10 @@ void axis_slave_adapter::InputInjection() {
     }
     wait();
   }
+}
+
+void 
+axis_slave_adapter::AssignPortalSlaveID(int id) {
+  _portal_id = id;
+  //std::cout << "set portal_id of RAD "<< _rad_id << " in axis_slave_adapter.cpp to: " << _portal_id << std::endl;
 }
