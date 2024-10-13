@@ -67,7 +67,7 @@ An example design that utilizes RTL modules can be found in the ``rad-sim/exampl
 
 .. note::
    RAD-Sim adds a portal module for designs containing multiple RADs. The NoC, clock, and general configuration files
-   should be modified according to the developer guide.
+   should be modified according to the code structure guide.
 
 RTL CMakeLists
 ---------------
