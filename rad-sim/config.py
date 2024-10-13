@@ -247,8 +247,8 @@ def generate_radsim_params_header(radsim_header_params):
     for n in radsim_header_params["noc_num_nodes"]:
         if n > max_num_nodes:
             max_num_nodes = n
-    max_destination_bitwidth = int(math.ceil(math.log(max_num_nodes, 2))) * 3 # TO-DO-MR: Multiply by 3 for (rad_id, node_id1, node_id0). If single RAD, node_id0 and node_id1 is the same. If not, node_id0 is portal and node_id1 is destination node on other RAD. 
-    max_destination_field_bitwidth = int(math.ceil(math.log(max_num_nodes, 2))) # TO-DO-MR: Bitwidth of a single field of the destination described above.
+    max_destination_bitwidth = int(math.ceil(math.log(max_num_nodes, 2))) * 3 #Multiply by 3 for (rad_id, node_id1, node_id0). If single RAD, node_id0 and node_id1 is the same. If not, node_id0 is portal and node_id1 is destination node on other RAD. 
+    max_destination_field_bitwidth = int(math.ceil(math.log(max_num_nodes, 2))) #Bitwidth of a single field of the destination described above.
     radsim_params_header_file.write("#define NOC_LINKS_DEST_WIDTH      " + str(max_destination_bitwidth) + "\n")
 
     dest_interface_bitwidth = int(math.ceil(math.log(radsim_header_params["noc_max_num_router_dest_interfaces"], 2)))
@@ -438,6 +438,7 @@ def generate_radsim_main(design_names, radsim_knobs):
     main_cpp_file.write("\tsim_trace_probe.dump_traces();\n")
     main_cpp_file.write("\t(void)argc;\n")
     main_cpp_file.write("\t(void)argv;\n")
+    #device with RAD ID 0 is special as it is used to generate simulation exit codes
     main_cpp_file.write("\treturn cluster->all_rads[0]->GetSimExitCode();\n")
     main_cpp_file.write("}\n")
 
