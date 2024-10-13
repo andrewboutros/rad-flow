@@ -10,3 +10,4 @@ compiler/dump/*
 compiler/__pycache__/*
 scripts/reports/*.rpt
 .vscode
+Makefile
