@@ -167,6 +167,10 @@ design's ``config.yml`` file. For example, if the ``config.yml`` file, had the f
 adapters of both modules are operating at 1.25 ns clock period (800 MHz), while ``module_a`` has a clock period of 
 2.5 ns (400 MHz) and ``module_b`` has a clock period of 5.0 ns (200 MHz).
 
+.. note::
+For designs containing multiple RADs, RAD-Sim adds a portal module to the design, which allows for communication between
+RADs. The clock configuration for the portal module should be added to the clock configuration file.
+
 .. code-block:: yaml
 
     noc_adapters:
@@ -199,6 +203,12 @@ For a mesh NoC, Booksim assumes a row-major ordering of the NoC router IDs with 
 and the bottom-right router has ID :math:`N^2-1` for an :math:`N \times N` mesh. Only for modules with all AXI-S 
 interfaces, it is possible to only write the module name and this will result in all its ports to be connected to the 
 same NoC router with arbitration logic between them.
+
+.. note::
+For designs containing multiple RADs, RAD-Sim adds a portal module to the design, which allows for communication between
+RADs. The NoC configuration for the portal module should be added to the configuration file. AXI-S is the correct 
+interface type. Verify that the design configuration yaml file has a large enough NoC size to include the portal module.
+Any unused NoC ID can be selected. 
 
 CMakeLists File (``CMakeLists.txt``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
