@@ -32,7 +32,7 @@ dlrm_system::dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig, R
   dut_inst->collector_fifo_rdy(collector_fifo_rdy_sig);
   dut_inst->collector_fifo_ren(collector_fifo_ren_sig);
   dut_inst->collector_fifo_rdata(collector_fifo_rdata_sig);
-  //add _top as dut instance for parent class design_system
+  //add _top as dut instance for parent class RADSimDesignSystem
   this->design_dut_inst = dut_inst;
 }
 

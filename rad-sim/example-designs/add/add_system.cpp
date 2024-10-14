@@ -25,7 +25,7 @@ add_system::add_system(const sc_module_name &name, sc_clock *driver_clk_sig, RAD
   dut_inst->response(response_sig);
   dut_inst->response_valid(response_valid_sig);
   dut_inst->portal_recvd(portal_recvd_sig);
-  //add add_top as dut instance for parent class design_system
+  //add add_top as dut instance for parent class RADSimDesignSystem
   this->design_dut_inst = dut_inst;
 }
 

@@ -24,7 +24,7 @@ mult_system::mult_system(const sc_module_name &name, sc_clock *driver_clk_sig, R
   dut_inst->client_ready(client_ready_sig);
   dut_inst->response(response_sig);
   dut_inst->response_valid(response_valid_sig);
-  //add mult_top as dut instance for parent class design_system
+  //add mult_top as dut instance for parent class RADSimDesignSystem
   this->design_dut_inst = dut_inst;
   dut_inst->mult_inter_rad_recvd(mult_inter_rad_recvd_sig);
 }

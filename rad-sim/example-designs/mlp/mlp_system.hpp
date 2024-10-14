@@ -8,7 +8,7 @@
 #include <vector>
 #include <design_system.hpp>
 
-class mlp_system : public design_system {
+class mlp_system : public RADSimDesignSystem {
  private:
   sc_vector<sc_signal<bool>> dispatcher_fifo_rdy_signal;
   sc_vector<sc_signal<bool>> dispatcher_fifo_wen_signal;

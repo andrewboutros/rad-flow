@@ -6,7 +6,7 @@
 #include <vector>
 #include <design_system.hpp>
 
-class dlrm_system : public design_system { //sc_module {
+class dlrm_system : public RADSimDesignSystem { //sc_module {
 private:
   sc_signal<data_vector<uint64_t>> lookup_indecies_data_sig;
   sc_signal<data_vector<unsigned int>> lookup_indecies_target_channels_sig;

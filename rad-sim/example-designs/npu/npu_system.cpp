@@ -63,7 +63,7 @@ npu_system::npu_system(const sc_module_name &name, sc_clock* driver_clk_sig, RAD
   npu_inst->ofifo_ren(ofifo_ren);
   npu_inst->ofifo_rdata(ofifo_rdata);
 
-  //add _top as dut instance for parent class design_system
+  //add _top as dut instance for parent class RADSimDesignSystem
   this->design_dut_inst = npu_inst;
 }
 

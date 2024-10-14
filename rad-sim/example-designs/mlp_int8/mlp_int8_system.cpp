@@ -105,7 +105,7 @@ mlp_int8_system::mlp_int8_system(const sc_module_name& name, sc_clock* driver_cl
   mlp_inst->collector_fifo_ren(collector_fifo_ren_signal);
   mlp_inst->collector_fifo_rdata(collector_fifo_rdata_signal);
 
-  //add _top as dut instance for parent class design_system
+  //add _top as dut instance for parent class RADSimDesignSystem
   this->design_dut_inst = mlp_inst;
 }
 

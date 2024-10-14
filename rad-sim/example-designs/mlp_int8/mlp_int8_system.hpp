@@ -7,7 +7,7 @@
 #include <vector>
 #include <design_system.hpp>
 
-class mlp_int8_system : public design_system {
+class mlp_int8_system : public RADSimDesignSystem {
  private:
   std::vector<unsigned int> num_mvms_sysc;
   std::vector<unsigned int> num_mvms_rtl;

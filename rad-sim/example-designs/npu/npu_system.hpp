@@ -11,7 +11,7 @@
 #include <vector>
 #include <design_system.hpp>
 
-class npu_system : public design_system {
+class npu_system : public RADSimDesignSystem {
  private:
  public:
   sc_signal<vliw_inst> inst_wdata;
