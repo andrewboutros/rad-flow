@@ -223,6 +223,10 @@ This YAML file configures all the RAD-Sim parameters for the simulation of the a
 ``noc``, ``noc_adapters``, ``config <configname>``, and ``cluster``. The ``noc`` and ``noc_adapters`` parameters are shared across all RADs. 
 There may be multiple ``config <configname>`` sections, with each describing a configuration that applies to a specified number of RADs.
 The ``cluster`` tag describes the cluster of RADs, including the number of RADs and their configurations. 
+
+This file should be located in the same directory as the ``config.py`` script. For a new design, you should copy
+the ``config.yml`` file from one of the provided example design directories and make modifications for your use case. 
+
 Note that the parameters within a ``config <configname>`` subsection can be applied to a single RAD or shared among multiple RADs.
 An example configuration file is shown below, followed by an explanation for each configuration parameter.
 

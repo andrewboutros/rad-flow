@@ -6,7 +6,7 @@
 add_driver::add_driver(const sc_module_name &name, RADSimDesignContext* radsim_design_)
     : sc_module(name) {
   
-  this->radsim_design = radsim_design_; //AKB ADDED: update member for later use
+  this->radsim_design = radsim_design_;
 
   //for simulation cycle count
   start_cycle = 0;
