@@ -134,7 +134,7 @@ dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
     ch_id += mem_channels[ctrl_id];
   }
 
-  this->portal_inst->rst(rst);
+  this->connectPortalReset(&rst);
 
   radsim_design->BuildDesignContext("dlrm.place", "dlrm.clks");
   radsim_design->CreateSystemNoCs(rst);

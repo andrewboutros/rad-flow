@@ -66,9 +66,7 @@ mlp_top::mlp_top(const sc_module_name &name, RADSimDesignContext* radsim_design)
   output_collector->data_fifo_ren(collector_fifo_ren);
   output_collector->data_fifo_rdata(collector_fifo_rdata);
 
-  #ifndef SINGLE_RAD
-  this->portal_inst->rst(rst);
-  #endif
+  this->connectPortalReset(&rst);
   radsim_design->BuildDesignContext("mlp.place", "mlp.clks");
   radsim_design->CreateSystemNoCs(rst);
   radsim_design->ConnectModulesToNoC();
