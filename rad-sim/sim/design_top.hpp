@@ -4,7 +4,10 @@
 #include <vector>
 #include <portal.hpp>
 
-
+//Parent class for top-level classes of example designs.
+//The class constructor creates a portal module and connects it to the ports on the design.
+//Communication between RADs relies on the portal module as a connection between the device's NoC and the inter-RAD network.
+//The definition of SINGLE_RAD is used to prevent creation of the portal module for simulations of only one RAD.
 class RADSimDesignTop : virtual public sc_module {
     public:
         #ifndef SINGLE_RAD

@@ -6,8 +6,9 @@ RADSimCluster::RADSimCluster(int num_rads) {
         RADSimDesignContext* new_rad = new RADSimDesignContext(i); //pass in unique RAD ID
         all_rads.push_back(new_rad);
     }
+    //TODO: use configuration parameters to change topology and connectivity models
     inter_rad_topo = ALL_TO_ALL;
-    inter_rad_conn_model = WIRE;
+    inter_rad_conn_model = NETWORK;
 }
 
 RADSimCluster::~RADSimCluster() { 
@@ -48,8 +49,3 @@ void
 RADSimCluster::StoreSystem(RADSimDesignSystem* system) {
     all_systems.push_back(system);
 }
-
-/*void
-RADSimCluster::StoreSystemOut(sc_out<bool> system_out) {
-    all_systems_out.push_back(system_out);
-}*/

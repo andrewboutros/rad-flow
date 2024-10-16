@@ -19,13 +19,13 @@ num_test_inputs = 256
 native_dim = 32  # int(read_bytewidth / element_bytewidth)
 num_layers = 3
 hidden_dims = [1024, 512, 256]
-num_mvms = [4, 2, 2] #TODO: make all 1 for simplicity
+num_mvms = [4, 2, 2]
 hard_mvms = False
 
 # Model parsing
 table_info = []
 smallest_table_bytewidth = 8
-input_dim = 0 #TODO: change to 32
+input_dim = 0
 
 # Memory allocation
 hbm_channels_used_words = np.zeros(hbm_channels, dtype=int)

@@ -7,6 +7,9 @@
 #include <systemc.h>
 #include <design_system.hpp>
 
+//Represents a cluster of one or multiple RAD devices
+//Stores pointers to objects representing the RADs and the designs on each RAD
+//Contains support for future development of new topologies for inter-RAD connections
 class RADSimCluster {
     private:
     public:
@@ -20,9 +23,8 @@ class RADSimCluster {
             RING = 2
         };
         enum inter_rad_conn_model_type {
-            WIRE = 0,
-            STAT = 1,
-            SIM = 2
+            WIRE = 0, //Direct wire-based connection between RADs. This option has been deprecated.
+            NETWORK = 1 //Current approach using bandwidth and latency constraints from the user for inter-RAD communication.
         };
         inter_rad_topo_type inter_rad_topo;
         inter_rad_conn_model_type inter_rad_conn_model;

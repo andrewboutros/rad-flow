@@ -64,11 +64,8 @@ def parse_config_file(config_filename, booksim_params, radsim_header_params, rad
                 
             elif config_section == "cluster":
                 param_value = param #bc no subsection, so correction
-                param = param_category #bc no subsection, so correction
-                print('     ' + param, param_value)
-                param_name = param
-                #print(param_name)
-                #TODO: below doesnt rlly make sense for cluster-level params, fix up
+                param_name = param_category #bc no subsection, so correction
+                print('     ' + param_name, param_value)
                 if param_name in cluster_knobs:
                     cluster_knobs[param_name] = param_value
                 else:

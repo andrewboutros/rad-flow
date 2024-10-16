@@ -230,6 +230,8 @@ void axis_slave_adapter::InputInjection() {
         booksim_flit->tail = _to_be_injected_flit._tail;
         booksim_flit->type = _to_be_injected_flit._type;
 
+        //If the destination of the incoming transaction is a module on the same RAD as the sender module, the destination field is set appropriately. 
+        //Else if on a different RAD, the destination field is set to the portal module node used to communicate with other RADs.
         if (DEST_RAD(_to_be_injected_flit._dest) == _rad_id) { //not crossing to other RAD
           sc_bv<AXIS_DESTW> booksim_flit_dest = DEST_LOCAL_NODE(_to_be_injected_flit._dest);
           booksim_flit->dest = GetInputDestinationNode(booksim_flit_dest);

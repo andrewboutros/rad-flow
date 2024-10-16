@@ -20,11 +20,11 @@ include_directories(
   dram/DRAMsim3/src
   )
 
-  FOREACH(DESIGN_NAME ${DESIGN_NAMES})
-	  include_directories(
-		../example-designs/${DESIGN_NAME}
-	  	../example-designs/${DESIGN_NAME}/modules
- 	) 
+FOREACH(DESIGN_NAME ${DESIGN_NAMES})
+  include_directories(
+    ../example-designs/${DESIGN_NAME}
+    ../example-designs/${DESIGN_NAME}/modules
+  ) 
 ENDFOREACH()
 
 find_package(verilator CONFIG)

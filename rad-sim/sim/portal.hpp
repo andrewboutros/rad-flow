@@ -9,8 +9,6 @@
 #include <systemc.h>
 #include <vector>
 #include <radsim_utils.hpp>
-//#include <dlrm_defines.hpp>
-//#include <sim_utils.hpp> //AKB: added for data_vector template class
 
 struct portal_axis_fields {
             bool tvalid;
@@ -24,6 +22,8 @@ struct portal_axis_fields {
             sc_bv<AXIS_USERW> tuser;
         };
 
+
+//The portal class is a module that connects from a device's NoC to the outer inter-RAD network.
 class portal : public RADSimModule {
     private:
         std::queue<portal_axis_fields> portal_axis_fifo_noc_incoming;
@@ -32,12 +32,9 @@ class portal : public RADSimModule {
     public:
         RADSimDesignContext* radsim_design;
         sc_in<bool> rst { "rst" };
-        //sc_in<sc_bv<DATAW>> portal_in;
-        //sc_out<sc_bv<DATAW>> portal_out;
         //axis ports for external access to inter_rad
         axis_master_port portal_axis_master;
         axis_slave_port portal_axis_slave;
-        //sc_out<bool> portal_recvd; //for testing: flag so add_driver keeps simulation going until data is sent to mult module
         //Interfaces to the NoC
         axis_slave_port axis_portal_slave_interface;
         axis_master_port axis_portal_master_interface;
@@ -48,13 +45,5 @@ class portal : public RADSimModule {
         void Assign(); // Combinational logic process
         void Tick();   // Sequential logic process
         SC_HAS_PROCESS(portal);
-        void RegisterModuleInfo(); //even tho did not add AXI Interface, need because is virtual fn in derived class
+        void RegisterModuleInfo();
 };
-
-/* START FOR DEBUG 
-Note: need correct data_vector datatype matching the design's sim_utils.hpp
-*/
-// void bv_to_data_vector(
-//     sc_bv<AXI4_MAX_DATAW> &bitvector, data_vector<int16_t> &datavector,
-//     unsigned int num_elements);
-/* END FOR DEBUG */

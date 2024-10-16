@@ -70,7 +70,7 @@ std::string GetModuleNameFromPortName(std::string &port_name) {
   return module_name;
 }
 
-uint64_t DeterminedBaseAddress(int noc_id, int node_id, int rad_id) {
+uint64_t DetermineBaseAddress(int noc_id, int node_id, int rad_id) {
   int num_nocs = radsim_config.GetIntKnobPerRad("noc_num_nocs", rad_id);
   int max_num_nodes = 0;
   for (int noc_id = 0; noc_id < num_nocs; noc_id++) {
@@ -154,7 +154,7 @@ void RADSimDesignContext::ParseNoCPlacement(const std::string &placement_filenam
 
         // Set base address information
         _aximm_port_base_addresses[port_name] =
-            DeterminedBaseAddress(port_noc_placement, port_node_placement, rad_id);
+            DetermineBaseAddress(port_noc_placement, port_node_placement, rad_id);
       }
     } else {
       std::string module_name, port_name, port_noc_placement_str,
@@ -258,7 +258,7 @@ void RADSimDesignContext::ParseNoCPlacement(const std::string &placement_filenam
           }
           // Set base address information
           _aximm_port_base_addresses[port_name] =
-              DeterminedBaseAddress(port_noc_placement, port_node_placement, rad_id);
+              DetermineBaseAddress(port_noc_placement, port_node_placement, rad_id);
         }
 
         for (unsigned int port_id = 0;
@@ -288,7 +288,7 @@ void RADSimDesignContext::ParseNoCPlacement(const std::string &placement_filenam
           }
           // Set base address information
           _aximm_port_base_addresses[port_name] =
-              DeterminedBaseAddress(port_noc_placement, port_node_placement, rad_id);
+              DetermineBaseAddress(port_noc_placement, port_node_placement, rad_id);
         }
       }
       _node_module_names[port_noc_placement][port_node_placement].insert(

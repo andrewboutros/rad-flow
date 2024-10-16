@@ -58,9 +58,8 @@ private:
   bool rad_done;
 
 public:
-  //unsigned int portal_id; //NoC ID of portal module on RAD
   unsigned int rad_id; //unique ID of this RAD
-  std::string portal_slave_name;
+  std::string portal_slave_name; //when a portal module is created for the RAD, its name is stored here to lookup its node ID on the NoC
   RADSimDesignContext(unsigned int rad_id_);
   ~RADSimDesignContext();
   void ParseNoCPlacement(const std::string &placement_filename);
