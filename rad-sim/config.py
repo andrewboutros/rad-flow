@@ -359,7 +359,7 @@ def generate_radsim_config_file(radsim_knobs, cluster_knobs):
                 radsim_config_file.write("inter_rad_bw_accept_cycles " + str(inter_rad_bw_accept_cycles) + "\n")
                 radsim_config_file.write("inter_rad_bw_total_cycles " + str(inter_rad_bw_total_cycles) + "\n")
             else:
-                print('generate_radsim_config_file error: Invalid inter_rad_bw. Proceeding with default bandwidth of AXIS_DATAW per cycle.')
+                print('generate_radsim_config_file error: Invalid or missing inter_rad_bw. Proceeding with default bandwidth of AXIS_DATAW per cycle.')
                 radsim_config_file.write("inter_rad_bw_accept_cycles " + str(1) + "\n")
                 radsim_config_file.write("inter_rad_bw_total_cycles " + str(1) + "\n")
             continue

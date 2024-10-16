@@ -9,13 +9,11 @@
 #include <radsim_config.hpp>
 #include <systemc.h>
 #include <vector>
-#include <portal.hpp>
 #include <design_top.hpp>
 #include <axis_interface.hpp>
 
 class dlrm_top : public RADSimDesignTop {
 private:
-  //portal *portal_inst;
   embedding_lookup *embedding_lookup_inst;
   custom_feature_interaction *feature_interaction_inst;
   std::vector<std::vector<mvm *>> mvms;

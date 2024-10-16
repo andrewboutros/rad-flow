@@ -1,6 +1,6 @@
 #include <add_driver.hpp>
 
-#define NUM_ADDENDS 5 //3
+#define NUM_ADDENDS 3
 #define TOTAL_RADS 5
 
 add_driver::add_driver(const sc_module_name &name, RADSimDesignContext* radsim_design_)
@@ -22,10 +22,9 @@ add_driver::add_driver(const sc_module_name &name, RADSimDesignContext* radsim_d
     unsigned int r_num = std::rand() % 10 + 1;
     std::cout << r_num << " ";
     for (int i = 1; i < TOTAL_RADS; i++) {
+      //push same addend into FIFO repeatedly, once for each RAD
       numbers_to_send.push(r_num);
     }
-    // numbers_to_send.push(r_num);
-    // numbers_to_send.push(r_num); //push twice bc two mult modules now
     actual_sum += r_num;
   }
   std::cout << std::endl << "----------------------------------------" << std::endl;
@@ -48,7 +47,6 @@ void add_driver::source() {
 
   while (!numbers_to_send.empty()) {
     client_tdata.write(numbers_to_send.front());
-    //client_tlast.write(numbers_to_send.size() <= 1);
     client_tlast.write(numbers_to_send.size() <= TOTAL_RADS-1); //bc sending to TOTAL_RADS-1 mult RADs, so both receive the last flag
     client_valid.write(true);
 
@@ -86,7 +84,7 @@ void add_driver::sink() {
   end_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
   std::cout << "Simulation Cycles for Just Adder Portion = " << end_cycle - start_cycle << std::endl;
 
-  this->radsim_design->set_rad_done(); //flag to replace sc_stop calls
+  this->radsim_design->set_rad_done();
   return;
 
 }
