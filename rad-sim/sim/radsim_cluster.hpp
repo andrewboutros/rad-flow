@@ -12,7 +12,7 @@ class RADSimCluster {
     public:
         int num_rads;
         std::vector<RADSimDesignContext*> all_rads;
-        std::vector<design_system*> all_systems;
+        std::vector<RADSimDesignSystem*> all_systems;
 
         enum inter_rad_topo_type { 
             ALL_TO_ALL = 0,
@@ -33,5 +33,5 @@ class RADSimCluster {
         void SetTopo(inter_rad_topo_type inter_rad_topo);
         void SetConnModel(inter_rad_conn_model_type inter_rad_topo);
         bool AllRADsNotDone();
-        void StoreSystem(design_system* system);
+        void StoreSystem(RADSimDesignSystem* system);
 };

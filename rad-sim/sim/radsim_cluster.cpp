@@ -45,7 +45,7 @@ RADSimCluster::AllRADsNotDone() {
 }
 
 void
-RADSimCluster::StoreSystem(design_system* system) {
+RADSimCluster::StoreSystem(RADSimDesignSystem* system) {
     all_systems.push_back(system);
 }
 
