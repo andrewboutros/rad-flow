@@ -48,10 +48,9 @@ public:
   sc_out<bool> client_ready;
   // Interface to the NoC
   axis_master_port axis_client_interface;
-  //AKB added bc used in functions outside of constructor:
   RADSimDesignContext* radsim_design;
 
-  client(const sc_module_name &name, unsigned int fifo_depth, RADSimDesignContext* radsim_design); //AKB added last arg
+  client(const sc_module_name &name, RADSimDesignContext* radsim_design);
   ~client();
 
   void Assign(); // Combinational logic process

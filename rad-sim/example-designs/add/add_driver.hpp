@@ -25,7 +25,6 @@ public:
   sc_in<bool> client_ready;
   sc_in<sc_bv<DATAW>> response;
   sc_in<bool> response_valid;
-  sc_in<bool> portal_recvd;
 
   add_driver(const sc_module_name &name, RADSimDesignContext* radsim_design_);
   ~add_driver();

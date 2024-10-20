@@ -38,5 +38,5 @@ cluster:
   sim_driver_period: 5.0
   telemetry_log_verbosity: 2
   telemetry_traces: []
-  num_rads: 2
-  cluster_configs: ['rad1', 'rad1']
+  num_rads: 1
+  cluster_configs: ['rad1']

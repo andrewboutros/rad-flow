@@ -1,50 +1,13 @@
 #include <adder.hpp>
 
-int which_rad = 1;
-int TOTAL_RADS = 5;
-
 adder::adder(const sc_module_name &name, RADSimDesignContext* radsim_design)
     : RADSimModule(name, radsim_design) {
 
   this->radsim_design = radsim_design;
 
-  char fifo_name[25];
-  std::string fifo_name_str;
-  fifo_name_str = "adder_tdata_fifo";
-  std::strcpy(fifo_name, fifo_name_str.c_str());
-  adder_tdata_fifo = new fifo<sc_bv<DATAW>>(fifo_name, FIFO_DEPTH, FIFO_DEPTH - 1, 0);
-  adder_tdata_fifo->clk(clk);
-  adder_tdata_fifo->rst(rst);
-  adder_tdata_fifo->wen(adder_tdata_fifo_wen_signal);
-  adder_tdata_fifo->ren(adder_tdata_fifo_ren_signal);
-  adder_tdata_fifo->wdata(adder_tdata);
-  adder_tdata_fifo->full(adder_tdata_fifo_full_signal);
-  adder_tdata_fifo->almost_full(adder_tdata_fifo_almost_full_signal);
-  adder_tdata_fifo->empty(adder_tdata_fifo_empty_signal);
-  adder_tdata_fifo->almost_empty(adder_tdata_fifo_almost_empty_signal);
-  adder_tdata_fifo->rdata(adder_tdata_fifo_rdata_signal);
-
-  fifo_name_str = "adder_tlast_fifo";
-  std::strcpy(fifo_name, fifo_name_str.c_str());
-  adder_tlast_fifo = new fifo<bool>(fifo_name, FIFO_DEPTH, FIFO_DEPTH - 1, 0);
-  adder_tlast_fifo->clk(clk);
-  adder_tlast_fifo->rst(rst);
-  adder_tlast_fifo->wen(adder_tlast_fifo_wen_signal);
-  adder_tlast_fifo->ren(adder_tlast_fifo_ren_signal);
-  adder_tlast_fifo->wdata(axis_adder_interface.tlast);
-  adder_tlast_fifo->full(adder_tlast_fifo_full_signal);
-  adder_tlast_fifo->almost_full(adder_tlast_fifo_almost_full_signal);
-  adder_tlast_fifo->empty(adder_tlast_fifo_empty_signal);
-  adder_tlast_fifo->almost_empty(adder_tlast_fifo_almost_empty_signal);
-  adder_tlast_fifo->rdata(adder_tlast_fifo_rdata_signal);
-
   // Combinational logic and its sensitivity list
   SC_METHOD(Assign);
-  sensitive << rst << axis_adder_interface.tready
-    << axis_adder_interface.tvalid << adder_tdata_fifo_almost_full_signal
-    << adder_tdata_fifo_empty_signal << axis_adder_master_interface.tready 
-    << axis_adder_master_interface.tvalid << adder_tdata_fifo_rdata_signal 
-    << adder_tlast_fifo_rdata_signal << clk; //must be sensitive to clk or get occasional unexpected behaviour where rdata stagnates
+  sensitive << rst;
   // Sequential logic and its clock/reset setup
   SC_CTHREAD(Tick, clk.pos());
   reset_signal_is(rst, true); // Reset is active high
@@ -55,56 +18,15 @@ adder::adder(const sc_module_name &name, RADSimDesignContext* radsim_design)
 }
 
 adder::~adder() {
-  delete adder_tdata_fifo;
-  delete adder_tlast_fifo;
 }
 
 void adder::Assign() {
   if (rst) {
     adder_rolling_sum = 0;
     axis_adder_interface.tready.write(false);
-    adder_tdata_fifo_wen_signal.write(false);
-    adder_tlast_fifo_wen_signal.write(false);
-    axis_adder_master_interface.tvalid.write(false);
-    adder_tdata.write(0);
   } else {
-    if (!adder_tdata_fifo_empty_signal.read()) {
-      sc_bv<DATAW> tdata = adder_tdata_fifo_rdata_signal.read();
-      bool tlast = adder_tlast_fifo_rdata_signal.read();
-      std::string src_port_name = module_name + ".axis_adder_master_interface";
-      std::string dst_port_name = "portal_inst.axis_portal_slave_interface";
-      uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); 
-      uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); 
-      //std::cout << "adder.cpp portal dest is: " << dst_addr << std::endl;
-      sc_bv<AXIS_DESTW> concat_dest;
-      DEST_RAD(concat_dest) = which_rad; //1;
-      DEST_LOCAL_NODE(concat_dest) = dst_addr;
-      DEST_REMOTE_NODE(concat_dest) = 0; //for mult module on RAD 2 -- I know this, but designer would not... TODO code this flexibly
-      axis_adder_master_interface.tdest.write(concat_dest);
-      axis_adder_master_interface.tid.write(0);
-      axis_adder_master_interface.tstrb.write(0);
-      axis_adder_master_interface.tkeep.write(0);
-      axis_adder_master_interface.tuser.write(src_addr);
-      axis_adder_master_interface.tlast.write(tlast);
-      axis_adder_master_interface.tdata.write(tdata);
-      axis_adder_master_interface.tvalid.write(true);
-      adder_tdata.write(axis_adder_interface.tdata.read());
-    } else {
-      // Always ready to accept the transaction
-      //axis_adder_interface.tready.write(true);
-      axis_adder_master_interface.tvalid.write(false);
-      adder_tdata.write(axis_adder_interface.tdata.read());
-    }
-
-    axis_adder_interface.tready.write(!adder_tdata_fifo_almost_full_signal.read());
-
-    adder_tdata_fifo_wen_signal.write(axis_adder_interface.tready.read() && axis_adder_interface.tvalid.read());
-    adder_tlast_fifo_wen_signal.write(axis_adder_interface.tready.read() && axis_adder_interface.tvalid.read());
-
-    adder_tdata_fifo_ren_signal.write(axis_adder_master_interface.tvalid.read() &&
-      axis_adder_master_interface.tready.read());
-    adder_tlast_fifo_ren_signal.write(axis_adder_master_interface.tvalid.read() &&
-      axis_adder_master_interface.tready.read());
+    // Always ready to accept the transaction
+    axis_adder_interface.tready.write(true);
   }
 }
 
@@ -112,48 +34,27 @@ void adder::Tick() {
   response_valid.write(0);
   response.write(0);
   int count_in_addends = 0;
-  int count_out_addends = 0;
   wait();
 
-  int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
+  int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
   //std::cout << "adder.cpp is before while loop at cycle " << curr_cycle << std::endl;
+  
   // Always @ positive edge of the clock
   while (true) {
-    curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period"));
-    //std::cout << "tready: " << axis_adder_master_interface.tready.read() << std::endl;
+    curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
 
-    //accept_data = !accept_data;
     // Receiving transaction from AXI-S interface
     if (axis_adder_interface.tvalid.read() &&
         axis_adder_interface.tready.read()
-        //also check master since sending on master in same cycle
-        //in future if needed, could decouple receiving and sending using a fifo
-        //&& axis_adder_master_interface.tready.read() //this is input from NoC
     ){
-      if (which_rad == 1) { //only calculate sum when sending to RAD 1 -- prevents doubly adding
+        count_in_addends++;
         uint64_t current_sum = adder_rolling_sum.to_uint64();
         adder_rolling_sum = current_sum + axis_adder_interface.tdata.read().to_uint64();
-        t_finished.write(axis_adder_interface.tlast.read()); //this should still work even with 2 RADs because of which_rad check
-        // std::cout << module_name << ": Got Transaction " << count_in_addends << " on cycle " << curr_cycle << " (user = "
-        //           << axis_adder_interface.tuser.read().to_uint64() << ") (addend = "
-        //           << axis_adder_interface.tdata.read().to_uint64() << ")!"
-        //           << std::endl;
-        count_in_addends++;
-      }
-
-      if (which_rad < (TOTAL_RADS-1)) {
-        which_rad++;
-      }
-      else {
-        which_rad = 1; //rollback
-      }
-        
-    }
-
-    //sent to portal module
-    if (axis_adder_master_interface.tvalid.read() && axis_adder_master_interface.tready.read()) {
-        //std::cout << "Sent the " << count_out_addends << "th addend " << axis_adder_master_interface.tdata.read().to_uint64() << " over NoC to portal module on cycle " << curr_cycle << std::endl;
-        count_out_addends++;
+        t_finished.write(axis_adder_interface.tlast.read());
+        std::cout << module_name << ": Got Transaction " << count_in_addends << " on cycle " << curr_cycle << " (user = "
+                  << axis_adder_interface.tuser.read().to_uint64() << ") (addend = "
+                  << axis_adder_interface.tdata.read().to_uint64() << ")!"
+                  << std::endl; 
     }
 
     // Print Sum and Exit
@@ -175,6 +76,4 @@ void adder::RegisterModuleInfo() {
   port_name = module_name + ".axis_adder_interface";
   RegisterAxisSlavePort(port_name, &axis_adder_interface, DATAW, 0);
 
-  port_name = module_name + ".axis_adder_master_interface";
-  RegisterAxisMasterPort(port_name, &axis_adder_master_interface, DATAW, 0);
 }

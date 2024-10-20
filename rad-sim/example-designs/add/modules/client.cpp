@@ -1,6 +1,6 @@
 #include <client.hpp>
 
-client::client(const sc_module_name &name, unsigned int fifo_depth, RADSimDesignContext* radsim_design)
+client::client(const sc_module_name &name, RADSimDesignContext* radsim_design)
     : RADSimModule(name, radsim_design) {
 
   this->radsim_design = radsim_design;
@@ -59,15 +59,15 @@ void client::Tick() {
   wait();
   while (true) {
     if (client_ready.read() && client_valid.read()) {
-      // std::cout << this->name() << " @ cycle " 
-      //   << GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period")) << ": "
-      //   << " Pushed request to FIFO!" << std::endl;
+      std::cout << this->name() << " @ cycle " 
+        << GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period")) << ": "
+        << " Pushed request to FIFO!" << std::endl;
     }
 
     if (axis_client_interface.tvalid.read() && axis_client_interface.tready.read()) {
-      // std::cout << this->name() << " @ cycle " 
-      //   << GetSimulationCycle(radsim_config.GetDoubleKnob("sim_driver_period")) << ": "
-      //   << " Sent Transaction!" << std::endl;
+      std::cout << this->name() << " @ cycle " 
+        << GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period")) << ": "
+        << " Sent Transaction!" << std::endl;
     }
     wait();
   }
@@ -85,11 +85,13 @@ void client::Assign() {
       bool tlast = client_tlast_fifo_rdata_signal.read();
       std::string src_port_name = module_name + ".axis_client_interface";
       std::string dst_port_name = "adder_inst.axis_adder_interface";
-      //cout << dst_port_name << endl;
-      uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name); //AKB changed to ptr deref
-      uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name); //AKB changed to ptr deref
-
-      axis_client_interface.tdest.write(dst_addr);
+      uint64_t dst_addr = radsim_design->GetPortDestinationID(dst_port_name);
+      uint64_t src_addr = radsim_design->GetPortDestinationID(src_port_name);
+      sc_bv<AXIS_DESTW> dest_id_concat;
+      DEST_REMOTE_NODE(dest_id_concat) = 0; //bc staying on same RAD
+      DEST_LOCAL_NODE(dest_id_concat) = dst_addr;
+      DEST_RAD(dest_id_concat) = radsim_design->rad_id;
+      axis_client_interface.tdest.write(dest_id_concat);
       axis_client_interface.tid.write(0);
       axis_client_interface.tstrb.write(0);
       axis_client_interface.tkeep.write(0);
