@@ -136,7 +136,7 @@ dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
 
   this->connectPortalReset(&rst);
 
-  radsim_design->BuildDesignContext("dlrm.place", "dlrm.clks");
+  radsim_design->BuildDesignContext("dlrm_two_rad.place", "dlrm_two_rad.clks");
   radsim_design->CreateSystemNoCs(rst);
   radsim_design->ConnectModulesToNoC();
 }

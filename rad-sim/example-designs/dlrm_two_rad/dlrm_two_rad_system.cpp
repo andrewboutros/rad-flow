@@ -1,6 +1,6 @@
-#include <dlrm_system.hpp>
+#include <dlrm_two_rad_system.hpp>
 
-dlrm_system::dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig, RADSimDesignContext* radsim_design)
+dlrm_two_rad_system::dlrm_two_rad_system(const sc_module_name &name, sc_clock *driver_clk_sig, RADSimDesignContext* radsim_design)
     : sc_module(name) {
 
   // Instantiate driver
@@ -36,7 +36,7 @@ dlrm_system::dlrm_system(const sc_module_name &name, sc_clock *driver_clk_sig, R
   this->design_dut_inst = dut_inst;
 }
 
-dlrm_system::~dlrm_system() {
+dlrm_two_rad_system::~dlrm_two_rad_system() {
   delete driver_inst;
   delete dut_inst;
 }

@@ -28,7 +28,7 @@ set(srcfiles
   modules/collector.cpp
   dlrm_top.cpp
   dlrm_driver.cpp
-  dlrm_system.cpp
+  dlrm_two_rad_system.cpp
 )
 
 set(hdrfiles
@@ -45,10 +45,10 @@ set(hdrfiles
   modules/dlrm_defines.hpp
   dlrm_top.hpp
   dlrm_driver.hpp
-  dlrm_system.hpp
+  dlrm_two_rad_system.hpp
 )
 
 add_compile_options(-Wall -Wextra -pedantic)
 
-add_library(dlrm STATIC ${srcfiles} ${hdrfiles})
-target_link_libraries(dlrm PUBLIC SystemC::systemc booksim noc dram)
+add_library(dlrm_two_rad STATIC ${srcfiles} ${hdrfiles})
+target_link_libraries(dlrm_two_rad PUBLIC SystemC::systemc booksim noc dram)

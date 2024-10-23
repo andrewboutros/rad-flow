@@ -6,8 +6,8 @@ config rad1:
     config_files: ['DDR4_8Gb_x16_2400', 'DDR4_8Gb_x16_2400', 'HBM2_8Gb_x128', 'HBM2_8Gb_x128']
     
   design:
-    name: 'dlrm'
-    noc_placement: ['dlrm.place']
+    name: 'dlrm_two_rad'
+    noc_placement: ['dlrm_two_rad.place']
     clk_periods: [5.0, 2.0, 3.32, 1.5]
 
 config anotherconfig:
@@ -18,8 +18,8 @@ config anotherconfig:
     config_files: ['DDR4_8Gb_x16_2400', 'DDR4_8Gb_x16_2400', 'HBM2_8Gb_x128', 'HBM2_8Gb_x128']
     
   design:
-    name: 'dlrm'
-    noc_placement: ['dlrm.place']
+    name: 'dlrm_two_rad'
+    noc_placement: ['dlrm_two_rad.place']
     clk_periods: [5.0, 2.0, 3.32, 1.5]
 
 noc:
