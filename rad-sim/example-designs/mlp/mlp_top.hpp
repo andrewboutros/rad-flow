@@ -15,7 +15,7 @@ class mlp_top : public RADSimDesignTop {
   std::vector<std::vector<mvm*>> matrix_vector_engines;
   std::vector<dispatcher*> input_dispatchers;
   collector* output_collector;
-  RADSimDesignContext* radsim_design; //AKB ADDED
+  RADSimDesignContext* radsim_design;
 
  public:
   sc_in<bool> rst;

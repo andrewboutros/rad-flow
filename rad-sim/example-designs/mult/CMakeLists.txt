@@ -13,8 +13,8 @@ include_directories(
 
 set(srcfiles
   modules/mult.cpp
-  modules/client_mult.cpp
-  modules/portal_mult.cpp
+  modules/client.cpp
+  modules/fifo.cpp
   mult_top.cpp
   mult_driver.cpp
   mult_system.cpp
@@ -22,8 +22,8 @@ set(srcfiles
 
 set(hdrfiles
   modules/mult.hpp
-  modules/client_mult.hpp
-  modules/portal_mult.hpp
+  modules/client.hpp
+  modules/fifo.hpp
   mult_top.hpp
   mult_driver.hpp
   mult_system.hpp
@@ -31,5 +31,5 @@ set(hdrfiles
 
 add_compile_options(-Wall -Wextra -pedantic)
 
-add_library(design_mult STATIC ${srcfiles} ${hdrfiles})
-target_link_libraries(design_mult PUBLIC SystemC::systemc booksim noc)
+add_library(mult STATIC ${srcfiles} ${hdrfiles})
+target_link_libraries(mult PUBLIC SystemC::systemc booksim noc)

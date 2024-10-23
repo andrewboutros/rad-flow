@@ -5,7 +5,7 @@
 #include <queue>
 #include <radsim_defines.hpp>
 #include <radsim_module.hpp>
-#include <client_mult.hpp>
+#include <client.hpp>
 #include <string>
 #include <systemc.h>
 #include <vector>
@@ -21,11 +21,10 @@ public:
   sc_in<bool> rst;
   sc_out<bool> response_valid;
   sc_out<sc_bv<DATAW>> response;
-  sc_out<bool> mult_inter_rad_recvd;
   // Interface to the NoC
   axis_slave_port axis_mult_interface;
 
-  mult(const sc_module_name &name, RADSimDesignContext* radsim_design); //AKB added last arg
+  mult(const sc_module_name &name, RADSimDesignContext* radsim_design);
   ~mult();
 
   void Assign(); // Combinational logic process
