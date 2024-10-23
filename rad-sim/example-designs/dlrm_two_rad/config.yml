@@ -1,0 +1,63 @@
+config rad1:
+  dram:
+    num_controllers: 4
+    clk_periods: [3.32, 3.32, 2.0, 2.0]
+    queue_sizes: [64, 64, 64, 64]
+    config_files: ['DDR4_8Gb_x16_2400', 'DDR4_8Gb_x16_2400', 'HBM2_8Gb_x128', 'HBM2_8Gb_x128']
+    
+  design:
+    name: 'dlrm'
+    noc_placement: ['dlrm.place']
+    clk_periods: [5.0, 2.0, 3.32, 1.5]
+
+config anotherconfig:
+  dram:
+    num_controllers: 4
+    clk_periods: [3.32, 3.32, 2.0, 2.0]
+    queue_sizes: [64, 64, 64, 64]
+    config_files: ['DDR4_8Gb_x16_2400', 'DDR4_8Gb_x16_2400', 'HBM2_8Gb_x128', 'HBM2_8Gb_x128']
+    
+  design:
+    name: 'dlrm'
+    noc_placement: ['dlrm.place']
+    clk_periods: [5.0, 2.0, 3.32, 1.5]
+
+noc:
+  type: ['2d']
+  num_nocs: 1
+  clk_period: [1.0]
+  payload_width: [82]
+  topology: ['mesh']
+  dim_x: [10]
+  dim_y: [10] 
+  routing_func: ['dim_order']
+  vcs: [5]
+  vc_buffer_size: [16]
+  output_buffer_size: [8]
+  num_packet_types: [5]
+  router_uarch: ['iq']
+  vc_allocator: ['islip']
+  sw_allocator:  ['islip']
+  credit_delay: [1]
+  routing_delay: [1]
+  vc_alloc_delay: [1]
+  sw_alloc_delay: [1]
+
+noc_adapters:
+  clk_period: [1.25]
+  fifo_size: [16]
+  obuff_size: [2]
+  in_arbiter: ['fixed_rr']
+  out_arbiter: ['priority_rr']
+  vc_mapping: ['direct']
+
+cluster:  
+  sim_driver_period: 5.0
+  telemetry_log_verbosity: 2
+  telemetry_traces: ['Embedding LU', 'Mem0', 'Mem1', 'Mem2', 'Mem3', 'Feature Inter.', 'MVM first', 'MVM last']
+  num_rads: 2
+  cluster_configs: ['rad1', 'anotherconfig']
+  cluster_topology: 'all-to-all'
+  inter_rad_latency: 2100
+  inter_rad_bw: 102.4
+  inter_rad_fifo_num_slots: 1000
