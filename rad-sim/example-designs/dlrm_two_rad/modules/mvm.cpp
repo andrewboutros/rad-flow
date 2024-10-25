@@ -316,16 +316,14 @@ void mvm::Tick() {
 
     if (rx_input_interface.tvalid.read() && rx_input_interface.tready.read()) {
       sc_bv<AXIS_MAX_DATAW> tdata = rx_input_interface.tdata.read();
-      data_vector<int16_t> tdatavector(32);
+      data_vector<int16_t> tdatavector(TDATA_ELEMS);
       unsigned int start_idx, end_idx;
-      for (unsigned int e = 0; e < 32; e++) {
-        start_idx = e * 16;
-        end_idx = (e + 1) * 16;
+      for (unsigned int e = 0; e < TDATA_ELEMS; e++) {
+        start_idx = e * TDATA_WIDTH;
+        end_idx = (e + 1) * TDATA_WIDTH;
         tdatavector[e] = tdata.range(end_idx - 1, start_idx).to_int();
       }
-      //if (layer_id == 0) std::cout << "got tdatavector on rad " << radsim_design->rad_id << ": " << tdatavector << std::endl;
-      // sc_bv<7> testing_width = "1000110";
-      // std::cout << "testing_width.to_uint64(): " << testing_width.to_uint64() << std::endl;
+
       if (rx_input_interface.tuser.read().range(15, 13).to_uint() == 1) {
         unsigned int waddr =
             rx_input_interface.tuser.read().range(8, 0).to_uint();

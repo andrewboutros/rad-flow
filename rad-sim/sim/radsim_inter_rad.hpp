@@ -52,7 +52,7 @@ class RADSimInterRad : public sc_module {
 
         RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_clk, RADSimCluster* cluster);
         ~RADSimInterRad();
-        void ConnectRadAxi(int i);
+        void ConnectClusterInterfaces(int rad_id);
         void writeFifo();
         void readFifo();
         SC_HAS_PROCESS(RADSimInterRad);

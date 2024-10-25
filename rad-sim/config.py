@@ -33,10 +33,6 @@ def parse_config_file(config_filename, booksim_params, radsim_header_params, rad
                     if param_name in radsim_knobs[config_counter]:
                         radsim_knobs[config_counter][param_name] = param_value
                         invalid_param = False
-                    # if param_name == "dram_config_files": #TODO: double check dram_config_files correct, had error earlier but I think I fixed earlier
-                    #     print('param_value')
-                    #     print(config_counter)
-                    #     print(param_value)
 
                     if invalid_param:
                         print("Config Error: Parameter " + param_name + " is invalid!")
@@ -265,12 +261,12 @@ def generate_radsim_params_header(radsim_header_params):
         str(radsim_header_params["interfaces_axi_user_width"]) + "\n")
 
     radsim_params_header_file.write("// (Almost always) Constant AXI Parameters\n")
-    radsim_params_header_file.write("// NOTE: AXIS_DEST_FIELDW must be NOC_LINKS_DEST_WIDTH/3 to fit RAD_DEST_ID, REMOTE_NODE_ID, and LOCAL_NODE_ID\n")
     radsim_params_header_file.write("#define AXIS_STRBW  " + str(radsim_header_params["interfaces_axis_tstrb_width"]) + "\n")
     radsim_params_header_file.write("#define AXIS_KEEPW  " + str(radsim_header_params["interfaces_axis_tkeep_width"]) + "\n")
     radsim_params_header_file.write("#define AXIS_IDW    NOC_LINKS_PACKETID_WIDTH\n")
     radsim_params_header_file.write("#define AXIS_DESTW  NOC_LINKS_DEST_WIDTH\n")
-    radsim_params_header_file.write("#define AXIS_DEST_FIELDW  " + str(max_destination_field_bitwidth) + "\n") # TO-DO-MR: Define parameter for destination field width (to separate 3 fields)
+    #NOTE: AXIS_DEST_FIELDW is NOC_LINKS_DEST_WIDTH/3 to fit RAD_DEST_ID, REMOTE_NODE_ID, and LOCAL_NODE_ID
+    radsim_params_header_file.write("#define AXIS_DEST_FIELDW  " + str(max_destination_field_bitwidth) + "\n")
     radsim_params_header_file.write("#define AXI4_IDW    " + str(radsim_header_params["interfaces_axi_id_width"]) + "\n")
     radsim_params_header_file.write("#define AXI4_ADDRW  64\n")
     radsim_params_header_file.write("#define AXI4_LENW   8\n")
@@ -333,11 +329,11 @@ def get_fraction(input_val):
 
 def generate_radsim_config_file(radsim_knobs, cluster_knobs):
     radsim_config_file = open(radsim_header_params["radsim_root_dir"] + "/sim/radsim_knobs", "w")
-    for i in range(len(cluster_knobs["cluster_configs"])):
-        curr_config_name = cluster_knobs["cluster_configs"][i] #retrieve the config num by rad ID
+    for config_id in range(len(cluster_knobs["cluster_configs"])):
+        curr_config_name = cluster_knobs["cluster_configs"][config_id] #retrieve the config num by rad ID
         curr_config_num = config_names.index(curr_config_name)
-        for param in radsim_knobs[i]:
-            radsim_config_file.write(param + " " + str(i) + " ") # second element is RAD ID
+        for param in radsim_knobs[config_id]:
+            radsim_config_file.write(param + " " + str(config_id) + " ") # second element is RAD ID
             if isinstance(radsim_knobs[curr_config_num][param], list):
                 for value in radsim_knobs[curr_config_num][param]:
                     radsim_config_file.write(str(value) + " ")
@@ -412,7 +408,7 @@ def generate_radsim_main(design_names, radsim_knobs):
         main_cpp_file.write("\t\t\"node_clk0\", radsim_config.GetDoubleKnobShared(\"sim_driver_period\"), SC_NS);\n")
         main_cpp_file.write("\tRADSimInterRad* blackbox = new RADSimInterRad(\"inter_rad_box\", inter_rad_clk_sig, cluster);\n\n")
         for i in range(cluster_knobs["num_rads"]):
-            main_cpp_file.write("\tblackbox->ConnectRadAxi(" + str(i) +");\n")
+            main_cpp_file.write("\tblackbox->ConnectClusterInterfaces(" + str(i) +");\n")
     #main_cpp_file.write("\tsc_start();\n\n")
     main_cpp_file.write("\n\tint start_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared(\"sim_driver_period\"));\n")
     main_cpp_file.write("\twhile (cluster->AllRADsNotDone()) {\n")

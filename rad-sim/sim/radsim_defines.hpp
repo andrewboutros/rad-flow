@@ -3,14 +3,12 @@
 // clang-format off
 #define RADSIM_ROOT_DIR "/home/bassiabn/rad-sim/rad-flow/rad-sim"
 
-#define SINGLE_RAD 1
-
 // NoC-related Parameters
-#define NOC_LINKS_PAYLOAD_WIDTH   145
-#define NOC_LINKS_VCID_WIDTH      1
+#define NOC_LINKS_PAYLOAD_WIDTH   82
+#define NOC_LINKS_VCID_WIDTH      3
 #define NOC_LINKS_PACKETID_WIDTH  32
-#define NOC_LINKS_TYPEID_WIDTH    1
-#define NOC_LINKS_DEST_WIDTH      12
+#define NOC_LINKS_TYPEID_WIDTH    3
+#define NOC_LINKS_DEST_WIDTH      21
 #define NOC_LINKS_DEST_INTERFACE_WIDTH 5
 #define NOC_LINKS_WIDTH           (NOC_LINKS_PAYLOAD_WIDTH + NOC_LINKS_VCID_WIDTH         + NOC_LINKS_PACKETID_WIDTH + NOC_LINKS_DEST_WIDTH + NOC_LINKS_DEST_INTERFACE_WIDTH)
 
@@ -20,19 +18,18 @@
 #define AXIS_USERW     75
 #define AXI4_USERW     64
 // (Almost always) Constant AXI Parameters
-// NOTE: AXIS_DEST_FIELDW must be NOC_LINKS_DEST_WIDTH/3 to fit RAD_DEST_ID, REMOTE_NODE_ID, and LOCAL_NODE_ID
 #define AXIS_STRBW  8
 #define AXIS_KEEPW  8
 #define AXIS_IDW    NOC_LINKS_PACKETID_WIDTH
 #define AXIS_DESTW  NOC_LINKS_DEST_WIDTH
-#define AXIS_DEST_FIELDW  4
+#define AXIS_DEST_FIELDW  7
 #define AXI4_IDW    8
 #define AXI4_ADDRW  64
 #define AXI4_LENW   8
 #define AXI4_SIZEW  3
 #define AXI4_BURSTW 2
 #define AXI4_RESPW  2
-#define AXI4_NODE_ADDRW 4
+#define AXI4_NODE_ADDRW 7
 #define AXI4_CTRLW  (AXI4_LENW + AXI4_SIZEW + AXI4_BURSTW)
 
 // AXI Packetization Defines

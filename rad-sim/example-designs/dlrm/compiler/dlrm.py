@@ -782,6 +782,8 @@ def generate_dlrm_defines_hpp():
     dlrm_defines.write("#define INST_MEM_DEPTH 2048\n")
     dlrm_defines.write("#define DOT_PRODUCTS LANES\n")
     dlrm_defines.write("#define DATAW (BITWIDTH * LANES)\n")
+    dlrm_defines.write("#define TDATA_ELEMS 32\n")
+    dlrm_defines.write("#define TDATA_WIDTH 16\n")
     dlrm_defines.close()
 
 

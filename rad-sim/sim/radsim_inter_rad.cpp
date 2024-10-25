@@ -45,10 +45,10 @@ RADSimInterRad::~RADSimInterRad() {
 
 //Connect the axi slave interface of each portal module to its corresponding RADSimInterRad axi master interface, and vice versa
 void
-RADSimInterRad::ConnectRadAxi(int i) {
+RADSimInterRad::ConnectClusterInterfaces(int rad_id) {
     #ifndef SINGLE_RAD
-    all_axis_master_signals[i]->Connect(*(all_axis_master_ports[i]), cluster->all_systems[i]->design_dut_inst->design_top_portal_axis_slave); //Connect(axis_master_port &m, axis_slave_port &s)
-    all_axis_slave_signals[i]->Connect(cluster->all_systems[i]->design_dut_inst->design_top_portal_axis_master, *(all_axis_slave_ports[i])); //Connect(axis_master_port &m, axis_slave_port &s)
+    all_axis_master_signals[rad_id]->Connect(*(all_axis_master_ports[rad_id]), cluster->all_systems[rad_id]->design_dut_inst->design_top_portal_axis_slave);
+    all_axis_slave_signals[rad_id]->Connect(cluster->all_systems[rad_id]->design_dut_inst->design_top_portal_axis_master, *(all_axis_slave_ports[rad_id]));
     #endif
 }
 
