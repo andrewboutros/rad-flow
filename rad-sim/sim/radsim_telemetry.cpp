@@ -10,7 +10,7 @@ NoCTransactionTelemetry::~NoCTransactionTelemetry() {}
 int NoCTransactionTelemetry::RecordTransactionInitiation(int src, int dest, int type, int dataw, int network_id) {
   NoCTransactionTrace entry;
   entry.src_node = src;
-  entry.dest_node = (~(0xff << AXIS_DEST_FIELDW)) & dest; //extract only local NoC node. ignore any remote NoC node set for inter-rad network.
+  entry.dest_node = ((1 << AXIS_DEST_FIELDW) - 1) & dest; //extract only local NoC node. ignore any remote NoC node set for inter-rad network.
   entry.transaction_type = type;
   entry.dataw = dataw;
   entry.network_id = network_id;
