@@ -36,7 +36,7 @@ void collector::Assign() {
   if (rst.read()) {
     rx_interface.tready.write(false);
     data_fifo_rdy.write(false);
-  } else if (radsim_design->rad_id == 1) {
+  } else {
     rx_interface.tready.write(!data_fifo_almost_full_signal);
     data_fifo_wen_signal.write(rx_interface.tvalid.read() &&
                                rx_interface.tready.read());

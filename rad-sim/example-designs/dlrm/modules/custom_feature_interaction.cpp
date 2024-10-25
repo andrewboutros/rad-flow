@@ -99,7 +99,7 @@ void custom_feature_interaction::Assign() {
       aximm_interface[ch_id].bready.write(false);
       aximm_interface[ch_id].rready.write(false);
     }
-  } else if (radsim_design->rad_id == 0) {
+  } else {
     // Set ready signals to accept read/write response from the AXI-MM NoC
     for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
       aximm_interface[ch_id].bready.write(false);
@@ -146,7 +146,6 @@ bool are_ififos_ready(sc_vector<sc_signal<bool>> &ififo_empty,
 }
 
 void custom_feature_interaction::Tick() {
-  if (radsim_design->rad_id == 0) {
   // Reset ports
   for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
     aximm_interface[ch_id].arvalid.write(false);
@@ -172,7 +171,7 @@ void custom_feature_interaction::Tick() {
   bool got_all_mem_responses = false;
 
   // Always @ positive edge of the clock
-  while (true ) { //&& (radsim_design->rad_id == 0)) {
+  while (true ) { 
     // Accept R responses from the NoC
     for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
       if (_input_fifos[ch_id].size() < _fifos_depth &&
@@ -248,7 +247,7 @@ void custom_feature_interaction::Tick() {
         _output_fifos[ch_id].pop();
       }
 
-      if ( (!_output_fifos[ch_id].empty()) ) { //&& (radsim_design->rad_id == 0) ) {
+      if ( (!_output_fifos[ch_id].empty()) ) { 
         non_empty_output_fifo = true;
         data_vector<int16_t> tx_tdata = _output_fifos[ch_id].front();
         //std::cout << "custom_feature_interaction: tx_tdata sent " << tx_tdata << " from RAD " << radsim_design->rad_id << std::endl;
@@ -262,12 +261,11 @@ void custom_feature_interaction::Tick() {
             "layer0_mvm" + std::to_string(ch_id) + ".rx_interface";
         //std::cout << "radsim_design->GetPortDestinationID(dest_name) on RAD " << radsim_design->rad_id << ": " << radsim_design->GetPortDestinationID(dest_name) << std::endl;
         sc_bv<AXIS_DESTW> dest_id_concat;
-        DEST_RAD(dest_id_concat) = 1; //radsim_design->rad_id;
+        DEST_RAD(dest_id_concat) = radsim_design->rad_id; //keep data on current RAD
         DEST_LOCAL_NODE(dest_id_concat) = radsim_design->GetPortDestinationID(dest_name);
         DEST_REMOTE_NODE(dest_id_concat) = radsim_design->GetPortDestinationID(dest_name);
         axis_interface[ch_id].tdest.write(
             dest_id_concat);
-            //radsim_design->GetPortDestinationID(dest_name));
         no_val_counter = 0;
       } else {
         axis_interface[ch_id].tvalid.write(false);
@@ -291,7 +289,6 @@ void custom_feature_interaction::Tick() {
     }
 
     wait();
-  }
   }
 }
 
