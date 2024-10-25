@@ -39,8 +39,6 @@ void portal::Tick() { //sequential logic
     //Always @ positive edge of clock
     while (true) {
 
-        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
-
         //Accepting incoming NoC transaction
         if (axis_portal_slave_interface.tvalid.read() &&
             axis_portal_slave_interface.tready.read()) {

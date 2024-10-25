@@ -12,7 +12,7 @@ RADSimInterRad::RADSimInterRad(const sc_module_name &name, sc_clock *inter_rad_c
     all_signals.init(num_rads + 1);
 
     fifos_latency_counters.resize(num_rads);
-    int inter_rad_fifo_num_slots = radsim_config.GetIntKnobShared("inter_rad_fifo_num_slots"); //1000;
+    int inter_rad_fifo_num_slots = radsim_config.GetIntKnobShared("inter_rad_fifo_num_slots");
     for (int v = 0; v < num_rads; v++) { //width of vector = num of rads bc want fifo per rad
         sc_fifo<axis_fields>* new_fifo_ptr = new sc_fifo<axis_fields>(inter_rad_fifo_num_slots);
         fifos.push_back(new_fifo_ptr);
@@ -76,7 +76,7 @@ RADSimInterRad::writeFifo() {
     //every clock cycle
     while (true) {
         //get current cycle for experiments
-        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
+        //int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
 
         //iterate thru all RADs
         for (int i = 0; i < num_rads; i++) {
@@ -141,12 +141,12 @@ RADSimInterRad::readFifo() {
     while (true) {
         
         //get current cycle for experiments
-        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
+        //int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
 
         for (int i = 0; i < num_rads; i++) { //iterate through all rad's fifos
             
             //increment delay on all counters
-            for (int j = 0; j < fifos_latency_counters[i].size(); j++) {
+            for (unsigned int j = 0; j < fifos_latency_counters[i].size(); j++) {
                 fifos_latency_counters[i][j]++;
             }
             

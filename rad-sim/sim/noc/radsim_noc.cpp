@@ -109,7 +109,6 @@ radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, std::str
   _num_axis_slave_endpoints =
       radsim_design->GetNumNoCSlaveAdapters(_noc_id, false);
   noc_axis_slave_ports.init(_num_axis_slave_endpoints);
-  int local_idx_portal = -1;
   for (unsigned int adapter_id = 0; adapter_id < _num_axis_slave_endpoints;
        adapter_id++) {
     unsigned int num_adapter_ports =

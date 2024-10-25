@@ -240,7 +240,7 @@ std::string RADSimConfig::GetStringVectorKnobPerRad(const std::string &key,
   }
   // if (key == "dram_config_files" ) {
   //   std::cout << "radsim_config.cpp: dram_config_files: " << std::endl;
-  //   for (int i = 0; i < _string_vector_knobs_per_rad[rad_id][key].size(); i++) {
+  //   for (unsigned int i = 0; i < _string_vector_knobs_per_rad[rad_id][key].size(); i++) {
   //     std::cout << _string_vector_knobs_per_rad[rad_id][key][i] << std::endl;
   //   }
   // }

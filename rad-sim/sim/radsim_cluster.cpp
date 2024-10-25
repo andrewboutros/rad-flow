@@ -2,7 +2,7 @@
 
 RADSimCluster::RADSimCluster(int num_rads) {
     this->num_rads = num_rads;
-    for (unsigned int i = 0; i < num_rads; i++) {
+    for (int i = 0; i < num_rads; i++) {
         RADSimDesignContext* new_rad = new RADSimDesignContext(i); //pass in unique RAD ID
         all_rads.push_back(new_rad);
     }
