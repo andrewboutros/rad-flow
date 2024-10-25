@@ -39,7 +39,7 @@ mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
       "/sim/dram/DRAMsim3/configs/" +
       radsim_config.GetStringVectorKnobPerRad("dram_config_files", dram_id, radsim_design->rad_id) + ".ini";
 
-  std::cout << "mem_controller::mem_controller() config_file: " << config_file << std::endl;
+  //std::cout << "mem_controller::mem_controller() config_file: " << config_file << std::endl;
 
   std::string output_dir =
       radsim_config.GetStringKnobShared("radsim_root_dir") + "/logs";
@@ -51,7 +51,7 @@ mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
       dram_id);
   _mem_id = dram_id;
   _num_channels = _dramsim->GetChannels();
-  std::cout << "mem_controller.cpp mem_controller() _num_channels: " << _num_channels << std::endl;
+  //std::cout << "mem_controller.cpp mem_controller() _num_channels: " << _num_channels << std::endl;
   mem_channels.init(_num_channels);
 
   _memory_channel_bitwidth = _dramsim->GetBusBits();
@@ -628,7 +628,7 @@ void mem_controller::RegisterModuleInfo() {
 
   for (unsigned int ch_id = 0; ch_id < _num_channels; ch_id++) {
     port_name = module_name + ".mem_channel_" + std::to_string(ch_id);
-    std::cout << "mem_controller::RegisterModuleInfo() port_name: " << port_name << std::endl;
+    //std::cout << "mem_controller::RegisterModuleInfo() port_name: " << port_name << std::endl;
     RegisterAximmSlavePort(port_name, &mem_channels[ch_id],
                            _addressable_size_bytes * 8);
   }

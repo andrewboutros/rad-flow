@@ -238,12 +238,12 @@ std::string RADSimConfig::GetStringVectorKnobPerRad(const std::string &key,
               << key << "\"" << std::endl;
     exit(1);
   }
-  if (key == "dram_config_files" ) {
-    std::cout << "radsim_config.cpp: dram_config_files: " << std::endl;
-    for (int i = 0; i < _string_vector_knobs_per_rad[rad_id][key].size(); i++) {
-      std::cout << _string_vector_knobs_per_rad[rad_id][key][i] << std::endl;
-    }
-  }
+  // if (key == "dram_config_files" ) {
+  //   std::cout << "radsim_config.cpp: dram_config_files: " << std::endl;
+  //   for (int i = 0; i < _string_vector_knobs_per_rad[rad_id][key].size(); i++) {
+  //     std::cout << _string_vector_knobs_per_rad[rad_id][key][i] << std::endl;
+  //   }
+  // }
   return _string_vector_knobs_per_rad[rad_id][key][idx];
 }
 
@@ -447,7 +447,7 @@ void ParseRADSimKnobs(const std::string &knobs_filename) {
       std::string value_element;
       while (getline(ss, value_element, ' ')) {
         if (param == "dram_config_files") {
-          std::cout << "radsim_config.cpp: " << value_element << std::endl;
+          //std::cout << "radsim_config.cpp: " << value_element << std::endl;
         }
         value.push_back(value_element);
       }
