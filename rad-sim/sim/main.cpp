@@ -8,6 +8,7 @@
 #include <radsim_inter_rad.hpp>
 
 #include <dlrm_two_rad_system.hpp>
+#define NUM_RADS 2 
 
 RADSimConfig radsim_config;
 std::ostream *gWatchOut;
@@ -17,10 +18,10 @@ SimTraceRecording sim_trace_probe;
 int sc_main(int argc, char *argv[]) {
 	std::string radsim_knobs_filename = "/sim/radsim_knobs";
 	std::string radsim_knobs_filepath = RADSIM_ROOT_DIR + radsim_knobs_filename;
-	radsim_config.ResizeAll(2);
+	radsim_config.ResizeAll(NUM_RADS);
 	ParseRADSimKnobs(radsim_knobs_filepath);
 
-	RADSimCluster* cluster = new RADSimCluster(2);
+	RADSimCluster* cluster = new RADSimCluster(NUM_RADS);
 
 	gWatchOut = &cout;
 	int log_verbosity = radsim_config.GetIntKnobShared("telemetry_log_verbosity");

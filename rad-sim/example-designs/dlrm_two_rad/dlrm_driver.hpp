@@ -19,7 +19,7 @@ private:
   unsigned int _num_feature_interaction_outputs;
   unsigned int _num_mlp_outputs;
   unsigned int _start_cycle, _end_cycle;
-  RADSimDesignContext* radsim_design; //AKB ADDED
+  RADSimDesignContext* radsim_design;
 
 public:
   sc_in<bool> clk;

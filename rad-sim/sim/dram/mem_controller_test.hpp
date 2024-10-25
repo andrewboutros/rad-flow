@@ -28,7 +28,7 @@ public:
   sc_in<bool> clk;
   sc_out<bool> rst;
   sc_vector<aximm_master_port> tx_interface;
-  RADSimDesignContext* radsim_design; //AKB ADDED
+  RADSimDesignContext* radsim_design;
 
   mem_controller_test(const sc_module_name &name, unsigned int num_cmds,
                       unsigned int test_mode, unsigned int burst_size,
@@ -36,7 +36,7 @@ public:
                       unsigned int num_used_channels,
                       unsigned int addressable_word_size_bytes,
                       double clk_peiod,
-                      RADSimDesignContext* radsim_design); //AKB ADDED last arg
+                      RADSimDesignContext* radsim_design);
   ~mem_controller_test();
 
   void aw_source();
@@ -59,6 +59,6 @@ public:
   sc_clock *clk_sig;
   sc_clock *mem_clk_sig;
 
-  mem_controller_system(const sc_module_name &name, RADSimDesignContext* radsim_design); //AKB ADDED last arg
+  mem_controller_system(const sc_module_name &name, RADSimDesignContext* radsim_design);
   ~mem_controller_system();
 };

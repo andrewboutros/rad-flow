@@ -22,7 +22,7 @@ private:
 
   std::vector<axis_signal> axis_sig;
   std::vector<sc_clock *> mem_clks;
-  RADSimDesignContext* radsim_design; //AKB ADDED
+  RADSimDesignContext* radsim_design;
 
 public:
   sc_in<bool> rst;

@@ -31,8 +31,8 @@ void mem_controller::InitializeMemoryContents(std::string &init_filename) {
 }
 
 mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
-                               RADSimDesignContext* radsim_design, std::string init_filename) //AKB added radsim_design
-    : RADSimModule(name, radsim_design), mem_clk("mem_clk"), rst("rst") { //AKB added radsim_design
+                               RADSimDesignContext* radsim_design, std::string init_filename)
+    : RADSimModule(name, radsim_design), mem_clk("mem_clk"), rst("rst") { 
 
   std::string config_file =
       radsim_config.GetStringKnobShared("radsim_root_dir") +

@@ -31,7 +31,7 @@ class RADSimCluster {
 
         RADSimCluster(int num_rads);
         ~RADSimCluster();
-        RADSimDesignContext* CreateNewRAD(unsigned int i); //returns ptr to the newly added RAD
+        RADSimDesignContext* CreateNewRAD(unsigned int rad_id); //returns ptr to the newly added RAD
         void SetTopo(inter_rad_topo_type inter_rad_topo);
         void SetConnModel(inter_rad_conn_model_type inter_rad_topo);
         bool AllRADsNotDone();

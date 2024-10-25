@@ -4,10 +4,10 @@ mem_controller_test::mem_controller_test(
     const sc_module_name &name, unsigned int num_cmds, unsigned int test_mode,
     unsigned int burst_size, unsigned int num_channels,
     unsigned int mem_capacity_mb, unsigned int num_used_channels,
-    unsigned int addressable_word_size_bytes, double clk_period, RADSimDesignContext* radsim_design) //AKB added last arg
+    unsigned int addressable_word_size_bytes, double clk_period, RADSimDesignContext* radsim_design) 
     : sc_module(name) {
 
-  this -> radsim_design = radsim_design; //AKB ADDED
+  this -> radsim_design = radsim_design; 
 
   tx_interface.init(num_channels);
 
@@ -318,7 +318,7 @@ void mem_controller_test::assign() {
   }
 }
 
-mem_controller_system::mem_controller_system(const sc_module_name &name, RADSimDesignContext* radsim_design) //AKB added last arg
+mem_controller_system::mem_controller_system(const sc_module_name &name, RADSimDesignContext* radsim_design) 
     : sc_module(name) {
   double clk_period = 2.0;
   double mem_clk_period = 1.0;
@@ -330,7 +330,7 @@ mem_controller_system::mem_controller_system(const sc_module_name &name, RADSimD
   clk_sig = new sc_clock("clk0", clk_period, SC_NS);
   mem_clk_sig = new sc_clock("mem_clk", mem_clk_period, SC_NS);
 
-  dut_inst = new mem_controller("mem_controller", 0, radsim_design); //AKB added last arg
+  dut_inst = new mem_controller("mem_controller", 0, radsim_design); 
   dut_inst->clk(*clk_sig);
   dut_inst->mem_clk(*mem_clk_sig);
   dut_inst->rst(rst_sig);
@@ -341,7 +341,7 @@ mem_controller_system::mem_controller_system(const sc_module_name &name, RADSimD
   test_inst = new mem_controller_test(
       "mem_controller_test", total_cmds, mode, burst_size, num_channels,
       dut_inst->GetMemCapacity(), num_used_channels,
-      dut_inst->GetAddressableWordSize(), clk_period, radsim_design); //AKB added radsim_design
+      dut_inst->GetAddressableWordSize(), clk_period, radsim_design); 
   test_inst->clk(*clk_sig);
   test_inst->rst(rst_sig);
 

@@ -51,7 +51,7 @@ class aximm_slave_adapter : public sc_module {
 private:
   // The node ID, network ID and data width of the node this adapter is
   // connected to
-  unsigned int _rad_id; //AKB added
+  unsigned int _rad_id;
   int _node_id;
   int _network_id;
   int _interface_dataw;

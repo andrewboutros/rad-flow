@@ -308,7 +308,7 @@ bool RADSimConfig::HasStringVectorKnobShared(const std::string &key) {
   return (_string_vector_knobs_shared.find(key) != _string_vector_knobs_shared.end());
 }
 
-//AKB: per-RAD functions to check if has certain knob defined for that RAD
+//per-RAD functions to check if has certain knob defined for that RAD
 // Check if an integer configuration knob is defined
 bool RADSimConfig::HasIntKnobPerRad(const std::string &key, unsigned int rad_id) {
   return (_int_knobs_per_rad[rad_id].find(key) != _int_knobs_per_rad[rad_id].end());
@@ -460,5 +460,4 @@ void ParseRADSimKnobs(const std::string &knobs_filename) {
       exit(1);
     }
   }
-  //radsim_config.AddDoubleKnob("max_period", max_period); //AKB: removing, using sim_driver_period instead
 }

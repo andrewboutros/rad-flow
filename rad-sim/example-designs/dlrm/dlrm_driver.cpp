@@ -72,7 +72,7 @@ bool ParseOutputs(std::vector<std::vector<int16_t>> &fi_outputs,
 }
 
 dlrm_driver::dlrm_driver(const sc_module_name &name, RADSimDesignContext* radsim_design_) : sc_module(name) {
-  this->radsim_design = radsim_design_; //AKB ADDED
+  this->radsim_design = radsim_design_;
 
   // Parse design configuration (number of layers & number of MVM per layer)
   std::string design_root_dir =

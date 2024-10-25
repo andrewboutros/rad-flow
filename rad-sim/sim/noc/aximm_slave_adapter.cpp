@@ -11,7 +11,7 @@ aximm_slave_adapter::aximm_slave_adapter(
     : sc_module(name) {
 
   // Initialize basic adapter member variables
-  _rad_id = rad_id; //AKB added
+  _rad_id = rad_id;
   _node_id = node_id;
   _network_id = network_id;
   _node_period = node_period;

@@ -20,7 +20,7 @@ bool ParseIO(std::vector<std::vector<int>>& data_vec, std::string& io_filename) 
 }
 
 mlp_driver::mlp_driver(const sc_module_name& name, RADSimDesignContext* radsim_design_) : sc_module(name) {
-  this->radsim_design = radsim_design_; //AKB ADDED
+  this->radsim_design = radsim_design_;
   start_cycle = 0;
   end_cycle = 0;
 

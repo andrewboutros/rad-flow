@@ -8,7 +8,7 @@ axis_master_adapter::axis_master_adapter(
     bool lookahead_routing, bool wait_for_tail_credit,
     map<int, int> *ejected_flits)
     : sc_module(name) {
-  _rad_id = rad_id; //AKB added
+  _rad_id = rad_id;
   _node_id = node_id;
   _network_id = network_id;
   _num_axis_interfaces = interface_types.size();

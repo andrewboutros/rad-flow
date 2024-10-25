@@ -16,7 +16,7 @@
 
 class axis_master_adapter : public sc_module {
 private:
-  unsigned int _rad_id; //AKB added for config-file related changes
+  unsigned int _rad_id;
   unsigned int _node_id;
   unsigned int _network_id;
   unsigned int _num_axis_interfaces;

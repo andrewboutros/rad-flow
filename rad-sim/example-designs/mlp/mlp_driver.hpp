@@ -18,7 +18,7 @@ class mlp_driver : public sc_module {
   std::vector<unsigned int> num_mvms;
   std::vector<std::vector<std::vector<int>>> test_inputs;
   std::vector<std::vector<int>> golden_outputs;
-  RADSimDesignContext* radsim_design; //AKB ADDED
+  RADSimDesignContext* radsim_design;
 
  public:
   sc_in<bool> clk;

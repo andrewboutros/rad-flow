@@ -2,8 +2,8 @@
 
 RADSimCluster::RADSimCluster(int num_rads) {
     this->num_rads = num_rads;
-    for (int i = 0; i < num_rads; i++) {
-        RADSimDesignContext* new_rad = new RADSimDesignContext(i); //pass in unique RAD ID
+    for (int rad_id = 0; rad_id < num_rads; rad_id++) {
+        RADSimDesignContext* new_rad = new RADSimDesignContext(rad_id); //pass in unique RAD ID
         all_rads.push_back(new_rad);
     }
     //TODO: use configuration parameters to change topology and connectivity models
@@ -12,14 +12,14 @@ RADSimCluster::RADSimCluster(int num_rads) {
 }
 
 RADSimCluster::~RADSimCluster() { 
-    for (int i = 0; i < num_rads; i++) {
-        delete all_rads[i]; //free the RADs allocated
+    for (int rad_id = 0; rad_id < num_rads; rad_id++) {
+        delete all_rads[rad_id]; //free the RADs allocated
     }
 }
 
 RADSimDesignContext* 
-RADSimCluster::CreateNewRAD(unsigned int i) {
-    RADSimDesignContext* new_rad = new RADSimDesignContext(i);
+RADSimCluster::CreateNewRAD(unsigned int rad_id) {
+    RADSimDesignContext* new_rad = new RADSimDesignContext(rad_id);
     num_rads++;
     all_rads.push_back(new_rad);
     return new_rad;
@@ -37,8 +37,8 @@ RADSimCluster::SetConnModel(inter_rad_conn_model_type inter_rad_conn_model) {
 
 bool
 RADSimCluster::AllRADsNotDone() {
-    for (int i = 0; i < num_rads; i++) {
-        if (!(all_rads[i]->is_rad_done())) {
+    for (int rad_id = 0; rad_id < num_rads; rad_id++) {
+        if (!(all_rads[rad_id]->is_rad_done())) {
             return true;
         }
     }
