@@ -283,11 +283,6 @@ void custom_feature_interaction::Tick() {
       _ofifo_full[ch_id].write(_output_fifos[ch_id].size() >= _fifos_depth - 2);
     }
     received_responses.write(_num_received_responses);
-
-    if (non_empty_output_fifo && got_all_mem_responses) {
-      radsim_design->set_rad_done();
-    }
-
     wait();
   }
 }
