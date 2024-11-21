@@ -12,7 +12,7 @@ You can configure RAD-Sim for the two-RAD DLRM design simulation using the follo
 .. code-block:: bash
 
     $ cd <rad_flow_root_dir>/rad-sim
-    $ python config.py dlrm #dlrm is name of design directory within example-designs parent directory
+    $ python config.py dlrm_two_rad #dlrm_two_rad is name of design directory within example-designs parent directory
 
 Running RAD-Sim
 ----------------
@@ -24,7 +24,7 @@ You can then simulate this two-RAD DLRM example design following these steps:
 
     .. code-block:: bash
 
-        $ cd <rad_flow_root_dir>/rad-sim/example-designs/dlrm/compiler
+        $ cd <rad_flow_root_dir>/rad-sim/example-designs/dlrm_two_rad/compiler
         $ python dlrm.py
 
 2. Run RAD-Sim simulation:
@@ -33,14 +33,16 @@ You can then simulate this two-RAD DLRM example design following these steps:
 
         $ cd <rad_flow_root_dir>/rad-sim/build
         $ make run
-        # ....
-        # dlrm_system.dut.feature_interaction_inst: Got all memory responses at cycle 6101!
+        # Info: /OSCI/SystemC: Simulation stopped by user.
+        # Simulation Cycles from main.cpp = 20390
+        # [100%] Built target run
+        # dlrm_system.driver: Finished sending all inputs to embedding lookup module!
+        # dlrm_system.dut.feature_interaction_inst: Got all memory responses at cycle 6113!
         # [==================================================] 100 %
         # Got 2048 output(s)!
         # Simulation PASSED! All outputs matching!
-        # Simulated 20377 cycle(s)
-        # stopping
+        # Simulated 19958 cycle(s)
 
         # Info: /OSCI/SystemC: Simulation stopped by user.
-        # Simulation Cycles from main.cpp = 20390
+        # Simulation Cycles from main.cpp = 19971
         # [100%] Built target run
