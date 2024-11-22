@@ -45,7 +45,7 @@ class axis_mvu_sector_chain : public RADSimModule {
   sc_vector<sc_vector<sc_out<data_vector<tb_input_precision>>>> sector_chain_ofifo_rdata;
   sc_vector<axis_master_port> sector_ofifo_interface;
 
-  axis_mvu_sector_chain(const sc_module_name& name, unsigned int id);
+  axis_mvu_sector_chain(const sc_module_name& name, unsigned int id, RADSimDesignContext* radsim_design);
   ~axis_mvu_sector_chain();
   void RegisterModuleInfo();
 };

@@ -54,8 +54,13 @@ private:
       _noc_aximm_master_ports;
   std::vector<aximm_signal> _aximm_signals;
 
+  //flag to indicate if this device done
+  bool rad_done;
+
 public:
-  RADSimDesignContext();
+  unsigned int rad_id; //unique ID of this RAD
+  std::string portal_slave_name; //when a portal module is created for the RAD, its name is stored here to lookup its node ID on the NoC
+  RADSimDesignContext(unsigned int rad_id_);
   ~RADSimDesignContext();
   void ParseNoCPlacement(const std::string &placement_filename);
   void ParseClockSettings(const std::string &clks_filename);
@@ -96,11 +101,13 @@ public:
   unsigned int GetPortDestinationID(std::string &port_name);
   unsigned int GetPortInterfaceID(std::string &port_name);
   void DumpDesignContext();
-  std::vector<std::vector<std::set<std::string>>> &GetNodeModuleNames();
+  std::vector<std::vector<std::set<std::string>>> GetNodeModuleNames();
   uint64_t GetPortBaseAddress(std::string &port_name);
 
   int GetSimExitCode();
   void ReportDesignFailure();
+  bool is_rad_done();
+  void set_rad_done();
+  void AssignPortalSlaveName(std::string name);
+  unsigned int GetPortalSlaveID ();
 };
-
-extern RADSimDesignContext radsim_design;

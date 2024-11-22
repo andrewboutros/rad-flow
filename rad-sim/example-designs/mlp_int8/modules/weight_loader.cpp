@@ -1,7 +1,7 @@
 #include "weight_loader.hpp"
 
-weight_loader::weight_loader(const sc_module_name &name)
-    : RADSimModule(name), 
+weight_loader::weight_loader(const sc_module_name &name, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design), 
       rst("rst"), 
       weight_fifo_rdy("weight_fifo_rdy"),
       weight_fifo_wen("weight_fifo_wen"), 
@@ -19,6 +19,7 @@ weight_loader::weight_loader(const sc_module_name &name)
       mvm_id_fifo_wen("mvm_id_fifo_wen"),
       mvm_id_fifo_wdata("mvm_id_fifo_wdata") {
 
+  this->radsim_design = radsim_design;
   module_name = name;
 
   char fifo_name[25];
@@ -136,7 +137,7 @@ void weight_loader::Assign() {
       std::string dest_name =
           "layer" + std::to_string(layer_id_fifo_odata.read()) + 
           "_mvm" + std::to_string(mvm_id_fifo_odata.read()) + ".axis_rx";
-      tx_interface.tdest.write(radsim_design.GetPortDestinationID(dest_name));
+      tx_interface.tdest.write(radsim_design->GetPortDestinationID(dest_name));
     } else {
       tx_interface.tvalid.write(false);
     }

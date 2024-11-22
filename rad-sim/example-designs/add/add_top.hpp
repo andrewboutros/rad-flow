@@ -5,11 +5,14 @@
 #include <client.hpp>
 #include <systemc.h>
 #include <vector>
+#include <design_top.hpp>
+#include <axis_interface.hpp>
 
-class add_top : public sc_module {
+class add_top : public RADSimDesignTop {
 private:
   adder *adder_inst;
   client *client_inst;
+  RADSimDesignContext* radsim_design;
 
 public:
   sc_in<bool> rst;
@@ -21,6 +24,6 @@ public:
   sc_out<sc_bv<DATAW>> response;
   sc_out<bool> response_valid;
 
-  add_top(const sc_module_name &name);
+  add_top(const sc_module_name &name, RADSimDesignContext* radsim_design);
   ~add_top();
 };

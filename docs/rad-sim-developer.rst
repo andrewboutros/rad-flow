@@ -6,6 +6,9 @@ RAD-Sim Testing Infrastructure
 
 Python Scripts Tests
 ^^^^^^^^^^^^^^^^^^^^^
+.. note::
+    This script does not currently work in multi-RAD RAD-Sim.
+
 To run python tests, ensure the current working directory is in the ``rad-sim`` folder and run the following steps:
 
 #. ``python -m unittest discover .``

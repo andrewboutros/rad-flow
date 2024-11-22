@@ -31,16 +31,18 @@ void mem_controller::InitializeMemoryContents(std::string &init_filename) {
 }
 
 mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
-                               std::string init_filename)
-    : RADSimModule(name), mem_clk("mem_clk"), rst("rst") {
+                               RADSimDesignContext* radsim_design, std::string init_filename)
+    : RADSimModule(name, radsim_design), mem_clk("mem_clk"), rst("rst") { 
 
   std::string config_file =
-      radsim_config.GetStringKnob("radsim_root_dir") +
+      radsim_config.GetStringKnobShared("radsim_root_dir") +
       "/sim/dram/DRAMsim3/configs/" +
-      radsim_config.GetStringVectorKnob("dram_config_files", dram_id) + ".ini";
+      radsim_config.GetStringVectorKnobPerRad("dram_config_files", dram_id, radsim_design->rad_id) + ".ini";
+
+  //std::cout << "mem_controller::mem_controller() config_file: " << config_file << std::endl;
 
   std::string output_dir =
-      radsim_config.GetStringKnob("radsim_root_dir") + "/logs";
+      radsim_config.GetStringKnobShared("radsim_root_dir") + "/logs";
 
   _dramsim = new dramsim3::MemorySystem(
       config_file, output_dir,
@@ -49,6 +51,7 @@ mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
       dram_id);
   _mem_id = dram_id;
   _num_channels = _dramsim->GetChannels();
+  //std::cout << "mem_controller.cpp mem_controller() _num_channels: " << _num_channels << std::endl;
   mem_channels.init(_num_channels);
 
   _memory_channel_bitwidth = _dramsim->GetBusBits();
@@ -56,7 +59,7 @@ mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
       _dramsim->GetBusBits() * _dramsim->GetBurstLength();
   _memory_clk_period_ns = _dramsim->GetTCK();
   _controller_clk_period_ns =
-      radsim_config.GetDoubleVectorKnob("dram_clk_periods", dram_id);
+      radsim_config.GetDoubleVectorKnobPerRad("dram_clk_periods", dram_id, radsim_design->rad_id);
   double bitwidth_ratio =
       1.0 * _controller_channel_bitwidth / _memory_channel_bitwidth;
   double clk_period_ratio =
@@ -90,9 +93,9 @@ mem_controller::mem_controller(const sc_module_name &name, unsigned int dram_id,
   _output_write_queue_occupancy.init(_num_channels);
   _output_read_queue_occupancy.init(_num_channels);
   _input_queue_size =
-      radsim_config.GetIntVectorKnob("dram_queue_sizes", dram_id);
+      radsim_config.GetIntVectorKnobPerRad("dram_queue_sizes", dram_id, radsim_design->rad_id);
   _output_queue_size =
-      radsim_config.GetIntVectorKnob("dram_queue_sizes", dram_id);
+      radsim_config.GetIntVectorKnobPerRad("dram_queue_sizes", dram_id, radsim_design->rad_id);
 
   _num_ranks = _dramsim->GetRanks();
   _num_bank_groups = _dramsim->GetBankGroups();
@@ -625,6 +628,7 @@ void mem_controller::RegisterModuleInfo() {
 
   for (unsigned int ch_id = 0; ch_id < _num_channels; ch_id++) {
     port_name = module_name + ".mem_channel_" + std::to_string(ch_id);
+    //std::cout << "mem_controller::RegisterModuleInfo() port_name: " << port_name << std::endl;
     RegisterAximmSlavePort(port_name, &mem_channels[ch_id],
                            _addressable_size_bytes * 8);
   }

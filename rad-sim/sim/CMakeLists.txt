@@ -18,9 +18,14 @@ include_directories(
   dram
   dram/DRAMsim3
   dram/DRAMsim3/src
-  ../example-designs/${DESIGN}
-  ../example-designs/${DESIGN}/modules
-)
+  )
+
+FOREACH(DESIGN_NAME ${DESIGN_NAMES})
+  include_directories(
+    ../example-designs/${DESIGN_NAME}
+    ../example-designs/${DESIGN_NAME}/modules
+  ) 
+ENDFOREACH()
 
 find_package(verilator CONFIG)
 if (verilator_FOUND)
@@ -33,6 +38,9 @@ set(srcfiles
   radsim_module.cpp
   radsim_telemetry.cpp
   radsim_utils.cpp
+  radsim_cluster.cpp
+  radsim_inter_rad.cpp
+  portal.cpp
 )
 
 set(hdrfiles
@@ -42,17 +50,22 @@ set(hdrfiles
   radsim_module.hpp
   radsim_telemetry.hpp
   radsim_utils.hpp
+  radsim_cluster.hpp
+  radsim_inter_rad.hpp
+  design_top.hpp
+  design_system.hpp
+  portal.hpp
 )
 
 add_compile_options(-Wall -Wextra -pedantic)
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g")
 
 add_library(radsim STATIC ${srcfiles} ${hdrfiles})
-target_link_libraries(radsim PUBLIC SystemC::systemc booksim noc dram design)
+target_link_libraries(radsim PUBLIC SystemC::systemc booksim noc dram ${DESIGN_NAMES})
 
 add_executable(system main.cpp ${srcfiles} ${hdrfiles})
-target_link_libraries(system PUBLIC radsim SystemC::systemc booksim noc dram design)
+target_link_libraries(system PUBLIC radsim SystemC::systemc booksim noc dram ${DESIGN_NAMES})
 add_custom_target(run
   COMMAND system
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

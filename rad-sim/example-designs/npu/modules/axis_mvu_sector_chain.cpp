@@ -1,7 +1,7 @@
 #include "axis_mvu_sector_chain.hpp"
 
-axis_mvu_sector_chain::axis_mvu_sector_chain(const sc_module_name& name, unsigned int sector_id)
-    : RADSimModule(name),
+axis_mvu_sector_chain::axis_mvu_sector_chain(const sc_module_name& name, unsigned int sector_id, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design),
       ofifo_rdy_signal("ofifo_rdy_signal"),
       ofifo_ren_signal("ofifo_ren_signal"),
       ofifo_rdata_signal("ofifo_rdata_signal"),
@@ -60,7 +60,7 @@ axis_mvu_sector_chain::axis_mvu_sector_chain(const sc_module_name& name, unsigne
     inst_interface_name_str = "sector" + std::to_string(_sector_id) + "_inst_interface_" + std::to_string(thread_id);
     std::strcpy(inst_interface_name, inst_interface_name_str.c_str());
     inst_axis_interface[thread_id] = new axis_slave_fifo_adapter<mvu_mop, sc_bv<MVU_MOP_BITWIDTH>>(
-        inst_interface_name, INSTRUCTION_INTERFACE, MVU_INSTRUCTION_INTERFACE_DATAW, 1, MVU_MOP_BITWIDTH, 1);
+        inst_interface_name, INSTRUCTION_INTERFACE, MVU_INSTRUCTION_INTERFACE_DATAW, 1, MVU_MOP_BITWIDTH, 1, radsim_design);
     inst_axis_interface[thread_id]->clk(clk);
     inst_axis_interface[thread_id]->rst(rst);
     inst_axis_interface[thread_id]->fifo_rdy(mop_rdy_signal[thread_id]);
@@ -78,7 +78,7 @@ axis_mvu_sector_chain::axis_mvu_sector_chain(const sc_module_name& name, unsigne
     ofifo_axis_interface[thread_id] =
         new axis_master_fifo_adapter<data_vector<tb_output_precision>, sc_bv<FEEDFORWARD_DATA_WIDTH>>(
             sector_ofifo_interface_name, FEEDFORWARD_INTERFACE, MVU_FEEDFORWARD_INTERFACE_DATAW, CORES, HIGH_PRECISION,
-            dest_name);
+            dest_name, radsim_design);
     ofifo_axis_interface[thread_id]->clk(clk);
     ofifo_axis_interface[thread_id]->rst(rst);
     ofifo_axis_interface[thread_id]->fifo_rdy(ofifo_rdy_signal[thread_id]);
@@ -91,7 +91,7 @@ axis_mvu_sector_chain::axis_mvu_sector_chain(const sc_module_name& name, unsigne
   char sector_name[NAME_LENGTH];
   std::string sector_name_str = "sector" + std::to_string(_sector_id);
   std::strcpy(sector_name, sector_name_str.c_str());
-  sector_module = new mvu_sector(sector_name, _sector_id);
+  sector_module = new mvu_sector(sector_name, _sector_id, radsim_design);
   sector_module->clk(clk);
   sector_module->rst(rst);
   sector_module->inst(uop_wdata_signal);

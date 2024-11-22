@@ -42,15 +42,17 @@ custom_feature_interaction::custom_feature_interaction(
     const sc_module_name &name, unsigned int dataw,
     unsigned int element_bitwidth, unsigned int num_mem_channels,
     unsigned int fifos_depth, unsigned int num_output_channels,
-    std::string &instructions_file)
-    : RADSimModule(name) {
+    std::string &instructions_file,
+    RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design) {
 
+  this->radsim_design = radsim_design;
   _fifos_depth = fifos_depth;
   _num_received_responses = 0;
   _num_mem_channels = num_mem_channels;
   _dataw = dataw;
   _bitwidth = element_bitwidth;
-  _num_input_elements = dataw / element_bitwidth;
+  _num_input_elements = dataw / element_bitwidth; //512/16=32
   _num_output_elements = DATAW / element_bitwidth;
   _num_output_channels = num_output_channels;
 
@@ -66,7 +68,7 @@ custom_feature_interaction::custom_feature_interaction(
   _ofifo_empty.init(_num_output_channels);
 
   std::string resp_filename =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir") +
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id) +
       "/compiler/embedding_indecies.in";
   ParseFeatureInteractionInstructions(instructions_file, _instructions,
                                       resp_filename, _num_expected_responses);
@@ -165,8 +167,11 @@ void custom_feature_interaction::Tick() {
   _pc.write(0);
   wait();
 
+  int no_val_counter = 0;
+  bool got_all_mem_responses = false;
+
   // Always @ positive edge of the clock
-  while (true) {
+  while (true ) { 
     // Accept R responses from the NoC
     for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
       if (_input_fifos[ch_id].size() < _fifos_depth &&
@@ -179,6 +184,7 @@ void custom_feature_interaction::Tick() {
         if (_num_received_responses == _num_expected_responses) {
           std::cout << this->name() << ": Got all memory responses at cycle "
                     << GetSimulationCycle(5.0) << "!" << std::endl;
+          got_all_mem_responses = true;
         }
       }
     }
@@ -231,14 +237,20 @@ void custom_feature_interaction::Tick() {
     }
 
     // Interface with AXI-S NoC
+    bool non_empty_output_fifo = false;
     for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
       if (axis_interface[ch_id].tready.read() &&
           axis_interface[ch_id].tvalid.read()) {
+        //int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
+        data_vector<int16_t> tx_tdata = _output_fifos[ch_id].front();
+        //std::cout << "custom_feature_interaction @ cycle " << curr_cycle << ": tx_tdata sent " << tx_tdata << " from RAD " << radsim_design->rad_id << " with tdest field " << axis_interface[ch_id].tdest.read() << std::endl;
         _output_fifos[ch_id].pop();
       }
 
-      if (!_output_fifos[ch_id].empty()) {
+      if ( (!_output_fifos[ch_id].empty()) ) { 
+        non_empty_output_fifo = true;
         data_vector<int16_t> tx_tdata = _output_fifos[ch_id].front();
+        //std::cout << "custom_feature_interaction: tx_tdata sent " << tx_tdata << " from RAD " << radsim_design->rad_id << std::endl;
         sc_bv<AXIS_MAX_DATAW> tx_tdata_bv;
         data_vector_to_bv(tx_tdata, tx_tdata_bv, _num_output_elements);
         axis_interface[ch_id].tvalid.write(true);
@@ -247,10 +259,17 @@ void custom_feature_interaction::Tick() {
         axis_interface[ch_id].tid.write(0);
         std::string dest_name =
             "layer0_mvm" + std::to_string(ch_id) + ".rx_interface";
+        //std::cout << "radsim_design->GetPortDestinationID(dest_name) on RAD " << radsim_design->rad_id << ": " << radsim_design->GetPortDestinationID(dest_name) << std::endl;
+        sc_bv<AXIS_DESTW> dest_id_concat;
+        DEST_RAD(dest_id_concat) = radsim_design->rad_id; //keep data on current RAD
+        DEST_LOCAL_NODE(dest_id_concat) = radsim_design->GetPortDestinationID(dest_name);
+        DEST_REMOTE_NODE(dest_id_concat) = radsim_design->GetPortDestinationID(dest_name);
         axis_interface[ch_id].tdest.write(
-            radsim_design.GetPortDestinationID(dest_name));
+            dest_id_concat);
+        no_val_counter = 0;
       } else {
         axis_interface[ch_id].tvalid.write(false);
+        no_val_counter++;
       }
     }
 

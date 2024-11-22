@@ -18,6 +18,7 @@ class mlp_driver : public sc_module {
   std::vector<unsigned int> num_mvms;
   std::vector<std::vector<std::vector<int>>> test_inputs;
   std::vector<std::vector<int>> golden_outputs;
+  RADSimDesignContext* radsim_design;
 
  public:
   sc_in<bool> clk;
@@ -31,7 +32,7 @@ class mlp_driver : public sc_module {
   sc_out<bool> collector_fifo_ren;
   sc_in<data_vector<sc_int<32>>> collector_fifo_rdata;
 
-  mlp_driver(const sc_module_name& name);
+  mlp_driver(const sc_module_name& name, RADSimDesignContext* radsim_design_);
   ~mlp_driver();
 
   void source();

@@ -4,3 +4,7 @@ radsim_knobs
 __pycache__
 
 test/*.xml
+*.cmake
+*.a
+CMakeFiles
+MakeFile

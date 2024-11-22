@@ -1,14 +1,14 @@
 #include <dlrm_top.hpp>
 
-dlrm_top::dlrm_top(const sc_module_name &name) : sc_module(name) {
-
+dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_design) : RADSimDesignTop(radsim_design) { 
+  this->radsim_design = radsim_design;
   unsigned int line_bitwidth = 512;
   unsigned int element_bitwidth = 16;
   std::vector<unsigned int> mem_channels = {1, 1, 8, 8};
   unsigned int embedding_lookup_fifos_depth = 16;
   unsigned int feature_interaction_fifos_depth = 64;
   unsigned int num_mem_controllers =
-      radsim_config.GetIntKnob("dram_num_controllers");
+      radsim_config.GetIntKnobPerRad("dram_num_controllers", radsim_design->rad_id);
   assert(num_mem_controllers == mem_channels.size());
   unsigned int total_mem_channels = 0;
   for (auto &num_channels : mem_channels) {
@@ -20,7 +20,7 @@ dlrm_top::dlrm_top(const sc_module_name &name) : sc_module(name) {
 
   // Parse MVM configuration
   std::string design_root_dir =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir");
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
   std::string design_config_filename =
       design_root_dir + "/compiler/mvms.config";
 
@@ -45,7 +45,7 @@ dlrm_top::dlrm_top(const sc_module_name &name) : sc_module(name) {
   module_name_str = "embedding_lookup_inst";
   std::strcpy(module_name, module_name_str.c_str());
   embedding_lookup_inst = new embedding_lookup(
-      module_name, line_bitwidth, mem_channels, embedding_lookup_fifos_depth);
+      module_name, line_bitwidth, mem_channels, embedding_lookup_fifos_depth, radsim_design);
   embedding_lookup_inst->rst(rst);
   embedding_lookup_inst->lookup_indecies_data(lookup_indecies_data);
   embedding_lookup_inst->lookup_indecies_target_channels(
@@ -59,12 +59,12 @@ dlrm_top::dlrm_top(const sc_module_name &name) : sc_module(name) {
   module_name_str = "feature_interaction_inst";
   std::strcpy(module_name, module_name_str.c_str());
   std::string feature_interaction_inst_file =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir") +
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id) +
       "/compiler/instructions/feature_interaction.inst";
   feature_interaction_inst = new custom_feature_interaction(
       module_name, line_bitwidth, element_bitwidth, total_mem_channels,
       feature_interaction_fifos_depth, num_mvms[0],
-      feature_interaction_inst_file);
+      feature_interaction_inst_file, radsim_design);
   feature_interaction_inst->rst(rst);
   feature_interaction_inst->received_responses(received_responses);
 
@@ -79,7 +79,7 @@ dlrm_top::dlrm_top(const sc_module_name &name) : sc_module(name) {
       std::strcpy(module_name, module_name_str.c_str());
       std::string inst_filename = design_root_dir + "/compiler/instructions/" +
                                   module_name_str + ".inst";
-      mvms[l][m] = new mvm(module_name, m, l, inst_filename);
+      mvms[l][m] = new mvm(module_name, m, l, inst_filename, radsim_design);
       mvms[l][m]->rst(rst);
       axis_signal_count++;
     }
@@ -106,7 +106,7 @@ dlrm_top::dlrm_top(const sc_module_name &name) : sc_module(name) {
   // Instantiate Output Collector
   module_name_str = "output_collector";
   std::strcpy(module_name, module_name_str.c_str());
-  output_collector = new collector(module_name);
+  output_collector = new collector(module_name, radsim_design);
   output_collector->rst(rst);
   output_collector->data_fifo_rdy(collector_fifo_rdy);
   output_collector->data_fifo_ren(collector_fifo_ren);
@@ -116,11 +116,11 @@ dlrm_top::dlrm_top(const sc_module_name &name) : sc_module(name) {
   mem_clks.resize(num_mem_controllers);
   unsigned int ch_id = 0;
   std::string mem_content_init_prefix =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir") +
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id) +
       "/compiler/embedding_tables/channel_";
   for (unsigned int ctrl_id = 0; ctrl_id < num_mem_controllers; ctrl_id++) {
     double mem_clk_period =
-        radsim_config.GetDoubleVectorKnob("dram_clk_periods", ctrl_id);
+        radsim_config.GetDoubleVectorKnobPerRad("dram_clk_periods", ctrl_id, radsim_design->rad_id);
     module_name_str = "ext_mem_" + to_string(ctrl_id) + "_clk";
     std::strcpy(module_name, module_name_str.c_str());
     mem_clks[ctrl_id] = new sc_clock(module_name, mem_clk_period, SC_NS);
@@ -128,15 +128,17 @@ dlrm_top::dlrm_top(const sc_module_name &name) : sc_module(name) {
     std::strcpy(module_name, module_name_str.c_str());
     std::string mem_content_init = mem_content_init_prefix + to_string(ch_id);
     ext_mem[ctrl_id] =
-        new mem_controller(module_name, ctrl_id, mem_content_init);
+        new mem_controller(module_name, ctrl_id, radsim_design, mem_content_init);
     ext_mem[ctrl_id]->mem_clk(*mem_clks[ctrl_id]);
     ext_mem[ctrl_id]->rst(rst);
     ch_id += mem_channels[ctrl_id];
   }
 
-  radsim_design.BuildDesignContext("dlrm.place", "dlrm.clks");
-  radsim_design.CreateSystemNoCs(rst);
-  radsim_design.ConnectModulesToNoC();
+  this->connectPortalReset(&rst);
+
+  radsim_design->BuildDesignContext("dlrm.place", "dlrm.clks");
+  radsim_design->CreateSystemNoCs(rst);
+  radsim_design->ConnectModulesToNoC();
 }
 
 dlrm_top::~dlrm_top() {
@@ -150,4 +152,5 @@ dlrm_top::~dlrm_top() {
       delete mvm;
     }
   }
+
 }

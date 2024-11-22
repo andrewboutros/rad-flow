@@ -9,8 +9,9 @@
 #include <params.hpp>
 #include <sim_utils.hpp>
 #include <vector>
+#include <design_system.hpp>
 
-class npu_system : public sc_module {
+class npu_system : public RADSimDesignSystem {
  private:
  public:
   sc_signal<vliw_inst> inst_wdata;
@@ -33,6 +34,6 @@ class npu_system : public sc_module {
   npu_driver* npu_driver_inst;
   npu_top* npu_inst;
 
-  npu_system(const sc_module_name& name, sc_clock* driver_clk_sig);
+  npu_system(const sc_module_name& name, sc_clock* driver_clk_sig, RADSimDesignContext* radsim_design);
   ~npu_system();
 };

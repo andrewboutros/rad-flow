@@ -39,8 +39,8 @@ bool ParseInstructions(std::vector<mvm_inst> &inst_mem,
 }
 
 mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
-         const std::string &inst_filename)
-    : RADSimModule(name), matrix_mem_rdata("matrix_mem_rdata", DOT_PRODUCTS),
+         const std::string &inst_filename, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design), matrix_mem_rdata("matrix_mem_rdata", DOT_PRODUCTS),
       matrix_mem_wen("matrix_mem_wen", DOT_PRODUCTS),
       ififo_pipeline("ififo_pipeline", RF_RD_LATENCY),
       reduce_pipeline("reduce_pipeline", RF_RD_LATENCY),
@@ -54,6 +54,7 @@ mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
       dest_mvm_pipeline("mvm_layer_pipeline", COMPUTE_LATENCY + RF_RD_LATENCY),
       tdata_vec(LANES), result(DOT_PRODUCTS), rst("rst") {
 
+  this->radsim_design = radsim_design;
   module_name = name;
   mvm_id = id_mvm;
   layer_id = id_layer;
@@ -71,7 +72,7 @@ mvm::mvm(const sc_module_name &name, unsigned int id_mvm, unsigned int id_layer,
   std::string mem_name_str;
   matrix_memory.resize(DOT_PRODUCTS);
   std::string mvm_dir =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir");
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
   std::string mem_init_file;
   for (unsigned int dot_id = 0; dot_id < DOT_PRODUCTS; dot_id++) {
     mem_init_file = mvm_dir + "/compiler/weight_mifs/layer" +
@@ -468,7 +469,7 @@ void mvm::Assign() {
       dest_name = "layer" + std::to_string(dest_layer_int - 1) + "_mvm" +
                   std::to_string(dest_mvm_int) + ".rx_interface";
     }
-    dest_id = radsim_design.GetPortDestinationID(dest_name);
+    dest_id = radsim_design->GetPortDestinationID(dest_name);
 
     unsigned int dest_interface;
     // If destination is the same layer, send to reduce FIFO
@@ -495,7 +496,11 @@ void mvm::Assign() {
       tx_interface.tdata.write(tx_tdata_bv);
       tx_interface.tvalid.write(!ofifo_empty_signal);
       tx_interface.tuser.write(dest_interface);
-      tx_interface.tdest.write(dest_id);
+      sc_bv<AXIS_DESTW> dest_id_concat;
+      DEST_REMOTE_NODE(dest_id_concat) = 0; //bc staying on same RAD
+      DEST_LOCAL_NODE(dest_id_concat) = dest_id;
+      DEST_RAD(dest_id_concat) = radsim_design->rad_id;
+      tx_interface.tdest.write(dest_id_concat); //dest_id);
       /*if (dest_interface == 2 << 13 && !ofifo_empty_signal) {
         std::cout << "Sending to reduce FIFO" << std::endl;
         std::cout << tx_tdata << std::endl;

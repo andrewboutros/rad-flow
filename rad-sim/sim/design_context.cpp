@@ -1,14 +1,14 @@
 #include <design_context.hpp>
 
-RADSimDesignContext::RADSimDesignContext() {
-  std::string radsim_knobs_filename = "/sim/radsim_knobs";
-  std::string radsim_knobs_filepath = RADSIM_ROOT_DIR + radsim_knobs_filename;
-  ParseRADSimKnobs(radsim_knobs_filepath);
+RADSimDesignContext::RADSimDesignContext(unsigned int rad_id_) {
+
+  //assign its rad id
+  rad_id = rad_id_;
 
   // Create NoC clocks
   std::string clk_name;
   std::vector<double> noc_period =
-      radsim_config.GetDoubleVectorKnob("noc_clk_period");
+      radsim_config.GetDoubleVectorKnobPerRad("noc_clk_period", rad_id);
   _noc_clks.resize(noc_period.size());
   for (unsigned int clk_id = 0; clk_id < _noc_clks.size(); clk_id++) {
     clk_name = "noc_clk" + std::to_string(clk_id);
@@ -18,7 +18,7 @@ RADSimDesignContext::RADSimDesignContext() {
 
   // Create adapter clocks
   std::vector<double> adapter_period =
-      radsim_config.GetDoubleVectorKnob("noc_adapters_clk_period");
+      radsim_config.GetDoubleVectorKnobPerRad("noc_adapters_clk_period", rad_id);
   _adapter_clks.resize(adapter_period.size());
   for (unsigned int clk_id = 0; clk_id < _adapter_clks.size(); clk_id++) {
     clk_name = "adapter_clk" + std::to_string(clk_id);
@@ -28,7 +28,7 @@ RADSimDesignContext::RADSimDesignContext() {
 
   // Create module clocks
   std::vector<double> module_period =
-      radsim_config.GetDoubleVectorKnob("design_clk_periods");
+      radsim_config.GetDoubleVectorKnobPerRad("design_clk_periods", rad_id);
   _module_clks.resize(module_period.size());
   for (unsigned int clk_id = 0; clk_id < _module_clks.size(); clk_id++) {
     clk_name = "module_clk" + std::to_string(clk_id);
@@ -36,12 +36,13 @@ RADSimDesignContext::RADSimDesignContext() {
         new sc_clock(clk_name.c_str(), module_period[clk_id], SC_NS);
   }
 
-  int num_nocs = radsim_config.GetIntKnob("noc_num_nocs");
+  int num_nocs = radsim_config.GetIntKnobPerRad("noc_num_nocs", rad_id);
   _node_module_names.resize(num_nocs);
   for (int noc_id = 0; noc_id < num_nocs; noc_id++) {
-    int num_nodes = radsim_config.GetIntVectorKnob("noc_num_nodes", noc_id);
+    int num_nodes = radsim_config.GetIntVectorKnobPerRad("noc_num_nodes", noc_id, rad_id);
     _node_module_names[noc_id].resize(num_nodes);
   }
+  rad_done = false; //initially this RAD is not done its simulation design
 }
 
 RADSimDesignContext::~RADSimDesignContext() {}
@@ -69,11 +70,11 @@ std::string GetModuleNameFromPortName(std::string &port_name) {
   return module_name;
 }
 
-uint64_t DeterminedBaseAddress(int noc_id, int node_id) {
-  int num_nocs = radsim_config.GetIntKnob("noc_num_nocs");
+uint64_t DetermineBaseAddress(int noc_id, int node_id, int rad_id) {
+  int num_nocs = radsim_config.GetIntKnobPerRad("noc_num_nocs", rad_id);
   int max_num_nodes = 0;
   for (int noc_id = 0; noc_id < num_nocs; noc_id++) {
-    int num_nodes = radsim_config.GetIntVectorKnob("noc_num_nodes", noc_id);
+    int num_nodes = radsim_config.GetIntVectorKnobPerRad("noc_num_nodes", noc_id, rad_id);
     if (num_nodes > max_num_nodes) {
       max_num_nodes = num_nodes;
     }
@@ -86,12 +87,12 @@ uint64_t DeterminedBaseAddress(int noc_id, int node_id) {
   return base_addr;
 }
 
-void RADSimDesignContext::ParseNoCPlacement(
-    const std::string &placement_filename) {
+void RADSimDesignContext::ParseNoCPlacement(const std::string &placement_filename) {
   std::string placement_filepath =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir") + "/" +
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", rad_id) + "/" +
       placement_filename;
   std::ifstream placement_file(placement_filepath);
+  std::cout << "placement_filepath: " << placement_filepath << std::endl;
 
   std::string line;
   while (std::getline(placement_file, line)) {
@@ -153,7 +154,7 @@ void RADSimDesignContext::ParseNoCPlacement(
 
         // Set base address information
         _aximm_port_base_addresses[port_name] =
-            DeterminedBaseAddress(port_noc_placement, port_node_placement);
+            DetermineBaseAddress(port_noc_placement, port_node_placement, rad_id);
       }
     } else {
       std::string module_name, port_name, port_noc_placement_str,
@@ -257,7 +258,7 @@ void RADSimDesignContext::ParseNoCPlacement(
           }
           // Set base address information
           _aximm_port_base_addresses[port_name] =
-              DeterminedBaseAddress(port_noc_placement, port_node_placement);
+              DetermineBaseAddress(port_noc_placement, port_node_placement, rad_id);
         }
 
         for (unsigned int port_id = 0;
@@ -287,7 +288,7 @@ void RADSimDesignContext::ParseNoCPlacement(
           }
           // Set base address information
           _aximm_port_base_addresses[port_name] =
-              DeterminedBaseAddress(port_noc_placement, port_node_placement);
+              DetermineBaseAddress(port_noc_placement, port_node_placement, rad_id);
         }
       }
       _node_module_names[port_noc_placement][port_node_placement].insert(
@@ -298,7 +299,7 @@ void RADSimDesignContext::ParseNoCPlacement(
 
 void RADSimDesignContext::ParseClockSettings(const std::string &clks_filename) {
   std::string clks_filepath =
-      radsim_config.GetStringKnob("radsim_user_design_root_dir") + "/" +
+      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", rad_id) + "/" +
       clks_filename;
   std::ifstream clks_file(clks_filepath);
 
@@ -327,9 +328,8 @@ void RADSimDesignContext::RegisterModule(std::string module_name,
   _design_modules[module_name] = module_ptr;
 }
 
-void RADSimDesignContext::BuildDesignContext(
-    const std::string &placement_filename, const std::string &clks_filename) {
-  unsigned int num_nocs = radsim_config.GetIntKnob("noc_num_nocs");
+void RADSimDesignContext::BuildDesignContext(const std::string &placement_filename, const std::string &clks_filename) {
+  unsigned int num_nocs = radsim_config.GetIntKnobPerRad("noc_num_nocs", rad_id);
   _node_id_is_aximm.resize(num_nocs);
   _node_id_ports_list.resize(num_nocs);
   _noc_axis_slave_adapter_info.resize(num_nocs);
@@ -464,16 +464,17 @@ void RADSimDesignContext::BuildDesignContext(
 }
 
 void RADSimDesignContext::CreateSystemNoCs(sc_in<bool> &rst) {
-  unsigned int num_nocs = radsim_config.GetIntKnob("noc_num_nocs");
+  unsigned int num_nocs = radsim_config.GetIntKnobPerRad("noc_num_nocs", rad_id);
   for (unsigned int noc_id = 0; noc_id < num_nocs; noc_id++) {
     std::string noc_name_str = "radsim_noc_" + std::to_string(noc_id);
     const char *noc_name = noc_name_str.c_str();
     radsim_noc *noc_inst =
-        new radsim_noc(noc_name, noc_id, _adapter_clks, _module_clks,
+        new radsim_noc(noc_name, rad_id, portal_slave_name, noc_id, _adapter_clks, _module_clks,
                        _noc_axis_master_adapter_info[noc_id],
                        _noc_axis_slave_adapter_info[noc_id],
                        _noc_aximm_master_adapter_info[noc_id],
-                       _noc_aximm_slave_adapter_info[noc_id]);
+                       _noc_aximm_slave_adapter_info[noc_id],
+                        this);
     noc_inst->noc_clk(*_noc_clks[noc_id]);
     noc_inst->rst(rst);
 
@@ -488,26 +489,31 @@ void RADSimDesignContext::ConnectModulesToNoC() {
   for (auto module_it = _design_modules.begin();
        module_it != _design_modules.end(); module_it++) {
     RADSimModule *module_ptr = module_it->second;
-    // std::cout << "MODULE " << module_ptr->name() << std::endl;
+     //std::cout << "MODULE " << module_ptr->name() << std::endl;
 
     // Connect AXI-S Slave ports of the module
-    // std::cout << "AXI-S slave ports: " << std::endl;
+     //std::cout << "AXI-S slave ports: " << std::endl;
+     //std::cout << module_ptr->_axis_slave_ports.begin()->first<< std::endl;
     for (auto slave_port_it = module_ptr->_axis_slave_ports.begin();
          slave_port_it != module_ptr->_axis_slave_ports.end();
          slave_port_it++) {
+          //std::cout << "here" << std::endl;
       std::string port_name = slave_port_it->first;
       // std::cout << port_name << ", ";
       if (_port_placement.find(port_name) == _port_placement.end())
         sim_log.log(error, "Port " + port_name + " has no NoC placement defined!");
       unsigned int noc_id = std::get<0>(_port_placement[port_name]);
+      //std::cout << _noc_axis_master_ports[noc_id][port_name] << std::endl;
       _axis_signals[axis_signal_id].Connect(
           *(_noc_axis_master_ports[noc_id][port_name]),
           *(slave_port_it->second));
+      //std::cout << "here3" << std::endl;
       axis_signal_id++;
+      //std::cout << axis_signal_id << std::endl;
     }
 
     // Connect AXI-S Master ports of the module
-    // std::cout << "\nAXI-S master ports: ";
+     //std::cout << "\nAXI-S master ports: ";
     for (auto master_port_it = module_ptr->_axis_master_ports.begin();
          master_port_it != module_ptr->_axis_master_ports.end();
          master_port_it++) {
@@ -523,7 +529,7 @@ void RADSimDesignContext::ConnectModulesToNoC() {
     }
 
     // Connect AXI-MM Slave ports of the module
-    // std::cout << "\nAXI-MM slave ports: ";
+     //std::cout << "\nAXI-MM slave ports: ";
     for (auto slave_port_it = module_ptr->_aximm_slave_ports.begin();
          slave_port_it != module_ptr->_aximm_slave_ports.end();
          slave_port_it++) {
@@ -539,7 +545,7 @@ void RADSimDesignContext::ConnectModulesToNoC() {
     }
 
     // Connect AXI-MM Master ports of the module
-    // std::cout << "\nAXI-MM master ports: ";
+     //std::cout << "\nAXI-MM master ports: ";
     for (auto master_port_it = module_ptr->_aximm_master_ports.begin();
          master_port_it != module_ptr->_aximm_master_ports.end();
          master_port_it++) {
@@ -553,7 +559,7 @@ void RADSimDesignContext::ConnectModulesToNoC() {
           *(_noc_aximm_slave_ports[noc_id][port_name]));
       aximm_signal_id++;
     }
-    // std::cout << "\n";
+     //std::cout << "\n";
   }
 }
 
@@ -679,9 +685,9 @@ void RADSimDesignContext::DumpDesignContext() {
   cin.get();
 }
 
-std::vector<std::vector<std::set<std::string>>> &
+std::vector<std::vector<std::set<std::string>>>
 RADSimDesignContext::GetNodeModuleNames() {
-  return _node_module_names;
+  return std::ref(_node_module_names);
 }
 
 uint64_t RADSimDesignContext::GetPortBaseAddress(std::string &port_name) {
@@ -696,4 +702,26 @@ int RADSimDesignContext::GetSimExitCode() {
 
 void RADSimDesignContext::ReportDesignFailure() {
   _sim_exit_code = 1;
+}
+
+//returns whether the rad is done simulation. needed because rad_done is private member.
+bool
+RADSimDesignContext::is_rad_done() {
+  return this->rad_done;
+}
+
+void
+RADSimDesignContext::set_rad_done() {
+  this->rad_done = true;
+}
+
+void 
+RADSimDesignContext::AssignPortalSlaveName(std::string name) {
+  //std::cout << "design_context assigned portal name: " << name << std::endl;
+  this->portal_slave_name = name;
+}
+
+unsigned int
+RADSimDesignContext::GetPortalSlaveID () {
+  return GetPortDestinationID(portal_slave_name);
 }

@@ -1,9 +1,10 @@
 #include "dispatcher.hpp"
 
-dispatcher::dispatcher(const sc_module_name &name, unsigned int id)
-    : RADSimModule(name), rst("rst"), data_fifo_rdy("data_fifo_rdy"),
+dispatcher::dispatcher(const sc_module_name &name, unsigned int id, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design), rst("rst"), data_fifo_rdy("data_fifo_rdy"),
       data_fifo_wen("data_fifo_wen"), data_fifo_wdata("data_fifo_wdata") {
 
+  this->radsim_design = radsim_design;
   module_name = name;
   dispatcher_id = id;
 
@@ -52,7 +53,12 @@ void dispatcher::Assign() {
       tx_interface.tid.write(0);
       std::string dest_name =
           "layer0_mvm" + std::to_string(dispatcher_id) + ".rx_interface";
-      tx_interface.tdest.write(radsim_design.GetPortDestinationID(dest_name));
+      unsigned int dest_id = radsim_design->GetPortDestinationID(dest_name);
+      sc_bv<AXIS_DESTW> dest_id_concat;
+      DEST_REMOTE_NODE(dest_id_concat) = 0; //bc staying on same RAD
+      DEST_LOCAL_NODE(dest_id_concat) = dest_id;
+      DEST_RAD(dest_id_concat) = radsim_design->rad_id;
+      tx_interface.tdest.write(dest_id_concat); //radsim_design->GetPortDestinationID(dest_name));
       // std::cout << "Dispatcher " << dispatcher_id << " pushed data into the
       // NoC with dest "
       //   << radsim_design.GetPortDestinationID(dest_name) << "!" << std::endl;

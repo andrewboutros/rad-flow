@@ -4,8 +4,9 @@
 #include <add_top.hpp>
 #include <chrono>
 #include <vector>
+#include <design_system.hpp>
 
-class add_system : public sc_module {
+class add_system : public RADSimDesignSystem {
 private:
   sc_signal<sc_bv<DATAW>> client_tdata_sig;
   sc_signal<bool> client_tlast_sig;
@@ -21,6 +22,6 @@ public:
   add_top *dut_inst;
 
   add_system(const sc_module_name &name,
-                           sc_clock *driver_clk_sig);
+                           sc_clock *driver_clk_sig, RADSimDesignContext* radsim_design);
   ~add_system();
 };

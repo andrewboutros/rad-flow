@@ -1,13 +1,14 @@
 #include "axis_master_adapter.hpp"
 
 axis_master_adapter::axis_master_adapter(
-    const sc_module_name &name, int node_id, int network_id,
+    const sc_module_name &name, unsigned int rad_id, int node_id, int network_id,
     std::vector<Flit::FlitType> &interface_types,
     std::vector<unsigned int> &interface_dataw, BookSimConfig *noc_config,
     Network *noc, BufferState *buffer_state, tRoutingFunction routing_func,
     bool lookahead_routing, bool wait_for_tail_credit,
     map<int, int> *ejected_flits)
     : sc_module(name) {
+  _rad_id = rad_id;
   _node_id = node_id;
   _network_id = network_id;
   _num_axis_interfaces = interface_types.size();
@@ -20,7 +21,7 @@ axis_master_adapter::axis_master_adapter(
     _num_flits[interface_id] =
         (int)ceil(payload_dataw * 1.0 / NOC_LINKS_PAYLOAD_WIDTH);
   }
-  _num_vcs = radsim_config.GetIntVectorKnob("noc_vcs", _network_id);
+  _num_vcs = radsim_config.GetIntVectorKnobPerRad("noc_vcs", _network_id, _rad_id);
   axis_interfaces.init(_num_axis_interfaces);
 
   _noc_config = noc_config;
@@ -33,7 +34,7 @@ axis_master_adapter::axis_master_adapter(
 
   _ejected_booksim_flit = nullptr;
   _ejection_afifo_depth =
-      radsim_config.GetIntVectorKnob("noc_adapters_fifo_size", _network_id);
+      radsim_config.GetIntVectorKnobPerRad("noc_adapters_fifo_size", _network_id, _rad_id);
   _ejection_afifos.resize(_num_vcs);
   _ejection_afifo_push_counter.init(_num_vcs);
   _ejection_afifo_pop_counter.init(_num_vcs);
@@ -44,7 +45,7 @@ axis_master_adapter::axis_master_adapter(
   _output_afifos.resize(_num_axis_interfaces);
   _output_packet_ready.resize(_num_axis_interfaces);
   _output_afifo_depth =
-      radsim_config.GetIntVectorKnob("noc_adapters_obuff_size", _network_id);
+      radsim_config.GetIntVectorKnobPerRad("noc_adapters_obuff_size", _network_id, _rad_id);
   _constructed_packet = sc_packet();
   _output_chunk.resize(_num_axis_interfaces);
 

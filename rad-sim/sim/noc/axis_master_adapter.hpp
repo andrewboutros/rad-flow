@@ -16,6 +16,7 @@
 
 class axis_master_adapter : public sc_module {
 private:
+  unsigned int _rad_id;
   unsigned int _node_id;
   unsigned int _network_id;
   unsigned int _num_axis_interfaces;
@@ -52,7 +53,7 @@ public:
   sc_in<bool> rst;
   sc_vector<axis_master_port> axis_interfaces;
 
-  axis_master_adapter(const sc_module_name &name, int node_id, int network_id,
+  axis_master_adapter(const sc_module_name &name, unsigned int rad_id, int node_id, int network_id,
                       std::vector<Flit::FlitType> &interface_types,
                       std::vector<unsigned int> &interface_dataw,
                       BookSimConfig *noc_config, Network *noc,

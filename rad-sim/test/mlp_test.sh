@@ -2,6 +2,8 @@
 test_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 cd $test_path
 
+cp -f ../example-designs/mlp/config.yml ../config.yml
+
 (cd ../; python config.py mlp)
 
 # python gen_testcase.py <num_layers> <input_size> {<hidden_dims>} {<mvms_per_layer>}

@@ -6,6 +6,8 @@
 #include <systemc.h>
 #include <unordered_map>
 
+class RADSimDesignContext;
+
 class RADSimModule : public sc_module {
 public:
   std::string module_name;
@@ -25,7 +27,7 @@ public:
 
   sc_in<bool> clk;
 
-  RADSimModule(const sc_module_name &name);
+  RADSimModule(const sc_module_name &name, RADSimDesignContext* radsim_design);
   ~RADSimModule();
   virtual void RegisterModuleInfo() = 0;
   void RegisterAxisSlavePort(std::string &port_name, axis_slave_port *port_ptr,

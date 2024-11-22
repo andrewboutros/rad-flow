@@ -15,9 +15,13 @@
 #include <routefunc.hpp>
 #include <sstream>
 
+class RADSimDesignContext;
+
 // NoC SystemC wrapper around all Booksim-related datastructures
 class radsim_noc : public sc_module {
 private:
+  int _rad_id;
+  std::string _portal_slave_name;
   int _noc_id;
   int _num_noc_nodes;
   BookSimConfig _config;                    // Booksim NoC configuration
@@ -44,13 +48,14 @@ public:
   sc_vector<aximm_master_port> noc_aximm_master_ports;
   sc_vector<aximm_slave_port> noc_aximm_slave_ports;
 
-  radsim_noc(const sc_module_name &name, int noc_id,
+  radsim_noc(const sc_module_name &name, unsigned int rad_id, std::string portal_slave_name, int noc_id,
              std::vector<sc_clock *> &adapter_clks,
              std::vector<sc_clock *> &module_clks,
              std::vector<AdapterInfo> &axis_master_adapter_info,
              std::vector<AdapterInfo> &axis_slave_adapter_info,
              std::vector<AdapterInfo> &aximm_master_adapter_info,
-             std::vector<AdapterInfo> &aximm_slave_adapter_info);
+             std::vector<AdapterInfo> &aximm_slave_adapter_info, 
+             RADSimDesignContext* radsim_design);
   ~radsim_noc();
 
   Network *GetNetwork();

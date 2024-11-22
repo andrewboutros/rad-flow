@@ -1,7 +1,7 @@
 #include <axis_slave_adapter.hpp>
 
 axis_slave_adapter::axis_slave_adapter(
-    const sc_module_name &name, int node_id, int network_id,
+    const sc_module_name &name, unsigned int rad_id, int node_id, int network_id,
     std::vector<Flit::FlitType> &interface_types,
     std::vector<unsigned int> &interface_dataw, double node_period,
     double adapter_period, BookSimConfig *noc_config, Network *noc,
@@ -11,12 +11,13 @@ axis_slave_adapter::axis_slave_adapter(
   axis_interfaces.init(interface_types.size());
 
   // Node properties
-  _rad_id = 0; // TO-DO-MR: set appropriate RAD ID through constructor
+  _rad_id = rad_id;
+  _portal_id = 0; //default 0, user must set correct value using AssignPortalSlaveID()
   _node_id = node_id;
   _network_id = network_id;
   _node_period = node_period;
   _adapter_period = adapter_period;
-  _noc_period = radsim_config.GetDoubleVectorKnob("noc_clk_period", _network_id);
+  _noc_period = radsim_config.GetDoubleVectorKnobPerRad("noc_clk_period", _network_id, _rad_id);
   _num_axis_interfaces = interface_types.size();
   _interface_types = interface_types;
   _interface_dataw = interface_dataw;
@@ -50,7 +51,7 @@ axis_slave_adapter::axis_slave_adapter(
   _input_axis_transactions_afifo_depth = 2;
 
   _injection_afifo_depth =
-      radsim_config.GetIntVectorKnob("noc_adapters_fifo_size", _network_id);
+      radsim_config.GetIntVectorKnobPerRad("noc_adapters_fifo_size", _network_id, _rad_id);
   _injection_flit_ready = false;
 
   SC_METHOD(InputReady);
@@ -229,19 +230,20 @@ void axis_slave_adapter::InputInjection() {
         booksim_flit->tail = _to_be_injected_flit._tail;
         booksim_flit->type = _to_be_injected_flit._type;
 
-        // TO-DO-MR BEGIN
-        if (DEST_RAD(_to_be_injected_flit._dest) == _rad_id) {
+        //If the destination of the incoming transaction is a module on the same RAD as the sender module, the destination field is set appropriately. 
+        //Else if on a different RAD, the destination field is set to the portal module node used to communicate with other RADs.
+        if (DEST_RAD(_to_be_injected_flit._dest) == _rad_id) { //not crossing to other RAD
           sc_bv<AXIS_DESTW> booksim_flit_dest = DEST_LOCAL_NODE(_to_be_injected_flit._dest);
           booksim_flit->dest = GetInputDestinationNode(booksim_flit_dest);
-          booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_uint();
-          booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_uint();
+          booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_int();
+          booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_int();
         } else {
-          sc_bv<AXIS_DESTW> booksim_flit_dest = 0; // TO-DO-MR: set to portal node ID
+          //std::cout << "_portal_id in axis_slave_adapter.cpp: " << _portal_id << std::endl;
+          sc_bv<AXIS_DESTW> booksim_flit_dest = _portal_id;
           booksim_flit->dest = GetInputDestinationNode(booksim_flit_dest);
-          booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_uint();
-          booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_uint();
+          booksim_flit->dest_rad = DEST_RAD(_to_be_injected_flit._dest).to_int();
+          booksim_flit->dest_remote = DEST_REMOTE_NODE(_to_be_injected_flit._dest).to_int();
         }
-        // TO-DO-MR END
 
         booksim_flit->dest_interface =
             _to_be_injected_flit._dest_interface.to_uint();
@@ -277,4 +279,12 @@ void axis_slave_adapter::InputInjection() {
     }
     wait();
   }
+}
+
+//For the current NoC, store the node ID of the portal module that RAD-Sim adds for multi-RAD designs.
+//This is used for inter-rad communication.
+void 
+axis_slave_adapter::AssignPortalSlaveID(int id) {
+  _portal_id = id;
+  //std::cout << "set portal_id of RAD "<< _rad_id << " in axis_slave_adapter.cpp to: " << _portal_id << std::endl;
 }

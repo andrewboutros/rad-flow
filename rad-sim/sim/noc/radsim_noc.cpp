@@ -1,22 +1,25 @@
 #include <design_context.hpp>
 #include <radsim_noc.hpp>
 
-radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
+radsim_noc::radsim_noc(const sc_module_name &name, unsigned int rad_id, std::string portal_slave_name, int noc_id,
                        std::vector<sc_clock *> &adapter_clks,
                        std::vector<sc_clock *> &module_clks,
                        std::vector<AdapterInfo> &axis_master_adapter_info,
                        std::vector<AdapterInfo> &axis_slave_adapter_info,
                        std::vector<AdapterInfo> &aximm_master_adapter_info,
-                       std::vector<AdapterInfo> &aximm_slave_adapter_info)
+                       std::vector<AdapterInfo> &aximm_slave_adapter_info,
+                       RADSimDesignContext* radsim_design)
     : sc_module(name), noc_clk("noc_clk"), rst("rst") {
-
+  _rad_id = rad_id; 
+  _portal_slave_name = portal_slave_name;
   _noc_id = noc_id;
-  _num_noc_nodes = radsim_config.GetIntVectorKnob("noc_num_nodes", _noc_id);
+  _num_noc_nodes = radsim_config.GetIntVectorKnobPerRad("noc_num_nodes", _noc_id, _rad_id);
 
   // Parse config file, initialize routing data structures and create Booksim
   // NoC
-  std::string config_filename = radsim_config.GetStringKnob("radsim_root_dir") +
+  std::string config_filename = radsim_config.GetStringKnobShared("radsim_root_dir") +
                                 "/sim/noc/noc" + std::to_string(noc_id) +
+                                "_rad" + std::to_string(rad_id) + 
                                 "_config";
   _config.ParseFile(config_filename);
   InitializeRoutingMap(_config);
@@ -56,12 +59,12 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
 
   // Create NoC AXI-S Master adapters
   _num_axis_master_endpoints =
-      radsim_design.GetNumNoCMasterAdapters(_noc_id, false);
+      radsim_design->GetNumNoCMasterAdapters(_noc_id, false);
   noc_axis_master_ports.init(_num_axis_master_endpoints);
   for (unsigned int adapter_id = 0; adapter_id < _num_axis_master_endpoints;
        adapter_id++) {
     unsigned int num_adapter_ports =
-        radsim_design.GetNumAxisMasterAdapterPorts(_noc_id, adapter_id);
+        radsim_design->GetNumAxisMasterAdapterPorts(_noc_id, adapter_id);
     noc_axis_master_ports[adapter_id].init(num_adapter_ports);
 
     // Prepare adapter information
@@ -75,7 +78,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
 
     // Create adapter
     axis_master_adapter *master_adapter = new axis_master_adapter(
-        adapter_name, axis_master_adapter_info[adapter_id]._node_id, _noc_id,
+        adapter_name, _rad_id, axis_master_adapter_info[adapter_id]._node_id, _noc_id,
         adapter_port_types, axis_master_adapter_info[adapter_id]._port_dataw,
         &_config, _booksim_noc,
         _buffer_state[axis_master_adapter_info[adapter_id]._node_id],
@@ -92,9 +95,10 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
     for (unsigned int port_id = 0; port_id < num_adapter_ports; port_id++) {
       std::string port_name =
           axis_master_adapter_info[adapter_id]._port_names[port_id];
+          //std::cout << "axis_master_adapter_info radsim_noc.cpp port_name is: " << port_name << std::endl;
       master_adapter->axis_interfaces[port_id].ConnectToPort(
           noc_axis_master_ports[adapter_id][port_id]);
-      radsim_design.RegisterNoCMasterPort(
+      radsim_design->RegisterNoCMasterPort(
           _noc_id, port_name, &noc_axis_master_ports[adapter_id][port_id]);
     }
 
@@ -103,12 +107,12 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
 
   // Create NoC AXI-S Slave adapters
   _num_axis_slave_endpoints =
-      radsim_design.GetNumNoCSlaveAdapters(_noc_id, false);
+      radsim_design->GetNumNoCSlaveAdapters(_noc_id, false);
   noc_axis_slave_ports.init(_num_axis_slave_endpoints);
   for (unsigned int adapter_id = 0; adapter_id < _num_axis_slave_endpoints;
        adapter_id++) {
     unsigned int num_adapter_ports =
-        radsim_design.GetNumAxisSlaveAdapterPorts(_noc_id, adapter_id);
+        radsim_design->GetNumAxisSlaveAdapterPorts(_noc_id, adapter_id);
     noc_axis_slave_ports[adapter_id].init(num_adapter_ports);
 
     // Prepare adapter information
@@ -119,14 +123,14 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
     for (auto it = axis_slave_adapter_info[adapter_id]._port_types.begin();
          it != axis_slave_adapter_info[adapter_id]._port_types.end(); it++)
       adapter_port_types.push_back(static_cast<Flit::FlitType>(*it));
-    double adapter_module_period = radsim_config.GetDoubleVectorKnob(
-        "design_clk_periods", axis_slave_adapter_info[adapter_id]._module_clk_idx);
-    double adapter_period = radsim_config.GetDoubleVectorKnob(
-        "noc_adapters_clk_period", axis_slave_adapter_info[adapter_id]._adapter_clk_idx);
+    double adapter_module_period = radsim_config.GetDoubleVectorKnobPerRad(
+        "design_clk_periods", axis_slave_adapter_info[adapter_id]._module_clk_idx, _rad_id);
+    double adapter_period = radsim_config.GetDoubleVectorKnobPerRad(
+        "noc_adapters_clk_period", axis_slave_adapter_info[adapter_id]._adapter_clk_idx, _rad_id);
 
     // Create adapter
     axis_slave_adapter *slave_adapter = new axis_slave_adapter(
-        adapter_name, axis_slave_adapter_info[adapter_id]._node_id, _noc_id,
+        adapter_name, _rad_id, axis_slave_adapter_info[adapter_id]._node_id, _noc_id,
         adapter_port_types, axis_slave_adapter_info[adapter_id]._port_dataw,
         adapter_module_period, adapter_period, &_config, _booksim_noc,
         _buffer_state[axis_slave_adapter_info[adapter_id]._node_id],
@@ -142,9 +146,10 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
     for (unsigned int port_id = 0; port_id < num_adapter_ports; port_id++) {
       std::string port_name =
           axis_slave_adapter_info[adapter_id]._port_names[port_id];
+       //std::cout << "axis_slave_adapter radsim_noc.cpp port_name is: " << port_name << std::endl;
       slave_adapter->axis_interfaces[port_id].ConnectToPort(
           noc_axis_slave_ports[adapter_id][port_id]);
-      radsim_design.RegisterNoCSlavePort(
+      radsim_design->RegisterNoCSlavePort( 
           _noc_id, port_name, &noc_axis_slave_ports[adapter_id][port_id]);
     }
 
@@ -153,7 +158,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
 
   // Create NoC AXI-MM Master adapters
   _num_aximm_slave_endpoints =
-      radsim_design.GetNumNoCMasterAdapters(_noc_id, true);
+      radsim_design->GetNumNoCMasterAdapters(_noc_id, true);
   noc_aximm_master_ports.init(_num_aximm_slave_endpoints);
   for (unsigned int adapter_id = 0; adapter_id < _num_aximm_slave_endpoints;
        adapter_id++) {
@@ -162,15 +167,15 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
     std::string adapter_name_str =
         "aximm_master_adapter_" + std::to_string(adapter_id);
     const char *adapter_name = adapter_name_str.c_str();
-    double adapter_module_period = radsim_config.GetDoubleVectorKnob(
-        "design_clk_periods", aximm_master_adapter_info[adapter_id]._module_clk_idx);
-    double adapter_period = radsim_config.GetDoubleVectorKnob(
+    double adapter_module_period = radsim_config.GetDoubleVectorKnobPerRad(
+        "design_clk_periods", aximm_master_adapter_info[adapter_id]._module_clk_idx, _rad_id);
+    double adapter_period = radsim_config.GetDoubleVectorKnobPerRad(
         "noc_adapters_clk_period",
-        aximm_master_adapter_info[adapter_id]._adapter_clk_idx);
+        aximm_master_adapter_info[adapter_id]._adapter_clk_idx, _rad_id);
 
     // Create adapter
     aximm_master_adapter *master_adapter = new aximm_master_adapter(
-        adapter_name, aximm_master_adapter_info[adapter_id]._node_id, _noc_id,
+        adapter_name, _rad_id, aximm_master_adapter_info[adapter_id]._node_id, _noc_id,
         &_config, _booksim_noc,
         _buffer_state[aximm_master_adapter_info[adapter_id]._node_id],
         _routing_func, _lookahead_routing, _wait_for_tail_credit,
@@ -188,7 +193,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
         noc_aximm_master_ports[adapter_id]);
     std::string port_name =
         aximm_master_adapter_info[adapter_id]._port_names[0];
-    radsim_design.RegisterNoCMasterPort(_noc_id, port_name,
+    radsim_design->RegisterNoCMasterPort(_noc_id, port_name,
                                         &noc_aximm_master_ports[adapter_id]);
 
     _aximm_master_adapters.push_back(master_adapter);
@@ -196,7 +201,7 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
 
   // Create NoC AXI-MM Slave adapters
   _num_aximm_master_endpoints =
-      radsim_design.GetNumNoCSlaveAdapters(_noc_id, true);
+      radsim_design->GetNumNoCSlaveAdapters(_noc_id, true);
   noc_aximm_slave_ports.init(_num_aximm_master_endpoints);
   for (unsigned int adapter_id = 0; adapter_id < _num_aximm_master_endpoints;
        adapter_id++) {
@@ -205,15 +210,15 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
     std::string adapter_name_str =
         "aximm_slave_adapter_" + std::to_string(adapter_id);
     const char *adapter_name = adapter_name_str.c_str();
-    double adapter_module_period = radsim_config.GetDoubleVectorKnob(
-        "design_clk_periods", aximm_slave_adapter_info[adapter_id]._module_clk_idx);
-    double adapter_period = radsim_config.GetDoubleVectorKnob(
+    double adapter_module_period = radsim_config.GetDoubleVectorKnobPerRad(
+        "design_clk_periods", aximm_slave_adapter_info[adapter_id]._module_clk_idx, _rad_id);
+    double adapter_period = radsim_config.GetDoubleVectorKnobPerRad(
         "noc_adapters_clk_period",
-        aximm_slave_adapter_info[adapter_id]._adapter_clk_idx);
+        aximm_slave_adapter_info[adapter_id]._adapter_clk_idx, _rad_id);
 
     // Create adapter
     aximm_slave_adapter *slave_adapter = new aximm_slave_adapter(
-        adapter_name, aximm_slave_adapter_info[adapter_id]._node_id, _noc_id,
+        adapter_name, _rad_id, aximm_slave_adapter_info[adapter_id]._node_id, _noc_id,
         &_config, _booksim_noc,
         _buffer_state[aximm_slave_adapter_info[adapter_id]._node_id],
         _routing_func, _lookahead_routing, _wait_for_tail_credit,
@@ -230,11 +235,21 @@ radsim_noc::radsim_noc(const sc_module_name &name, int noc_id,
     slave_adapter->aximm_interface.ConnectToPort(
         noc_aximm_slave_ports[adapter_id]);
     std::string port_name = aximm_slave_adapter_info[adapter_id]._port_names[0];
-    radsim_design.RegisterNoCSlavePort(_noc_id, port_name,
+    radsim_design->RegisterNoCSlavePort(_noc_id, port_name,
                                        &noc_aximm_slave_ports[adapter_id]);
 
     _aximm_slave_adapters.push_back(slave_adapter);
   }
+
+    #ifndef SINGLE_RAD
+    //set portal ID to use in axis_slave_adapter for NoC versus inter_rad
+    unsigned int PortalSlaveID = radsim_design->GetPortalSlaveID();
+    //std::cout << "Set portal slave ids in radsim_noc.cpp to: " << PortalSlaveID << std::endl;
+    for (int i = 0; i < _axis_slave_adapters.size(); i++) {
+        _axis_slave_adapters[i]->AssignPortalSlaveID(PortalSlaveID);
+    }
+    #endif
+    //std::cout <<  "DONE AXIS SLAVE ADAPTER CREATION " << std::endl;
 
   SC_CTHREAD(Tick, noc_clk.pos());
   reset_signal_is(rst, true);

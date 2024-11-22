@@ -9,6 +9,8 @@
 #include <string>
 #include <systemc.h>
 #include <vector>
+#include <radsim_utils.hpp>
+#include <tuple>
 
 class adder : public RADSimModule {
 private:
@@ -16,13 +18,14 @@ private:
   sc_signal<bool> t_finished; // Signal flagging that the transaction has terminated
 
 public:
+  RADSimDesignContext* radsim_design;
   sc_in<bool> rst;
   sc_out<bool> response_valid;
   sc_out<sc_bv<DATAW>> response;
   // Interface to the NoC
   axis_slave_port axis_adder_interface;
 
-  adder(const sc_module_name &name);
+  adder(const sc_module_name &name, RADSimDesignContext* radsim_design);
   ~adder();
 
   void Assign(); // Combinational logic process

@@ -31,5 +31,5 @@ set(hdrfiles
 
 add_compile_options(-Wall -Wextra -pedantic)
 
-add_library(design STATIC ${srcfiles} ${hdrfiles})
-target_link_libraries(design PUBLIC SystemC::systemc booksim noc)
+add_library(add STATIC ${srcfiles} ${hdrfiles})
+target_link_libraries(add PUBLIC SystemC::systemc booksim noc)

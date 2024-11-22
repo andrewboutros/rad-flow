@@ -1,7 +1,9 @@
 #include <adder.hpp>
 
-adder::adder(const sc_module_name &name)
-    : RADSimModule(name) {
+adder::adder(const sc_module_name &name, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design) {
+
+  this->radsim_design = radsim_design;
 
   // Combinational logic and its sensitivity list
   SC_METHOD(Assign);
@@ -15,7 +17,8 @@ adder::adder(const sc_module_name &name)
   this->RegisterModuleInfo();
 }
 
-adder::~adder() {}
+adder::~adder() {
+}
 
 void adder::Assign() {
   if (rst) {
@@ -30,20 +33,28 @@ void adder::Assign() {
 void adder::Tick() {
   response_valid.write(0);
   response.write(0);
+  int count_in_addends = 0;
   wait();
 
+  int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
+  //std::cout << "adder.cpp is before while loop at cycle " << curr_cycle << std::endl;
+  
   // Always @ positive edge of the clock
   while (true) {
+    curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
+
     // Receiving transaction from AXI-S interface
     if (axis_adder_interface.tvalid.read() &&
-        axis_adder_interface.tready.read()) {
-      uint64_t current_sum = adder_rolling_sum.to_uint64();
-      adder_rolling_sum = current_sum + axis_adder_interface.tdata.read().to_uint64();
-      t_finished.write(axis_adder_interface.tlast.read());
-      //std::cout << module_name << ": Got Transaction (user = "
-      //          << axis_adder_interface.tuser.read().to_uint64() << ") (addend = "
-      //          << axis_adder_interface.tdata.read().to_uint64() << ")!"
-      //          << std::endl;
+        axis_adder_interface.tready.read()
+    ){
+        count_in_addends++;
+        uint64_t current_sum = adder_rolling_sum.to_uint64();
+        adder_rolling_sum = current_sum + axis_adder_interface.tdata.read().to_uint64();
+        t_finished.write(axis_adder_interface.tlast.read());
+        std::cout << module_name << ": Got Transaction " << count_in_addends << " on cycle " << curr_cycle << " (user = "
+                  << axis_adder_interface.tuser.read().to_uint64() << ") (addend = "
+                  << axis_adder_interface.tdata.read().to_uint64() << ")!"
+                  << std::endl; 
     }
 
     // Print Sum and Exit
@@ -64,4 +75,5 @@ void adder::RegisterModuleInfo() {
 
   port_name = module_name + ".axis_adder_interface";
   RegisterAxisSlavePort(port_name, &axis_adder_interface, DATAW, 0);
+
 }

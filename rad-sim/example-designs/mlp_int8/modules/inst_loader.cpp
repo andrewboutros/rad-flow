@@ -1,7 +1,7 @@
 #include "inst_loader.hpp"
 
-inst_loader::inst_loader(const sc_module_name &name)
-    : RADSimModule(name), 
+inst_loader::inst_loader(const sc_module_name &name, RADSimDesignContext* radsim_design)
+    : RADSimModule(name, radsim_design), 
       rst("rst"), 
       inst_fifo_rdy("inst_fifo_rdy"),
       inst_fifo_wen("inst_fifo_wen"), 
@@ -13,6 +13,7 @@ inst_loader::inst_loader(const sc_module_name &name)
       mvm_id_fifo_wen("mvm_id_fifo_wen"),
       mvm_id_fifo_wdata("mvm_id_fifo_wdata") {
 
+  this->radsim_design = radsim_design;
   module_name = name;
 
   char fifo_name[25];
@@ -89,7 +90,7 @@ void inst_loader::Assign() {
       std::string dest_name =
           "layer" + std::to_string(layer_id_fifo_odata.read()) + 
           "_mvm" + std::to_string(mvm_id_fifo_odata.read()) + ".axis_rx";
-      tx_interface.tdest.write(radsim_design.GetPortDestinationID(dest_name));
+      tx_interface.tdest.write(radsim_design->GetPortDestinationID(dest_name));
     }
     tx_interface.tvalid.write(!inst_fifo_empty.read());
 

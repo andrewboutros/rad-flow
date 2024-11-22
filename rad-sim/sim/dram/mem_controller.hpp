@@ -82,8 +82,10 @@ public:
   sc_in<bool> mem_clk;
   sc_in<bool> rst;
   sc_vector<aximm_slave_port> mem_channels;
+  RADSimDesignContext* radsim_design;
 
   mem_controller(const sc_module_name &name, unsigned int dram_id,
+                RADSimDesignContext* radsim_design,
                  std::string init_filename = "");
   ~mem_controller();
 

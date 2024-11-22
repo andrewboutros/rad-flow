@@ -14,19 +14,16 @@ from npu_layers import *
 
 # Define constants
 INPUT_SIZE = 1536
-DENSE_SIZE = 1536
+HIDDEN_UNITS = 1536
+TIME_STEPS = 8
 
 # Define model architecture using Keras Sequential Model
 model = NPUSequential([
-	layers.Dense(DENSE_SIZE, name="layer1"),
-	layers.Dense(DENSE_SIZE, name="layer2"),
-	layers.Dense(DENSE_SIZE, name="layer3"),
-	layers.Dense(DENSE_SIZE, name="layer4"),
-	layers.Dense(DENSE_SIZE, name="layer5"),
+	layers.SimpleRNN(HIDDEN_UNITS, name="layer1"),
 ])
 
 # Random test inputs for different types of layers
-test_input = tf.random.uniform(shape=[6, INPUT_SIZE], minval=-128, maxval=127)
+test_input = tf.random.uniform(shape=[TIME_STEPS, 6, INPUT_SIZE], minval=-128, maxval=127)
 
 # Call model on example input
 y = model(test_input)

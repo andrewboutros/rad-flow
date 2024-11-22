@@ -74,7 +74,6 @@ Building RAD-Sim
 ----------------
 
 You can configure RAD-Sim for your example design simulation using the following commands executed at the ``rad-sim`` root directory (the commands use the ``mlp`` example design which can be replaced by your own design under the ``rad-flow/rad-sim/example-designs`` directory):
-
 .. code-block:: bash
 
     $ cd <rad_flow_root_dir>/rad-sim

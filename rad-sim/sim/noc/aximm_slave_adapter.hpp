@@ -51,6 +51,7 @@ class aximm_slave_adapter : public sc_module {
 private:
   // The node ID, network ID and data width of the node this adapter is
   // connected to
+  unsigned int _rad_id;
   int _node_id;
   int _network_id;
   int _interface_dataw;
@@ -165,7 +166,7 @@ public:
   // AXI-MM Master Port
   aximm_slave_port aximm_interface;
 
-  aximm_slave_adapter(const sc_module_name &name, int node_id, int network_id,
+  aximm_slave_adapter(const sc_module_name &name, unsigned int rad_id, int node_id, int network_id,
                       BookSimConfig *noc_config, Network *noc,
                       BufferState *buffer_state, tRoutingFunction routing_func,
                       bool lookahead_routing, bool wait_for_tail_credit,
