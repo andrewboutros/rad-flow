@@ -83,10 +83,8 @@ jobs:
     - name: Setup Mambaforge (Conda)
       uses: conda-incubator/setup-miniconda@v2
       with:
-        miniforge-variant: Mambaforge
         miniforge-version: latest
         activate-environment: radflow
-        use-mamba: true
 
     - name: Cache Conda ENV
       id: cache-conda
