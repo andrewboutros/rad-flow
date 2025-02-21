@@ -1,0 +1,9 @@
+CMakeFiles/
+Makefile
+*.log
+compiler/embedding_tables/
+compiler/instructions/
+compiler/mvm_weights/
+compiler/*.out
+compiler/*.in
+compiler/mvms.config
