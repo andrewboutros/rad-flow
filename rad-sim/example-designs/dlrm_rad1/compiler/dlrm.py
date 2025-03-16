@@ -49,11 +49,8 @@ tobin = lambda x, count=8: "".join(
     map(lambda y: str((x >> y) & 1), range(count - 1, -1, -1))
 )
 
-<<<<<<< HEAD
 #Seed random for consistency
 random.seed(1)
-=======
->>>>>>> 7d58ddecfb2fa683f932c78ed67efcf538a18a31
 
 def get_table_id(table):
     return table[0]
@@ -263,7 +260,7 @@ def print_allocation():
 
 def generate_embedding_lookup_inputs(num_inputs):
     f = open("embedding_indecies.in", "w")
-    f.write(str(len(table_info)) + " " + str(num_inputs) + "\n")
+    f.write(str(len(table_info)) + " " + str(num_inputs/2) + "\n")
     for i in range(num_inputs):
         input_vec = []
         target_ch = []
@@ -307,15 +304,16 @@ def generate_embedding_lookup_inputs(num_inputs):
         test_input_data.append(input_vec)
         test_input_base_addr.append(base_addr)
         test_input_target_ch.append(target_ch)
-        for j in input_vec:
-            f.write(str(j) + " ")
-        f.write("\n")
-        for j in target_ch:
-            f.write(str(j) + " ")
-        f.write("\n")
-        for j in base_addr:
-            f.write(str(j) + " ")
-        f.write("\n")
+        if (i >= num_inputs/2 and i < num_inputs):
+            for j in input_vec:
+                f.write(str(j) + " ")
+            f.write("\n")
+            for j in target_ch:
+                f.write(str(j) + " ")
+            f.write("\n")
+            for j in base_addr:
+                f.write(str(j) + " ")
+            f.write("\n")
     f.close()
 
 

@@ -260,7 +260,7 @@ def print_allocation():
 
 def generate_embedding_lookup_inputs(num_inputs):
     f = open("embedding_indecies.in", "w")
-    f.write(str(len(table_info)) + " " + str(num_inputs) + "\n")
+    f.write(str(len(table_info)) + " " + str(num_inputs/2) + "\n")
     for i in range(num_inputs):
         input_vec = []
         target_ch = []
@@ -304,15 +304,16 @@ def generate_embedding_lookup_inputs(num_inputs):
         test_input_data.append(input_vec)
         test_input_base_addr.append(base_addr)
         test_input_target_ch.append(target_ch)
-        for j in input_vec:
-            f.write(str(j) + " ")
-        f.write("\n")
-        for j in target_ch:
-            f.write(str(j) + " ")
-        f.write("\n")
-        for j in base_addr:
-            f.write(str(j) + " ")
-        f.write("\n")
+        if (i < num_inputs/2):
+            for j in input_vec:
+                f.write(str(j) + " ")
+            f.write("\n")
+            for j in target_ch:
+                f.write(str(j) + " ")
+            f.write("\n")
+            for j in base_addr:
+                f.write(str(j) + " ")
+            f.write("\n")
     f.close()
 
 
