@@ -49,6 +49,8 @@ tobin = lambda x, count=8: "".join(
     map(lambda y: str((x >> y) & 1), range(count - 1, -1, -1))
 )
 
+#Seed random for consistency
+random.seed(1)
 
 def get_table_id(table):
     return table[0]
