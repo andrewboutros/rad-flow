@@ -30,11 +30,11 @@ public:
   sc_out<bool> lookup_indecies_valid;
   sc_in<bool> lookup_indecies_ready;
 
-  sc_in<unsigned int> received_responses;
+  // sc_in<unsigned int> received_responses;
 
-  sc_in<bool> collector_fifo_rdy;
-  sc_out<bool> collector_fifo_ren;
-  sc_in<data_vector<int16_t>> collector_fifo_rdata;
+  sc_in<bool> sent_all_lookups;
+  // sc_out<bool> collector_fifo_ren;
+  // sc_in<data_vector<int16_t>> collector_fifo_rdata;
 
   dlrm_driver(const sc_module_name &name, RADSimDesignContext* radsim_design_);
   ~dlrm_driver();

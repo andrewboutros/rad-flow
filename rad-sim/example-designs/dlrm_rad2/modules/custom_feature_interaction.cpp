@@ -242,7 +242,7 @@ void custom_feature_interaction::Tick() {
     for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
       if (axis_interface[ch_id].tready.read() &&
           axis_interface[ch_id].tvalid.read()) {
-        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
+        // int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
         data_vector<int16_t> tx_tdata = _output_fifos[ch_id].front();
         //std::cout << "custom_feature_interaction @ cycle " << curr_cycle << ": tx_tdata sent " << tx_tdata << " from RAD " << radsim_design->rad_id << " with tdest field " << axis_interface[ch_id].tdest.read() << std::endl;
         _output_fifos[ch_id].pop();
@@ -299,13 +299,13 @@ void custom_feature_interaction::RegisterModuleInfo() {
   std::string port_name;
   _num_noc_axis_slave_ports = 0;
   _num_noc_axis_master_ports = 0;
-  _num_noc_aximm_slave_ports = 0;
-  _num_noc_aximm_master_ports = 0;
+  // _num_noc_aximm_slave_ports = 0;
+  // _num_noc_aximm_master_ports = 0;
 
-  for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
-    port_name = module_name + ".aximm_interface_" + std::to_string(ch_id);
-    RegisterAximmMasterPort(port_name, &aximm_interface[ch_id], _dataw);
-  }
+  // for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
+  //   port_name = module_name + ".aximm_interface_" + std::to_string(ch_id);
+  //   RegisterAximmMasterPort(port_name, &aximm_interface[ch_id], _dataw);
+  // }
 
   for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
     port_name = module_name + ".axis_interface_" + std::to_string(ch_id);

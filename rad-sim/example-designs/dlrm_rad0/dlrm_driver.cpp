@@ -94,14 +94,16 @@ dlrm_driver::dlrm_driver(const sc_module_name &name, RADSimDesignContext* radsim
   ParseOutputs(_mlp_outputs, mlp_outputs_filename, _num_mlp_outputs);
 
   SC_METHOD(assign);
-  sensitive << collector_fifo_rdy;
+  // sensitive << collector_fifo_rdy;
   SC_CTHREAD(source, clk.pos());
   SC_CTHREAD(sink, clk.pos());
 }
 
 dlrm_driver::~dlrm_driver() {}
 
-void dlrm_driver::assign() { collector_fifo_ren.write(collector_fifo_rdy); }
+void dlrm_driver::assign() { 
+  // collector_fifo_ren.write(collector_fifo_rdy); 
+  }
 
 void dlrm_driver::source() {
   // Reset
@@ -133,95 +135,42 @@ void dlrm_driver::source() {
   wait();
 }
 
-void print_progress_bar(unsigned int outputs_count, unsigned int total) {
-  unsigned int loading_bar_width = 50;
-  std::cout << "[";
-  float progress = 1.0 * outputs_count / total;
-  unsigned int pos = loading_bar_width * progress;
-  for (unsigned int i = 0; i < loading_bar_width; ++i) {
-    if (i < pos)
-      std::cout << "=";
-    else if (i == pos)
-      std::cout << ">";
-    else
-      std::cout << " ";
-  }
-  if (outputs_count == total) {
-    std::cout << "] " << int(progress * 100.0) << " %\n";
-  } else {
-    std::cout << "] " << int(progress * 100.0) << " %\r";
-  }
-  std::cout.flush();
-}
+// void print_progress_bar(unsigned int outputs_count, unsigned int total) {
+//   unsigned int loading_bar_width = 50;
+//   std::cout << "[";
+//   float progress = 1.0 * outputs_count / total;
+//   unsigned int pos = loading_bar_width * progress;
+//   for (unsigned int i = 0; i < loading_bar_width; ++i) {
+//     if (i < pos)
+//       std::cout << "=";
+//     else if (i == pos)
+//       std::cout << ">";
+//     else
+//       std::cout << " ";
+//   }
+//   if (outputs_count == total) {
+//     std::cout << "] " << int(progress * 100.0) << " %\n";
+//   } else {
+//     std::cout << "] " << int(progress * 100.0) << " %\r";
+//   }
+//   std::cout.flush();
+// }
 
 void dlrm_driver::sink() {
-  std::ofstream mismatching_outputs_file("mismatching.log");
 
-  unsigned int outputs_count = 0;
-  data_vector<int16_t> dut_output;
-  bool all_outputs_matching = true;
-  while (outputs_count < _num_mlp_outputs) {
-    dut_output = collector_fifo_rdata.read();
-    if (collector_fifo_rdy.read() && dut_output.size() > 0) {
-      bool matching = true;
-      for (unsigned int e = 0; e < dut_output.size(); e++) {
-        matching = (dut_output[e] == _mlp_outputs[outputs_count][e]);
-      }
-      if (!matching) {
-        std::cout << "Output " << outputs_count << " on rad " << radsim_design->rad_id << " does not match!\n";
-        std::cout << "TRUE: [ ";
-        for (unsigned int e = 0; e < _mlp_outputs[outputs_count].size(); e++) {
-          std::cout << _mlp_outputs[outputs_count][e] << " ";
-        }
-        std::cout << "]\n";
-        std::cout << "DUT : [ ";
-        for (unsigned int e = 0; e < dut_output.size(); e++) {
-          std::cout << dut_output[e] << " ";
-        }
-        std::cout << "]\n";
-        std::cout << "-------------------------------\n";
-      }
-      // else {
-      //   std::cout << "Output " << outputs_count << " on rad " << radsim_design->rad_id << " does match :)\n";
-      //   std::cout << "TRUE: [ ";
-      //   for (unsigned int e = 0; e < _mlp_outputs[outputs_count].size(); e++) {
-      //     std::cout << _mlp_outputs[outputs_count][e] << " ";
-      //   }
-      //   std::cout << "]\n";
-      //   std::cout << "DUT : [ ";
-      //   for (unsigned int e = 0; e < dut_output.size(); e++) {
-      //     std::cout << dut_output[e] << " ";
-      //   }
-      //   std::cout << "]\n";
-      //   std::cout << "-------------------------------\n";
-      // }
-      outputs_count++;
-      all_outputs_matching &= matching;
+  if (sent_all_lookups) {
+    std::cout << "RAD 0 sent all embedding lookups to RAD 2" << std::endl;
 
-      print_progress_bar(outputs_count, _num_mlp_outputs);
-      //std::cout << "outputs_count " << outputs_count << " and _num_mlp_outputs " << _num_mlp_outputs << std::endl;
-    }
-    wait();
-  }
-  std::cout << "Got " << outputs_count << " output(s)!\n";
-  mismatching_outputs_file.flush();
-  mismatching_outputs_file.close();
-
-  if (all_outputs_matching) {
-    std::cout << "Simulation PASSED! All outputs matching!" << std::endl;
-  } else {
-    std::cout << "Simulation FAILED! Some outputs are NOT matching!" << std::endl;
-    radsim_design->ReportDesignFailure();
-  }
-  _end_cycle =
+    _end_cycle =
       GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
-  std::cout << "Simulated " << (_end_cycle - _start_cycle) << " cycle(s)"
+    std::cout << "Simulated " << (_end_cycle - _start_cycle) << " cycle(s)"
             << std::endl;
 
-  for (unsigned int i = 0; i < 10; i++) {
-    wait();
+    for (unsigned int i = 0; i < 10; i++) {
+      wait();
+    }
+
+    this->radsim_design->set_rad_done(); //flag to replace sc_stop calls
+    return;
   }
-  //sc_stop();
-  this->radsim_design->set_rad_done(); //flag to replace sc_stop calls
-  return;
 }

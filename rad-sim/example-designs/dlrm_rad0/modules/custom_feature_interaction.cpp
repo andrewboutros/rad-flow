@@ -178,116 +178,138 @@ void custom_feature_interaction::Tick() {
       if (_input_fifos[ch_id].size() < _fifos_depth &&
           aximm_interface[ch_id].rvalid.read()) {
         sc_bv<AXI4_MAX_DATAW> rdata_bv = aximm_interface[ch_id].rdata.read();
-        data_vector<int16_t> rdata(_num_input_elements);
-        bv_to_data_vector(rdata_bv, rdata, _num_input_elements);
-        _input_fifos[ch_id].push(rdata);
+        // data_vector<int16_t> rdata(_num_input_elements);
+        // bv_to_data_vector(rdata_bv, rdata, _num_input_elements);
+        // _input_fifos[ch_id].push(rdata);
         _num_received_responses++;
         if (_num_received_responses == _num_expected_responses) {
           std::cout << this->name() << ": Got all memory responses at cycle "
                     << GetSimulationCycle(5.0) << "!" << std::endl;
           got_all_mem_responses = true;
         }
-      }
-    }
 
-    // Pop from input FIFOs
-    bool ififos_ready =
-        are_ififos_ready(_ififo_empty, _instructions[_pc.read()]);
-    if (ififos_ready && !_ofifo_full[_dest_ofifo.read()]) {
-      data_vector<int16_t> ofifo_data_vector(_num_output_elements);
-      custom_feature_interaction_inst instruction = _instructions[_pc.read()];
-      unsigned int num_steps = instruction.xbar_schedule.size();
-      unsigned int element_id = 0;
-      unsigned int fifo_id, start_idx, end_idx;
-      for (unsigned int step = 0; step < num_steps; step++) {
-        fifo_id = instruction.xbar_schedule[step];
-        start_idx = instruction.start_element[step];
-        end_idx = instruction.end_element[step];
-        data_vector<int16_t> tmp(_num_input_elements);
-        if (fifo_id != 0) {
-          tmp = _input_fifos[fifo_id - 1].front();
-          if (instruction.pop_fifo[step]) {
-            _input_fifos[fifo_id - 1].pop();
-          }
-        }
-        for (unsigned int element = start_idx; element <= end_idx; element++) {
-          assert(element_id < ofifo_data_vector.size());
-          ofifo_data_vector[element_id] = tmp[element];
-          element_id++;
-        }
-      }
-      if (fifo_id != 0) {
-        *_debug_feature_interaction_out << ofifo_data_vector << "\n";
-        _debug_feature_interaction_out->flush();
-      }
-      _output_fifos[_dest_ofifo.read()].push(ofifo_data_vector);
-
-      // Advance destination FIFO pointer
-      if (_dest_ofifo.read() == _num_output_channels - 1) {
-        _dest_ofifo.write(0);
-      } else {
-        _dest_ofifo.write(_dest_ofifo.read() + 1);
-      }
-
-      // Advance Instructions Pointer
-      if (_pc.read() == _instructions.size() - 1) {
-        _pc.write(0);
-      } else {
-        _pc.write(_pc.read() + 1);
-      }
-    }
-
-    // Interface with AXI-S NoC
-    bool non_empty_output_fifo = false;
-    for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
-      if (axis_interface[ch_id].tready.read() &&
-          axis_interface[ch_id].tvalid.read()) {
-        int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
-        data_vector<int16_t> tx_tdata = _output_fifos[ch_id].front();
-        //std::cout << "custom_feature_interaction @ cycle " << curr_cycle << ": tx_tdata sent " << tx_tdata << " from RAD " << radsim_design->rad_id << " with tdest field " << axis_interface[ch_id].tdest.read() << std::endl;
-        _output_fifos[ch_id].pop();
-      }
-
-      if ( (!_output_fifos[ch_id].empty()) ) { //&& (radsim_design->rad_id == 0) ) {
-        non_empty_output_fifo = true;
-        data_vector<int16_t> tx_tdata = _output_fifos[ch_id].front();
-        //std::cout << "custom_feature_interaction: tx_tdata sent " << tx_tdata << " from RAD " << radsim_design->rad_id << std::endl;
-        sc_bv<AXIS_MAX_DATAW> tx_tdata_bv;
-        data_vector_to_bv(tx_tdata, tx_tdata_bv, _num_output_elements);
+        //send to RADs via portal module. sending to portal module is over AXI-S NoC.
         axis_interface[ch_id].tvalid.write(true);
-        axis_interface[ch_id].tdata.write(tx_tdata_bv);
-        axis_interface[ch_id].tuser.write(3 << 13);
+        axis_interface[ch_id].tdata.write(rdata_bv);
+        axis_interface[ch_id].tuser.write(3 << 13); //gets used by MVM module to detect using input fifo
         axis_interface[ch_id].tid.write(0);
+        //not actually doing feature interaction in this RAD, letting RAD2 do that in the same named module
         std::string dest_name =
-            "layer0_mvm" + std::to_string(ch_id) + ".rx_interface";
+            "feature_interaction_inst" + std::to_string(ch_id) + ".rx_interface";
         //std::cout << "radsim_design->GetPortDestinationID(dest_name) on RAD " << radsim_design->rad_id << ": " << radsim_design->GetPortDestinationID(dest_name) << std::endl;
         sc_bv<AXIS_DESTW> dest_id_concat;
-        DEST_RAD(dest_id_concat) = 1; //radsim_design->rad_id;
+        DEST_RAD(dest_id_concat) = 2; //radsim_design->rad_id;
         DEST_LOCAL_NODE(dest_id_concat) = radsim_design->GetPortDestinationID(dest_name);
-        DEST_REMOTE_NODE(dest_id_concat) = radsim_design->GetPortDestinationID(dest_name);
+        //next commented out line only works if both RADs have same design and modules to NoC, because then NoC ID is same on other RAD
+        // DEST_REMOTE_NODE(dest_id_concat) = radsim_design->GetPortDestinationID(dest_name);
+        DEST_REMOTE_NODE(dest_id_concat) = 41; //manually checked RAD2 .place file for NoC ID
         axis_interface[ch_id].tdest.write(
             dest_id_concat);
             //radsim_design->GetPortDestinationID(dest_name));
-        no_val_counter = 0;
-      } else {
+
+      }
+      else {
         axis_interface[ch_id].tvalid.write(false);
-        no_val_counter++;
       }
     }
 
-    // Set FIFO signals
-    for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
-      _ififo_empty[ch_id].write(_input_fifos[ch_id].empty());
-      _ififo_full[ch_id].write(_input_fifos[ch_id].size() >= _fifos_depth - 4);
-    }
-    for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
-      _ofifo_empty[ch_id].write(_output_fifos[ch_id].empty());
-      _ofifo_full[ch_id].write(_output_fifos[ch_id].size() >= _fifos_depth - 2);
-    }
-    received_responses.write(_num_received_responses);
+    // // Pop from input FIFOs
+    // bool ififos_ready =
+    //     are_ififos_ready(_ififo_empty, _instructions[_pc.read()]);
+    // if (ififos_ready && !_ofifo_full[_dest_ofifo.read()]) {
+    //   data_vector<int16_t> ofifo_data_vector(_num_output_elements);
+    //   custom_feature_interaction_inst instruction = _instructions[_pc.read()];
+    //   unsigned int num_steps = instruction.xbar_schedule.size();
+    //   unsigned int element_id = 0;
+    //   unsigned int fifo_id, start_idx, end_idx;
+    //   for (unsigned int step = 0; step < num_steps; step++) {
+    //     fifo_id = instruction.xbar_schedule[step];
+    //     start_idx = instruction.start_element[step];
+    //     end_idx = instruction.end_element[step];
+    //     data_vector<int16_t> tmp(_num_input_elements);
+    //     if (fifo_id != 0) {
+    //       tmp = _input_fifos[fifo_id - 1].front();
+    //       if (instruction.pop_fifo[step]) {
+    //         _input_fifos[fifo_id - 1].pop();
+    //       }
+    //     }
+    //     for (unsigned int element = start_idx; element <= end_idx; element++) {
+    //       assert(element_id < ofifo_data_vector.size());
+    //       ofifo_data_vector[element_id] = tmp[element];
+    //       element_id++;
+    //     }
+    //   }
+    //   if (fifo_id != 0) {
+    //     *_debug_feature_interaction_out << ofifo_data_vector << "\n";
+    //     _debug_feature_interaction_out->flush();
+    //   }
+    //   _output_fifos[_dest_ofifo.read()].push(ofifo_data_vector);
 
-    if (non_empty_output_fifo && got_all_mem_responses) {
-      radsim_design->set_rad_done();
+    //   // Advance destination FIFO pointer
+    //   if (_dest_ofifo.read() == _num_output_channels - 1) {
+    //     _dest_ofifo.write(0);
+    //   } else {
+    //     _dest_ofifo.write(_dest_ofifo.read() + 1);
+    //   }
+
+    //   // Advance Instructions Pointer
+    //   if (_pc.read() == _instructions.size() - 1) {
+    //     _pc.write(0);
+    //   } else {
+    //     _pc.write(_pc.read() + 1);
+    //   }
+    // }
+
+    // // Interface with AXI-S NoC
+    // bool non_empty_output_fifo = false;
+    // for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
+    //   if (axis_interface[ch_id].tready.read() &&
+    //       axis_interface[ch_id].tvalid.read()) {
+    //     int curr_cycle = GetSimulationCycle(radsim_config.GetDoubleKnobShared("sim_driver_period"));
+    //     data_vector<int16_t> tx_tdata = _output_fifos[ch_id].front();
+    //     //std::cout << "custom_feature_interaction @ cycle " << curr_cycle << ": tx_tdata sent " << tx_tdata << " from RAD " << radsim_design->rad_id << " with tdest field " << axis_interface[ch_id].tdest.read() << std::endl;
+    //     _output_fifos[ch_id].pop();
+    //   }
+
+    //   if ( (!_output_fifos[ch_id].empty()) ) { //&& (radsim_design->rad_id == 0) ) {
+    //     non_empty_output_fifo = true;
+    //     data_vector<int16_t> tx_tdata = _output_fifos[ch_id].front();
+    //     //std::cout << "custom_feature_interaction: tx_tdata sent " << tx_tdata << " from RAD " << radsim_design->rad_id << std::endl;
+    //     sc_bv<AXIS_MAX_DATAW> tx_tdata_bv;
+    //     data_vector_to_bv(tx_tdata, tx_tdata_bv, _num_output_elements);
+    //     axis_interface[ch_id].tvalid.write(true);
+    //     axis_interface[ch_id].tdata.write(tx_tdata_bv);
+    //     axis_interface[ch_id].tuser.write(3 << 13);
+    //     axis_interface[ch_id].tid.write(0);
+    //     std::string dest_name =
+    //         "layer0_mvm" + std::to_string(ch_id) + ".rx_interface";
+    //     //std::cout << "radsim_design->GetPortDestinationID(dest_name) on RAD " << radsim_design->rad_id << ": " << radsim_design->GetPortDestinationID(dest_name) << std::endl;
+    //     sc_bv<AXIS_DESTW> dest_id_concat;
+    //     DEST_RAD(dest_id_concat) = 1; //radsim_design->rad_id;
+    //     DEST_LOCAL_NODE(dest_id_concat) = radsim_design->GetPortDestinationID(dest_name);
+    //     DEST_REMOTE_NODE(dest_id_concat) = radsim_design->GetPortDestinationID(dest_name);
+    //     axis_interface[ch_id].tdest.write(
+    //         dest_id_concat);
+    //         //radsim_design->GetPortDestinationID(dest_name));
+    //     no_val_counter = 0;
+    //   } else {
+    //     axis_interface[ch_id].tvalid.write(false);
+    //     no_val_counter++;
+    //   }
+    // }
+
+    // Set FIFO signals
+    // for (unsigned int ch_id = 0; ch_id < _num_mem_channels; ch_id++) {
+    //   _ififo_empty[ch_id].write(_input_fifos[ch_id].empty());
+    //   _ififo_full[ch_id].write(_input_fifos[ch_id].size() >= _fifos_depth - 4);
+    // }
+    // for (unsigned int ch_id = 0; ch_id < _num_output_channels; ch_id++) {
+    //   _ofifo_empty[ch_id].write(_output_fifos[ch_id].empty());
+    //   _ofifo_full[ch_id].write(_output_fifos[ch_id].size() >= _fifos_depth - 2);
+    // }
+
+    if (got_all_mem_responses) {
+      received_responses.write(_num_received_responses);
     }
 
     wait();

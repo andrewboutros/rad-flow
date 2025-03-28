@@ -52,8 +52,8 @@ public:
   // Interface to driver logic
   sc_out<unsigned int> received_responses;
   // Interface to the NoC
-  sc_vector<aximm_master_port> aximm_interface;
-  sc_vector<axis_master_port> axis_interface;
+  // sc_vector<aximm_master_port> aximm_interface;
+  sc_vector<axis_slave_port> axis_interface;
 
   custom_feature_interaction(const sc_module_name &name, unsigned int dataw,
                              unsigned int element_bitwidth,

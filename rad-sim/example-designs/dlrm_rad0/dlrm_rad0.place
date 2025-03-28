@@ -56,13 +56,4 @@ feature_interaction_inst.axis_interface_0 0 41 axis
 feature_interaction_inst.axis_interface_1 0 41 axis
 feature_interaction_inst.axis_interface_2 0 41 axis
 feature_interaction_inst.axis_interface_3 0 41 axis
-layer0_mvm0 0 70 axis
-layer0_mvm1 0 60 axis
-layer0_mvm2 0 50 axis
-layer0_mvm3 0 40 axis
-layer1_mvm0 0 30 axis
-layer1_mvm1 0 20 axis
-layer2_mvm0 0 10 axis
-layer2_mvm1 0 0 axis
-output_collector 0 31 axis
 portal_inst 0 32 axis

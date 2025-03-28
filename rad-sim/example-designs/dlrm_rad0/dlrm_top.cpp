@@ -18,28 +18,28 @@ dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
   std::string module_name_str;
   char module_name[25];
 
-  // Parse MVM configuration
-  std::string design_root_dir =
-      radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
-  std::string design_config_filename =
-      design_root_dir + "/compiler/mvms.config";
+  // // Parse MVM configuration
+  // std::string design_root_dir =
+  //     radsim_config.GetStringKnobPerRad("radsim_user_design_root_dir", radsim_design->rad_id);
+  // std::string design_config_filename =
+  //     design_root_dir + "/compiler/mvms.config";
 
-  std::ifstream design_config_file(design_config_filename);
-  if (!design_config_file) {
-    std::cerr << "Cannot read MLP design configuration file!" << std::endl;
-    exit(1);
-  }
-  std::string line;
-  std::getline(design_config_file, line);
-  std::stringstream line_stream(line);
-  unsigned int num_layers, tmp;
-  std::vector<unsigned int> num_mvms;
-  line_stream >> num_layers;
-  num_mvms.resize(num_layers);
-  for (unsigned int layer_id = 0; layer_id < num_layers; layer_id++) {
-    line_stream >> tmp;
-    num_mvms[layer_id] = tmp;
-  }
+  // std::ifstream design_config_file(design_config_filename);
+  // if (!design_config_file) {
+  //   std::cerr << "Cannot read MLP design configuration file!" << std::endl;
+  //   exit(1);
+  // }
+  // std::string line;
+  // std::getline(design_config_file, line);
+  // std::stringstream line_stream(line);
+  // unsigned int num_layers, tmp;
+  // std::vector<unsigned int> num_mvms;
+  // line_stream >> num_layers;
+  // num_mvms.resize(num_layers);
+  // for (unsigned int layer_id = 0; layer_id < num_layers; layer_id++) {
+  //   line_stream >> tmp;
+  //   num_mvms[layer_id] = tmp;
+  // }
 
   // Instantiate Embedding Lookup Module
   module_name_str = "embedding_lookup_inst";
@@ -70,48 +70,49 @@ dlrm_top::dlrm_top(const sc_module_name &name, RADSimDesignContext* radsim_desig
 
   // Instantiate MVM Engines
 
-  unsigned int axis_signal_count = 0;
-  mvms.resize(num_layers);
-  for (unsigned int l = 0; l < num_layers; l++) {
-    mvms[l].resize(num_mvms[l]);
-    for (unsigned int m = 0; m < num_mvms[l]; m++) {
-      module_name_str = "layer" + to_string(l) + "_mvm" + to_string(m);
-      std::strcpy(module_name, module_name_str.c_str());
-      std::string inst_filename = design_root_dir + "/compiler/instructions/" +
-                                  module_name_str + ".inst";
-      mvms[l][m] = new mvm(module_name, m, l, inst_filename, radsim_design);
-      mvms[l][m]->rst(rst);
-      axis_signal_count++;
-    }
-  }
+  // unsigned int axis_signal_count = 0;
+  // mvms.resize(num_layers);
+  // for (unsigned int l = 0; l < num_layers; l++) {
+  //   mvms[l].resize(num_mvms[l]);
+  //   for (unsigned int m = 0; m < num_mvms[l]; m++) {
+  //     module_name_str = "layer" + to_string(l) + "_mvm" + to_string(m);
+  //     std::strcpy(module_name, module_name_str.c_str());
+  //     std::string inst_filename = design_root_dir + "/compiler/instructions/" +
+  //                                 module_name_str + ".inst";
+  //     mvms[l][m] = new mvm(module_name, m, l, inst_filename, radsim_design);
+  //     mvms[l][m]->rst(rst);
+  //     axis_signal_count++;
+  //   }
+  // }
 
-  axis_sig.resize(axis_signal_count);
-  unsigned int idx = 0;
-  for (unsigned int l = 0; l < num_layers; l++) {
-    for (unsigned int m = 0; m < num_mvms[l]; m++) {
-      if (m == num_mvms[l] - 1 && l == num_layers - 1) {
-        axis_sig[idx].Connect(mvms[l][m]->tx_reduce_interface,
-                              mvms[0][0]->rx_reduce_interface);
-      } else if (m == num_mvms[l] - 1) {
-        axis_sig[idx].Connect(mvms[l][m]->tx_reduce_interface,
-                              mvms[l + 1][0]->rx_reduce_interface);
-      } else {
-        axis_sig[idx].Connect(mvms[l][m]->tx_reduce_interface,
-                              mvms[l][m + 1]->rx_reduce_interface);
-      }
-      idx++;
-    }
-  }
+  // axis_sig.resize(axis_signal_count);
+  // unsigned int idx = 0;
+  // for (unsigned int l = 0; l < num_layers; l++) {
+  //   for (unsigned int m = 0; m < num_mvms[l]; m++) {
+  //     if (m == num_mvms[l] - 1 && l == num_layers - 1) {
+  //       axis_sig[idx].Connect(mvms[l][m]->tx_reduce_interface,
+  //                             mvms[0][0]->rx_reduce_interface);
+  //     } else if (m == num_mvms[l] - 1) {
+  //       axis_sig[idx].Connect(mvms[l][m]->tx_reduce_interface,
+  //                             mvms[l + 1][0]->rx_reduce_interface);
+  //     } else {
+  //       axis_sig[idx].Connect(mvms[l][m]->tx_reduce_interface,
+  //                             mvms[l][m + 1]->rx_reduce_interface);
+  //     }
+  //     idx++;
+  //   }
+  // }
 
   // Instantiate Output Collector
-  module_name_str = "output_collector";
-  std::strcpy(module_name, module_name_str.c_str());
-  output_collector = new collector(module_name, radsim_design);
-  output_collector->rst(rst);
-  output_collector->data_fifo_rdy(collector_fifo_rdy);
-  output_collector->data_fifo_ren(collector_fifo_ren);
-  output_collector->data_fifo_rdata(collector_fifo_rdata);
+  // module_name_str = "output_collector";
+  // std::strcpy(module_name, module_name_str.c_str());
+  // output_collector = new collector(module_name, radsim_design);
+  // output_collector->rst(rst);
+  // output_collector->data_fifo_rdy(collector_fifo_rdy);
+  // output_collector->data_fifo_ren(collector_fifo_ren);
+  // output_collector->data_fifo_rdata(collector_fifo_rdata);
 
+  //Instantiate memory controllers
   ext_mem.resize(num_mem_controllers);
   mem_clks.resize(num_mem_controllers);
   unsigned int ch_id = 0;
@@ -146,11 +147,11 @@ dlrm_top::~dlrm_top() {
   delete feature_interaction_inst;
   for (auto &ctrlr : ext_mem)
     delete ctrlr;
-  delete output_collector;
-  for (unsigned int l = 0; l < mvms.size(); l++) {
-    for (auto &mvm : mvms[l]) {
-      delete mvm;
-    }
-  }
+  // delete output_collector;
+  // for (unsigned int l = 0; l < mvms.size(); l++) {
+  //   for (auto &mvm : mvms[l]) {
+  //     delete mvm;
+  //   }
+  // }
 
 }
