@@ -260,7 +260,8 @@ def print_allocation():
 
 def generate_embedding_lookup_inputs(num_inputs):
     f = open("embedding_indecies.in", "w")
-    f.write(str(len(table_info)) + " " + str(num_inputs/2) + "\n")
+    num_columns = 36 #len(table_info) #math.floor(len(table_info)/2)
+    f.write(str(num_columns) + " " + str(num_inputs) + "\n")
     for i in range(num_inputs):
         input_vec = []
         target_ch = []
@@ -268,9 +269,12 @@ def generate_embedding_lookup_inputs(num_inputs):
         round_id = 0
         done = False
         table_count = 0
+        # print("len(tables_per_ddr_channel)" + str(len(tables_per_ddr_channel)))
+        # print("len(tables_per_hbm_channel)" + str(len(tables_per_hbm_channel)))
         while not (done):
             for ch in tables_per_ddr_channel:
                 if round_id < len(tables_per_ddr_channel[ch]):
+                    # print("len(tables_per_ddr_channel[ch])" + str(len(tables_per_ddr_channel[ch])))
                     table_id = tables_per_ddr_channel[ch][round_id]
                     limit = int(get_table_entries_by_id(table_info, table_id) / 2)
                     input_vec.append(random.randint(0, limit) * read_bytewidth)
@@ -286,6 +290,7 @@ def generate_embedding_lookup_inputs(num_inputs):
                     table_count += 1
             for ch in tables_per_hbm_channel:
                 if round_id < len(tables_per_hbm_channel[ch]):
+                    # print("len(tables_per_hbm_channel[ch])" + str(len(tables_per_hbm_channel[ch])))
                     table_id = tables_per_hbm_channel[ch][round_id]
                     limit = int(get_table_entries_by_id(table_info, table_id) / 2)
                     input_vec.append(random.randint(0, limit) * read_bytewidth)
@@ -300,11 +305,12 @@ def generate_embedding_lookup_inputs(num_inputs):
                     ]
                     table_count += 1
             round_id += 1
-            done = table_count == len(table_info)
+            print("table_count" + str(table_count))
+            done = table_count >= num_columns
         test_input_data.append(input_vec)
         test_input_base_addr.append(base_addr)
         test_input_target_ch.append(target_ch)
-        if (i < num_inputs/2):
+        if (i < num_inputs):
             for j in input_vec:
                 f.write(str(j) + " ")
             f.write("\n")
