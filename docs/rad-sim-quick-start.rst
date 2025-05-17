@@ -74,10 +74,15 @@ Building RAD-Sim
 ----------------
 
 You can configure RAD-Sim for your example design simulation using the following commands executed at the ``rad-sim`` root directory (the commands use the ``mlp`` example design which can be replaced by your own design under the ``rad-flow/rad-sim/example-designs`` directory):
-.. code-block:: bash
-
-    $ cd <rad_flow_root_dir>/rad-sim
-    $ python config.py mlp
+    .. code-block:: bash
+        $ cd <rad_flow_root_dir>/rad-sim
+        $ python config.py mlp
+        $ cd build
+        $ cmake ..
+        $ make
+        ....
+        [100%] Linking CXX executable build/system
+        [100%] Built target system
 
 Running RAD-Sim
 ----------------
@@ -109,9 +114,13 @@ To test that RAD-Sim is working as intended, the multi-layer perceptron (MLP) ex
         $ cd <rad_flow_root_dir>/rad-sim/build
         $ make run
         # ....
+        # Inputs per dispatcher = 256
+        # Outputs = 256
+        # placement_filepath: /home/andrew/rad-flow/rad-sim/example-designs/mlp/mlp.place
         # SUCCESS - All outputs are matching!
-        # Simulation Cycles = 11900
-        # Aggregate NoC BW = 33.9383 Gbps
+        # Simulation Cycles = 12280
+        # Aggregate NoC BW = 211.071 Gbps
 
         # Info: /OSCI/SystemC: Simulation stopped by user.
+        # Simulation Cycles from main.cpp = 12282
         # [100%] Built target run
