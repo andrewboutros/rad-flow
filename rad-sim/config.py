@@ -478,7 +478,7 @@ if __name__ == "__main__":
             exit(1)
 
     # Point to YAML configuration file
-    config_filename = "config.yml"
+    config_filename = f"{os.getcwd()}/example-designs/{design_name}/config.yml"
     config_names = []
 
     # List default parameter values
