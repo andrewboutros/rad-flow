@@ -6,6 +6,7 @@ import shutil
 from itertools import repeat
 from copy import deepcopy
 from math import ceil
+import argparse
 
 def parse_config_file(config_filename, booksim_params, radsim_header_params, radsim_knobs, cluster_knobs):
     with open(config_filename, 'r') as yaml_config:
@@ -23,7 +24,7 @@ def parse_config_file(config_filename, booksim_params, radsim_header_params, rad
                 for param, param_value in param.items():
                     print('         ' + param, param_value)
                     param_name = param_category + '_' + param
-                    invalid_param = True
+                    invalid_param = False
                     if param_name in booksim_params[config_counter]:
                         booksim_params[config_counter][param_name] = param_value
                         invalid_param = False
@@ -461,15 +462,18 @@ def find_num_configs(config_filename):
     return config_counter
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("designs", nargs='+', help="Unique design names to be included in the simulation")
+    parser.add_argument("-config", "--config", help="Path to the configuration file", required=False, default=None)
+    args = parser.parse_args()
     # Get design name from command line argument
     if len(sys.argv) < 2:
         print("Invalid arguments: python config.py <unique_design_name> <[optional] other_unique_design_names>")
         exit(1)
 
-    design_names = set() #No duplicating design include statements and cmake commands
-    for i in range(1, len(sys.argv)): #skip 0th argument (that is current program name)
-        design_names.add(sys.argv[i])
-        print(sys.argv[i])
+    design_names = set(args.designs) #use set to avoid duplicates
+    for design_name in design_names:
+        print(design_name)
 
     # Check if design directory exists
     for design_name in design_names:
@@ -478,7 +482,11 @@ if __name__ == "__main__":
             exit(1)
 
     # Point to YAML configuration file
-    config_filename = f"{os.getcwd()}/example-designs/{design_name}/config.yml"
+    
+    if args.config is not None:
+        config_filename = f"{os.getcwd()}/example-designs/{design_name}/{args.config}"
+    else:
+        config_filename = f"{os.getcwd()}/example-designs/{design_name}/config.yml"
     config_names = []
 
     # List default parameter values
