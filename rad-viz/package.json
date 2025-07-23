@@ -1,0 +1,38 @@
+{
+  "name": "rad-viz",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "d3": "^7.8.5",
+    "flowbite": "^2.0.0",
+    "flowbite-vue": "^0.1.0",
+    "mxgraph": "^4.2.2",
+    "pako": "^1.0.11",
+    "papaparse": "^5.4.1",
+    "pinia": "^2.1.6",
+    "sanitize-html": "^2.11.0",
+    "splitpanes": "^3.1.5",
+    "vue": "^3.3.4"
+  },
+  "devDependencies": {
+    "@typed-mxgraph/typed-mxgraph": "^1.0.8",
+    "@types/d3": "^7.4.2",
+    "@types/pako": "^2.0.1",
+    "@types/papaparse": "^5.3.10",
+    "@types/splitpanes": "^2.2.4",
+    "@vitejs/plugin-vue": "^4.2.3",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "sass": "^1.69.0",
+    "tailwindcss": "^3.3.5",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5",
+    "vue-tsc": "^1.8.5"
+  }
+}
